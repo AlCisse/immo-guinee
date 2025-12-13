@@ -1,0 +1,103 @@
+{
+  "name": "ImmoGuinée - Envoi OTP WhatsApp",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "send-otp",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook OTP",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WAHA_URL || 'http://immog-waha:3000' }}/api/sendText",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chatId\": \"{{ $json.phone.replace('+', '') }}@c.us\",\n  \"text\": \"🏠 *ImmoGuinée*\\n\\nVotre code de vérification est:\\n\\n🔐 *{{ $json.otp }}*\\n\\n⏱️ Ce code expire dans 5 minutes.\\n\\n_Ne partagez jamais ce code avec quelqu'un d'autre._\",\n  \"session\": \"default\"\n}",
+        "options": {}
+      },
+      "id": "send-whatsapp",
+      "name": "Envoyer WhatsApp WAHA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, message: 'OTP envoyé via WhatsApp', phone: $json.phone }) }}"
+      },
+      "id": "response-success",
+      "name": "Réponse Succès",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [750, 250]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: false, message: 'Erreur envoi WhatsApp', error: $json.error || 'Unknown error' }) }}",
+        "options": {
+          "responseCode": 500
+        }
+      },
+      "id": "response-error",
+      "name": "Réponse Erreur",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [750, 400]
+    }
+  ],
+  "connections": {
+    "Webhook OTP": {
+      "main": [
+        [
+          {
+            "node": "Envoyer WhatsApp WAHA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Envoyer WhatsApp WAHA": {
+      "main": [
+        [
+          {
+            "node": "Réponse Succès",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {
+      "name": "OTP"
+    },
+    {
+      "name": "WhatsApp"
+    }
+  ]
+}

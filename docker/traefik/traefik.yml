@@ -1,0 +1,112 @@
+# ===============================================
+# Traefik v2.10 - Reverse Proxy Configuration
+# Auto-SSL with Let's Encrypt
+# ===============================================
+
+# Global configuration
+global:
+  checkNewVersion: true
+  sendAnonymousUsage: false
+
+# API and Dashboard
+api:
+  dashboard: true
+  insecure: true  # Allow insecure API (development only)
+  debug: false
+
+# Entry Points
+entryPoints:
+  # HTTP (port 80)
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+
+  # HTTPS (port 443)
+  websecure:
+    address: ":443"
+    http:
+      tls:
+        certResolver: letsencrypt
+        domains:
+          - main: immoguinee.gn
+            sans:
+              - "*.immoguinee.gn"
+
+  # Traefik Dashboard (port 8080)
+  traefik:
+    address: ":8080"
+
+# Providers
+providers:
+  # Docker provider
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: immog-network
+    watch: true
+
+  # File provider for additional configuration
+  file:
+    directory: "/etc/traefik/dynamic"
+    watch: true
+
+# Certificate Resolvers (Let's Encrypt)
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: admin@immoguinee.gn
+      storage: /letsencrypt/acme.json
+      caServer: "https://acme-v02.api.letsencrypt.org/directory"
+      # Uncomment for staging during development:
+      # caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
+
+      # TLS Challenge (recommended for wildcards)
+      tlsChallenge: {}
+
+      # HTTP Challenge (alternative)
+      # httpChallenge:
+      #   entryPoint: web
+
+# Logging
+log:
+  level: INFO
+  format: json
+  filePath: "/var/log/traefik/traefik.log"
+
+# Access Logs
+accessLog:
+  filePath: "/var/log/traefik/access.log"
+  format: json
+  bufferingSize: 100
+  filters:
+    statusCodes:
+      - "400-599"  # Log only errors
+    retryAttempts: true
+    minDuration: "100ms"
+
+# Metrics
+metrics:
+  prometheus:
+    addEntryPointsLabels: true
+    addServicesLabels: true
+    buckets:
+      - 0.1
+      - 0.3
+      - 1.0
+      - 3.0
+      - 10.0
+
+# Tracing (optional, for debugging)
+# tracing:
+#   jaeger:
+#     samplingServerURL: http://jaeger:5778/sampling
+#     localAgentHostPort: jaeger:6831
+
+# Ping endpoint for health checks
+ping:
+  entryPoint: traefik

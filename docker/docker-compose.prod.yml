@@ -1,0 +1,192 @@
+version: '3.8'
+
+# =================================================
+# ImmoGuinée - Production Docker Compose
+# =================================================
+# Usage: docker-compose -f docker-compose.prod.yml up -d
+# =================================================
+
+networks:
+  immog-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  redis-data:
+  minio-data:
+  letsencrypt:
+
+services:
+  # PostgreSQL 15 with PostGIS
+  postgres:
+    image: postgis/postgis:15-3.4
+    container_name: immog-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - immog-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis (Cache, Sessions, Queues)
+  redis:
+    image: redis:7-alpine
+    container_name: immog-redis
+    restart: always
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
+    networks:
+      - immog-network
+
+  # Next.js Frontend (Production Build)
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=production
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+    container_name: immog-frontend
+    restart: always
+    networks:
+      - immog-network
+    environment:
+      - NODE_ENV=production
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls=true"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+
+  # PHP-FPM (Laravel Backend)
+  php:
+    build:
+      context: ../backend
+      dockerfile: ../docker/php/Dockerfile.prod
+    container_name: immog-php
+    restart: always
+    working_dir: /var/www/backend
+    volumes:
+      - ../backend:/var/www/backend:ro
+      - ../backend/storage:/var/www/backend/storage
+    networks:
+      - immog-network
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_URL=https://${DOMAIN}
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+
+  # Nginx
+  nginx:
+    image: nginx:alpine
+    container_name: immog-nginx
+    restart: always
+    volumes:
+      - ./nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/sites-prod:/etc/nginx/conf.d:ro
+      - ../backend/public:/var/www/backend/public:ro
+      - ../backend/storage/app/public:/var/www/backend/storage/app/public:ro
+    networks:
+      - immog-network
+    depends_on:
+      - php
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`${DOMAIN}`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls=true"
+      - "traefik.http.services.backend.loadbalancer.server.port=80"
+
+  # Laravel Queue Worker
+  queue-worker:
+    build:
+      context: ../backend
+      dockerfile: ../docker/php/Dockerfile.prod
+    container_name: immog-queue-worker
+    restart: always
+    command: php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
+    volumes:
+      - ../backend:/var/www/backend:ro
+      - ../backend/storage:/var/www/backend/storage
+    networks:
+      - immog-network
+    depends_on:
+      - postgres
+      - redis
+
+  # Laravel Scheduler
+  scheduler:
+    build:
+      context: ../backend
+      dockerfile: ../docker/php/Dockerfile.prod
+    container_name: immog-scheduler
+    restart: always
+    command: sh -c "while true; do php artisan schedule:run; sleep 60; done"
+    volumes:
+      - ../backend:/var/www/backend:ro
+    networks:
+      - immog-network
+    depends_on:
+      - postgres
+      - redis
+
+  # MinIO (Object Storage)
+  minio:
+    image: minio/minio:latest
+    container_name: immog-minio
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio-data:/data
+    networks:
+      - immog-network
+
+  # Traefik (Reverse Proxy + Auto SSL)
+  traefik:
+    image: traefik:v2.10
+    container_name: immog-traefik
+    restart: always
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--log.level=WARN"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - letsencrypt:/letsencrypt
+      - ./traefik/dynamic:/etc/traefik/dynamic:ro
+    networks:
+      - immog-network

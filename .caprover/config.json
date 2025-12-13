@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 2,
+  "appName": "immoguinee",
+  "instanceCount": 2,
+  "captainDefinitionRelativeFilePath": "./captain-definition",
+  "branch": "main",
+  "repo": "https://github.com/votre-username/immoguinee.git",
+  "deploy": {
+    "method": "captain-definition",
+    "buildArgs": {
+      "NODE_ENV": "production",
+      "PHP_MEMORY_LIMIT": "512M"
+    }
+  },
+  "envVars": [
+    {
+      "key": "APP_NAME",
+      "value": "ImmoGuinée"
+    },
+    {
+      "key": "APP_ENV",
+      "value": "production"
+    },
+    {
+      "key": "APP_DEBUG",
+      "value": "false"
+    },
+    {
+      "key": "APP_URL",
+      "value": "https://immoguinee.gn"
+    },
+    {
+      "key": "DB_CONNECTION",
+      "value": "pgsql"
+    },
+    {
+      "key": "DB_HOST",
+      "value": "srv-captain--immoguinee-postgres"
+    },
+    {
+      "key": "REDIS_HOST",
+      "value": "srv-captain--immoguinee-redis"
+    },
+    {
+      "key": "ELASTICSEARCH_HOST",
+      "value": "srv-captain--immoguinee-elasticsearch"
+    },
+    {
+      "key": "CACHE_DRIVER",
+      "value": "redis"
+    },
+    {
+      "key": "SESSION_DRIVER",
+      "value": "redis"
+    },
+    {
+      "key": "QUEUE_CONNECTION",
+      "value": "redis"
+    }
+  ],
+  "preDeployFunction": "php artisan migrate --force && php artisan config:cache && php artisan route:cache && php artisan view:cache"
+}
