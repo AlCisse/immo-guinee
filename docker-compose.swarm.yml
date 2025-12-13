@@ -1,0 +1,312 @@
+version: '3.8'
+
+networks:
+  immog-network:
+    driver: overlay
+    attachable: true
+
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  elasticsearch-data:
+    driver: local
+  minio-data:
+    driver: local
+  n8n-data:
+    driver: local
+  traefik-certificates:
+    driver: local
+  traefik-logs:
+    driver: local
+
+services:
+  # PostgreSQL with PostGIS
+  postgres:
+    image: postgis/postgis:15-3.4
+    deploy:
+      replicas: 1  # Réduit à 1 pour éviter les conflits de données
+      restart_policy:
+        condition: on-failure
+    environment:
+      POSTGRES_DB: immog_db
+      POSTGRES_USER: immog_user
+      POSTGRES_PASSWORD: REDACTED_DB_PASSWORD
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - immog-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U immog_user -d immog_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    command: redis-server --appendonly yes --requirepass immog_redis_secret
+    volumes:
+      - redis-data:/data
+    networks:
+      - immog-network
+
+  # Elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - immog-network
+
+  # Next.js Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://nginx/api
+        NEXT_PUBLIC_ECHO_HOST: localhost
+        NEXT_PUBLIC_ECHO_PORT: "6001"
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.frontend.rule=Host(`immoguinee.com`) || Host(`www.immoguinee.com`)"
+        - "traefik.http.routers.frontend.entrypoints=web,websecure"
+        - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
+        - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+        - "traefik.http.services.frontend.loadbalancer.sticky.cookie=true"
+        - "traefik.http.services.frontend.loadbalancer.healthcheck.path=/api/health"
+        - "traefik.http.services.frontend.loadbalancer.healthcheck.interval=30s"
+        # Cloudflare optimizations
+        - "traefik.http.middlewares.frontend-headers.headers.customresponseheaders.Cache-Control=public, max-age=31536000, immutable"
+        - "traefik.http.middlewares.frontend-compress.compress=true"
+        - "traefik.http.routers.frontend.middlewares=frontend-headers,frontend-compress"
+    networks:
+      - immog-network
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # PHP-FPM avec un Dockerfile personnalisé
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile.php
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+    working_dir: /var/www/html
+    volumes:
+      - ../backend:/var/www/html
+    networks:
+      - immog-network
+    environment:
+      - APP_ENV=local
+      - DB_HOST=postgres
+      - DB_DATABASE=immog_db
+      - DB_USERNAME=immog_user
+      - DB_PASSWORD=REDACTED_DB_PASSWORD
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=immog_redis_secret
+
+  # Nginx - Supprimer le port 80 et utiliser Traefik
+  nginx:
+    image: nginx:alpine
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.nginx.rule=Host(`localhost`)"
+        - "traefik.http.services.nginx.loadbalancer.server.port=80"
+    volumes:
+      - ../backend/public:/var/www/html/public:ro
+    networks:
+      - immog-network
+    depends_on:
+      - php
+
+  # Queue Worker avec Dockerfile personnalisé
+  queue-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.php
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    working_dir: /var/www/html
+    command: php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
+    volumes:
+      - ../backend:/var/www/html
+    networks:
+      - immog-network
+    environment:
+      - APP_ENV=local
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=immog_redis_secret
+
+  # Scheduler avec Dockerfile personnalisé
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile.php
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    working_dir: /var/www/html
+    command: >
+      sh -c "while true; do
+        php artisan schedule:run --verbose --no-interaction &
+        sleep 60
+      done"
+    volumes:
+      - ../backend:/var/www/html
+    networks:
+      - immog-network
+    environment:
+      - APP_ENV=local
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+
+  # MinIO
+  minio:
+    image: minio/minio:latest
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: immog_minio
+      MINIO_ROOT_PASSWORD: immog_minio_secret
+    volumes:
+      - minio-data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - immog-network
+
+  # n8n
+  n8n:
+    image: n8nio/n8n:latest
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=immog_n8n_secret
+    volumes:
+      - n8n-data:/home/node/.n8n
+    ports:
+      - "5678:5678"
+    networks:
+      - immog-network
+
+  # Traefik - Reverse Proxy avec HTTPS
+  traefik:
+    image: traefik:v2.10
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.dashboard.rule=Host(`traefik.immoguinee.com`)"
+        - "traefik.http.routers.dashboard.service=api@internal"
+        - "traefik.http.routers.dashboard.entrypoints=websecure"
+        - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
+    command:
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.swarmMode=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=immog-network"
+      # Entrypoints
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      # HTTP to HTTPS redirect
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
+      # Let's Encrypt
+      - "--certificatesresolvers.letsencrypt.acme.email=admin@immoguinee.com"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      # Cloudflare real IP
+      - "--entrypoints.web.forwardedHeaders.trustedIPs=173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22,2400:cb00::/32,2606:4700::/32,2803:f800::/32,2405:b500::/32,2405:8100::/32,2a06:98c0::/29,2c0f:f248::/32"
+      # Compression
+      - "--experimental.plugins.gzip.modulename=github.com/klauspost/compress"
+      - "--experimental.plugins.gzip.version=v1.15.15"
+      # Metrics
+      - "--metrics.prometheus=true"
+      - "--metrics.prometheus.addEntryPointsLabels=true"
+      - "--metrics.prometheus.addServicesLabels=true"
+      # Access logs
+      - "--accesslog=true"
+      - "--accesslog.filepath=/var/log/traefik/access.log"
+      - "--accesslog.bufferingsize=100"
+      # Logging
+      - "--log.level=INFO"
+      - "--log.filepath=/var/log/traefik/traefik.log"
+    ports:
+      - target: 80
+        published: 80
+        mode: host
+      - target: 443
+        published: 443
+        mode: host
+      - "8080:8080"  # Dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-certificates:/letsencrypt
+      - traefik-logs:/var/log/traefik
+    networks:
+      - immog-network

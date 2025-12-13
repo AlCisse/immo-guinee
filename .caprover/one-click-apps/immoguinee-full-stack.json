@@ -1,0 +1,197 @@
+{
+  "captainVersion": 4,
+  "services": {
+    "$$cap_appname-postgres": {
+      "image": "postgis/postgis:15-3.4",
+      "volumes": [
+        "$$cap_appname-postgres-data:/var/lib/postgresql/data"
+      ],
+      "restart": "always",
+      "environment": {
+        "POSTGRES_DB": "$$cap_postgres_db",
+        "POSTGRES_USER": "$$cap_postgres_user",
+        "POSTGRES_PASSWORD": "$$cap_postgres_password"
+      },
+      "caproverExtra": {
+        "notExposeAsWebApp": "true"
+      }
+    },
+    "$$cap_appname-redis": {
+      "image": "redis:7-alpine",
+      "volumes": [
+        "$$cap_appname-redis-data:/data"
+      ],
+      "restart": "always",
+      "caproverExtra": {
+        "notExposeAsWebApp": "true"
+      }
+    },
+    "$$cap_appname-elasticsearch": {
+      "image": "docker.elastic.co/elasticsearch/elasticsearch:8.11.0",
+      "volumes": [
+        "$$cap_appname-elasticsearch-data:/usr/share/elasticsearch/data"
+      ],
+      "restart": "always",
+      "environment": {
+        "discovery.type": "single-node",
+        "ES_JAVA_OPTS": "-Xms512m -Xmx512m",
+        "xpack.security.enabled": "false"
+      },
+      "caproverExtra": {
+        "notExposeAsWebApp": "true"
+      }
+    },
+    "$$cap_appname-minio": {
+      "image": "minio/minio:latest",
+      "volumes": [
+        "$$cap_appname-minio-data:/data"
+      ],
+      "restart": "always",
+      "environment": {
+        "MINIO_ROOT_USER": "$$cap_minio_user",
+        "MINIO_ROOT_PASSWORD": "$$cap_minio_password"
+      },
+      "caproverExtra": {
+        "containerHttpPort": "9000",
+        "websocketSupport": "true"
+      }
+    },
+    "$$cap_appname": {
+      "depends_on": [
+        "$$cap_appname-postgres",
+        "$$cap_appname-redis",
+        "$$cap_appname-elasticsearch",
+        "$$cap_appname-minio"
+      ],
+      "restart": "always",
+      "environment": {
+        "APP_NAME": "ImmoGuinée",
+        "APP_ENV": "production",
+        "APP_DEBUG": "false",
+        "DB_HOST": "srv-captain--$$cap_appname-postgres",
+        "DB_DATABASE": "$$cap_postgres_db",
+        "DB_USERNAME": "$$cap_postgres_user",
+        "DB_PASSWORD": "$$cap_postgres_password",
+        "REDIS_HOST": "srv-captain--$$cap_appname-redis",
+        "ELASTICSEARCH_HOST": "srv-captain--$$cap_appname-elasticsearch",
+        "AWS_ENDPOINT": "http://srv-captain--$$cap_appname-minio:9000"
+      },
+      "caproverExtra": {
+        "containerHttpPort": "80",
+        "websocketSupport": "true"
+      }
+    },
+    "$$cap_appname-queue-worker": {
+      "depends_on": [
+        "$$cap_appname"
+      ],
+      "restart": "always",
+      "environment": {
+        "DB_HOST": "srv-captain--$$cap_appname-postgres",
+        "REDIS_HOST": "srv-captain--$$cap_appname-redis"
+      },
+      "caproverExtra": {
+        "notExposeAsWebApp": "true",
+        "dockerfileLines": [
+          "FROM $$cap_appname",
+          "CMD php artisan queue:work redis --sleep=3 --tries=3"
+        ]
+      }
+    },
+    "$$cap_appname-scheduler": {
+      "depends_on": [
+        "$$cap_appname"
+      ],
+      "restart": "always",
+      "environment": {
+        "DB_HOST": "srv-captain--$$cap_appname-postgres",
+        "REDIS_HOST": "srv-captain--$$cap_appname-redis"
+      },
+      "caproverExtra": {
+        "notExposeAsWebApp": "true",
+        "dockerfileLines": [
+          "FROM $$cap_appname",
+          "CMD sh -c 'while true; do php artisan schedule:run --verbose --no-interaction & sleep 60; done'"
+        ]
+      }
+    },
+    "$$cap_appname-laravel-echo": {
+      "image": "oanhnn/laravel-echo-server:latest",
+      "depends_on": [
+        "$$cap_appname-redis"
+      ],
+      "restart": "always",
+      "environment": {
+        "LARAVEL_ECHO_SERVER_AUTH_HOST": "http://srv-captain--$$cap_appname",
+        "LARAVEL_ECHO_SERVER_HOST": "0.0.0.0",
+        "LARAVEL_ECHO_SERVER_PORT": "6001",
+        "LARAVEL_ECHO_SERVER_REDIS_HOST": "srv-captain--$$cap_appname-redis"
+      },
+      "caproverExtra": {
+        "containerHttpPort": "6001",
+        "websocketSupport": "true"
+      }
+    },
+    "$$cap_appname-grafana": {
+      "image": "grafana/grafana:latest",
+      "volumes": [
+        "$$cap_appname-grafana-data:/var/lib/grafana"
+      ],
+      "restart": "always",
+      "environment": {
+        "GF_SECURITY_ADMIN_USER": "$$cap_grafana_user",
+        "GF_SECURITY_ADMIN_PASSWORD": "$$cap_grafana_password"
+      },
+      "caproverExtra": {
+        "containerHttpPort": "3000"
+      }
+    }
+  },
+  "variables": [
+    {
+      "id": "$$cap_postgres_db",
+      "label": "PostgreSQL Database Name",
+      "defaultValue": "immog_db",
+      "validRegex": "/^[a-z0-9_]+$/"
+    },
+    {
+      "id": "$$cap_postgres_user",
+      "label": "PostgreSQL Username",
+      "defaultValue": "immog_user",
+      "validRegex": "/^[a-z0-9_]+$/"
+    },
+    {
+      "id": "$$cap_postgres_password",
+      "label": "PostgreSQL Password",
+      "defaultValue": "$$cap_gen_random_hex(16)",
+      "validRegex": "/.{8,}/"
+    },
+    {
+      "id": "$$cap_minio_user",
+      "label": "MinIO Root User",
+      "defaultValue": "immog_minio",
+      "validRegex": "/^[a-zA-Z0-9_]+$/"
+    },
+    {
+      "id": "$$cap_minio_password",
+      "label": "MinIO Root Password",
+      "defaultValue": "$$cap_gen_random_hex(16)",
+      "validRegex": "/.{8,}/"
+    },
+    {
+      "id": "$$cap_grafana_user",
+      "label": "Grafana Admin Username",
+      "defaultValue": "admin"
+    },
+    {
+      "id": "$$cap_grafana_password",
+      "label": "Grafana Admin Password",
+      "defaultValue": "$$cap_gen_random_hex(12)",
+      "validRegex": "/.{8,}/"
+    }
+  ],
+  "instructions": {
+    "start": "🚀 ImmoGuinée - Plateforme immobilière complète pour la Guinée\n\nCette application déploie:\n- Backend Laravel 11 avec Passport (OAuth2)\n- Base de données PostgreSQL avec PostGIS\n- Redis pour cache/sessions/queues\n- Elasticsearch pour recherche avancée\n- MinIO pour stockage S3\n- Laravel Echo pour temps réel\n- Queue worker et scheduler\n- Grafana pour monitoring\n\n⚠️ Assurez-vous d'avoir au moins 4GB RAM disponible.",
+    "end": "✅ ImmoGuinée déployé avec succès!\n\n📝 Prochaines étapes:\n1. Configurez votre domaine personnalisé\n2. Activez HTTPS via CapRover\n3. Exécutez les migrations: `php artisan migrate --seed`\n4. Configurez les variables d'environnement supplémentaires\n5. Configurez Twilio, Orange Money, MTN MoMo\n\n📊 Accès Grafana: https://$$cap_appname-grafana.$$cap_root_domain\nUtilisateur: $$cap_grafana_user\n\n💾 MinIO Console: https://$$cap_appname-minio.$$cap_root_domain\nUtilisateur: $$cap_minio_user"
+  }
+}

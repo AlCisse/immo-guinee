@@ -1,0 +1,427 @@
+version: '3.8'
+
+networks:
+  immog-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  redis-data:
+  elasticsearch-data:
+  minio-data:
+  n8n-data:
+  grafana-data:
+  prometheus-data:
+
+services:
+  # PostgreSQL 15 with PostGIS Extension
+  postgres:
+    image: postgis/postgis:15-3.4
+    container_name: immog-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-immog_db}
+      POSTGRES_USER: ${DB_USERNAME:-immog_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-REDACTED_DB_PASSWORD}
+      POSTGRES_INITDB_ARGS: "-E UTF8"
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    networks:
+      - immog-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-immog_user} -d ${DB_DATABASE:-immog_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis 7+ (Cache, Sessions, Queues, Broadcasting)
+  redis:
+    image: redis:7-alpine
+    container_name: immog-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-immog_redis_secret}
+    volumes:
+      - redis-data:/data
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    networks:
+      - immog-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Elasticsearch 8.x (Search Engine with Laravel Scout)
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: immog-elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - "${ELASTICSEARCH_PORT:-9200}:9200"
+      - "9300:9300"
+    networks:
+      - immog-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Varnish HTTP Cache
+  varnish:
+    image: varnish:7.4
+    container_name: immog-varnish
+    restart: unless-stopped
+    volumes:
+      - ./varnish/default.vcl:/etc/varnish/default.vcl:ro
+    ports:
+      - "${VARNISH_PORT:-8082}:80"
+    networks:
+      - immog-network
+    depends_on:
+      - nginx
+    environment:
+      - VARNISH_SIZE=256M
+
+  # Next.js Frontend (Development Mode)
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile.dev
+      args:
+        - NODE_ENV=development
+    container_name: immog-frontend
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "${FRONTEND_PORT:-3006}:3005"
+    networks:
+      - immog-network
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api}
+      - NEXT_PUBLIC_ECHO_HOST=${NEXT_PUBLIC_ECHO_HOST:-localhost}
+      - NEXT_PUBLIC_ECHO_PORT=${NEXT_PUBLIC_ECHO_PORT:-6001}
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
+    command: npm run dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3005/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`localhost`)"
+      - "traefik.http.routers.frontend.entrypoints=web"
+      - "traefik.http.routers.frontend.priority=1"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3005"
+
+  # PHP-FPM 8.2 (Laravel Backend)
+  php:
+    build:
+      context: ../backend
+      dockerfile: ../docker/php/Dockerfile
+    container_name: immog-php
+    restart: unless-stopped
+    working_dir: /var/www/backend
+    volumes:
+      - ../backend:/var/www/backend
+      - ./php/php.ini:/usr/local/etc/php/php.ini:ro
+      - ./php/www.conf:/usr/local/etc/php-fpm.d/www.conf:ro
+    networks:
+      - immog-network
+    depends_on:
+      - postgres
+      - redis
+      - elasticsearch
+    environment:
+      - APP_ENV=${APP_ENV:-local}
+      - APP_DEBUG=${APP_DEBUG:-true}
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=${DB_DATABASE:-immog_db}
+      - DB_USERNAME=${DB_USERNAME:-immog_user}
+      - DB_PASSWORD=${DB_PASSWORD:-REDACTED_DB_PASSWORD}
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-immog_redis_secret}
+      - REDIS_PORT=6379
+      - ELASTICSEARCH_HOST=elasticsearch
+      - ELASTICSEARCH_PORT=9200
+
+  # Nginx Web Server
+  nginx:
+    image: nginx:alpine
+    container_name: immog-nginx
+    restart: unless-stopped
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/sites:/etc/nginx/conf.d:ro
+      - ../backend/public:/var/www/backend/public:ro
+      - ../backend/storage/app/public:/var/www/backend/storage/app/public:ro
+      - ../frontend/.next:/var/www/frontend/.next:ro
+    ports:
+      - "${NGINX_PORT:-8000}:80"
+      - "${NGINX_SSL_PORT:-8443}:443"
+    networks:
+      - immog-network
+    depends_on:
+      - php
+      - postgres
+      - redis
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`localhost`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.entrypoints=web"
+      - "traefik.http.routers.backend.priority=100"
+      - "traefik.http.services.backend.loadbalancer.server.port=80"
+
+  # Laravel Queue Worker
+  queue-worker:
+    build:
+      context: ../backend
+      dockerfile: ../docker/php/Dockerfile
+    container_name: immog-queue-worker
+    restart: unless-stopped
+    working_dir: /var/www/backend
+    command: php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
+    volumes:
+      - ../backend:/var/www/backend
+      - ./php/php.ini:/usr/local/etc/php/php.ini:ro
+    networks:
+      - immog-network
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - APP_ENV=${APP_ENV:-local}
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-immog_redis_secret}
+
+  # Laravel Scheduler (Cron)
+  scheduler:
+    build:
+      context: ../backend
+      dockerfile: ../docker/php/Dockerfile
+    container_name: immog-scheduler
+    restart: unless-stopped
+    working_dir: /var/www/backend
+    command: >
+      sh -c "while true; do
+        php artisan schedule:run --verbose --no-interaction &
+        sleep 60
+      done"
+    volumes:
+      - ../backend:/var/www/backend
+      - ./php/php.ini:/usr/local/etc/php/php.ini:ro
+    networks:
+      - immog-network
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - APP_ENV=${APP_ENV:-local}
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+
+  # MinIO (S3-Compatible Object Storage)
+  minio:
+    image: minio/minio:latest
+    container_name: immog-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-immog_minio}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-immog_minio_secret}
+    volumes:
+      - minio-data:/data
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    networks:
+      - immog-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # n8n (Workflow Automation)
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: immog-n8n
+    restart: unless-stopped
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_USER:-admin}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD:-immog_n8n_secret}
+      - N8N_HOST=${N8N_HOST:-localhost}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5678/
+      - GENERIC_TIMEZONE=Africa/Conakry
+    volumes:
+      - n8n-data:/home/node/.n8n
+    ports:
+      - "${N8N_PORT:-5678}:5678"
+    networks:
+      - immog-network
+
+  # WAHA (WhatsApp HTTP API - Self-hosted)
+  waha:
+    image: devlikeapro/waha:latest
+    container_name: immog-waha
+    restart: unless-stopped
+    environment:
+      - WHATSAPP_HOOK_URL=${WHATSAPP_HOOK_URL:-http://nginx/api/webhooks/whatsapp}
+      - WHATSAPP_HOOK_EVENTS=message,message.any
+      - WAHA_DASHBOARD_ENABLED=true
+      - WHATSAPP_API_KEY="${WAHA_API_KEY}"
+      - WAHA_DASHBOARD_USERNAME=admin
+      - WAHA_DASHBOARD_PASSWORD=admin123
+    ports:
+      - "${WAHA_PORT:-3000}:3000"
+    volumes:
+      - ./waha/.sessions:/app/.sessions
+    networks:
+      - immog-network
+
+  # Laravel Echo Server (Real-time Broadcasting with Socket.IO)
+  laravel-echo:
+    image: oanhnn/laravel-echo-server:latest
+    container_name: immog-laravel-echo
+    restart: unless-stopped
+    volumes:
+      - ./laravel-echo/laravel-echo-server.json:/app/laravel-echo-server.json:ro
+    ports:
+      - "${LARAVEL_ECHO_PORT:-6001}:6001"
+    networks:
+      - immog-network
+    depends_on:
+      - redis
+
+  # Traefik (Reverse Proxy with Auto-SSL)
+  # Note: Ports modifiés pour éviter conflit (8888:80, 8889:443)
+  # En production, utilisez les ports standards 80 et 443
+  traefik:
+    image: traefik:v2.10
+    container_name: immog-traefik
+    restart: unless-stopped
+    command:
+      - "--api.insecure=true"
+      - "--api.dashboard=true"
+      # Disable Docker provider on Windows (socket issues)
+      # - "--providers.docker=true"
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--providers.file.watch=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--log.level=INFO"
+    ports:
+      - "${TRAEFIK_HTTP_PORT:-8888}:80"
+      - "${TRAEFIK_HTTPS_PORT:-8889}:443"
+      - "${TRAEFIK_DASHBOARD_PORT:-8081}:8080"
+    volumes:
+      - ./traefik/letsencrypt:/letsencrypt
+      - ./traefik/dynamic:/etc/traefik/dynamic:ro
+    networks:
+      - immog-network
+
+  # Prometheus (Metrics Collection)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: immog-prometheus
+    restart: unless-stopped
+    volumes:
+      - ../monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    networks:
+      - immog-network
+
+  # Grafana (Metrics Visualization)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: immog-grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-immog_grafana_secret}
+      - GF_INSTALL_PLUGINS=redis-datasource
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ../monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ../monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    networks:
+      - immog-network
+    depends_on:
+      - prometheus
+
+  # PgAdmin (PostgreSQL Management)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: immog-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@immog.gn}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-immog_pgadmin_secret}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - ./pgadmin:/var/lib/pgadmin
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    networks:
+      - immog-network
+    depends_on:
+      - postgres
+
+  # Ollama (Local LLM for Recommendations)
+  # Note: GPU support désactivé (nécessite NVIDIA GPU + drivers WSL)
+  # Pour activer GPU: décommenter la section 'deploy' ci-dessous
+  ollama:
+    image: ollama/ollama:latest
+    container_name: immog-ollama
+    restart: unless-stopped
+    volumes:
+      - ./ollama:/root/.ollama
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+    networks:
+      - immog-network
+    # Décommenter pour activer GPU (nécessite NVIDIA GPU + nvidia-container-toolkit)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]

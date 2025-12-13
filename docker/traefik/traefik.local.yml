@@ -1,0 +1,56 @@
+# ===============================================
+# Traefik v2.10 - LOCAL DEVELOPMENT Configuration
+# No SSL, No redirections
+# ===============================================
+
+# Global configuration
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+
+# API and Dashboard
+api:
+  dashboard: true
+  insecure: true
+  debug: true
+
+# Entry Points
+entryPoints:
+  # HTTP (port 80) - NO redirect to HTTPS
+  web:
+    address: ":80"
+
+  # HTTPS (port 443) - disabled for local dev
+  websecure:
+    address: ":443"
+
+  # Traefik Dashboard (port 8080)
+  traefik:
+    address: ":8080"
+
+# Providers
+providers:
+  # Docker provider
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: immog_immog-network
+    watch: true
+
+  # File provider for additional configuration
+  file:
+    directory: "/etc/traefik/dynamic"
+    watch: true
+
+# Logging
+log:
+  level: DEBUG
+  format: common
+
+# Access Logs
+accessLog:
+  format: common
+
+# Ping endpoint for health checks
+ping:
+  entryPoint: traefik

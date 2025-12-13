@@ -1,0 +1,501 @@
+{
+  "name": "T198 - Nouveau Message Alerts (4 Channels)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "nouveau-message",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-data-valid",
+              "leftValue": "={{ $json.recipient_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "validate-payload",
+      "name": "Validate Payload",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.LARAVEL_API_URL }}/api/users/{{ $json.recipient_id }}/notification-preferences",
+        "options": {
+          "timeout": 10000
+        },
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.API_SERVICE_TOKEN }}"
+            }
+          ]
+        }
+      },
+      "id": "fetch-preferences",
+      "name": "Fetch User Preferences",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [640, 260]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Prepare notification data for all channels\nconst message = $input.item.json;\nconst preferences = $('Fetch User Preferences').first().json;\n\n// Determine which channels to use\nconst channels = [];\n\nif (preferences.push_enabled && preferences.push_tokens?.length > 0) {\n  channels.push('push');\n}\n\nif (preferences.sms_enabled && preferences.phone) {\n  channels.push('sms');\n}\n\nif (preferences.email_enabled && preferences.email) {\n  channels.push('email');\n}\n\nif (preferences.whatsapp_enabled && preferences.whatsapp_phone) {\n  channels.push('whatsapp');\n}\n\n// Prepare notification content\nconst senderName = message.sender_name || 'Un utilisateur';\nconst messagePreview = message.message_preview || 'Nouveau message';\nconst listingTitle = message.listing_title || 'une annonce';\nconst deepLink = message.deep_link || '/dashboard/messagerie';\n\nreturn {\n  json: {\n    ...message,\n    channels,\n    preferences,\n    notification: {\n      title: `Nouveau message de ${senderName}`,\n      body: messagePreview,\n      listing: listingTitle,\n      deep_link: deepLink,\n      timestamp: new Date().toISOString()\n    }\n  }\n};"
+      },
+      "id": "prepare-notifications",
+      "name": "Prepare Notifications",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [840, 260]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-push",
+              "leftValue": "={{ $json.channels.includes('push') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-push-enabled",
+      "name": "Push Enabled?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1040, 140]
+    },
+    {
+      "parameters": {
+        "url": "https://fcm.googleapis.com/fcm/send",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"to\": \"{{ $json.preferences.push_tokens[0] }}\",\n  \"notification\": {\n    \"title\": \"{{ $json.notification.title }}\",\n    \"body\": \"{{ $json.notification.body }}\",\n    \"click_action\": \"{{ $env.FRONTEND_URL }}{{ $json.notification.deep_link }}\"\n  },\n  \"data\": {\n    \"type\": \"new_message\",\n    \"conversation_id\": \"{{ $json.conversation_id }}\",\n    \"message_id\": \"{{ $json.message_id }}\"\n  }\n}",
+        "options": {},
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "key={{ $env.FCM_SERVER_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        }
+      },
+      "id": "send-push",
+      "name": "Send Push Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1260, 80],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-sms",
+              "leftValue": "={{ $json.channels.includes('sms') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-sms-enabled",
+      "name": "SMS Enabled?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1040, 260]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SMS_GATEWAY_URL }}/send",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"to\": \"{{ $json.preferences.phone }}\",\n  \"message\": \"{{ $json.notification.title }}: {{ $json.notification.body }}\",\n  \"sender\": \"ImmoGuinee\"\n}",
+        "options": {},
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.SMS_API_KEY }}"
+            }
+          ]
+        }
+      },
+      "id": "send-sms",
+      "name": "Send SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1260, 220],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-email",
+              "leftValue": "={{ $json.channels.includes('email') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-email-enabled",
+      "name": "Email Enabled?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1040, 380]
+    },
+    {
+      "parameters": {
+        "fromEmail": "notifications@immoguinee.com",
+        "toEmail": "={{ $json.preferences.email }}",
+        "subject": "={{ $json.notification.title }}",
+        "emailType": "html",
+        "html": "=<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"utf-8\">\n  <style>\n    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }\n    .container { max-width: 600px; margin: 0 auto; padding: 20px; }\n    .header { background: #1a56db; color: white; padding: 20px; text-align: center; }\n    .content { padding: 20px; background: #f9fafb; }\n    .message-preview { background: white; border-left: 4px solid #1a56db; padding: 15px; margin: 15px 0; }\n    .button { display: inline-block; background: #1a56db; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 15px; }\n    .footer { text-align: center; color: #6b7280; font-size: 12px; padding: 20px; }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <div class=\"header\">\n      <h1>Nouveau Message</h1>\n    </div>\n    <div class=\"content\">\n      <p>Bonjour {{ $json.preferences.first_name || 'cher utilisateur' }},</p>\n      <p>Vous avez reçu un nouveau message concernant <strong>{{ $json.notification.listing }}</strong>.</p>\n      <div class=\"message-preview\">\n        <strong>{{ $json.sender_name }}</strong><br>\n        {{ $json.notification.body }}\n      </div>\n      <a href=\"{{ $env.FRONTEND_URL }}{{ $json.notification.deep_link }}\" class=\"button\">Voir le message</a>\n    </div>\n    <div class=\"footer\">\n      <p>ImmoGuinée - La plateforme immobilière de confiance</p>\n      <p>Vous recevez cet email car vous avez activé les notifications par email.</p>\n    </div>\n  </div>\n</body>\n</html>",
+        "options": {}
+      },
+      "id": "send-email",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1260, 360],
+      "credentials": {
+        "smtp": {
+          "id": "smtp-credentials",
+          "name": "SMTP Credentials"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-whatsapp",
+              "leftValue": "={{ $json.channels.includes('whatsapp') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-whatsapp-enabled",
+      "name": "WhatsApp Enabled?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1040, 500]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.WAHA_URL }}/api/sendText",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chatId\": \"{{ $json.preferences.whatsapp_phone }}@c.us\",\n  \"text\": \"📩 *Nouveau message sur ImmoGuinée*\\n\\nDe: {{ $json.sender_name }}\\nAnnonce: {{ $json.notification.listing }}\\n\\n💬 {{ $json.notification.body }}\\n\\n👉 Répondre: {{ $env.FRONTEND_URL }}{{ $json.notification.deep_link }}\",\n  \"session\": \"default\"\n}",
+        "options": {},
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Api-Key",
+              "value": "={{ $env.WAHA_API_KEY }}"
+            }
+          ]
+        }
+      },
+      "id": "send-whatsapp",
+      "name": "Send WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1260, 500],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Log notification results\nconst results = {\n  message_id: $input.item.json.message_id,\n  recipient_id: $input.item.json.recipient_id,\n  channels_attempted: $input.item.json.channels,\n  timestamp: new Date().toISOString(),\n  status: 'completed'\n};\n\nreturn { json: results };"
+      },
+      "id": "log-results",
+      "name": "Log Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1480, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "error"
+            },
+            {
+              "name": "message",
+              "value": "Invalid payload - missing recipient_id"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "error-response",
+      "name": "Error Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [640, 380]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Validate Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Payload": {
+      "main": [
+        [
+          {
+            "node": "Fetch User Preferences",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch User Preferences": {
+      "main": [
+        [
+          {
+            "node": "Prepare Notifications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Notifications": {
+      "main": [
+        [
+          {
+            "node": "Push Enabled?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "SMS Enabled?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Email Enabled?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "WhatsApp Enabled?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Push Enabled?": {
+      "main": [
+        [
+          {
+            "node": "Send Push Notification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "SMS Enabled?": {
+      "main": [
+        [
+          {
+            "node": "Send SMS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Email Enabled?": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "WhatsApp Enabled?": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Send Push Notification": {
+      "main": [
+        [
+          {
+            "node": "Log Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send SMS": {
+      "main": [
+        [
+          {
+            "node": "Log Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [
+          {
+            "node": "Log Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Log Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "messaging",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "notifications",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "versionId": "1"
+}

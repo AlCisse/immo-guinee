@@ -1,0 +1,107 @@
+# ===============================================
+# Production Configuration - Cloudflare SSL
+# ===============================================
+
+http:
+  routers:
+    # Frontend (Next.js)
+    frontend-secure:
+      rule: "Host(`immoguinee.gn`) || Host(`www.immoguinee.gn`)"
+      entryPoints:
+        - websecure
+      service: frontend
+      tls: {}
+      middlewares:
+        - security-headers
+        - compress
+        - www-redirect
+      priority: 1
+
+    # Backend API
+    backend-secure:
+      rule: "(Host(`immoguinee.gn`) || Host(`www.immoguinee.gn`)) && PathPrefix(`/api`)"
+      entryPoints:
+        - websecure
+      service: backend
+      tls: {}
+      middlewares:
+        - security-headers
+        - api-ratelimit
+      priority: 100
+
+    # Storage (MinIO) - for images
+    storage-secure:
+      rule: "(Host(`immoguinee.gn`) || Host(`www.immoguinee.gn`)) && PathPrefix(`/storage`)"
+      entryPoints:
+        - websecure
+      service: backend
+      tls: {}
+      priority: 50
+
+  services:
+    frontend:
+      loadBalancer:
+        servers:
+          - url: "http://frontend:3005"
+        healthCheck:
+          path: /
+          interval: "30s"
+          timeout: "5s"
+
+    backend:
+      loadBalancer:
+        servers:
+          - url: "http://nginx:80"
+        healthCheck:
+          path: /api/health
+          interval: "30s"
+          timeout: "5s"
+
+  middlewares:
+    # Redirect www to non-www
+    www-redirect:
+      redirectRegex:
+        regex: "^https://www\\.(.*)"
+        replacement: "https://${1}"
+        permanent: true
+
+    # Security headers
+    security-headers:
+      headers:
+        stsSeconds: 31536000
+        stsIncludeSubdomains: true
+        stsPreload: true
+        forceSTSHeader: true
+        contentTypeNosniff: true
+        browserXssFilter: true
+        referrerPolicy: "strict-origin-when-cross-origin"
+        customFrameOptionsValue: "SAMEORIGIN"
+        customResponseHeaders:
+          X-Powered-By: ""
+          Server: ""
+
+    # Compression
+    compress:
+      compress:
+        excludedContentTypes:
+          - "text/event-stream"
+
+    # API Rate limiting
+    api-ratelimit:
+      rateLimit:
+        average: 100
+        burst: 200
+        period: 1m
+
+# TLS Configuration for Cloudflare
+tls:
+  options:
+    default:
+      minVersion: VersionTLS12
+      cipherSuites:
+        - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+        - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+        - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
+        - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305

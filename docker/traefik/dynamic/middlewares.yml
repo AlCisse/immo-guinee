@@ -1,0 +1,119 @@
+# ===============================================
+# Traefik Dynamic Configuration - Middlewares
+# Security headers, rate limiting, compression
+# ===============================================
+
+http:
+  middlewares:
+    # Security Headers
+    security-headers:
+      headers:
+        frameDeny: true
+        browserXssFilter: true
+        contentTypeNosniff: true
+        forceSTSHeader: true
+        stsIncludeSubdomains: true
+        stsPreload: true
+        stsSeconds: 31536000
+        customFrameOptionsValue: "SAMEORIGIN"
+        customRequestHeaders:
+          X-Forwarded-Proto: "https"
+        customResponseHeaders:
+          X-Frame-Options: "SAMEORIGIN"
+          X-Content-Type-Options: "nosniff"
+          X-XSS-Protection: "1; mode=block"
+          Referrer-Policy: "strict-origin-when-cross-origin"
+          Permissions-Policy: "geolocation=(self), microphone=(), camera=()"
+
+    # CORS Headers
+    cors-headers:
+      headers:
+        accessControlAllowMethods:
+          - "GET"
+          - "POST"
+          - "PUT"
+          - "PATCH"
+          - "DELETE"
+          - "OPTIONS"
+        accessControlAllowOriginList:
+          - "https://immoguinee.gn"
+          - "https://www.immoguinee.gn"
+          - "https://api.immoguinee.gn"
+        accessControlAllowHeaders:
+          - "Content-Type"
+          - "Authorization"
+          - "X-Requested-With"
+          - "Accept"
+          - "Origin"
+        accessControlAllowCredentials: true
+        accessControlMaxAge: 3600
+
+    # Compression
+    gzip-compression:
+      compress:
+        excludedContentTypes:
+          - "image/jpeg"
+          - "image/png"
+          - "image/webp"
+          - "video/mp4"
+
+    # Rate Limiting - API General
+    rate-limit-api:
+      rateLimit:
+        average: 100
+        period: "1m"
+        burst: 50
+
+    # Rate Limiting - Auth Endpoints
+    rate-limit-auth:
+      rateLimit:
+        average: 10
+        period: "1m"
+        burst: 5
+
+    # Rate Limiting - Search
+    rate-limit-search:
+      rateLimit:
+        average: 200
+        period: "1m"
+        burst: 100
+
+    # Circuit Breaker
+    circuit-breaker:
+      circuitBreaker:
+        expression: "NetworkErrorRatio() > 0.30 || ResponseCodeRatio(500, 600, 0, 600) > 0.25"
+        checkPeriod: "30s"
+        fallbackDuration: "10s"
+        recoveryDuration: "30s"
+
+    # Retry
+    retry-policy:
+      retry:
+        attempts: 3
+        initialInterval: "100ms"
+
+    # IP Whitelist (Admin endpoints)
+    admin-whitelist:
+      ipWhiteList:
+        sourceRange:
+          - "127.0.0.1/32"
+          - "10.0.0.0/8"
+          - "172.16.0.0/12"
+          - "192.168.0.0/16"
+
+    # Redirect to HTTPS
+    redirect-to-https:
+      redirectScheme:
+        scheme: https
+        permanent: true
+
+    # Strip prefix
+    strip-api-prefix:
+      stripPrefix:
+        prefixes:
+          - "/api"
+
+    # Add prefix
+    add-api-prefix:
+      addPrefix:
+        prefix: "/api"

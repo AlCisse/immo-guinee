@@ -1,0 +1,34 @@
+# Docker volumes et données générées
+*.log
+*.pid
+
+# Environment files avec secrets
+.env
+*.local
+
+# Données PostgreSQL
+postgres/data/
+pgadmin/storage/
+pgadmin/sessions/
+pgadmin/azurecredentialcache/
+
+# Certificats SSL
+traefik/letsencrypt/*.json
+traefik/letsencrypt/*.pem
+!traefik/letsencrypt/.gitkeep
+
+# Ollama models
+ollama/*.bin
+ollama/models/
+
+# WAHA sessions
+waha/.sessions/*
+!waha/.sessions/.gitkeep
+
+# Redis dumps
+*.rdb
+*.aof
+
+# Logs
+**/logs/
+**/*.log

@@ -1,0 +1,493 @@
+{
+  "name": "ImmoGuinée - Escrow Timeout Checker",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Every Hour",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.IMMOGUINEE_API_URL }}/api/payments/escrow/pending",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": false
+            }
+          }
+        }
+      },
+      "id": "fetch-escrow-payments",
+      "name": "Fetch Escrow Payments",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "immoguinee-credentials",
+          "name": "ImmoGuinée API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.data?.length || 0 }}",
+              "operation": "largerEqual",
+              "value2": 1
+            }
+          ]
+        }
+      },
+      "id": "has-payments",
+      "name": "Has Pending Payments?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "id": "split-payments",
+      "name": "Split Payments",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [850, 200]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Check if payment escrow period has expired (48h)\nconst payment = $input.item.json;\nconst escrowStartDate = new Date(payment.date_paiement || payment.created_at);\nconst now = new Date();\nconst hoursDiff = (now - escrowStartDate) / (1000 * 60 * 60);\n\n// 48h escrow period\nconst ESCROW_HOURS = 48;\n\nreturn {\n  json: {\n    ...payment,\n    hours_in_escrow: Math.floor(hoursDiff),\n    is_expired: hoursDiff >= ESCROW_HOURS,\n    hours_remaining: Math.max(0, Math.ceil(ESCROW_HOURS - hoursDiff)),\n    should_release: hoursDiff >= ESCROW_HOURS && payment.statut_paiement === 'escrow',\n    should_remind: hoursDiff >= 24 && hoursDiff < 48 && !payment.reminder_sent\n  }\n};"
+      },
+      "id": "check-expiry",
+      "name": "Check Escrow Expiry",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1050, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.should_release }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "should-release",
+      "name": "Should Release?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1250, 100]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.should_remind }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "should-remind",
+      "name": "Should Remind?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.IMMOGUINEE_API_URL }}/api/payments/{{ $json.id }}/release",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"reason\": \"escrow_timeout\",\n  \"hours_in_escrow\": {{ $json.hours_in_escrow }},\n  \"auto_release\": true\n}"
+      },
+      "id": "release-funds",
+      "name": "Release Funds",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1500, 0],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "immoguinee-credentials",
+          "name": "ImmoGuinée API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Prepare notification for auto-released payment\nconst payment = $input.item.json;\n\nreturn {\n  json: {\n    event_type: 'escrow_released',\n    payment_id: payment.id,\n    payment_reference: payment.reference_paiement,\n    montant_total: payment.montant_total,\n    montant_loyer: payment.montant_loyer,\n    montant_caution: payment.montant_caution,\n    listing_titre: payment.contrat?.listing?.titre,\n    proprietaire: payment.beneficiaire,\n    locataire: payment.payeur,\n    auto_released: true,\n    channels: ['sms', 'email', 'push']\n  }\n};"
+      },
+      "id": "prepare-release-notification",
+      "name": "Prepare Release Notification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1700, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.N8N_WEBHOOK_URL }}/payment-notification",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}"
+      },
+      "id": "trigger-release-notification",
+      "name": "Trigger Release Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1900, 0]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Prepare 24h reminder notification\nconst payment = $input.item.json;\nconst formatAmount = (amount) => amount?.toLocaleString('fr-GN') + ' GNF';\n\nreturn {\n  json: {\n    payment_id: payment.id,\n    payment_reference: payment.reference_paiement,\n    hours_remaining: payment.hours_remaining,\n    \n    // Proprietaire notification\n    proprietaire_email: payment.beneficiaire?.email,\n    proprietaire_phone: payment.beneficiaire?.telephone,\n    proprietaire_name: payment.beneficiaire?.nom_complet,\n    \n    // Message content\n    subject: `Rappel: Fonds en séquestre - ${payment.reference_paiement}`,\n    message: `Les fonds (${formatAmount(payment.montant_loyer + payment.montant_caution)}) seront automatiquement libérés dans ${payment.hours_remaining}h si vous ne signalez pas de problème.`,\n    \n    listing_titre: payment.contrat?.listing?.titre,\n    validation_url: `${$env.FRONTEND_URL}/payments/${payment.id}/validate`\n  }\n};"
+      },
+      "id": "prepare-reminder",
+      "name": "Prepare 24h Reminder",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1500, 250]
+    },
+    {
+      "parameters": {
+        "fromEmail": "paiements@immoguinee.com",
+        "toEmail": "={{ $json.proprietaire_email }}",
+        "subject": "={{ $json.subject }}",
+        "text": "=Bonjour {{ $json.proprietaire_name }},\n\n⏰ Rappel: {{ $json.message }}\n\n🏠 Bien: {{ $json.listing_titre }}\n📋 Référence: {{ $json.payment_reference }}\n\nSi tout est conforme, vous n'avez rien à faire. Les fonds seront automatiquement crédités.\n\nSi vous avez un problème, signalez-le maintenant: {{ $json.validation_url }}\n\nL'équipe ImmoGuinée"
+      },
+      "id": "send-reminder-email",
+      "name": "Send Reminder Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1700, 200],
+      "credentials": {
+        "smtp": {
+          "id": "smtp-credentials",
+          "name": "SMTP Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.TWILIO_API_URL }}/Messages.json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "twilioApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "To",
+              "value": "={{ $json.proprietaire_phone }}"
+            },
+            {
+              "name": "From",
+              "value": "={{ $env.TWILIO_PHONE_NUMBER }}"
+            },
+            {
+              "name": "Body",
+              "value": "=ImmoGuinée: Rappel - {{ $json.message }} Réf: {{ $json.payment_reference }}"
+            }
+          ]
+        }
+      },
+      "id": "send-reminder-sms",
+      "name": "Send Reminder SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1700, 350],
+      "credentials": {
+        "twilioApi": {
+          "id": "twilio-credentials",
+          "name": "Twilio Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.IMMOGUINEE_API_URL }}/api/payments/{{ $json.payment_id }}/mark-reminded",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth"
+      },
+      "id": "mark-reminded",
+      "name": "Mark as Reminded",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1900, 275],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "immoguinee-credentials",
+          "name": "ImmoGuinée API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Log summary\nconst now = new Date();\nreturn {\n  json: {\n    timestamp: now.toISOString(),\n    message: 'Escrow check completed',\n    status: 'no_pending_payments'\n  }\n};"
+      },
+      "id": "log-no-payments",
+      "name": "Log No Payments",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 400]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "check_completed"
+            }
+          ]
+        }
+      },
+      "id": "finalize",
+      "name": "Finalize",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [2100, 300]
+    }
+  ],
+  "connections": {
+    "Every Hour": {
+      "main": [
+        [
+          {
+            "node": "Fetch Escrow Payments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Escrow Payments": {
+      "main": [
+        [
+          {
+            "node": "Has Pending Payments?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Pending Payments?": {
+      "main": [
+        [
+          {
+            "node": "Split Payments",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log No Payments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Payments": {
+      "main": [
+        [
+          {
+            "node": "Check Escrow Expiry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Escrow Expiry": {
+      "main": [
+        [
+          {
+            "node": "Should Release?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Should Remind?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Release?": {
+      "main": [
+        [
+          {
+            "node": "Release Funds",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Should Remind?": {
+      "main": [
+        [
+          {
+            "node": "Prepare 24h Reminder",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Release Funds": {
+      "main": [
+        [
+          {
+            "node": "Prepare Release Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Release Notification": {
+      "main": [
+        [
+          {
+            "node": "Trigger Release Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Release Notification": {
+      "main": [
+        [
+          {
+            "node": "Finalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare 24h Reminder": {
+      "main": [
+        [
+          {
+            "node": "Send Reminder Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Reminder SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Reminder Email": {
+      "main": [
+        [
+          {
+            "node": "Mark as Reminded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Reminder SMS": {
+      "main": [
+        [
+          {
+            "node": "Mark as Reminded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark as Reminded": {
+      "main": [
+        [
+          {
+            "node": "Finalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log No Payments": {
+      "main": [
+        [
+          {
+            "node": "Finalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Africa/Conakry"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "payments",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "updatedAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "escrow",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "updatedAt": "2025-01-01T00:00:00.000Z"
+    },
+    {
+      "name": "cron",
+      "createdAt": "2025-01-01T00:00:00.000Z",
+      "updatedAt": "2025-01-01T00:00:00.000Z"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2025-01-01T00:00:00.000Z",
+  "versionId": "1"
+}
