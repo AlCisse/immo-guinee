@@ -1,0 +1,159 @@
+{
+  "listings": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0,
+      "analysis": {
+        "analyzer": {
+          "french_analyzer": {
+            "type": "standard",
+            "stopwords": "_french_"
+          },
+          "autocomplete_analyzer": {
+            "type": "custom",
+            "tokenizer": "standard",
+            "filter": ["lowercase", "autocomplete_filter"]
+          },
+          "autocomplete_search_analyzer": {
+            "type": "custom",
+            "tokenizer": "standard",
+            "filter": ["lowercase"]
+          }
+        },
+        "filter": {
+          "autocomplete_filter": {
+            "type": "edge_ngram",
+            "min_gram": 2,
+            "max_gram": 10
+          }
+        }
+      }
+    },
+    "mappings": {
+      "properties": {
+        "id": {
+          "type": "keyword"
+        },
+        "titre": {
+          "type": "text",
+          "analyzer": "french_analyzer",
+          "fields": {
+            "autocomplete": {
+              "type": "text",
+              "analyzer": "autocomplete_analyzer",
+              "search_analyzer": "autocomplete_search_analyzer"
+            },
+            "keyword": {
+              "type": "keyword"
+            }
+          }
+        },
+        "description": {
+          "type": "text",
+          "analyzer": "french_analyzer"
+        },
+        "type_propriete": {
+          "type": "keyword"
+        },
+        "type_transaction": {
+          "type": "keyword"
+        },
+        "prix": {
+          "type": "long"
+        },
+        "caution_mois": {
+          "type": "integer"
+        },
+        "surface_m2": {
+          "type": "float"
+        },
+        "nombre_chambres": {
+          "type": "integer"
+        },
+        "nombre_salles_bain": {
+          "type": "integer"
+        },
+        "meuble": {
+          "type": "boolean"
+        },
+        "equipements": {
+          "type": "keyword"
+        },
+        "commune": {
+          "type": "keyword"
+        },
+        "quartier": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword"
+            }
+          }
+        },
+        "adresse_complete": {
+          "type": "text",
+          "analyzer": "french_analyzer"
+        },
+        "geolocalisation": {
+          "type": "geo_point"
+        },
+        "latitude": {
+          "type": "float"
+        },
+        "longitude": {
+          "type": "float"
+        },
+        "statut": {
+          "type": "keyword"
+        },
+        "badge_premium": {
+          "type": "boolean"
+        },
+        "badge_urgent": {
+          "type": "boolean"
+        },
+        "nombre_vues": {
+          "type": "integer"
+        },
+        "nombre_contacts": {
+          "type": "integer"
+        },
+        "disponible_a_partir_de": {
+          "type": "date"
+        },
+        "date_expiration": {
+          "type": "date"
+        },
+        "created_at": {
+          "type": "date"
+        },
+        "updated_at": {
+          "type": "date"
+        },
+        "proprietaire": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "keyword"
+            },
+            "prenom": {
+              "type": "text"
+            },
+            "nom": {
+              "type": "text"
+            },
+            "badge": {
+              "type": "keyword"
+            },
+            "telephone_verifie": {
+              "type": "boolean"
+            },
+            "identite_verifiee": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    }
+  }
+}
