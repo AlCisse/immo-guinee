@@ -379,7 +379,7 @@ export default function ClientHomePage() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                     placeholder="Quartier, ville..."
-                    className="min-w-0 flex-1 py-3 sm:py-4 bg-transparent text-neutral-900 dark:text-white placeholder:text-neutral-200 focus:outline-none text-sm sm:text-base rounded-r-lg border border-neutral-200 dark:border-neutral-700"
+                    className="min-w-0 flex-1 py-3 sm:py-4 bg-transparent text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none text-sm sm:text-base rounded-r-lg border border-neutral-200 dark:border-neutral-700"
                   />
                 </div>
                 <motion.button
