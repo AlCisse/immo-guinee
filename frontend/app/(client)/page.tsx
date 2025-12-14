@@ -1,33 +1,32 @@
 'use client';
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import Link from 'next/link';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api/client';
 import { CONAKRY_COMMUNES } from '@/lib/data/communes';
+import { useQuery } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 import {
-  Search,
-  MapPin,
-  Home,
-  Building2,
-  Store,
-  Briefcase,
-  ChevronRight,
-  Heart,
-  Zap,
-  Shield,
-  Clock,
   ArrowRight,
-  Play,
-  Sparkles,
-  Users,
-  Phone,
-  Star,
+  Briefcase,
+  Building2,
+  ChevronRight,
+  Clock,
+  Heart,
+  Home,
   Loader2,
+  MapPin,
+  Phone,
+  Play,
+  Search,
+  Shield,
+  Star,
+  Store,
+  Users,
+  Zap
 } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 interface Listing {
   id: string;
@@ -163,9 +162,8 @@ function PropertyCard({ property }: { property: Listing }) {
             className="absolute top-3 right-3 p-2.5 bg-white/90 dark:bg-dark-card/90 backdrop-blur-sm rounded-full shadow-lg z-10"
           >
             <Heart
-              className={`w-5 h-5 transition-colors ${
-                isFavorite ? 'fill-red-500 text-red-500' : 'text-neutral-600'
-              }`}
+              className={`w-5 h-5 transition-colors ${isFavorite ? 'fill-red-500 text-red-500' : 'text-neutral-600'
+                }`}
             />
           </motion.button>
 
@@ -351,21 +349,19 @@ export default function ClientHomePage() {
               <div className="inline-flex bg-white/10 backdrop-blur-sm rounded-full p-1">
                 <button
                   onClick={() => setSearchType('location')}
-                  className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                    searchType === 'location'
+                  className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${searchType === 'location'
                       ? 'bg-white text-primary-600 shadow-md'
                       : 'text-white hover:bg-white/10'
-                  }`}
+                    }`}
                 >
                   Location
                 </button>
                 <button
                   onClick={() => setSearchType('achat')}
-                  className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-                    searchType === 'achat'
+                  className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${searchType === 'achat'
                       ? 'bg-white text-primary-600 shadow-md'
                       : 'text-white hover:bg-white/10'
-                  }`}
+                    }`}
                 >
                   Achat
                 </button>
@@ -373,26 +369,27 @@ export default function ClientHomePage() {
             </div>
 
             {/* Search Input */}
-            <div className="bg-white dark:bg-dark-card rounded-2xl shadow-2xl p-1">
-              <div className="flex items-center gap-2">
-                <div className="flex-1 flex items-center gap-3 px-4 bg-neutral-50 dark:bg-dark-bg rounded-xl">
-                  <Search className="w-5 h-5 text-neutral-400" />
+            <div className="bg-white dark:bg-gray-card rounded-2xl shadow-2xl p-1">
+              <div className="flex items-center gap-1 sm:gap-2">
+                <div className="flex-1 flex items-center gap-2 sm:gap-3 px-3 sm:px-4 bg-white dark:bg-neutral-800 rounded-xl">
+                  <Search className="w-4 h-4 sm:w-5 sm:h-5 text-neutral-400 shrink-0" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    placeholder="Quartier, ville ou type de bien..."
-                    className="w-full py-4 bg-transparent text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none text-lg rounded-xl"
+                    placeholder="Quartier, ville..."
+                    className="min-w-0 flex-1 py-3 sm:py-4 bg-transparent text-neutral-900 dark:text-white placeholder:text-neutral-200 focus:outline-none text-sm sm:text-base rounded-r-lg border border-neutral-200 dark:border-neutral-700"
                   />
                 </div>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleSearch}
-                  className="px-8 py-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors"
+                  className="p-3 sm:px-8 sm:py-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors shrink-0"
                 >
-                  Rechercher
+                  <Search className="w-5 h-5 sm:hidden" />
+                  <span className="hidden sm:inline">Rechercher</span>
                 </motion.button>
               </div>
             </div>
@@ -657,7 +654,7 @@ export default function ClientHomePage() {
                   className="flex items-center gap-3 px-6 py-3 bg-neutral-900 dark:bg-white dark:text-neutral-900 text-white rounded-xl"
                 >
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
                   </svg>
                   <div className="text-left">
                     <p className="text-[10px] opacity-80">Telecharger sur</p>

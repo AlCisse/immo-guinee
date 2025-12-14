@@ -1,10 +1,19 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense, lazy } from 'react';
 import { AuthProvider } from '@/lib/auth/AuthContext';
 import NavigationProgress from '@/components/ui/NavigationProgress';
+
+// Only import devtools in development - using lazy import to avoid including in production bundle
+const ReactQueryDevtools =
+  process.env.NODE_ENV === 'development'
+    ? lazy(() =>
+        import('@tanstack/react-query-devtools').then((mod) => ({
+          default: mod.ReactQueryDevtools,
+        }))
+      )
+    : () => null;
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -20,6 +29,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
       })
   );
 
+  // Only render devtools on client to avoid hydration mismatch
+  const [showDevtools, setShowDevtools] = useState(false);
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      setShowDevtools(true);
+    }
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
@@ -28,8 +45,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
         </Suspense>
         {children}
       </AuthProvider>
-      {process.env.NODE_ENV === 'development' && (
-        <ReactQueryDevtools initialIsOpen={false} />
+      {showDevtools && (
+        <Suspense fallback={null}>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </Suspense>
       )}
     </QueryClientProvider>
   );

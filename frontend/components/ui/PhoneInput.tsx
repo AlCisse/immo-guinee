@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Phone, Search } from 'lucide-react';
 import { clsx } from 'clsx';
+import { ChevronDown, Phone, Search } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 export interface Country {
   code: string;
@@ -225,55 +225,65 @@ export default function PhoneInput({
   return (
     <div className={clsx('relative', className)} ref={dropdownRef}>
       <div className={clsx(
-        'flex items-stretch rounded-xl border-2 transition-all overflow-hidden',
+        'flex items-stretch rounded-xl overflow-hidden bg-white dark:bg-white-card',
         error
-          ? 'border-red-500 focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500/20'
-          : 'border-neutral-200 dark:border-dark-border focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-500/20'
+          ? 'ring-1 ring-red-300 focus-within:ring-2 focus-within:ring-red-400'
+          : 'ring-1 ring-gray-200 dark:ring-neutral-700 focus-within:ring-2 focus-within:ring-primary-400'
       )}>
         {/* Country Selector */}
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2 px-3 py-3 bg-neutral-50 dark:bg-dark-hover border-r border-neutral-200 dark:border-dark-border hover:bg-neutral-100 dark:hover:bg-dark-border transition-colors min-w-[120px]"
+          className={clsx(
+            'flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3',
+            'bg-white dark:bg-dark-card',
+            'hover:bg-gray-50 dark:hover:bg-neutral-800',
+            'transition-colors min-w-[105px] sm:min-w-[115px]',
+            'border-r',
+            error ? 'border-red-300' : 'border-gray-200 dark:border-neutral-700'
+          )}
         >
-          <span className="text-xl">{selectedCountry.flag}</span>
-          <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+          <span className="text-lg sm:text-xl">{selectedCountry.flag}</span>
+          <span className="text-sm font-medium text-neutral-700 dark:text-neutral-200">
             {selectedCountry.dialCode}
           </span>
           <ChevronDown className={clsx(
-            'w-4 h-4 text-neutral-400 transition-transform',
+            'w-3.5 h-3.5 text-gray-400 transition-transform ml-auto',
             isOpen && 'rotate-180'
           )} />
         </button>
 
         {/* Phone Number Input */}
-        <div className="flex-1 flex items-center">
-          <Phone className="w-4 h-4 text-neutral-400 ml-3" />
+        <div className="flex items-center gap-2.5 px-3 sm:px-4">
+          <Phone className="w-4 h-4 shrink-0 text-gray-400 dark:text-gray-500" />
           <input
             ref={inputRef}
             type="tel"
+            inputMode="numeric"
+            autoComplete="tel"
             value={phoneNumber}
             onChange={handlePhoneChange}
             placeholder={placeholder}
             required={required}
-            className="flex-1 px-3 py-3 bg-white dark:bg-dark-card text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none"
+            aria-label="Numéro de téléphone"
+            className="flex-1 py-2.5 sm:py-3 bg-transparent text-neutral-900 dark:text-white placeholder:text-gray-400 focus:outline-none text-base"
           />
         </div>
       </div>
 
       {/* Country Dropdown */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-dark-card rounded-xl border border-neutral-200 dark:border-dark-border shadow-xl z-50 max-h-80 overflow-hidden">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-dark-card rounded-xl ring-1 ring-gray-200 dark:ring-neutral-700 shadow-xl z-50 max-h-80 overflow-hidden">
           {/* Search */}
-          <div className="p-3 border-b border-neutral-200 dark:border-dark-border">
+          <div className="p-3 border-b border-gray-200 dark:border-neutral-700">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Rechercher un pays..."
-                className="w-full pl-10 pr-4 py-2 bg-neutral-50 dark:bg-dark-hover border border-neutral-200 dark:border-dark-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 text-neutral-900 dark:text-white"
+                className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-dark-card ring-1 ring-gray-200 dark:ring-neutral-700 rounded-xl text-sm text-neutral-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-400 transition-all"
                 autoFocus
               />
             </div>
@@ -282,7 +292,7 @@ export default function PhoneInput({
           {/* Country List */}
           <div className="max-h-60 overflow-y-auto">
             {filteredCountries.length === 0 ? (
-              <div className="p-4 text-center text-neutral-500 text-sm">
+              <div className="p-4 text-center text-gray-400 text-sm">
                 Aucun pays trouvé
               </div>
             ) : (
@@ -292,17 +302,16 @@ export default function PhoneInput({
                   type="button"
                   onClick={() => handleCountrySelect(country)}
                   className={clsx(
-                    'w-full flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors text-left',
+                    'w-full flex items-center gap-3 px-4 py-3 text-left transition-colors',
+                    'hover:bg-gray-50 dark:hover:bg-neutral-800',
                     selectedCountry.code === country.code && 'bg-primary-50 dark:bg-primary-500/10'
                   )}
                 >
                   <span className="text-xl">{country.flag}</span>
-                  <div className="flex-1">
-                    <span className="text-sm font-medium text-neutral-900 dark:text-white">
-                      {country.name}
-                    </span>
-                  </div>
-                  <span className="text-sm text-neutral-500">
+                  <span className="flex-1 text-sm font-medium text-neutral-900 dark:text-white">
+                    {country.name}
+                  </span>
+                  <span className="text-sm text-gray-400">
                     {country.dialCode}
                   </span>
                 </button>
@@ -314,7 +323,7 @@ export default function PhoneInput({
 
       {/* Error Message */}
       {error && (
-        <p className="mt-1 text-sm text-red-500">{error}</p>
+        <p className="mt-1.5 text-sm text-red-500 dark:text-red-400">{error}</p>
       )}
     </div>
   );
