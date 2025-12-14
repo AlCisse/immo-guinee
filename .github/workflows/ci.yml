@@ -71,6 +71,9 @@ jobs:
           key: ${{ runner.os }}-composer-${{ hashFiles('backend/composer.lock') }}
           restore-keys: ${{ runner.os }}-composer-
 
+      - name: Create bootstrap/cache directory
+        run: mkdir -p bootstrap/cache && chmod -R 775 bootstrap/cache
+
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --no-interaction
 
@@ -172,6 +175,7 @@ jobs:
       - name: Audit PHP dependencies
         working-directory: backend
         run: |
+          mkdir -p bootstrap/cache && chmod -R 775 bootstrap/cache
           composer install --prefer-dist --no-progress --no-interaction
           composer audit
         continue-on-error: true
@@ -200,7 +204,9 @@ jobs:
 
       - name: Install PHP dependencies
         working-directory: backend
-        run: composer install --prefer-dist --no-progress --no-interaction
+        run: |
+          mkdir -p bootstrap/cache && chmod -R 775 bootstrap/cache
+          composer install --prefer-dist --no-progress --no-interaction
 
       - name: Run PHPStan (static analysis)
         working-directory: backend
