@@ -1,0 +1,98 @@
+# ==============================================
+# ImmoGuinée Frontend - Docker Ignore (Production)
+# ==============================================
+
+# Dependencies (seront installées dans le build)
+node_modules/
+.pnp
+.pnp.js
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Next.js (seront regénérés dans le build)
+.next/
+out/
+.swc/
+.turbo/
+
+# Build outputs
+build/
+dist/
+
+# Environment (variables injectées via Docker)
+.env
+.env.*
+!.env.example
+
+# Testing
+coverage/
+.nyc_output/
+jest.config.*
+__tests__/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+cypress/
+e2e/
+
+# TypeScript cache
+*.tsbuildinfo
+next-env.d.ts
+
+# IDE & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+*~
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docker (éviter récursion)
+Dockerfile*
+.dockerignore
+docker-compose*.yml
+
+# Documentation
+*.md
+docs/
+
+# OS Files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Vercel (pas utilisé en self-hosted)
+.vercel/
+
+# Storybook
+.storybook/
+storybook-static/
+
+# PWA generated files (seront regénérés)
+public/sw.js
+public/workbox-*.js
+public/worker-*.js
+public/fallback-*.js
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Development only
+.eslintcache
+.stylelintcache
+
+# Examples & Mocks
+public/exemple_web/
+mocks/

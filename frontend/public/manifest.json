@@ -1,0 +1,28 @@
+{
+  "name": "ImmoGuinée - Plateforme Immobilière",
+  "short_name": "ImmoGuinée",
+  "description": "Trouvez votre logement idéal en Guinée",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#F97316",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["business", "lifestyle"],
+  "lang": "fr",
+  "dir": "ltr",
+  "prefer_related_applications": false
+}

@@ -1,0 +1,94 @@
+# ==============================================
+# ImmoGuinée Backend - Docker Ignore (Production)
+# ==============================================
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE & Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*.swn
+*~
+.DS_Store
+
+# Environment (utiliser les variables Docker)
+.env
+.env.*
+!.env.example
+
+# Laravel Development
+storage/logs/*
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/framework/testing/*
+bootstrap/cache/*
+.phpunit.result.cache
+.phpunit.cache
+phpunit.xml
+.php-cs-fixer.cache
+
+# Symlink qui cause des problèmes
+public/storage
+
+# Tests (exclure en production)
+tests/
+phpunit.xml
+.phpunit.result.cache
+
+# Documentation
+*.md
+docs/
+CHANGELOG*
+
+# Docker files (éviter récursion)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Vendor dev dependencies (optionnel, composer install --no-dev)
+# vendor/
+
+# Fichiers temporaires
+*.tmp
+*.temp
+*.cache
+*.log
+
+# Node (si présent)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+
+# OS Files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Backups
+*.sql
+*.sql.gz
+*.backup
+
+# Clés privées (JAMAIS dans l'image)
+*.key
+*.pem
+oauth-private.key
+oauth-public.key
+storage/*.key
+
+# Development files
+Homestead.json
+Homestead.yaml
+auth.json
+_ide_helper*
+.phpstorm.meta.php
+
+# Seeds de test
+seedTest/
+database/seeders/test/

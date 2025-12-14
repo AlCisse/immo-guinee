@@ -1,0 +1,12 @@
+node_modules/
+.next/
+out/
+build/
+dist/
+public/sw.js
+public/workbox-*.js
+*.min.js
+*.min.css
+package-lock.json
+pnpm-lock.yaml
+yarn.lock

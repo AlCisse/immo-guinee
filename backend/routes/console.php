@@ -1,0 +1,73 @@
+<?php
+
+use Illuminate\Foundation\Inspiring;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
+
+Artisan::command('inspire', function () {
+    $this->comment(Inspiring::quote());
+})->purpose('Display an inspiring quote')->hourly();
+
+/*
+|--------------------------------------------------------------------------
+| Console Schedule
+|--------------------------------------------------------------------------
+|
+| Here you may define all of your scheduled commands. These commands will
+| run automatically according to the schedule defined below.
+|
+*/
+
+// Check escrow timeouts every hour (FR-045)
+Schedule::command('escrow:check-timeouts')->hourly();
+
+// Send rent payment reminders 3 days before due date (FR-049)
+Schedule::command('rent:send-reminders --days=3')->dailyAt('09:00');
+
+// Process pending document verifications (FR-054)
+Schedule::command('verifications:process --limit=20')->everyFiveMinutes();
+
+// Clean up expired listings after 90 days
+Schedule::command('listings:clean-expired --days=90')->daily();
+
+// Generate daily analytics report (FR-084)
+Schedule::command('analytics:generate daily')->dailyAt('00:30');
+
+// Generate weekly analytics report
+Schedule::command('analytics:generate weekly')->weekly()->mondays()->at('01:00');
+
+// Generate monthly analytics report
+Schedule::command('analytics:generate monthly')->monthlyOn(1, '02:00');
+
+// Generate sitemap for SEO (FR-027)
+Schedule::command('sitemap:generate')->daily();
+
+// Backup database daily at 3 AM (FR-086)
+Schedule::command('db:backup --compress')->dailyAt('03:00');
+
+// Auto-expire listings after 30 days (FR-013)
+Schedule::command('listings:expire')->daily();
+
+// Clean up expired OTP codes
+Schedule::command('otp:cleanup')->hourly();
+
+// Sync Elasticsearch index
+Schedule::command('scout:import')->hourly();
+
+// Generate monthly reports
+Schedule::command('reports:generate')->monthlyOn(1, '00:00');
+
+// Clean up old contracts (archive after 10 years - FR-032)
+Schedule::command('contracts:archive')->yearly();
+
+// Verify contract integrity weekly (detect tampering/corruption)
+Schedule::command('contracts:verify-integrity --all')->weekly()->sundays()->at('04:00');
+
+// Daily integrity check for recently archived contracts
+Schedule::command('contracts:verify-integrity --all')
+    ->daily()
+    ->at('05:00')
+    ->when(function () {
+        // Only run if there are contracts archived in the last 7 days
+        return \App\Models\IntegrityAudit::where('archived_at', '>=', now()->subDays(7))->exists();
+    });
