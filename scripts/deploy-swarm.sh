@@ -49,15 +49,15 @@ build_images() {
     echo -e "${YELLOW}Building Docker images...${NC}"
     cd "$PROJECT_DIR"
 
-    # Build frontend
+    # Build frontend (--no-cache to force rebuild)
     echo -e "${YELLOW}Building frontend image...${NC}"
-    docker build -t immoguinee/frontend:latest \
+    docker build --no-cache -t immoguinee/frontend:latest \
         --build-arg NEXT_PUBLIC_API_URL=/api \
         -f frontend/Dockerfile frontend/
 
-    # Build PHP
+    # Build PHP (--no-cache to force rebuild)
     echo -e "${YELLOW}Building PHP image...${NC}"
-    docker build -t immoguinee/php:latest \
+    docker build --no-cache -t immoguinee/php:latest \
         -f docker/php/Dockerfile backend/
 
     echo -e "${GREEN}Images built successfully${NC}"
@@ -105,14 +105,15 @@ update_frontend() {
     cd "$PROJECT_DIR"
     git pull
 
-    # Build new image
-    docker build -t immoguinee/frontend:latest \
+    # Build new image (--no-cache to force rebuild)
+    docker build --no-cache -t immoguinee/frontend:latest \
         --build-arg NEXT_PUBLIC_API_URL=/api \
         -f frontend/Dockerfile frontend/
 
     # Update service (rolling update - zero downtime)
     docker service update \
         --image immoguinee/frontend:latest \
+        --force \
         --update-parallelism 1 \
         --update-delay 30s \
         --update-failure-action rollback \
@@ -130,13 +131,14 @@ update_backend() {
     cd "$PROJECT_DIR"
     git pull
 
-    # Build new image
-    docker build -t immoguinee/php:latest \
+    # Build new image (--no-cache to force rebuild)
+    docker build --no-cache -t immoguinee/php:latest \
         -f docker/php/Dockerfile backend/
 
     # Update PHP service
     docker service update \
         --image immoguinee/php:latest \
+        --force \
         --update-parallelism 1 \
         --update-delay 10s \
         --update-failure-action rollback \
@@ -145,11 +147,13 @@ update_backend() {
     # Update queue worker
     docker service update \
         --image immoguinee/php:latest \
+        --force \
         "${STACK_NAME}_queue-worker"
 
     # Update scheduler
     docker service update \
         --image immoguinee/php:latest \
+        --force \
         "${STACK_NAME}_scheduler"
 
     echo -e "${GREEN}Backend updated${NC}"
