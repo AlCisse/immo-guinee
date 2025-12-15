@@ -21,13 +21,18 @@ docker/grafana/
 docker/pgadmin/
 docker/ollama/
 docker/traefik/letsencrypt/
+docker/traefik/certs/*.crt
+docker/traefik/certs/*.key
+!docker/traefik/certs/.gitkeep
 docker/waha/.sessions/
+docker/.env
 
 # ============================================
 # Backups
 # ============================================
 backups/*.sql
 backups/*.sql.gz
+backend/storage/app/backups/
 *.backup
 
 # ============================================

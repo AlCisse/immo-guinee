@@ -1,0 +1,13 @@
+# This directory contains SSL certificates for production
+#
+# Required files:
+# - immoguinee.crt  (Cloudflare Origin Certificate)
+# - immoguinee.key  (Private Key)
+#
+# To generate these certificates:
+# 1. Go to Cloudflare Dashboard > SSL/TLS > Origin Server
+# 2. Create Certificate
+# 3. Copy the certificate to immoguinee.crt
+# 4. Copy the private key to immoguinee.key
+#
+# IMPORTANT: Never commit the actual certificate files to git!

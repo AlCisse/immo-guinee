@@ -1,0 +1,75 @@
+# ===============================================
+# Production Configuration - immoguinee.com
+# Cloudflare Origin SSL with Full (strict) mode
+# ===============================================
+
+http:
+  routers:
+    # Frontend (Next.js) - HTTPS
+    frontend-secure:
+      rule: "Host(`immoguinee.com`) || Host(`www.immoguinee.com`)"
+      entryPoints:
+        - websecure
+      service: frontend
+      tls: {}
+      middlewares:
+        - compress
+      priority: 1
+
+    # Backend API - HTTPS
+    backend-secure:
+      rule: "(Host(`immoguinee.com`) || Host(`www.immoguinee.com`)) && PathPrefix(`/api`)"
+      entryPoints:
+        - websecure
+      service: backend
+      tls: {}
+      middlewares:
+        - api-ratelimit
+      priority: 100
+
+    # Storage - HTTPS
+    storage-secure:
+      rule: "(Host(`immoguinee.com`) || Host(`www.immoguinee.com`)) && PathPrefix(`/storage`)"
+      entryPoints:
+        - websecure
+      service: backend
+      tls: {}
+      priority: 50
+
+    # HTTP to HTTPS redirect
+    http-redirect:
+      rule: "Host(`immoguinee.com`) || Host(`www.immoguinee.com`)"
+      entryPoints:
+        - web
+      middlewares:
+        - https-redirect
+      service: frontend
+      priority: 1
+
+  services:
+    frontend:
+      loadBalancer:
+        servers:
+          - url: "http://frontend:3005"
+
+    backend:
+      loadBalancer:
+        servers:
+          - url: "http://nginx:80"
+
+  middlewares:
+    compress:
+      compress:
+        excludedContentTypes:
+          - "text/event-stream"
+
+    api-ratelimit:
+      rateLimit:
+        average: 100
+        burst: 200
+        period: 1m
+
+    https-redirect:
+      redirectScheme:
+        scheme: https
+        permanent: true
