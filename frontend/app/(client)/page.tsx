@@ -386,9 +386,10 @@ export default function ClientHomePage() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleSearch}
-                  className="px-8 py-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors shrink-0"
+                  className="p-4 md:px-8 md:py-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors shrink-0"
                 >
-                  Rechercher
+                  <Search className="w-5 h-5 md:hidden" />
+                  <span className="hidden md:inline">Rechercher</span>
                 </motion.button>
               </div>
             </div>
