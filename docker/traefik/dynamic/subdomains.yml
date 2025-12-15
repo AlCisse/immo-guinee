@@ -1,0 +1,128 @@
+# ===============================================
+# Subdomains Configuration - immoguinee.com
+# Routes for n8n, waha, grafana, minio
+# ===============================================
+
+http:
+  routers:
+    # n8n (Workflow Automation) - automate.immoguinee.com
+    n8n-secure:
+      rule: "Host(`automate.immoguinee.com`)"
+      entryPoints:
+        - websecure
+      service: n8n
+      tls: {}
+      priority: 100
+
+    n8n-http:
+      rule: "Host(`automate.immoguinee.com`)"
+      entryPoints:
+        - web
+      middlewares:
+        - https-redirect
+      service: n8n
+      priority: 1
+
+    # WAHA (WhatsApp API) - waha.immoguinee.com
+    waha-secure:
+      rule: "Host(`waha.immoguinee.com`)"
+      entryPoints:
+        - websecure
+      service: waha
+      tls: {}
+      priority: 100
+
+    waha-http:
+      rule: "Host(`waha.immoguinee.com`)"
+      entryPoints:
+        - web
+      middlewares:
+        - https-redirect
+      service: waha
+      priority: 1
+
+    # Grafana (Monitoring) - monitoring.immoguinee.com
+    grafana-secure:
+      rule: "Host(`monitoring.immoguinee.com`)"
+      entryPoints:
+        - websecure
+      service: grafana
+      tls: {}
+      priority: 100
+
+    grafana-http:
+      rule: "Host(`monitoring.immoguinee.com`)"
+      entryPoints:
+        - web
+      middlewares:
+        - https-redirect
+      service: grafana
+      priority: 1
+
+    # MinIO Console - minio.immoguinee.com
+    minio-secure:
+      rule: "Host(`minio.immoguinee.com`)"
+      entryPoints:
+        - websecure
+      service: minio-console
+      tls: {}
+      priority: 100
+
+    minio-http:
+      rule: "Host(`minio.immoguinee.com`)"
+      entryPoints:
+        - web
+      middlewares:
+        - https-redirect
+      service: minio-console
+      priority: 1
+
+    # Traefik Dashboard - traefik.immoguinee.com
+    traefik-secure:
+      rule: "Host(`traefik.immoguinee.com`)"
+      entryPoints:
+        - websecure
+      service: traefik-dashboard
+      tls: {}
+      priority: 100
+
+    traefik-http:
+      rule: "Host(`traefik.immoguinee.com`)"
+      entryPoints:
+        - web
+      middlewares:
+        - https-redirect
+      service: traefik-dashboard
+      priority: 1
+
+  services:
+    n8n:
+      loadBalancer:
+        servers:
+          - url: "http://n8n:5678"
+
+    waha:
+      loadBalancer:
+        servers:
+          - url: "http://waha:3000"
+
+    grafana:
+      loadBalancer:
+        servers:
+          - url: "http://grafana:3000"
+
+    minio-console:
+      loadBalancer:
+        servers:
+          - url: "http://minio:9001"
+
+    traefik-dashboard:
+      loadBalancer:
+        servers:
+          - url: "http://traefik:8080"
+
+  middlewares:
+    https-redirect:
+      redirectScheme:
+        scheme: https
+        permanent: true
