@@ -58,14 +58,18 @@ WORKDIR /var/www/backend
 # Copy composer files first (for better layer caching)
 COPY backend/composer.json backend/composer.lock ./
 
+# Create bootstrap/cache directory BEFORE composer install
+RUN mkdir -p bootstrap/cache && chmod -R 775 bootstrap/cache
+
 # Install dependencies (production)
 RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
 
 # Copy application code
 COPY backend/ .
 
-# Run post-install scripts
-RUN composer run-script post-autoload-dump
+# Run post-install scripts (bootstrap/cache must exist)
+RUN mkdir -p bootstrap/cache && chmod -R 775 bootstrap/cache \
+    && composer run-script post-autoload-dump
 
 # Copy custom PHP configuration
 COPY docker/php/php.ini /usr/local/etc/php/php.ini
