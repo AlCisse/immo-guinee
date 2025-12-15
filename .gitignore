@@ -26,6 +26,8 @@ docker/traefik/certs/*.key
 !docker/traefik/certs/.gitkeep
 docker/waha/.sessions/
 docker/.env
+# Laravel Echo server config (contains Redis password - each environment has its own)
+docker/laravel-echo/laravel-echo-server.json
 
 # ============================================
 # Backups
