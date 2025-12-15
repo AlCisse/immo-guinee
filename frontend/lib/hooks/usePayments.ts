@@ -233,7 +233,7 @@ export function isPaymentPending(status: string): boolean {
   return ['en_attente', 'en_cours'].includes(status);
 }
 
-export function canValidatePayment(payment: Payment, userId: string): boolean {
+export function canValidatePayment(payment: Payment, _userId: string): boolean {
   return (
     payment.statut_paiement === 'escrow' &&
     payment.beneficiaire?.nom_complet !== undefined
