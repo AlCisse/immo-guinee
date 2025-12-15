@@ -345,6 +345,7 @@ services:
     volumes:
       - ./traefik/letsencrypt:/letsencrypt
       - ./traefik/dynamic:/etc/traefik/dynamic:ro
+      - ./traefik/certs:/certs:ro
     networks:
       - immog-network
 

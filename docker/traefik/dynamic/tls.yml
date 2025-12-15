@@ -1,0 +1,14 @@
+# ===============================================
+# TLS Certificate Configuration
+# Uses Cloudflare Origin Certificate
+# ===============================================
+
+tls:
+  certificates:
+    - certFile: /certs/immoguinee.crt
+      keyFile: /certs/immoguinee.key
+  stores:
+    default:
+      defaultCertificate:
+        certFile: /certs/immoguinee.crt
+        keyFile: /certs/immoguinee.key
