@@ -50,8 +50,8 @@ http:
     frontend:
       loadBalancer:
         servers:
-          # Port 3000 for production standalone build
-          - url: "http://frontend:3000"
+          # Container: immog-frontend, Port 3000 (standalone build)
+          - url: "http://immog-frontend:3000"
 
     backend:
       loadBalancer:
