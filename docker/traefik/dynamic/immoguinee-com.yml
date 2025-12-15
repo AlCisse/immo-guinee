@@ -1,6 +1,7 @@
 # ===============================================
 # Production Configuration - immoguinee.com
 # Cloudflare Origin SSL with Full (strict) mode
+# Works with both Docker Compose and Docker Swarm
 # ===============================================
 
 http:
@@ -47,12 +48,13 @@ http:
       priority: 1
 
   services:
+    # Frontend service - uses hostname 'frontend' (Swarm service name)
     frontend:
       loadBalancer:
         servers:
-          # Container: immog-frontend, Port 3000 (standalone build)
-          - url: "http://immog-frontend:3000"
+          - url: "http://frontend:3000"
 
+    # Backend service - uses hostname 'nginx'
     backend:
       loadBalancer:
         servers:
