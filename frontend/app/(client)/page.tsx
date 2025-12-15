@@ -369,27 +369,26 @@ export default function ClientHomePage() {
             </div>
 
             {/* Search Input */}
-            <div className="bg-white dark:bg-gray-card rounded-2xl shadow-2xl p-1">
-              <div className="flex items-center gap-1 sm:gap-2">
-                <div className="flex-1 flex items-center gap-2 sm:gap-3 px-3 sm:px-4 bg-white dark:bg-neutral-800 rounded-xl">
-                  <Search className="w-4 h-4 sm:w-5 sm:h-5 text-neutral-400 shrink-0" />
+            <div className="bg-white dark:bg-dark-card rounded-2xl shadow-2xl p-1">
+              <div className="flex items-center gap-2">
+                <div className="flex-1 flex items-center gap-3 px-4 bg-neutral-50 dark:bg-dark-bg rounded-xl">
+                  <Search className="w-5 h-5 text-neutral-400" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    placeholder="Quartier, ville..."
-                    className="min-w-0 flex-1 py-3 sm:py-4 bg-transparent text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none text-sm sm:text-base rounded-r-lg border border-neutral-200 dark:border-neutral-700"
+                    placeholder="Quartier, ville ou type de bien..."
+                    className="w-full py-4 bg-transparent text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none text-base"
                   />
                 </div>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleSearch}
-                  className="p-3 sm:px-8 sm:py-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors shrink-0"
+                  className="px-8 py-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors shrink-0"
                 >
-                  <Search className="w-5 h-5 sm:hidden" />
-                  <span className="hidden sm:inline">Rechercher</span>
+                  Rechercher
                 </motion.button>
               </div>
             </div>
