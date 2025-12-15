@@ -350,8 +350,8 @@ export default function ClientHomePage() {
                 <button
                   onClick={() => setSearchType('location')}
                   className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${searchType === 'location'
-                      ? 'bg-white text-primary-600 shadow-md'
-                      : 'text-white hover:bg-white/10'
+                    ? 'bg-white text-primary-600 shadow-md'
+                    : 'text-white hover:bg-white/10'
                     }`}
                 >
                   Location
@@ -359,8 +359,8 @@ export default function ClientHomePage() {
                 <button
                   onClick={() => setSearchType('achat')}
                   className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${searchType === 'achat'
-                      ? 'bg-white text-primary-600 shadow-md'
-                      : 'text-white hover:bg-white/10'
+                    ? 'bg-white text-primary-600 shadow-md'
+                    : 'text-white hover:bg-white/10'
                     }`}
                 >
                   Achat
@@ -379,7 +379,7 @@ export default function ClientHomePage() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                     placeholder="Quartier, ville ou type de bien..."
-                    className="w-full py-4 bg-transparent text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none text-base"
+                    className="flex-1 py-3 sm:py-4 bg-transparent text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none text-sm sm:text-base border-neutral-200 dark:border-neutral-700"
                   />
                 </div>
                 <motion.button
