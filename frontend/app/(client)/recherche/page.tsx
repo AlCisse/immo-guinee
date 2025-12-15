@@ -555,11 +555,37 @@ function SearchContent() {
     const transaction = searchParams.get('type_transaction');
     const premium = searchParams.get('premium');
 
-    if (q) setSearchQuery(q);
     if (type) setSelectedType(type);
     if (quartier) setSelectedQuartier(quartier);
     if (commune) setSelectedCommune(commune);
     if (transaction) setTransactionType(transaction as 'LOCATION' | 'VENTE');
+
+    // Check if 'q' matches a known quartier - if so, use it as quartier filter
+    if (q && !quartier) {
+      const normalizedQ = normalizeString(q);
+      const matchedQuartier = CONAKRY_QUARTIERS.find(
+        qr => normalizeString(qr.name) === normalizedQ ||
+              normalizeString(qr.name).includes(normalizedQ) ||
+              normalizedQ.includes(normalizeString(qr.name))
+      );
+
+      if (matchedQuartier) {
+        // It's a quartier - set as quartier filter
+        setSelectedQuartier(matchedQuartier.name);
+        setSelectedCommune(matchedQuartier.commune);
+        setSearchQuery(''); // Clear search query since we're using quartier filter
+        // Update URL to use quartier param instead of q
+        const newParams = new URLSearchParams(searchParams.toString());
+        newParams.delete('q');
+        newParams.set('quartier', matchedQuartier.name);
+        newParams.set('commune', matchedQuartier.commune);
+        router.replace(`/recherche?${newParams.toString()}`, { scroll: false });
+      } else {
+        setSearchQuery(q);
+      }
+    } else if (q) {
+      setSearchQuery(q);
+    }
   }, []);
 
   const activeFiltersCount = [
