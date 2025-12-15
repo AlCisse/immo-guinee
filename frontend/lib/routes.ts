@@ -12,10 +12,6 @@ import {
   Settings,
   HelpCircle,
   FileText,
-  Shield,
-  LogOut,
-  Plus,
-  Bell,
   LayoutDashboard,
 } from 'lucide-react';
 
