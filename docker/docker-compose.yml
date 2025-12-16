@@ -143,6 +143,7 @@ services:
     environment:
       - APP_ENV=${APP_ENV:-production}
       - APP_DEBUG=${APP_DEBUG:-false}
+      - APP_KEY=${APP_KEY}
       - DB_CONNECTION=pgsql
       - DB_HOST=postgres
       - DB_PORT=5432
@@ -192,6 +193,7 @@ services:
       - ./php/php.ini:/usr/local/etc/php/php.ini:ro
     environment:
       - APP_ENV=${APP_ENV:-production}
+      - APP_KEY=${APP_KEY}
       - DB_CONNECTION=pgsql
       - DB_HOST=postgres
       - DB_DATABASE=${DB_DATABASE:-immog_db}
@@ -223,6 +225,7 @@ services:
       - ./php/php.ini:/usr/local/etc/php/php.ini:ro
     environment:
       - APP_ENV=${APP_ENV:-production}
+      - APP_KEY=${APP_KEY}
       - DB_CONNECTION=pgsql
       - DB_HOST=postgres
       - DB_DATABASE=${DB_DATABASE:-immog_db}
