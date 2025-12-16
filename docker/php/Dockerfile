@@ -57,13 +57,11 @@ RUN pecl install imagick \
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copy existing application directory (if exists)
-COPY . /var/www/backend
+# Copy backend application directory
+COPY backend /var/www/backend
 
-# Install Composer dependencies if composer.json exists (ignore platform requirements)
-RUN if [ -f "composer.json" ]; then \
-        composer install --optimize-autoloader --no-interaction --ignore-platform-reqs --no-scripts; \
-    fi
+# Install Composer dependencies
+RUN composer install --optimize-autoloader --no-interaction --ignore-platform-reqs --no-scripts
 
 # Create necessary directories (only if not exists)
 RUN mkdir -p /var/www/backend/storage/framework/{sessions,views,cache} \

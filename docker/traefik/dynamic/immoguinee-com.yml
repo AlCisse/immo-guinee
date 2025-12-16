@@ -48,17 +48,17 @@ http:
       priority: 1
 
   services:
-    # Frontend service - uses hostname 'frontend' (Swarm service name)
+    # Frontend service - Docker Swarm service name
     frontend:
       loadBalancer:
         servers:
-          - url: "http://frontend:3000"
+          - url: "http://immog_frontend:3000"
 
-    # Backend service - uses hostname 'nginx'
+    # Backend service - Docker Swarm service name
     backend:
       loadBalancer:
         servers:
-          - url: "http://nginx:80"
+          - url: "http://immog_nginx:80"
 
   middlewares:
     compress:

@@ -1,6 +1,7 @@
 # ===============================================
 # Subdomains Configuration - immoguinee.com
-# Routes for n8n, waha, grafana, minio
+# Routes for admin tools: n8n, waha, grafana, minio, pgadmin
+# Docker Swarm service names use immog_ prefix
 # ===============================================
 
 http:
@@ -77,6 +78,24 @@ http:
       service: minio-console
       priority: 1
 
+    # pgAdmin (Database Admin) - pgadmin.immoguinee.com
+    pgadmin-secure:
+      rule: "Host(`pgadmin.immoguinee.com`)"
+      entryPoints:
+        - websecure
+      service: pgadmin
+      tls: {}
+      priority: 100
+
+    pgadmin-http:
+      rule: "Host(`pgadmin.immoguinee.com`)"
+      entryPoints:
+        - web
+      middlewares:
+        - https-redirect
+      service: pgadmin
+      priority: 1
+
     # Traefik Dashboard - traefik.immoguinee.com
     traefik-secure:
       rule: "Host(`traefik.immoguinee.com`)"
@@ -95,31 +114,60 @@ http:
       service: traefik-dashboard
       priority: 1
 
+    # Prometheus - prometheus.immoguinee.com
+    prometheus-secure:
+      rule: "Host(`prometheus.immoguinee.com`)"
+      entryPoints:
+        - websecure
+      service: prometheus
+      tls: {}
+      priority: 100
+
+    prometheus-http:
+      rule: "Host(`prometheus.immoguinee.com`)"
+      entryPoints:
+        - web
+      middlewares:
+        - https-redirect
+      service: prometheus
+      priority: 1
+
   services:
+    # All services use Docker Swarm naming: immog_<service>
     n8n:
       loadBalancer:
         servers:
-          - url: "http://n8n:5678"
+          - url: "http://immog_n8n:5678"
 
     waha:
       loadBalancer:
         servers:
-          - url: "http://waha:3000"
+          - url: "http://immog_waha:3000"
 
     grafana:
       loadBalancer:
         servers:
-          - url: "http://grafana:3000"
+          - url: "http://immog_grafana:3000"
 
     minio-console:
       loadBalancer:
         servers:
-          - url: "http://minio:9001"
+          - url: "http://immog_minio:9001"
+
+    pgadmin:
+      loadBalancer:
+        servers:
+          - url: "http://immog_pgadmin:80"
+
+    prometheus:
+      loadBalancer:
+        servers:
+          - url: "http://immog_prometheus:9090"
 
     traefik-dashboard:
       loadBalancer:
         servers:
-          - url: "http://traefik:8080"
+          - url: "http://immog_traefik:8080"
 
   middlewares:
     https-redirect:
