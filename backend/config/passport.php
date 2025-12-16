@@ -1,5 +1,15 @@
 <?php
 
+// Read key from Docker secret file or env variable
+$getKey = function (string $secretPath, string $envVar): ?string {
+    // Try Docker secret first
+    if (file_exists($secretPath)) {
+        return trim(file_get_contents($secretPath));
+    }
+    // Fall back to environment variable
+    return env($envVar);
+};
+
 return [
 
     /*
@@ -23,12 +33,13 @@ return [
     | Passport uses encryption keys while generating secure access tokens for
     | your application. By default, the keys are stored as local files but
     | can be set via environment variables when that is more convenient.
+    | In Docker Swarm, keys are read from /run/secrets/.
     |
     */
 
-    'private_key' => env('PASSPORT_PRIVATE_KEY'),
+    'private_key' => $getKey('/run/secrets/passport_private_key', 'PASSPORT_PRIVATE_KEY'),
 
-    'public_key' => env('PASSPORT_PUBLIC_KEY'),
+    'public_key' => $getKey('/run/secrets/passport_public_key', 'PASSPORT_PUBLIC_KEY'),
 
     /*
     |--------------------------------------------------------------------------
