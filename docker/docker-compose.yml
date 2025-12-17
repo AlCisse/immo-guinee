@@ -17,6 +17,20 @@ secrets:
     external: true
   passport_public_key:
     external: true
+  db_password:
+    external: true
+  redis_password:
+    external: true
+  minio_password:
+    external: true
+  grafana_password:
+    external: true
+  pgadmin_password:
+    external: true
+  waha_password:
+    external: true
+  waha_api_key:
+    external: true
 
 volumes:
   postgres-data:
@@ -35,10 +49,12 @@ services:
   postgres:
     image: postgis/postgis:15-3.4
     hostname: postgres
+    secrets:
+      - db_password
     environment:
       POSTGRES_DB: ${DB_DATABASE:-immog_db}
       POSTGRES_USER: ${DB_USERNAME:-immog_user}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-REDACTED_DB_PASSWORD}
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
       POSTGRES_INITDB_ARGS: "-E UTF8"
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
@@ -64,7 +80,9 @@ services:
   redis:
     image: redis:7-alpine
     hostname: redis
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-immog_redis_secret}
+    secrets:
+      - redis_password
+    command: sh -c 'redis-server --appendonly yes --requirepass "$$(cat /run/secrets/redis_password)"'
     volumes:
       - redis-data:/data
     networks:
@@ -74,7 +92,7 @@ services:
       restart_policy:
         condition: on-failure
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-immog_redis_secret}", "ping"]
+      test: ["CMD-SHELL", "redis-cli -a $$(cat /run/secrets/redis_password) ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -149,6 +167,8 @@ services:
     secrets:
       - passport_private_key
       - passport_public_key
+      - db_password
+      - redis_password
     environment:
       - APP_ENV=${APP_ENV:-production}
       - APP_DEBUG=${APP_DEBUG:-false}
@@ -158,9 +178,9 @@ services:
       - DB_PORT=5432
       - DB_DATABASE=${DB_DATABASE:-immog_db}
       - DB_USERNAME=${DB_USERNAME:-immog_user}
-      - DB_PASSWORD=${DB_PASSWORD:-REDACTED_DB_PASSWORD}
+      - DB_PASSWORD_FILE=/run/secrets/db_password
       - REDIS_HOST=redis
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-immog_redis_secret}
+      - REDIS_PASSWORD_FILE=/run/secrets/redis_password
       - REDIS_PORT=6379
       - ELASTICSEARCH_HOST=elasticsearch
       - ELASTICSEARCH_PORT=9200
@@ -200,6 +220,9 @@ services:
     command: php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
     volumes:
       - ./php/php.ini:/usr/local/etc/php/php.ini:ro
+    secrets:
+      - db_password
+      - redis_password
     environment:
       - APP_ENV=${APP_ENV:-production}
       - APP_KEY=${APP_KEY}
@@ -207,9 +230,9 @@ services:
       - DB_HOST=postgres
       - DB_DATABASE=${DB_DATABASE:-immog_db}
       - DB_USERNAME=${DB_USERNAME:-immog_user}
-      - DB_PASSWORD=${DB_PASSWORD:-REDACTED_DB_PASSWORD}
+      - DB_PASSWORD_FILE=/run/secrets/db_password
       - REDIS_HOST=redis
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-immog_redis_secret}
+      - REDIS_PASSWORD_FILE=/run/secrets/redis_password
     networks:
       - immog-network
     deploy:
@@ -232,6 +255,9 @@ services:
       done"
     volumes:
       - ./php/php.ini:/usr/local/etc/php/php.ini:ro
+    secrets:
+      - db_password
+      - redis_password
     environment:
       - APP_ENV=${APP_ENV:-production}
       - APP_KEY=${APP_KEY}
@@ -239,9 +265,9 @@ services:
       - DB_HOST=postgres
       - DB_DATABASE=${DB_DATABASE:-immog_db}
       - DB_USERNAME=${DB_USERNAME:-immog_user}
-      - DB_PASSWORD=${DB_PASSWORD:-REDACTED_DB_PASSWORD}
+      - DB_PASSWORD_FILE=/run/secrets/db_password
       - REDIS_HOST=redis
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-immog_redis_secret}
+      - REDIS_PASSWORD_FILE=/run/secrets/redis_password
     networks:
       - immog-network
     deploy:
@@ -260,9 +286,11 @@ services:
     image: minio/minio:latest
     hostname: minio
     command: server /data --console-address ":9001"
+    secrets:
+      - minio_password
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-immog_minio}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-immog_minio_secret}
+      MINIO_ROOT_PASSWORD_FILE: /run/secrets/minio_password
     volumes:
       - minio-data:/data
     networks:
@@ -301,14 +329,17 @@ services:
   waha:
     image: devlikeapro/waha:latest
     hostname: waha
+    secrets:
+      - waha_password
+      - waha_api_key
     environment:
       - WHATSAPP_HOOK_URL=${WHATSAPP_HOOK_URL:-http://nginx/api/webhooks/waha}
       - WHATSAPP_HOOK_EVENTS=message,message.any,message.ack,session.status
       - WAHA_DASHBOARD_ENABLED=true
-      - WAHA_API_KEY=${WAHA_API_KEY:-}
-      - WHATSAPP_API_KEY=${WAHA_API_KEY:-}
+      - WAHA_API_KEY_FILE=/run/secrets/waha_api_key
+      - WHATSAPP_API_KEY_FILE=/run/secrets/waha_api_key
       - WAHA_DASHBOARD_USERNAME=admin
-      - WAHA_DASHBOARD_PASSWORD=${WAHA_DASHBOARD_PASSWORD:-admin123}
+      - WAHA_DASHBOARD_PASSWORD_FILE=/run/secrets/waha_password
     volumes:
       - ./waha/.sessions:/app/.sessions
     networks:
@@ -342,8 +373,10 @@ services:
     environment:
       - DOCKER_API_VERSION=1.46
     command:
-      - "--api.insecure=true"
+      # SECURITY: API secured via Traefik dynamic config, not exposed on port 8080
+      - "--api=true"
       - "--api.dashboard=true"
+      - "--api.insecure=false"
       - "--providers.swarm=true"
       - "--providers.swarm.exposedbydefault=false"
       - "--providers.swarm.network=immog_immog-network"
@@ -353,14 +386,12 @@ services:
       - "--entrypoints.websecure.address=:443"
       - "--log.level=INFO"
     ports:
+      # SECURITY: Only ports 80 and 443 exposed, 8080 removed
       - target: 80
         published: 80
         mode: host
       - target: 443
         published: 443
-        mode: host
-      - target: 8080
-        published: 8080
         mode: host
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -416,9 +447,11 @@ services:
   grafana:
     image: grafana/grafana:latest
     hostname: grafana
+    secrets:
+      - grafana_password
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-immog_grafana_secret}
+      - GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana_password
       - GF_INSTALL_PLUGINS=redis-datasource
     volumes:
       - grafana-data:/var/lib/grafana
@@ -436,9 +469,11 @@ services:
   pgadmin:
     image: dpage/pgadmin4:latest
     hostname: pgadmin
+    secrets:
+      - pgadmin_password
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@immog.gn}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-immog_pgadmin_secret}
+      PGADMIN_DEFAULT_PASSWORD_FILE: /run/secrets/pgadmin_password
       PGADMIN_CONFIG_SERVER_MODE: 'False'
     volumes:
       - ./pgadmin:/var/lib/pgadmin

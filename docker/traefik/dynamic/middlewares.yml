@@ -101,6 +101,14 @@ http:
           - "172.16.0.0/12"
           - "192.168.0.0/16"
 
+    # Basic Auth for Admin Services (admin / REDACTED_ADMIN_PASSWORD)
+    admin-auth:
+      basicAuth:
+        users:
+          - "admin:REDACTED_HASH"
+        realm: "ImmoGuinee Admin"
+        removeHeader: true
+
     # Redirect to HTTPS
     redirect-to-https:
       redirectScheme:
