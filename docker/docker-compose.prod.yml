@@ -82,16 +82,16 @@ services:
         - "traefik.http.routers.n8n.tls=true"
         - "traefik.http.services.n8n.loadbalancer.server.port=5678"
 
-  # WAHA - Production with external port for webhooks
+  # WAHA - Production (port 3000 REMOVED, access via Traefik only with BasicAuth)
   waha:
-    ports:
-      - "3000:3000"
+    # SECURITY: No direct port exposure, access only through Traefik reverse proxy
     deploy:
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.waha.rule=Host(`waha.immoguinee.com`)"
         - "traefik.http.routers.waha.entrypoints=websecure"
         - "traefik.http.routers.waha.tls=true"
+        - "traefik.http.routers.waha.middlewares=admin-auth@file"
         - "traefik.http.services.waha.loadbalancer.server.port=3000"
 
   # Grafana - Production
@@ -114,16 +114,17 @@ services:
         - "traefik.http.routers.minio.tls=true"
         - "traefik.http.services.minio.loadbalancer.server.port=9001"
 
-  # Traefik - Production ports (80/443)
+  # Traefik - Production ports (80/443 only, 8080 REMOVED for security)
   traefik:
     ports:
       - "80:80"
       - "443:443"
-      - "8080:8080"
     deploy:
       labels:
         - "traefik.enable=true"
+        # Dashboard accessible ONLY via traefik.immoguinee.com with BasicAuth
         - "traefik.http.routers.traefik.rule=Host(`traefik.immoguinee.com`)"
         - "traefik.http.routers.traefik.entrypoints=websecure"
         - "traefik.http.routers.traefik.tls=true"
         - "traefik.http.routers.traefik.service=api@internal"
+        - "traefik.http.routers.traefik.middlewares=admin-auth@file"

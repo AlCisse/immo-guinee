@@ -2,17 +2,21 @@
 # Subdomains Configuration - immoguinee.com
 # Routes for admin tools: n8n, waha, grafana, minio, pgadmin
 # Docker Swarm service names use immog_ prefix
+# SECURED: All admin UIs require BasicAuth (admin-auth middleware)
 # ===============================================
 
 http:
   routers:
     # n8n (Workflow Automation) - automate.immoguinee.com
+    # SECURED with admin-auth middleware
     n8n-secure:
       rule: "Host(`automate.immoguinee.com`)"
       entryPoints:
         - websecure
       service: n8n
       tls: {}
+      middlewares:
+        - admin-auth@file
       priority: 100
 
     n8n-http:
@@ -25,12 +29,15 @@ http:
       priority: 1
 
     # WAHA (WhatsApp API) - waha.immoguinee.com
+    # SECURED with admin-auth middleware
     waha-secure:
       rule: "Host(`waha.immoguinee.com`)"
       entryPoints:
         - websecure
       service: waha
       tls: {}
+      middlewares:
+        - admin-auth@file
       priority: 100
 
     waha-http:
@@ -43,12 +50,15 @@ http:
       priority: 1
 
     # Grafana (Monitoring) - monitoring.immoguinee.com
+    # SECURED with admin-auth middleware
     grafana-secure:
       rule: "Host(`monitoring.immoguinee.com`)"
       entryPoints:
         - websecure
       service: grafana
       tls: {}
+      middlewares:
+        - admin-auth@file
       priority: 100
 
     grafana-http:
@@ -61,12 +71,15 @@ http:
       priority: 1
 
     # MinIO Console - minio.immoguinee.com
+    # SECURED with admin-auth middleware
     minio-secure:
       rule: "Host(`minio.immoguinee.com`)"
       entryPoints:
         - websecure
       service: minio-console
       tls: {}
+      middlewares:
+        - admin-auth@file
       priority: 100
 
     minio-http:
@@ -79,12 +92,15 @@ http:
       priority: 1
 
     # pgAdmin (Database Admin) - pgadmin.immoguinee.com
+    # SECURED with admin-auth middleware
     pgadmin-secure:
       rule: "Host(`pgadmin.immoguinee.com`)"
       entryPoints:
         - websecure
       service: pgadmin
       tls: {}
+      middlewares:
+        - admin-auth@file
       priority: 100
 
     pgadmin-http:
@@ -97,12 +113,15 @@ http:
       priority: 1
 
     # Traefik Dashboard - traefik.immoguinee.com
+    # SECURED with admin-auth middleware
     traefik-secure:
       rule: "Host(`traefik.immoguinee.com`)"
       entryPoints:
         - websecure
       service: traefik-dashboard
       tls: {}
+      middlewares:
+        - admin-auth@file
       priority: 100
 
     traefik-http:
@@ -115,12 +134,15 @@ http:
       priority: 1
 
     # Prometheus - prometheus.immoguinee.com
+    # SECURED with admin-auth middleware
     prometheus-secure:
       rule: "Host(`prometheus.immoguinee.com`)"
       entryPoints:
         - websecure
       service: prometheus
       tls: {}
+      middlewares:
+        - admin-auth@file
       priority: 100
 
     prometheus-http:
