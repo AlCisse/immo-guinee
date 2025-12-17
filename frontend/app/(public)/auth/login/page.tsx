@@ -4,19 +4,15 @@ import { useState } from 'react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Eye, EyeOff, Lock, Loader2, Mail, ArrowRight, Phone } from 'lucide-react';
+import { Eye, EyeOff, Lock, Loader2, ArrowRight } from 'lucide-react';
 import { ROUTES } from '@/lib/routes';
 import { inputStyles } from '@/lib/utils';
 import PhoneInput from '@/components/ui/PhoneInput';
 
-type LoginMethod = 'phone' | 'email';
-
 export default function LoginPage() {
   const { login } = useAuth();
-  const [loginMethod, setLoginMethod] = useState<LoginMethod>('phone');
   const [formData, setFormData] = useState({
     telephone: '',
-    email: '',
     mot_de_passe: '',
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -28,17 +24,13 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
 
-    const identifier = loginMethod === 'phone' ? formData.telephone : formData.email;
-    if (!identifier || !formData.mot_de_passe) {
+    if (!formData.telephone || !formData.mot_de_passe) {
       setError('Veuillez remplir tous les champs');
       return;
     }
 
-    let loginId = identifier;
-    if (loginMethod === 'phone') {
-      // Le numéro est déjà formaté avec le code pays par PhoneInput
-      loginId = identifier.replace(/\s/g, '');
-    }
+    // Le numéro est déjà formaté avec le code pays par PhoneInput
+    const loginId = formData.telephone.replace(/\s/g, '');
 
     setIsLoading(true);
 
@@ -181,32 +173,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Login Method Toggle */}
-            <div className="flex bg-neutral-100 dark:bg-dark-bg rounded-xl p-1 mb-4 sm:mb-6">
-              <button
-                onClick={() => setLoginMethod('phone')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                  loginMethod === 'phone'
-                    ? 'bg-white dark:bg-dark-card text-primary-600 shadow-sm'
-                    : 'text-neutral-500 hover:text-neutral-700'
-                }`}
-              >
-                <Phone className="w-4 h-4" />
-                Téléphone
-              </button>
-              <button
-                onClick={() => setLoginMethod('email')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                  loginMethod === 'email'
-                    ? 'bg-white dark:bg-dark-card text-primary-600 shadow-sm'
-                    : 'text-neutral-500 hover:text-neutral-700'
-                }`}
-              >
-                <Mail className="w-4 h-4" />
-                Email
-              </button>
-            </div>
-
             {error && (
               <div className="mb-6 p-4 bg-error-50 dark:bg-error-500/10 border-l-4 border-error-500 rounded-r-lg">
                 <p className="text-sm text-error-700 dark:text-error-400">{error}</p>
@@ -214,42 +180,22 @@ export default function LoginPage() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
-              {/* Phone or Email Input */}
-              {loginMethod === 'phone' ? (
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                    Numéro de téléphone
-                  </label>
-                  <PhoneInput
-                    value={formData.telephone}
-                    onChange={(fullNumber) => setFormData({ ...formData, telephone: fullNumber })}
-                    placeholder="621 00 00 00"
-                    required
-                    defaultCountry="GN"
-                  />
-                  <p className="mt-1 text-xs text-neutral-500">
-                    Sélectionnez votre pays - Guinée et diaspora acceptés
-                  </p>
-                </div>
-              ) : (
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                    Adresse email
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-4">
-                      <Mail className="w-4 h-4 text-neutral-500" />
-                    </div>
-                    <input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className={`${inputStyles.base} ${inputStyles.withIcon}`}
-                      placeholder="exemple@email.com"
-                    />
-                  </div>
-                </div>
-              )}
+              {/* Phone Input */}
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                  Numéro de téléphone
+                </label>
+                <PhoneInput
+                  value={formData.telephone}
+                  onChange={(fullNumber) => setFormData({ ...formData, telephone: fullNumber })}
+                  placeholder="621 00 00 00"
+                  required
+                  defaultCountry="GN"
+                />
+                <p className="mt-1 text-xs text-neutral-500">
+                  Sélectionnez votre pays - Guinée et diaspora acceptés
+                </p>
+              </div>
 
               {/* Password */}
               <div>

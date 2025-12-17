@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth/AuthContext';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Eye, EyeOff, Lock, User, Mail, Building2, Loader2, ChevronDown, ArrowRight, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Lock, User, Building2, Loader2, ChevronDown, ArrowRight, AlertCircle } from 'lucide-react';
 import { ROUTES } from '@/lib/routes';
 import { inputStyles } from '@/lib/utils';
 import PhoneInput from '@/components/ui/PhoneInput';
@@ -26,7 +26,6 @@ export default function RegisterPage() {
     mot_de_passe_confirmation: '',
     nom_complet: '',
     type_compte: 'PARTICULIER' as 'PARTICULIER' | 'AGENCE' | 'PROMOTEUR',
-    email: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -64,7 +63,6 @@ export default function RegisterPage() {
         mot_de_passe: formData.mot_de_passe,
         nom_complet: formData.nom_complet,
         type_compte: formData.type_compte,
-        email: formData.email || undefined,
       });
     } catch (err: any) {
       console.error('Registration error:', err);
@@ -289,25 +287,6 @@ export default function RegisterPage() {
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 sm:pr-4 pointer-events-none">
                     <ChevronDown className="w-4 h-4 text-neutral-500" />
                   </div>
-                </div>
-              </div>
-
-              {/* Email (optionnel) - hidden on mobile by default, shown in expandable */}
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1 sm:mb-2">
-                  Email (optionnel)
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 sm:pl-4">
-                    <Mail className="w-4 h-4 text-neutral-500" />
-                  </div>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className={`${inputStyles.base} ${inputStyles.withIcon}`}
-                    placeholder="exemple@email.com"
-                  />
                 </div>
               </div>
 
