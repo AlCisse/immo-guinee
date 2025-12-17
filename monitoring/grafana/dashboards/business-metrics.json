@@ -11,8 +11,8 @@
   "panels": [
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "postgres",
+        "uid": "postgresql"
       },
       "fieldConfig": {
         "defaults": {
@@ -55,11 +55,12 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "postgres",
+            "uid": "postgresql"
           },
-          "expr": "immoguinee_users_total",
-          "legendFormat": "Total Users",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) as total FROM users WHERE deleted_at IS NULL AND is_active = true",
           "refId": "A"
         }
       ],
@@ -68,8 +69,8 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "postgres",
+        "uid": "postgresql"
       },
       "fieldConfig": {
         "defaults": {
@@ -112,11 +113,12 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "postgres",
+            "uid": "postgresql"
           },
-          "expr": "immoguinee_listings_total{status=\"PUBLIE\"}",
-          "legendFormat": "Active Listings",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) as total FROM listings WHERE statut = 'ACTIVE' AND deleted_at IS NULL",
           "refId": "A"
         }
       ],
@@ -125,8 +127,8 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "postgres",
+        "uid": "postgresql"
       },
       "fieldConfig": {
         "defaults": {
@@ -169,11 +171,12 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "postgres",
+            "uid": "postgresql"
           },
-          "expr": "sum(immoguinee_payments_total_gnf)",
-          "legendFormat": "Total Volume",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(SUM(montant_total), 0) as total FROM payments WHERE statut = 'COMPLETE' AND deleted_at IS NULL",
           "refId": "A"
         }
       ],
@@ -182,8 +185,8 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "postgres",
+        "uid": "postgresql"
       },
       "fieldConfig": {
         "defaults": {
@@ -226,11 +229,12 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "postgres",
+            "uid": "postgresql"
           },
-          "expr": "sum(immoguinee_commissions_total_gnf)",
-          "legendFormat": "Commissions",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(SUM(commission_montant), 0) as total FROM payments WHERE statut = 'COMPLETE' AND deleted_at IS NULL",
           "refId": "A"
         }
       ],
@@ -239,8 +243,8 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "postgres",
+        "uid": "postgresql"
       },
       "fieldConfig": {
         "defaults": {
@@ -313,30 +317,32 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "postgres",
+            "uid": "postgresql"
           },
-          "expr": "increase(immoguinee_registrations_total[1d])",
-          "legendFormat": "New Registrations",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT DATE_TRUNC('day', created_at) as time, COUNT(*) as \"Nouvelles Annonces\" FROM listings WHERE created_at >= NOW() - INTERVAL '30 days' AND deleted_at IS NULL GROUP BY DATE_TRUNC('day', created_at) ORDER BY time",
           "refId": "A"
         },
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "postgres",
+            "uid": "postgresql"
           },
-          "expr": "increase(immoguinee_listings_created_total[1d])",
-          "legendFormat": "New Listings",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT DATE_TRUNC('day', created_at) as time, COUNT(*) as \"Nouveaux Utilisateurs\" FROM users WHERE created_at >= NOW() - INTERVAL '30 days' AND deleted_at IS NULL GROUP BY DATE_TRUNC('day', created_at) ORDER BY time",
           "refId": "B"
         }
       ],
-      "title": "Daily Activity (SC-011: 50 new listings/day)",
+      "title": "Activite Quotidienne",
       "type": "timeseries"
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "postgres",
+        "uid": "postgresql"
       },
       "fieldConfig": {
         "defaults": {
@@ -409,30 +415,22 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "postgres",
+            "uid": "postgresql"
           },
-          "expr": "increase(immoguinee_payments_gnf{provider=\"orange\"}[1d])",
-          "legendFormat": "Orange Money",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT DATE_TRUNC('day', created_at) as time, type_paiement as metric, COALESCE(SUM(montant_total), 0) as value FROM payments WHERE created_at >= NOW() - INTERVAL '30 days' AND statut = 'COMPLETE' AND deleted_at IS NULL GROUP BY DATE_TRUNC('day', created_at), type_paiement ORDER BY time",
           "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "increase(immoguinee_payments_gnf{provider=\"mtn\"}[1d])",
-          "legendFormat": "MTN Mobile Money",
-          "refId": "B"
         }
       ],
-      "title": "Daily Payment Volume by Provider",
+      "title": "Volume Paiements par Provider",
       "type": "timeseries"
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "postgres",
+        "uid": "postgresql"
       },
       "fieldConfig": {
         "defaults": {
@@ -478,11 +476,12 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "postgres",
+            "uid": "postgresql"
           },
-          "expr": "immoguinee_listings_by_type",
-          "legendFormat": "{{type}}",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT type_bien, COUNT(*) as count FROM listings WHERE statut = 'ACTIVE' AND deleted_at IS NULL GROUP BY type_bien ORDER BY count DESC",
           "refId": "A"
         }
       ],
@@ -491,8 +490,8 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "postgres",
+        "uid": "postgresql"
       },
       "fieldConfig": {
         "defaults": {
@@ -538,11 +537,12 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "postgres",
+            "uid": "postgresql"
           },
-          "expr": "immoguinee_users_by_badge",
-          "legendFormat": "{{badge}}",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT badge, COUNT(*) as count FROM users WHERE deleted_at IS NULL AND is_active = true GROUP BY badge",
           "refId": "A"
         }
       ],
@@ -551,8 +551,8 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "postgres",
+        "uid": "postgresql"
       },
       "fieldConfig": {
         "defaults": {
@@ -603,11 +603,12 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "postgres",
+            "uid": "postgresql"
           },
-          "expr": "avg(immoguinee_ratings_average)",
-          "legendFormat": "Average Rating",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COALESCE(AVG(note), 0) as avg_rating FROM ratings WHERE is_published = true AND deleted_at IS NULL",
           "refId": "A"
         }
       ],
@@ -616,8 +617,8 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "postgres",
+        "uid": "postgresql"
       },
       "fieldConfig": {
         "defaults": {
@@ -690,30 +691,32 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "postgres",
+            "uid": "postgresql"
           },
-          "expr": "increase(immoguinee_contracts_signed_total[1d])",
-          "legendFormat": "Contracts Signed",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT DATE_TRUNC('day', created_at) as time, COUNT(*) as \"Contrats\" FROM contracts WHERE created_at >= NOW() - INTERVAL '30 days' AND deleted_at IS NULL GROUP BY DATE_TRUNC('day', created_at) ORDER BY time",
           "refId": "A"
         },
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "postgres",
+            "uid": "postgresql"
           },
-          "expr": "increase(immoguinee_disputes_opened_total[1d])",
-          "legendFormat": "Disputes Opened",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT DATE_TRUNC('day', created_at) as time, COUNT(*) as \"Litiges\" FROM disputes WHERE created_at >= NOW() - INTERVAL '30 days' AND deleted_at IS NULL GROUP BY DATE_TRUNC('day', created_at) ORDER BY time",
           "refId": "B"
         }
       ],
-      "title": "Daily Contracts & Disputes",
+      "title": "Contrats & Litiges Quotidiens",
       "type": "timeseries"
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "postgres",
+        "uid": "postgresql"
       },
       "fieldConfig": {
         "defaults": {
@@ -764,11 +767,12 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "postgres",
+            "uid": "postgresql"
           },
-          "expr": "immoguinee_disputes_open_total",
-          "legendFormat": "Open Disputes",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) as total FROM disputes WHERE is_closed = false AND deleted_at IS NULL",
           "refId": "A"
         }
       ],
@@ -777,8 +781,8 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "postgres",
+        "uid": "postgresql"
       },
       "fieldConfig": {
         "defaults": {
@@ -821,11 +825,12 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "postgres",
+            "uid": "postgresql"
           },
-          "expr": "immoguinee_insurances_active_total",
-          "legendFormat": "Active Insurances",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) as total FROM insurances WHERE is_active = true AND date_fin >= CURRENT_DATE AND deleted_at IS NULL",
           "refId": "A"
         }
       ],
@@ -834,8 +839,8 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "postgres",
+        "uid": "postgresql"
       },
       "fieldConfig": {
         "defaults": {
@@ -878,11 +883,12 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "postgres",
+            "uid": "postgresql"
           },
-          "expr": "immoguinee_verifications_pending_total",
-          "legendFormat": "Pending Verifications",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) as total FROM users WHERE statut_verification = 'EN_ATTENTE' AND deleted_at IS NULL",
           "refId": "A"
         }
       ],
@@ -891,8 +897,8 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "postgres",
+        "uid": "postgresql"
       },
       "fieldConfig": {
         "defaults": {
@@ -943,11 +949,12 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "postgres",
+            "uid": "postgresql"
           },
-          "expr": "(immoguinee_payments_success_total / immoguinee_payments_total) * 100",
-          "legendFormat": "Payment Success Rate",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT CASE WHEN COUNT(*) > 0 THEN (COUNT(*) FILTER (WHERE statut = 'COMPLETE') * 100.0 / COUNT(*)) ELSE 0 END as success_rate FROM payments WHERE deleted_at IS NULL",
           "refId": "A"
         }
       ],

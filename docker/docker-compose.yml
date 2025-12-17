@@ -480,6 +480,7 @@ services:
     hostname: grafana
     secrets:
       - grafana_password
+      - db_password
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana_password
@@ -496,6 +497,7 @@ services:
         condition: on-failure
     depends_on:
       - prometheus
+      - postgres
 
   pgadmin:
     image: dpage/pgadmin4:latest
