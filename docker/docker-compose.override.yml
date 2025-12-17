@@ -143,10 +143,6 @@ services:
     ports:
       - "5050:80"
 
-  ollama:
-    ports:
-      - "11434:11434"
-
 # Use bridge network for local development
 networks:
   immog-network:

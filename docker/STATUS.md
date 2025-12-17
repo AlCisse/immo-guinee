@@ -23,7 +23,6 @@
 | **Grafana** | ✅ UP | 3001 | - | Monitoring |
 | **Prometheus** | ✅ UP | 9090 | - | Metrics |
 | **PgAdmin** | ✅ UP | 5050 | - | DB admin |
-| **Ollama** | ✅ UP | 11434 | - | LLM (CPU mode) |
 | **Scheduler** | ✅ UP | - | - | Laravel cron |
 | **Queue Worker** | 🔴 RESTART | - | ❌ Error | Backend non installé |
 
@@ -92,7 +91,6 @@ docker logs immog-elasticsearch
 - **Elasticsearch**: http://localhost:9200
 - **Laravel Echo**: ws://localhost:6001
 - **WAHA (WhatsApp)**: http://localhost:3000
-- **Ollama (LLM)**: http://localhost:11434
 
 ---
 

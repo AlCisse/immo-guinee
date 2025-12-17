@@ -31,9 +31,6 @@
 - **Geocoder** (geolocation services)
 - **React Leaflet** (interactive maps)
 - **Docker Swarm + CapRover** (deployment options)
-**Intelligence Artificielle:**
-- Ollama
-
 
 **Monitoring:**
 - Laravel Telescope
@@ -632,7 +629,7 @@
 
 ### Docker & Orchestration
 
-- [x] T276 [P] Finalize docker/docker-compose.yml with all 18 services (PostgreSQL+PostGIS, Redis, Elasticsearch, Varnish, MinIO, n8n, WAHA, Laravel Echo, Traefik, Grafana, Prometheus, PgAdmin, Ollama, Queue Worker, Scheduler, etc.)
+- [x] T276 [P] Finalize docker/docker-compose.yml with all 17 services (PostgreSQL+PostGIS, Redis, Elasticsearch, Varnish, MinIO, n8n, WAHA, Laravel Echo, Traefik, Grafana, Prometheus, PgAdmin, Queue Worker, Scheduler, etc.)
 - [ ] T277 [P] Create docker/docker-compose.prod.yml for production environment
 - [ ] T278 [P] Create docker/docker-swarm.yml for Docker Swarm orchestration
 - [x] T279 [P] Create Dockerfile at root for CapRover deployment (PHP 8.3-fpm-alpine with all extensions)

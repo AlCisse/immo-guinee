@@ -61,9 +61,6 @@ docker/
 │   │   └── .gitkeep            # Garde le dossier en Git
 │   └── README.md
 │
-├── ollama/                     # LLM local
-│   └── README.md
-│
 └── pgadmin/                    # PostgreSQL admin UI
     └── README.md
 ```

@@ -490,15 +490,3 @@ services:
         condition: on-failure
     depends_on:
       - postgres
-
-  ollama:
-    image: ollama/ollama:latest
-    hostname: ollama
-    volumes:
-      - ./ollama:/root/.ollama
-    networks:
-      - immog-network
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: on-failure

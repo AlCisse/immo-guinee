@@ -93,11 +93,6 @@ FROM php:8.3-fpm
 | **grafana** | Visualisation et dashboards | 3001 |
 | **pgadmin** | Interface de gestion PostgreSQL | 5050 |
 
-### Intelligence Artificielle
-| Service | Description | Port(s) |
-|---------|-------------|---------|
-| **ollama** | LLM local pour recommandations (nécessite GPU) | 11434 |
-
 ---
 
 ## 🎯 Quelle configuration utiliser ?

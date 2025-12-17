@@ -17,10 +17,6 @@ traefik/letsencrypt/*.json
 traefik/letsencrypt/*.pem
 !traefik/letsencrypt/.gitkeep
 
-# Ollama models
-ollama/*.bin
-ollama/models/
-
 # WAHA sessions
 waha/.sessions/*
 !waha/.sessions/.gitkeep

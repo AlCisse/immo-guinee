@@ -72,9 +72,6 @@ Le `docker-compose.yml` orchestre 18 services:
 - **grafana**: Visualisation et dashboards
 - **pgadmin**: Interface PostgreSQL
 
-### Intelligence Artificielle
-- **ollama**: LLM local pour recommandations
-
 ## Démarrage rapide
 
 ### 1. Prérequis

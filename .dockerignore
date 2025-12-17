@@ -58,7 +58,6 @@ docker/elasticsearch/data/
 docker/n8n/data/
 docker/grafana/
 docker/pgadmin/
-docker/ollama/
 docker/traefik/letsencrypt/
 docker/traefik/logs/
 docker/waha/.sessions/
