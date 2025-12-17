@@ -43,6 +43,7 @@ if (!function_exists('load_docker_secrets')) {
 
         // Map of secret file names to environment variable names
         $secretMap = [
+            'app_key' => 'APP_KEY',
             'db_password' => 'DB_PASSWORD',
             'redis_password' => 'REDIS_PASSWORD',
             'minio_password' => 'MINIO_ROOT_PASSWORD',
