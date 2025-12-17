@@ -13,6 +13,8 @@ networks:
     attachable: true
 
 secrets:
+  app_key:
+    external: true
   passport_private_key:
     external: true
   passport_public_key:
@@ -165,6 +167,7 @@ services:
       - ./php/php.ini:/usr/local/etc/php/php.ini:ro
       - ./php/www.conf:/usr/local/etc/php-fpm.d/www.conf:ro
     secrets:
+      - app_key
       - passport_private_key
       - passport_public_key
       - db_password
@@ -172,7 +175,7 @@ services:
     environment:
       - APP_ENV=${APP_ENV:-production}
       - APP_DEBUG=${APP_DEBUG:-false}
-      - APP_KEY=${APP_KEY}
+      - APP_KEY_FILE=/run/secrets/app_key
       - DB_CONNECTION=pgsql
       - DB_HOST=postgres
       - DB_PORT=5432
@@ -221,11 +224,12 @@ services:
     volumes:
       - ./php/php.ini:/usr/local/etc/php/php.ini:ro
     secrets:
+      - app_key
       - db_password
       - redis_password
     environment:
       - APP_ENV=${APP_ENV:-production}
-      - APP_KEY=${APP_KEY}
+      - APP_KEY_FILE=/run/secrets/app_key
       - DB_CONNECTION=pgsql
       - DB_HOST=postgres
       - DB_DATABASE=${DB_DATABASE:-immog_db}
@@ -256,11 +260,12 @@ services:
     volumes:
       - ./php/php.ini:/usr/local/etc/php/php.ini:ro
     secrets:
+      - app_key
       - db_password
       - redis_password
     environment:
       - APP_ENV=${APP_ENV:-production}
-      - APP_KEY=${APP_KEY}
+      - APP_KEY_FILE=/run/secrets/app_key
       - DB_CONNECTION=pgsql
       - DB_HOST=postgres
       - DB_DATABASE=${DB_DATABASE:-immog_db}
