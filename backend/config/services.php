@@ -36,14 +36,14 @@ return [
     ],
 
     'waha' => [
-        'url' => env('WAHA_URL', 'http://immog-waha:3000'),
-        'api_key' => env('WAHA_API_KEY', 'immog2024'),
+        'url' => env('WAHA_URL', 'http://waha:3000'),
+        'api_key' => env('WAHA_API_KEY'),
         'session_name' => env('WAHA_SESSION_NAME', 'default'),
     ],
 
     'n8n' => [
-        'webhook_url' => env('N8N_WEBHOOK_URL', 'http://immog-n8n:5678/webhook/send-otp'),
-        'base_url' => env('N8N_BASE_URL', 'http://immog-n8n:5678'),
+        'webhook_url' => env('N8N_WEBHOOK_URL', 'http://n8n:5678/webhook/send-otp'),
+        'base_url' => env('N8N_BASE_URL', 'http://n8n:5678'),
     ],
 
 ];
