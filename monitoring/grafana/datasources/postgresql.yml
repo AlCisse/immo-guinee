@@ -18,3 +18,5 @@ datasources:
       connMaxLifetime: 14400
       postgresVersion: 1500
       timescaledb: false
+    secureJsonData:
+      password: $__file{/run/secrets/db_password}
