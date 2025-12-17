@@ -389,6 +389,9 @@ services:
       - "--providers.file.watch=true"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.metrics.address=:8082"
+      - "--metrics.prometheus=true"
+      - "--metrics.prometheus.entryPoint=metrics"
       - "--log.level=INFO"
     ports:
       # SECURITY: Only ports 80 and 443 exposed, 8080 removed
@@ -490,3 +493,89 @@ services:
         condition: on-failure
     depends_on:
       - postgres
+
+  # ============================================
+  # Monitoring Exporters
+  # ============================================
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    hostname: node-exporter
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks:
+      - immog-network
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          memory: 128M
+
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    hostname: redis-exporter
+    secrets:
+      - redis_password
+    environment:
+      - REDIS_ADDR=redis://redis:6379
+      - REDIS_PASSWORD_FILE=/run/secrets/redis_password
+    entrypoint: ["/bin/sh", "-c", "export REDIS_PASSWORD=$$(cat /run/secrets/redis_password) && /redis_exporter"]
+    networks:
+      - immog-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          memory: 64M
+    depends_on:
+      - redis
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    hostname: postgres-exporter
+    secrets:
+      - db_password
+    environment:
+      - DATA_SOURCE_NAME=postgresql://${DB_USERNAME:-immog_user}:PLACEHOLDER@postgres:5432/${DB_DATABASE:-immog_db}?sslmode=disable
+    entrypoint: ["/bin/sh", "-c", "export DATA_SOURCE_NAME=\"postgresql://${DB_USERNAME:-immog_user}:$$(cat /run/secrets/db_password)@postgres:5432/${DB_DATABASE:-immog_db}?sslmode=disable\" && /bin/postgres_exporter"]
+    networks:
+      - immog-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          memory: 64M
+    depends_on:
+      - postgres
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    hostname: cadvisor
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    networks:
+      - immog-network
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          memory: 256M
