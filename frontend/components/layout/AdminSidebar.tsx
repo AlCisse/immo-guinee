@@ -31,6 +31,7 @@ import {
   Star,
   FileCheck,
   Umbrella,
+  BookOpen,
 } from 'lucide-react';
 
 // Get dynamic label based on user roles
@@ -92,6 +93,7 @@ const getNavItems = (counts: SidebarCounts): NavItem[] => [
 
 const getBottomNavItems = (counts: SidebarCounts): NavItem[] => [
   { name: 'Notifications', href: '/admin/notifications', icon: Bell, badgeKey: 'notifications' },
+  { name: 'Documentation', href: '/admin/documentation', icon: BookOpen },
   { name: 'Paramètres', href: '/admin/settings', icon: Settings },
   { name: 'Aide', href: '/admin/aide', icon: HelpCircle },
 ];
