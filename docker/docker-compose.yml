@@ -521,14 +521,13 @@ services:
           memory: 128M
 
   redis-exporter:
-    image: oliver006/redis_exporter:latest
+    image: oliver006/redis_exporter:alpine
     hostname: redis-exporter
     secrets:
       - redis_password
     environment:
       - REDIS_ADDR=redis://redis:6379
-      - REDIS_PASSWORD_FILE=/run/secrets/redis_password
-    entrypoint: ["/bin/sh", "-c", "export REDIS_PASSWORD=$$(cat /run/secrets/redis_password) && /redis_exporter"]
+    command: sh -c 'export REDIS_PASSWORD=$$(cat /run/secrets/redis_password) && /redis_exporter'
     networks:
       - immog-network
     deploy:
