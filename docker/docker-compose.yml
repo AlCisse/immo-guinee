@@ -340,11 +340,10 @@ services:
     environment:
       - WHATSAPP_HOOK_URL=${WHATSAPP_HOOK_URL:-http://nginx/api/webhooks/waha}
       - WHATSAPP_HOOK_EVENTS=message,message.any,message.ack,session.status
-      - WAHA_DASHBOARD_ENABLED=true
+      # Dashboard disabled in production - only internal container access
+      - WAHA_DASHBOARD_ENABLED=false
       - WAHA_API_KEY_FILE=/run/secrets/waha_api_key
       - WHATSAPP_API_KEY_FILE=/run/secrets/waha_api_key
-      - WAHA_DASHBOARD_USERNAME=admin
-      - WAHA_DASHBOARD_PASSWORD_FILE=/run/secrets/waha_password
     volumes:
       - ./waha/.sessions:/app/.sessions
     networks:

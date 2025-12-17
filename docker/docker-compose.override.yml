@@ -108,6 +108,13 @@ services:
   waha:
     ports:
       - "3000:3000"
+    environment:
+      - WHATSAPP_API_KEY=${WAHA_API_KEY:-immog2024}
+      - WAHA_API_KEY=${WAHA_API_KEY:-immog2024}
+      # Dashboard enabled only for local development
+      - WAHA_DASHBOARD_ENABLED=true
+      - WAHA_DASHBOARD_USERNAME=admin
+      - WAHA_DASHBOARD_PASSWORD=${WAHA_PASSWORD:-immog2024}
 
   laravel-echo:
     ports:
