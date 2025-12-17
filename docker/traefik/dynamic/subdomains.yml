@@ -155,6 +155,27 @@ http:
       service: prometheus
       priority: 1
 
+    # Alertmanager - alertmanager.immoguinee.com
+    # SECURED with admin-auth middleware
+    alertmanager-secure:
+      rule: "Host(`alertmanager.immoguinee.com`)"
+      entryPoints:
+        - websecure
+      service: alertmanager
+      tls: {}
+      middlewares:
+        - admin-auth@file
+      priority: 100
+
+    alertmanager-http:
+      rule: "Host(`alertmanager.immoguinee.com`)"
+      entryPoints:
+        - web
+      middlewares:
+        - https-redirect
+      service: alertmanager
+      priority: 1
+
   services:
     # All services use Docker Swarm naming: immog_<service>
     n8n:
@@ -186,6 +207,11 @@ http:
       loadBalancer:
         servers:
           - url: "http://immog_prometheus:9090"
+
+    alertmanager:
+      loadBalancer:
+        servers:
+          - url: "http://immog_alertmanager:9093"
 
     # Note: traefik-dashboard removed - using api@internal instead
 

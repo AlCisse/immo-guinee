@@ -42,6 +42,7 @@ volumes:
   n8n-data:
   grafana-data:
   prometheus-data:
+  alertmanager-data:
 
 services:
   # ============================================
@@ -441,16 +442,38 @@ services:
     hostname: prometheus
     volumes:
       - ../monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../monitoring/prometheus/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
       - prometheus-data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
     networks:
       - immog-network
     deploy:
       replicas: 1
       restart_policy:
         condition: on-failure
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    hostname: alertmanager
+    volumes:
+      - ../monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ../monitoring/alertmanager/templates:/etc/alertmanager/templates:ro
+      - alertmanager-data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=https://alertmanager.immoguinee.com'
+    networks:
+      - immog-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    depends_on:
+      - prometheus
 
   grafana:
     image: grafana/grafana:latest
