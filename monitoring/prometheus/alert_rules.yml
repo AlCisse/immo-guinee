@@ -76,15 +76,21 @@ groups:
   # ============================================
   - name: container_alerts
     rules:
-      # Container Down
+      # Container Down - check if critical containers are running
       - alert: ContainerDown
-        expr: absent(container_last_seen{name=~"immog_(php|nginx|frontend|postgres|redis|traefik).*"})
+        expr: |
+          (count(container_last_seen{name=~"immog_php.*"}) or vector(0)) == 0
+          or (count(container_last_seen{name=~"immog_nginx.*"}) or vector(0)) == 0
+          or (count(container_last_seen{name=~"immog_frontend.*"}) or vector(0)) == 0
+          or (count(container_last_seen{name=~"immog_postgres.*"}) or vector(0)) == 0
+          or (count(container_last_seen{name=~"immog_redis.*"}) or vector(0)) == 0
+          or (count(container_last_seen{name=~"immog_traefik.*"}) or vector(0)) == 0
         for: 1m
         labels:
           severity: critical
         annotations:
           summary: "Critical container is down"
-          description: "A critical container has been down for more than 1 minute"
+          description: "One or more critical containers (php, nginx, frontend, postgres, redis, traefik) are down"
 
       # Container High CPU
       - alert: ContainerHighCpu
@@ -196,9 +202,9 @@ groups:
           summary: "Redis is down"
           description: "Redis cache server is not responding. Immediate action required!"
 
-      # Redis High Memory
+      # Redis High Memory (only when maxmemory is set)
       - alert: RedisHighMemory
-        expr: redis_memory_used_bytes / redis_memory_max_bytes * 100 > 80
+        expr: redis_memory_max_bytes > 0 and redis_memory_used_bytes / redis_memory_max_bytes * 100 > 80
         for: 5m
         labels:
           severity: warning
@@ -206,9 +212,9 @@ groups:
           summary: "Redis high memory usage"
           description: "Redis memory usage is above 80%. Current: {{ $value | printf \"%.1f\" }}%"
 
-      # Redis Critical Memory
+      # Redis Critical Memory (only when maxmemory is set)
       - alert: RedisCriticalMemory
-        expr: redis_memory_used_bytes / redis_memory_max_bytes * 100 > 95
+        expr: redis_memory_max_bytes > 0 and redis_memory_used_bytes / redis_memory_max_bytes * 100 > 95
         for: 2m
         labels:
           severity: critical
@@ -216,15 +222,15 @@ groups:
           summary: "Redis critical memory usage"
           description: "Redis memory usage is above 95%. Eviction may occur!"
 
-      # Redis Low Hit Rate
+      # Redis Low Hit Rate (only alert when there's meaningful traffic)
       - alert: RedisLowHitRate
-        expr: redis_keyspace_hits_total / (redis_keyspace_hits_total + redis_keyspace_misses_total) < 0.8
-        for: 15m
+        expr: (redis_keyspace_hits_total + redis_keyspace_misses_total) > 1000 and redis_keyspace_hits_total / (redis_keyspace_hits_total + redis_keyspace_misses_total) < 0.5
+        for: 30m
         labels:
           severity: warning
         annotations:
           summary: "Redis low cache hit rate"
-          description: "Redis hit rate is below 80%. Current: {{ $value | printf \"%.2f\" }}. Check cache strategy."
+          description: "Redis hit rate is below 50%. Current: {{ $value | printf \"%.2f\" }}. Check cache strategy."
 
       # Redis Too Many Connections
       - alert: RedisTooManyConnections
