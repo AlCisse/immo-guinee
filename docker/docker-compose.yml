@@ -550,7 +550,7 @@ services:
       - redis_password
     environment:
       - REDIS_ADDR=redis://redis:6379
-    command: sh -c 'export REDIS_PASSWORD=$$(cat /run/secrets/redis_password) && /redis_exporter'
+    entrypoint: ["/bin/sh", "-c", "REDIS_PASSWORD=$(cat /run/secrets/redis_password) exec /redis_exporter"]
     networks:
       - immog-network
     deploy:
