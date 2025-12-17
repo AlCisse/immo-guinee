@@ -19,7 +19,6 @@ docker/minio/data/
 docker/n8n/data/
 docker/grafana/
 docker/pgadmin/
-docker/ollama/
 docker/traefik/letsencrypt/
 docker/traefik/certs/*.crt
 docker/traefik/certs/*.key

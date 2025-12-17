@@ -21,7 +21,6 @@
 - [x] Grafana - **UP** (port 3001)
 - [x] Prometheus - **UP** (port 9090)
 - [x] PgAdmin - **UP** (port 5050)
-- [x] Ollama (CPU mode) - **UP** (port 11434)
 - [x] Scheduler - **UP**
 - [x] PHP-FPM - **UP** (port 9000)
 - [ ] Queue Worker - **Restarting** (backend manquant - normal)
@@ -32,7 +31,6 @@
 - [x] Dockerfile racine (CapRover) - PHP 8.3-fpm-alpine
 - [x] docker/php/Dockerfile - PHP 8.3-fpm (Debian)
 - [x] Correction ports (8000, 8443, 8082, 8888, 8889)
-- [x] Désactivation GPU Ollama
 - [x] 7 volumes persistants créés
 
 ### 3. Backend Laravel
@@ -120,11 +118,7 @@ docker exec immog-postgres pg_isready -U immog_user
 - Traefik: 80 → 8888, 443 → 8889
 - Varnish: 8080 → 8082
 
-### Problème 2: Ollama GPU support failed
-**Erreur**: No NVIDIA GPU found
-**Solution**: Commenté section `deploy.resources` dans docker-compose.yml (CPU mode)
-
-### Problème 3: Composer.lock PHP 8.4
+### Problème 2: Composer.lock PHP 8.4
 **Erreur**: `symfony/event-dispatcher v8.0.0 requires php >=8.4`
 **Solution**:
 1. Supprimé `composer.lock` et `vendor/`

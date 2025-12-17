@@ -219,7 +219,6 @@ Récapitulatif de tous les fichiers créés pour compléter la configuration Doc
 - [x] Documentation (11 fichiers README, guides, diagrammes)
 
 ### ⚠️ Configuration de base (peut être étendu)
-- [ ] Ollama (pas de config custom, utilise defaults)
 - [ ] PgAdmin (utilise config par défaut)
 - [ ] WAHA (sessions vides, à configurer au runtime)
 

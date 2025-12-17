@@ -20,7 +20,6 @@
 - **Real-Time**: Laravel Echo + Socket.IO (messaging, notifications)
 - **Automation**: n8n (workflows), Laravel Queue (async jobs)
 - **Messaging**: WAHA (WhatsApp), Twilio API (SMS), Telegram Bot API
-- **AI/ML**: Ollama (local LLM recommendations)
 - **Monitoring**: Laravel Telescope, Grafana, Prometheus, Sentry, Logrocket, OSSEC
 - **DevOps**: Docker, Docker Compose, Docker Swarm, Traefik (reverse proxy), Nginx, Certbot (SSL), CapRover
 - **Development Tools**: VS Code, Git, GitHub/GitLab, Postman, DBeaver
