@@ -114,11 +114,12 @@ http:
 
     # Traefik Dashboard - traefik.immoguinee.com
     # SECURED with admin-auth middleware
+    # Uses api@internal service (built-in Traefik dashboard)
     traefik-secure:
       rule: "Host(`traefik.immoguinee.com`)"
       entryPoints:
         - websecure
-      service: traefik-dashboard
+      service: api@internal
       tls: {}
       middlewares:
         - admin-auth@file
@@ -130,7 +131,7 @@ http:
         - web
       middlewares:
         - https-redirect
-      service: traefik-dashboard
+      service: api@internal
       priority: 1
 
     # Prometheus - prometheus.immoguinee.com
@@ -186,10 +187,7 @@ http:
         servers:
           - url: "http://immog_prometheus:9090"
 
-    traefik-dashboard:
-      loadBalancer:
-        servers:
-          - url: "http://immog_traefik:8080"
+    # Note: traefik-dashboard removed - using api@internal instead
 
   middlewares:
     https-redirect:
