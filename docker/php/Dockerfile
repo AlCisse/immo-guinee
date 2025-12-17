@@ -64,7 +64,10 @@ COPY backend /var/www/backend
 RUN composer install --optimize-autoloader --no-interaction --ignore-platform-reqs --no-scripts
 
 # Create necessary directories (only if not exists)
-RUN mkdir -p /var/www/backend/storage/framework/{sessions,views,cache} \
+# Note: brace expansion doesn't work in sh, so we create each directory explicitly
+RUN mkdir -p /var/www/backend/storage/framework/sessions \
+    && mkdir -p /var/www/backend/storage/framework/views \
+    && mkdir -p /var/www/backend/storage/framework/cache \
     && mkdir -p /var/www/backend/storage/logs \
     && mkdir -p /var/www/backend/bootstrap/cache
 
