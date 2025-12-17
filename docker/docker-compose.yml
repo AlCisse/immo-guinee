@@ -335,15 +335,16 @@ services:
     image: devlikeapro/waha:latest
     hostname: waha
     secrets:
-      - waha_password
       - waha_api_key
     environment:
       - WHATSAPP_HOOK_URL=${WHATSAPP_HOOK_URL:-http://nginx/api/webhooks/waha}
       - WHATSAPP_HOOK_EVENTS=message,message.any,message.ack,session.status
       # Dashboard disabled in production - only internal container access
       - WAHA_DASHBOARD_ENABLED=false
-      - WAHA_API_KEY_FILE=/run/secrets/waha_api_key
-      - WHATSAPP_API_KEY_FILE=/run/secrets/waha_api_key
+      # API key is read from secret file via entrypoint
+      - WAHA_API_KEY=${WAHA_API_KEY:-}
+      - WHATSAPP_API_KEY=${WAHA_API_KEY:-}
+    entrypoint: ["/bin/sh", "-c", "export WAHA_API_KEY=$$(cat /run/secrets/waha_api_key 2>/dev/null || echo $$WAHA_API_KEY) && export WHATSAPP_API_KEY=$$WAHA_API_KEY && exec /usr/bin/tini -- /entrypoint.sh"]
     volumes:
       - ./waha/.sessions:/app/.sessions
     networks:
