@@ -548,9 +548,9 @@ services:
     hostname: redis-exporter
     secrets:
       - redis_password
+    entrypoint: ["/bin/sh", "-c"]
     command:
-      - '--redis.addr=redis://redis:6379'
-      - '--redis.password-file=/run/secrets/redis_password'
+      - '/redis_exporter --redis.addr=redis://redis:6379 --redis.password="$$(cat /run/secrets/redis_password)"'
     networks:
       - immog-network
     deploy:
