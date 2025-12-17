@@ -1,0 +1,335 @@
+groups:
+  # ============================================
+  # System Alerts (Node Exporter)
+  # ============================================
+  - name: system_alerts
+    rules:
+      # High CPU Usage
+      - alert: HighCpuUsage
+        expr: 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is above 80% for more than 5 minutes. Current: {{ $value | printf \"%.1f\" }}%"
+
+      - alert: CriticalCpuUsage
+        expr: 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Critical CPU usage"
+          description: "CPU usage is above 95% for more than 2 minutes. Current: {{ $value | printf \"%.1f\" }}%"
+
+      # High Memory Usage
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is above 80% for more than 5 minutes. Current: {{ $value | printf \"%.1f\" }}%"
+
+      - alert: CriticalMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Critical memory usage"
+          description: "Memory usage is above 95% for more than 2 minutes. Current: {{ $value | printf \"%.1f\" }}%"
+
+      # Disk Space
+      - alert: LowDiskSpace
+        expr: (1 - (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"})) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low disk space on root partition"
+          description: "Disk usage on / is above 80%. Current: {{ $value | printf \"%.1f\" }}%"
+
+      - alert: CriticalDiskSpace
+        expr: (1 - (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"})) * 100 > 90
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Critical disk space on root partition"
+          description: "Disk usage on / is above 90%. Current: {{ $value | printf \"%.1f\" }}%. Immediate action required!"
+
+      # System Load
+      - alert: HighSystemLoad
+        expr: node_load5 > 4
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High system load"
+          description: "System load average (5m) is above 4. Current: {{ $value | printf \"%.2f\" }}"
+
+  # ============================================
+  # Docker Container Alerts (cAdvisor)
+  # ============================================
+  - name: container_alerts
+    rules:
+      # Container Down
+      - alert: ContainerDown
+        expr: absent(container_last_seen{name=~"immog_(php|nginx|frontend|postgres|redis|traefik).*"})
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Critical container is down"
+          description: "A critical container has been down for more than 1 minute"
+
+      # Container High CPU
+      - alert: ContainerHighCpu
+        expr: rate(container_cpu_usage_seconds_total{name=~"immog_.+"}[5m]) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container high CPU usage"
+          description: "Container {{ $labels.name }} CPU usage is above 80%. Current: {{ $value | printf \"%.1f\" }}%"
+
+      # Container High Memory
+      - alert: ContainerHighMemory
+        expr: container_memory_usage_bytes{name=~"immog_.+"} / container_spec_memory_limit_bytes{name=~"immog_.+"} * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container high memory usage"
+          description: "Container {{ $labels.name }} memory usage is above 80% of limit"
+
+      # Container Restart
+      - alert: ContainerRestarting
+        expr: increase(container_start_time_seconds{name=~"immog_.+"}[10m]) > 2
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container restarting frequently"
+          description: "Container {{ $labels.name }} has restarted more than 2 times in the last 10 minutes"
+
+  # ============================================
+  # PostgreSQL Alerts
+  # ============================================
+  - name: postgresql_alerts
+    rules:
+      # PostgreSQL Down
+      - alert: PostgresqlDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "PostgreSQL database is not responding. Immediate action required!"
+
+      # Too Many Connections
+      - alert: PostgresqlTooManyConnections
+        expr: sum(pg_stat_activity_count) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PostgreSQL too many connections"
+          description: "PostgreSQL has {{ $value }} active connections (threshold: 80)"
+
+      # Critical Connections
+      - alert: PostgresqlCriticalConnections
+        expr: sum(pg_stat_activity_count) > 95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL critical connection count"
+          description: "PostgreSQL has {{ $value }} connections, approaching limit!"
+
+      # Slow Queries (High idle in transaction)
+      - alert: PostgresqlIdleInTransaction
+        expr: pg_stat_activity_count{state="idle in transaction"} > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PostgreSQL idle transactions"
+          description: "{{ $value }} connections are idle in transaction for more than 5 minutes"
+
+      # Low Cache Hit Ratio
+      - alert: PostgresqlLowCacheHitRatio
+        expr: pg_stat_database_blks_hit{datname="immog_db"} / (pg_stat_database_blks_hit{datname="immog_db"} + pg_stat_database_blks_read{datname="immog_db"}) < 0.9
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PostgreSQL low cache hit ratio"
+          description: "Cache hit ratio is below 90%. Current: {{ $value | printf \"%.2f\" }}. Consider increasing shared_buffers."
+
+      # High Rollback Rate
+      - alert: PostgresqlHighRollbackRate
+        expr: rate(pg_stat_database_xact_rollback{datname="immog_db"}[5m]) / rate(pg_stat_database_xact_commit{datname="immog_db"}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PostgreSQL high rollback rate"
+          description: "Rollback rate is above 5%. This may indicate application issues."
+
+  # ============================================
+  # Redis Alerts
+  # ============================================
+  - name: redis_alerts
+    rules:
+      # Redis Down
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis is down"
+          description: "Redis cache server is not responding. Immediate action required!"
+
+      # Redis High Memory
+      - alert: RedisHighMemory
+        expr: redis_memory_used_bytes / redis_memory_max_bytes * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis high memory usage"
+          description: "Redis memory usage is above 80%. Current: {{ $value | printf \"%.1f\" }}%"
+
+      # Redis Critical Memory
+      - alert: RedisCriticalMemory
+        expr: redis_memory_used_bytes / redis_memory_max_bytes * 100 > 95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis critical memory usage"
+          description: "Redis memory usage is above 95%. Eviction may occur!"
+
+      # Redis Low Hit Rate
+      - alert: RedisLowHitRate
+        expr: redis_keyspace_hits_total / (redis_keyspace_hits_total + redis_keyspace_misses_total) < 0.8
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis low cache hit rate"
+          description: "Redis hit rate is below 80%. Current: {{ $value | printf \"%.2f\" }}. Check cache strategy."
+
+      # Redis Too Many Connections
+      - alert: RedisTooManyConnections
+        expr: redis_connected_clients > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis too many connections"
+          description: "Redis has {{ $value }} connected clients"
+
+      # Redis Rejected Connections
+      - alert: RedisRejectedConnections
+        expr: increase(redis_rejected_connections_total[5m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Redis rejecting connections"
+          description: "Redis is rejecting connections. Check maxclients setting."
+
+  # ============================================
+  # Traefik Alerts (HTTP Traffic)
+  # ============================================
+  - name: traefik_alerts
+    rules:
+      # High Error Rate (5xx)
+      - alert: HighErrorRate
+        expr: sum(rate(traefik_entrypoint_requests_total{code=~"5.."}[5m])) / sum(rate(traefik_entrypoint_requests_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High HTTP 5xx error rate"
+          description: "Error rate is above 5%. Current: {{ $value | printf \"%.2f\" }}%"
+
+      - alert: CriticalErrorRate
+        expr: sum(rate(traefik_entrypoint_requests_total{code=~"5.."}[5m])) / sum(rate(traefik_entrypoint_requests_total[5m])) > 0.10
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Critical HTTP 5xx error rate"
+          description: "Error rate is above 10%. Current: {{ $value | printf \"%.2f\" }}%. Check application logs!"
+
+      # High Latency
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, sum(rate(traefik_entrypoint_request_duration_seconds_bucket[5m])) by (le)) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High request latency"
+          description: "P95 latency is above 2 seconds. Current: {{ $value | printf \"%.2f\" }}s"
+
+      - alert: CriticalLatency
+        expr: histogram_quantile(0.95, sum(rate(traefik_entrypoint_request_duration_seconds_bucket[5m])) by (le)) > 5
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Critical request latency"
+          description: "P95 latency is above 5 seconds. Current: {{ $value | printf \"%.2f\" }}s"
+
+      # No Traffic (potential outage)
+      - alert: NoTraffic
+        expr: sum(rate(traefik_entrypoint_requests_total[5m])) == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "No incoming traffic"
+          description: "No requests received in the last 5 minutes. Possible outage!"
+
+  # ============================================
+  # Prometheus Self-Monitoring
+  # ============================================
+  - name: prometheus_alerts
+    rules:
+      # Target Down
+      - alert: PrometheusTargetDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Prometheus target is down"
+          description: "Target {{ $labels.job }} ({{ $labels.instance }}) is down"
+
+      # Prometheus Config Reload Failed
+      - alert: PrometheusConfigReloadFailed
+        expr: prometheus_config_last_reload_successful == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Prometheus config reload failed"
+          description: "Prometheus failed to reload configuration"
+
+      # Too Many Restarts
+      - alert: PrometheusRestarts
+        expr: changes(process_start_time_seconds{job="prometheus"}[30m]) > 2
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Prometheus restarting frequently"
+          description: "Prometheus has restarted more than 2 times in 30 minutes"
