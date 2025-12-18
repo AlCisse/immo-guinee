@@ -478,6 +478,7 @@ services:
   grafana:
     image: grafana/grafana:latest
     hostname: grafana
+    user: "0"  # Run as root to read secrets, Grafana drops privileges later
     secrets:
       - grafana_password
       - db_password
@@ -485,14 +486,12 @@ services:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana_password
       - GF_INSTALL_PLUGINS=redis-datasource
-      # PostgreSQL datasource password - read from secret at startup
-      - DB_PASSWORD__FILE=/run/secrets/db_password
-    entrypoint: ["/bin/sh", "-c"]
-    command: ["export DB_PASSWORD=$$(cat /run/secrets/db_password) && exec /run.sh"]
+    entrypoint: ["/bin/sh", "/custom-entrypoint.sh"]
     volumes:
       - grafana-data:/var/lib/grafana
       - ../monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
       - ../monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - ../monitoring/grafana/entrypoint.sh:/custom-entrypoint.sh:ro
     networks:
       - immog-network
     deploy:
