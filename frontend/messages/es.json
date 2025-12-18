@@ -445,15 +445,56 @@
   },
   "settings": {
     "title": "Configuracion",
-    "language": "Idioma",
-    "theme": "Tema",
-    "lightMode": "Modo claro",
-    "darkMode": "Modo oscuro",
-    "system": "Sistema",
-    "currency": "Moneda",
-    "notifications": "Notificaciones",
-    "privacy": "Privacidad",
-    "deleteAccount": "Eliminar cuenta"
+    "subtitle": "Gestiona tus preferencias",
+    "savedSuccess": "Configuracion guardada con exito!",
+    "save": "Guardar configuracion",
+    "saving": "Guardando...",
+    "account": {
+      "title": "Cuenta",
+      "myProfile": "Mi perfil",
+      "myProfileDesc": "Editar tu informacion personal",
+      "password": "Contrasena",
+      "passwordDesc": "Cambiar tu contrasena",
+      "currentPassword": "Contrasena actual",
+      "newPassword": "Nueva contrasena",
+      "confirmPassword": "Confirmar contrasena",
+      "changePassword": "Cambiar contrasena",
+      "passwordMismatch": "Las contrasenas no coinciden"
+    },
+    "appearance": {
+      "title": "Apariencia",
+      "darkMode": "Modo oscuro",
+      "darkModeDesc": "Activar tema oscuro",
+      "language": "Idioma"
+    },
+    "notifications": {
+      "title": "Notificaciones",
+      "channels": "Canales",
+      "email": "Correo",
+      "whatsapp": "WhatsApp",
+      "sms": "SMS",
+      "push": "Notificaciones push",
+      "types": "Tipos de notificaciones",
+      "newListings": "Nuevas propiedades que coinciden con tus criterios",
+      "newMessages": "Nuevos mensajes",
+      "priceAlerts": "Alertas de bajada de precio"
+    },
+    "privacy": {
+      "title": "Privacidad",
+      "terms": "Terminos de servicio",
+      "privacyPolicy": "Politica de privacidad"
+    },
+    "danger": {
+      "title": "Zona de peligro",
+      "logout": "Cerrar sesion",
+      "logoutDesc": "Desconectarse de tu cuenta",
+      "deleteAccount": "Eliminar mi cuenta",
+      "deleteAccountDesc": "Esta accion es irreversible",
+      "deleteConfirmTitle": "Eliminar tu cuenta?",
+      "deleteConfirmDesc": "Esta accion es irreversible. Todos tus datos, anuncios y mensajes seran eliminados permanentemente.",
+      "cancel": "Cancelar",
+      "delete": "Eliminar"
+    }
   },
   "footer": {
     "about": "Acerca de",

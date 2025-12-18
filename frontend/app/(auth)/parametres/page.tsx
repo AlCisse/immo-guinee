@@ -25,6 +25,7 @@ import {
   User,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { useLocale } from '@/lib/hooks/useLocale';
 
 interface NotificationSettings {
   email: boolean;
@@ -38,6 +39,7 @@ interface NotificationSettings {
 
 export default function ParametresPage() {
   const { user, logout } = useAuth();
+  const { t } = useLocale();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -83,7 +85,7 @@ export default function ParametresPage() {
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
-      alert('Les mots de passe ne correspondent pas');
+      alert(t('settings.account.passwordMismatch'));
       return;
     }
     setIsSaving(true);
@@ -122,10 +124,10 @@ export default function ParametresPage() {
             </Link>
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-white">
-                Parametres
+                {t('settings.title')}
               </h1>
               <p className="text-white/80 text-sm md:text-base">
-                Gerez vos preferences
+                {t('settings.subtitle')}
               </p>
             </div>
           </motion.div>
@@ -144,7 +146,7 @@ export default function ParametresPage() {
           >
             <Check className="w-5 h-5 text-green-600 dark:text-green-400" />
             <p className="text-green-700 dark:text-green-400 font-medium">
-              Parametres enregistres avec succes !
+              {t('settings.savedSuccess')}
             </p>
           </motion.div>
         )}
@@ -158,7 +160,7 @@ export default function ParametresPage() {
           <div className="px-4 py-3 border-b border-neutral-100 dark:border-dark-border">
             <h2 className="font-semibold text-neutral-900 dark:text-white flex items-center gap-2">
               <User className="w-5 h-5 text-primary-500" />
-              Compte
+              {t('settings.account.title')}
             </h2>
           </div>
 
@@ -168,8 +170,8 @@ export default function ParametresPage() {
               className="flex items-center justify-between px-4 py-4 hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors"
             >
               <div>
-                <p className="font-medium text-neutral-900 dark:text-white">Mon profil</p>
-                <p className="text-sm text-neutral-500">Modifier vos informations personnelles</p>
+                <p className="font-medium text-neutral-900 dark:text-white">{t('settings.account.myProfile')}</p>
+                <p className="text-sm text-neutral-500">{t('settings.account.myProfileDesc')}</p>
               </div>
               <ChevronRight className="w-5 h-5 text-neutral-400" />
             </Link>
@@ -181,8 +183,8 @@ export default function ParametresPage() {
               <div className="flex items-center gap-3">
                 <Lock className="w-5 h-5 text-neutral-500" />
                 <div>
-                  <p className="font-medium text-neutral-900 dark:text-white">Mot de passe</p>
-                  <p className="text-sm text-neutral-500">Changer votre mot de passe</p>
+                  <p className="font-medium text-neutral-900 dark:text-white">{t('settings.account.password')}</p>
+                  <p className="text-sm text-neutral-500">{t('settings.account.passwordDesc')}</p>
                 </div>
               </div>
               <ChevronRight className={`w-5 h-5 text-neutral-400 transition-transform ${showPasswordForm ? 'rotate-90' : ''}`} />
@@ -199,7 +201,7 @@ export default function ParametresPage() {
               >
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
-                    Mot de passe actuel
+                    {t('settings.account.currentPassword')}
                   </label>
                   <div className="relative">
                     <input
@@ -221,7 +223,7 @@ export default function ParametresPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
-                    Nouveau mot de passe
+                    {t('settings.account.newPassword')}
                   </label>
                   <div className="relative">
                     <input
@@ -244,7 +246,7 @@ export default function ParametresPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
-                    Confirmer le mot de passe
+                    {t('settings.account.confirmPassword')}
                   </label>
                   <input
                     type="password"
@@ -263,12 +265,12 @@ export default function ParametresPage() {
                   {isSaving ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      Enregistrement...
+                      {t('settings.saving')}
                     </>
                   ) : (
                     <>
                       <Save className="w-5 h-5" />
-                      Changer le mot de passe
+                      {t('settings.account.changePassword')}
                     </>
                   )}
                 </button>
@@ -287,7 +289,7 @@ export default function ParametresPage() {
           <div className="px-4 py-3 border-b border-neutral-100 dark:border-dark-border">
             <h2 className="font-semibold text-neutral-900 dark:text-white flex items-center gap-2">
               <Globe className="w-5 h-5 text-primary-500" />
-              Apparence
+              {t('settings.appearance.title')}
             </h2>
           </div>
 
@@ -296,8 +298,8 @@ export default function ParametresPage() {
               <div className="flex items-center gap-3">
                 {isDarkMode ? <Moon className="w-5 h-5 text-neutral-500" /> : <Sun className="w-5 h-5 text-neutral-500" />}
                 <div>
-                  <p className="font-medium text-neutral-900 dark:text-white">Mode sombre</p>
-                  <p className="text-sm text-neutral-500">Activer le theme sombre</p>
+                  <p className="font-medium text-neutral-900 dark:text-white">{t('settings.appearance.darkMode')}</p>
+                  <p className="text-sm text-neutral-500">{t('settings.appearance.darkModeDesc')}</p>
                 </div>
               </div>
               <button
@@ -315,8 +317,8 @@ export default function ParametresPage() {
               <div className="flex items-center gap-3">
                 <Globe className="w-5 h-5 text-neutral-500" />
                 <div>
-                  <p className="font-medium text-neutral-900 dark:text-white">Langue</p>
-                  <p className="text-sm text-neutral-500">Francais</p>
+                  <p className="font-medium text-neutral-900 dark:text-white">{t('settings.appearance.language')}</p>
+                  <p className="text-sm text-neutral-500">{t('language.fr')}</p>
                 </div>
               </div>
               <ChevronRight className="w-5 h-5 text-neutral-400" />
@@ -334,25 +336,25 @@ export default function ParametresPage() {
           <div className="px-4 py-3 border-b border-neutral-100 dark:border-dark-border">
             <h2 className="font-semibold text-neutral-900 dark:text-white flex items-center gap-2">
               <Bell className="w-5 h-5 text-primary-500" />
-              Notifications
+              {t('settings.notifications.title')}
             </h2>
           </div>
 
           <div className="divide-y divide-neutral-100 dark:divide-dark-border">
             {/* Channels */}
             <div className="px-4 py-3">
-              <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide mb-3">Canaux</p>
+              <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide mb-3">{t('settings.notifications.channels')}</p>
               <div className="space-y-3">
                 {[
-                  { key: 'email' as const, icon: Mail, label: 'Email' },
-                  { key: 'whatsapp' as const, icon: MessageSquare, label: 'WhatsApp' },
-                  { key: 'sms' as const, icon: Smartphone, label: 'SMS' },
-                  { key: 'push' as const, icon: Bell, label: 'Notifications push' },
+                  { key: 'email' as const, icon: Mail, labelKey: 'settings.notifications.email' },
+                  { key: 'whatsapp' as const, icon: MessageSquare, labelKey: 'settings.notifications.whatsapp' },
+                  { key: 'sms' as const, icon: Smartphone, labelKey: 'settings.notifications.sms' },
+                  { key: 'push' as const, icon: Bell, labelKey: 'settings.notifications.push' },
                 ].map((item) => (
                   <div key={item.key} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <item.icon className="w-5 h-5 text-neutral-500" />
-                      <span className="text-neutral-900 dark:text-white">{item.label}</span>
+                      <span className="text-neutral-900 dark:text-white">{t(item.labelKey)}</span>
                     </div>
                     <button
                       onClick={() => handleNotificationChange(item.key)}
@@ -370,15 +372,15 @@ export default function ParametresPage() {
 
             {/* Types */}
             <div className="px-4 py-3">
-              <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide mb-3">Types de notifications</p>
+              <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide mb-3">{t('settings.notifications.types')}</p>
               <div className="space-y-3">
                 {[
-                  { key: 'nouveauxBiens' as const, label: 'Nouveaux biens correspondant a vos criteres' },
-                  { key: 'messages' as const, label: 'Nouveaux messages' },
-                  { key: 'alertesPrix' as const, label: 'Alertes de baisse de prix' },
+                  { key: 'nouveauxBiens' as const, labelKey: 'settings.notifications.newListings' },
+                  { key: 'messages' as const, labelKey: 'settings.notifications.newMessages' },
+                  { key: 'alertesPrix' as const, labelKey: 'settings.notifications.priceAlerts' },
                 ].map((item) => (
                   <div key={item.key} className="flex items-center justify-between">
-                    <span className="text-neutral-900 dark:text-white text-sm">{item.label}</span>
+                    <span className="text-neutral-900 dark:text-white text-sm">{t(item.labelKey)}</span>
                     <button
                       onClick={() => handleNotificationChange(item.key)}
                       className={`w-12 h-7 rounded-full p-1 transition-colors ${notifications[item.key] ? 'bg-primary-500' : 'bg-neutral-200'}`}
@@ -405,7 +407,7 @@ export default function ParametresPage() {
           <div className="px-4 py-3 border-b border-neutral-100 dark:border-dark-border">
             <h2 className="font-semibold text-neutral-900 dark:text-white flex items-center gap-2">
               <Shield className="w-5 h-5 text-primary-500" />
-              Confidentialite
+              {t('settings.privacy.title')}
             </h2>
           </div>
 
@@ -414,14 +416,14 @@ export default function ParametresPage() {
               href="/conditions"
               className="flex items-center justify-between px-4 py-4 hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors"
             >
-              <span className="text-neutral-900 dark:text-white">Conditions d'utilisation</span>
+              <span className="text-neutral-900 dark:text-white">{t('settings.privacy.terms')}</span>
               <ChevronRight className="w-5 h-5 text-neutral-400" />
             </Link>
             <Link
               href="/confidentialite"
               className="flex items-center justify-between px-4 py-4 hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors"
             >
-              <span className="text-neutral-900 dark:text-white">Politique de confidentialite</span>
+              <span className="text-neutral-900 dark:text-white">{t('settings.privacy.privacyPolicy')}</span>
               <ChevronRight className="w-5 h-5 text-neutral-400" />
             </Link>
           </div>
@@ -439,12 +441,12 @@ export default function ParametresPage() {
           {isSaving ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              Enregistrement...
+              {t('settings.saving')}
             </>
           ) : (
             <>
               <Save className="w-5 h-5" />
-              Enregistrer les parametres
+              {t('settings.save')}
             </>
           )}
         </motion.button>
@@ -457,7 +459,7 @@ export default function ParametresPage() {
           className="bg-white dark:bg-dark-card rounded-2xl shadow-soft overflow-hidden border border-red-200 dark:border-red-500/20"
         >
           <div className="px-4 py-3 border-b border-red-100 dark:border-red-500/20 bg-red-50 dark:bg-red-500/5">
-            <h2 className="font-semibold text-red-600 dark:text-red-400">Zone de danger</h2>
+            <h2 className="font-semibold text-red-600 dark:text-red-400">{t('settings.danger.title')}</h2>
           </div>
 
           <div className="divide-y divide-neutral-100 dark:divide-dark-border">
@@ -467,8 +469,8 @@ export default function ParametresPage() {
             >
               <LogOut className="w-5 h-5 text-neutral-500" />
               <div>
-                <p className="font-medium text-neutral-900 dark:text-white">Se deconnecter</p>
-                <p className="text-sm text-neutral-500">Deconnexion de votre compte</p>
+                <p className="font-medium text-neutral-900 dark:text-white">{t('settings.danger.logout')}</p>
+                <p className="text-sm text-neutral-500">{t('settings.danger.logoutDesc')}</p>
               </div>
             </button>
 
@@ -478,8 +480,8 @@ export default function ParametresPage() {
             >
               <Trash2 className="w-5 h-5 text-red-500" />
               <div>
-                <p className="font-medium text-red-600">Supprimer mon compte</p>
-                <p className="text-sm text-neutral-500">Cette action est irreversible</p>
+                <p className="font-medium text-red-600">{t('settings.danger.deleteAccount')}</p>
+                <p className="text-sm text-neutral-500">{t('settings.danger.deleteAccountDesc')}</p>
               </div>
             </button>
           </div>
@@ -494,23 +496,23 @@ export default function ParametresPage() {
               className="bg-white dark:bg-dark-card rounded-2xl p-6 max-w-md w-full"
             >
               <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-2">
-                Supprimer votre compte ?
+                {t('settings.danger.deleteConfirmTitle')}
               </h3>
               <p className="text-neutral-600 dark:text-neutral-400 mb-6">
-                Cette action est irreversible. Toutes vos donnees, annonces et messages seront definitivement supprimes.
+                {t('settings.danger.deleteConfirmDesc')}
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowDeleteConfirm(false)}
                   className="flex-1 py-2.5 bg-neutral-100 dark:bg-dark-bg text-neutral-700 dark:text-neutral-300 font-medium rounded-xl hover:bg-neutral-200 dark:hover:bg-dark-border transition-colors"
                 >
-                  Annuler
+                  {t('settings.danger.cancel')}
                 </button>
                 <button
                   onClick={handleDeleteAccount}
                   className="flex-1 py-2.5 bg-red-500 text-white font-medium rounded-xl hover:bg-red-600 transition-colors"
                 >
-                  Supprimer
+                  {t('settings.danger.delete')}
                 </button>
               </div>
             </motion.div>

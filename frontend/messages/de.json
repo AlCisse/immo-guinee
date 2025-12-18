@@ -445,15 +445,56 @@
   },
   "settings": {
     "title": "Einstellungen",
-    "language": "Sprache",
-    "theme": "Theme",
-    "lightMode": "Hellmodus",
-    "darkMode": "Dunkelmodus",
-    "system": "System",
-    "currency": "Wahrung",
-    "notifications": "Benachrichtigungen",
-    "privacy": "Datenschutz",
-    "deleteAccount": "Konto loschen"
+    "subtitle": "Verwalten Sie Ihre Einstellungen",
+    "savedSuccess": "Einstellungen erfolgreich gespeichert!",
+    "save": "Einstellungen speichern",
+    "saving": "Speichern...",
+    "account": {
+      "title": "Konto",
+      "myProfile": "Mein Profil",
+      "myProfileDesc": "Personliche Informationen bearbeiten",
+      "password": "Passwort",
+      "passwordDesc": "Passwort andern",
+      "currentPassword": "Aktuelles Passwort",
+      "newPassword": "Neues Passwort",
+      "confirmPassword": "Passwort bestatigen",
+      "changePassword": "Passwort andern",
+      "passwordMismatch": "Passworter stimmen nicht uberein"
+    },
+    "appearance": {
+      "title": "Darstellung",
+      "darkMode": "Dunkelmodus",
+      "darkModeDesc": "Dunkles Design aktivieren",
+      "language": "Sprache"
+    },
+    "notifications": {
+      "title": "Benachrichtigungen",
+      "channels": "Kanale",
+      "email": "E-Mail",
+      "whatsapp": "WhatsApp",
+      "sms": "SMS",
+      "push": "Push-Benachrichtigungen",
+      "types": "Benachrichtigungstypen",
+      "newListings": "Neue Immobilien nach Ihren Kriterien",
+      "newMessages": "Neue Nachrichten",
+      "priceAlerts": "Preissenkungsalarme"
+    },
+    "privacy": {
+      "title": "Datenschutz",
+      "terms": "Nutzungsbedingungen",
+      "privacyPolicy": "Datenschutzrichtlinie"
+    },
+    "danger": {
+      "title": "Gefahrenbereich",
+      "logout": "Abmelden",
+      "logoutDesc": "Von Ihrem Konto abmelden",
+      "deleteAccount": "Mein Konto loschen",
+      "deleteAccountDesc": "Diese Aktion ist unwiderruflich",
+      "deleteConfirmTitle": "Konto loschen?",
+      "deleteConfirmDesc": "Diese Aktion ist unwiderruflich. Alle Ihre Daten, Anzeigen und Nachrichten werden dauerhaft geloscht.",
+      "cancel": "Abbrechen",
+      "delete": "Loschen"
+    }
   },
   "footer": {
     "about": "Uber uns",
