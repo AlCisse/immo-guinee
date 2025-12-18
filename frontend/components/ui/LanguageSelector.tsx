@@ -102,58 +102,31 @@ export default function LanguageSelector({
     setIsOpen(false);
   };
 
-  // Navbar variant - globe icon with dropdown
+  // Navbar variant - native select for guaranteed functionality
   if (variant === 'navbar') {
+    const handleNativeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const newLocale = e.target.value as Locale;
+      if (newLocale !== locale) {
+        handleSelect(newLocale);
+      }
+    };
+
     return (
-      <div ref={dropdownRef} className={clsx('relative', className)} style={{ zIndex: 60 }}>
-        <button
-          type="button"
-          onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-neutral-100 dark:hover:bg-dark-bg transition-colors"
+      <div className={clsx('relative flex items-center', className)}>
+        <Globe className="w-5 h-5 text-neutral-700 dark:text-white absolute left-2 pointer-events-none" />
+        <select
+          value={locale}
+          onChange={handleNativeChange}
+          className="appearance-none bg-transparent pl-8 pr-6 py-2 text-sm font-medium text-neutral-700 dark:text-white cursor-pointer hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
           aria-label="Changer de langue"
         >
-          <Globe className="w-5 h-5 text-neutral-700 dark:text-white" />
-        </button>
-
-        {isOpen && (
-          <div
-            className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-dark-card rounded-xl shadow-2xl py-2 border border-neutral-200 dark:border-dark-border"
-            style={{ zIndex: 9999 }}
-          >
-            <div className="px-3 py-2 border-b border-neutral-100 dark:border-dark-border">
-              <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide">
-                {t('language.select')}
-              </p>
-            </div>
-
-            {SUPPORTED_LOCALES.map((loc) => (
-              <button
-                type="button"
-                key={loc.code}
-                onClick={() => {
-                  handleSelect(loc.code);
-                }}
-                className={clsx(
-                  'w-full flex items-center gap-3 px-3 py-2.5 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors',
-                  locale === loc.code ? 'bg-primary-50 dark:bg-primary-500/10' : ''
-                )}
-              >
-                <span className="text-lg">{loc.flag}</span>
-                <span
-                  className={clsx(
-                    'flex-1 text-left text-sm',
-                    locale === loc.code
-                      ? 'font-semibold text-primary-600 dark:text-primary-400'
-                      : 'text-neutral-700 dark:text-neutral-300'
-                  )}
-                >
-                  {loc.nativeName}
-                </span>
-                {locale === loc.code && <Check className="w-4 h-4 text-primary-500" />}
-              </button>
-            ))}
-          </div>
-        )}
+          {SUPPORTED_LOCALES.map((loc) => (
+            <option key={loc.code} value={loc.code}>
+              {loc.flag} {loc.nativeName}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="w-4 h-4 text-neutral-500 dark:text-neutral-400 absolute right-1 pointer-events-none" />
       </div>
     );
   }
