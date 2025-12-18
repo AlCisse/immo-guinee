@@ -133,9 +133,21 @@ export default function OtpVerification({ telephone, onSuccess, onCancel }: OtpV
     }
   };
 
-  const formattedPhone = telephone.startsWith('224')
-    ? `+${telephone}`
-    : `+224${telephone}`;
+  // Format phone for display - handle both Guinea local numbers and international numbers
+  const formatPhoneForDisplay = (phone: string): string => {
+    // Remove any existing + prefix
+    const cleanPhone = phone.replace(/^\+/, '');
+
+    // If it's a 9-digit Guinea local number (starting with 6 or 7), add +224
+    if (cleanPhone.length === 9 && ['6', '7'].includes(cleanPhone[0])) {
+      return `+224 ${cleanPhone}`;
+    }
+
+    // For all other numbers (already have country code), just add +
+    return `+${cleanPhone}`;
+  };
+
+  const formattedPhone = formatPhoneForDisplay(telephone);
 
   return (
     <div className="w-full max-w-md mx-auto">

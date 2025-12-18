@@ -117,13 +117,25 @@ export function isValidGuineanPhone(phone: string): boolean {
 
 /**
  * Format phone number for display
+ * Handles both Guinea local numbers and international numbers
  */
 export function formatPhoneNumber(phone: string): string {
   const cleanPhone = phone.replace(/[\s-+]/g, '');
-  const digits = cleanPhone.replace(/^224/, '').replace(/^0/, '');
 
-  if (digits.length === 9) {
-    return `+224 ${digits.slice(0, 3)} ${digits.slice(3, 5)} ${digits.slice(5, 7)} ${digits.slice(7, 9)}`;
+  // Check if it's a Guinea number (starts with 224 or is a 9-digit local number)
+  if (cleanPhone.startsWith('224')) {
+    const localPart = cleanPhone.slice(3);
+    if (localPart.length === 9) {
+      return `+224 ${localPart.slice(0, 3)} ${localPart.slice(3, 5)} ${localPart.slice(5, 7)} ${localPart.slice(7, 9)}`;
+    }
+    return `+${cleanPhone}`;
   }
-  return phone;
+
+  // Local Guinea number (9 digits starting with 6 or 7)
+  if (cleanPhone.length === 9 && ['6', '7'].includes(cleanPhone[0])) {
+    return `+224 ${cleanPhone.slice(0, 3)} ${cleanPhone.slice(3, 5)} ${cleanPhone.slice(5, 7)} ${cleanPhone.slice(7, 9)}`;
+  }
+
+  // International number - just add + prefix
+  return `+${cleanPhone}`;
 }
