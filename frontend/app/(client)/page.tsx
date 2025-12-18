@@ -2,6 +2,7 @@
 
 import { api } from '@/lib/api/client';
 import { CONAKRY_COMMUNES } from '@/lib/data/communes';
+import { useTranslations } from '@/lib/i18n';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
@@ -273,6 +274,7 @@ function QuartierCard({ quartier }: { quartier: { name: string; count: number } 
 
 export default function ClientHomePage() {
   const router = useRouter();
+  const { t } = useTranslations();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchType, setSearchType] = useState<'location' | 'achat'>('location');
 
@@ -327,13 +329,12 @@ export default function ClientHomePage() {
             className="text-center mb-8 md:mb-12"
           >
             <h1 className="text-3xl md:text-5xl font-bold text-white mb-4">
-              Trouvez votre chez-vous
+              {t('home.hero.title')}
               <br />
-              <span className="text-orange-200">en Guinee</span>
+              <span className="text-orange-200">{t('home.hero.titleHighlight')}</span>
             </h1>
             <p className="text-white/80 text-lg max-w-2xl mx-auto">
-              Des milliers de proprietes a louer et a vendre dans toute la Guinee.
-              Trouvez celle qui vous correspond.
+              {t('home.hero.subtitle')}
             </p>
           </motion.div>
 
@@ -354,7 +355,7 @@ export default function ClientHomePage() {
                     : 'text-white hover:bg-white/10'
                     }`}
                 >
-                  Location
+                  {t('home.hero.rental')}
                 </button>
                 <button
                   onClick={() => setSearchType('achat')}
@@ -363,7 +364,7 @@ export default function ClientHomePage() {
                     : 'text-white hover:bg-white/10'
                     }`}
                 >
-                  Achat
+                  {t('home.hero.purchase')}
                 </button>
               </div>
             </div>
@@ -378,7 +379,7 @@ export default function ClientHomePage() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    placeholder="Quartier, ville ou type de bien..."
+                    placeholder={t('home.hero.searchPlaceholder')}
                     className="flex-1 py-3 sm:py-4 bg-transparent text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none text-sm sm:text-base border-neutral-200 dark:border-neutral-700"
                   />
                 </div>
@@ -389,7 +390,7 @@ export default function ClientHomePage() {
                   className="p-4 md:px-8 md:py-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors shrink-0"
                 >
                   <Search className="w-5 h-5 md:hidden" />
-                  <span className="hidden md:inline">Rechercher</span>
+                  <span className="hidden md:inline">{t('common.search')}</span>
                 </motion.button>
               </div>
             </div>
@@ -415,25 +416,25 @@ export default function ClientHomePage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <CategoryButton
             icon={Home}
-            label="Appartements"
+            label={t('home.categories.apartments')}
             href="/recherche?type_bien=APPARTEMENT"
             color="bg-gradient-to-br from-blue-500 to-blue-600"
           />
           <CategoryButton
             icon={Building2}
-            label="Maisons & Villas"
+            label={t('home.categories.houses')}
             href="/recherche?type_bien=MAISON"
             color="bg-gradient-to-br from-emerald-500 to-emerald-600"
           />
           <CategoryButton
             icon={Store}
-            label="Magasins"
+            label={t('home.categories.shops')}
             href="/recherche?type_bien=MAGASIN"
             color="bg-gradient-to-br from-purple-500 to-purple-600"
           />
           <CategoryButton
             icon={Briefcase}
-            label="Bureaux"
+            label={t('home.categories.offices')}
             href="/recherche?type_bien=BUREAU"
             color="bg-gradient-to-br from-amber-500 to-amber-600"
           />
@@ -445,17 +446,17 @@ export default function ClientHomePage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white mb-2">
-              Annonces Premium
+              {t('home.premium.title')}
             </h2>
             <p className="text-neutral-500 dark:text-neutral-400">
-              Les meilleures proprietes selectionnees pour vous
+              {t('home.premium.subtitle')}
             </p>
           </div>
           <Link
             href="/recherche?premium=true"
             className="hidden md:flex items-center gap-2 text-primary-500 hover:text-primary-600 font-medium"
           >
-            Voir tout
+            {t('home.premium.viewAll')}
             <ChevronRight className="w-5 h-5" />
           </Link>
         </div>
@@ -472,7 +473,7 @@ export default function ClientHomePage() {
           </div>
         ) : (
           <div className="text-center py-12">
-            <p className="text-neutral-500">Aucune annonce premium pour le moment</p>
+            <p className="text-neutral-500">{t('home.premium.noListings')}</p>
           </div>
         )}
 
@@ -481,7 +482,7 @@ export default function ClientHomePage() {
             href="/recherche?premium=true"
             className="inline-flex items-center gap-2 px-6 py-3 bg-primary-500 text-white font-semibold rounded-xl"
           >
-            Voir toutes les annonces
+            {t('home.premium.viewAllListings')}
             <ArrowRight className="w-5 h-5" />
           </Link>
         </div>
@@ -492,10 +493,10 @@ export default function ClientHomePage() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-10">
             <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white mb-2">
-              Explorez par quartier
+              {t('home.quartiers.title')}
             </h2>
             <p className="text-neutral-500 dark:text-neutral-400">
-              Decouvrez les quartiers les plus recherches de Conakry
+              {t('home.quartiers.subtitle')}
             </p>
           </div>
 
@@ -511,10 +512,10 @@ export default function ClientHomePage() {
       <section className="max-w-7xl mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white mb-2">
-            Pourquoi choisir ImmoGuinee ?
+            {t('home.features.title')}
           </h2>
           <p className="text-neutral-500 dark:text-neutral-400">
-            La plateforme immobiliere de reference en Guinee
+            {t('home.features.subtitle')}
           </p>
         </div>
 
@@ -522,28 +523,28 @@ export default function ClientHomePage() {
           {[
             {
               icon: Shield,
-              title: 'Annonces verifiees',
-              description: 'Toutes nos annonces sont verifiees par notre equipe pour garantir leur authenticite.',
+              title: t('home.features.verified.title'),
+              description: t('home.features.verified.description'),
               color: 'text-emerald-500',
               bg: 'bg-emerald-50 dark:bg-emerald-500/10',
             },
             {
               icon: Clock,
-              title: 'Reponse rapide',
-              description: 'Contactez directement les proprietaires et obtenez une reponse en moins de 24h.',
+              title: t('home.features.fast.title'),
+              description: t('home.features.fast.description'),
               color: 'text-blue-500',
               bg: 'bg-blue-50 dark:bg-blue-500/10',
             },
             {
               icon: Zap,
-              title: 'Simple et efficace',
-              description: 'Une interface intuitive pour trouver votre bien ideal en quelques clics.',
+              title: t('home.features.simple.title'),
+              description: t('home.features.simple.description'),
               color: 'text-primary-500',
               bg: 'bg-primary-50 dark:bg-primary-500/10',
             },
           ].map((feature, index) => (
             <motion.div
-              key={feature.title}
+              key={index}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -569,13 +570,13 @@ export default function ClientHomePage() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
-              { value: '5000+', label: 'Annonces actives', icon: Home },
-              { value: '15K+', label: 'Utilisateurs', icon: Users },
-              { value: '98%', label: 'Satisfaction', icon: Star },
-              { value: '24/7', label: 'Support', icon: Phone },
+              { value: '5000+', label: t('home.stats.activeListings'), icon: Home },
+              { value: '15K+', label: t('home.stats.users'), icon: Users },
+              { value: '98%', label: t('home.stats.satisfaction'), icon: Star },
+              { value: '24/7', label: t('home.stats.support'), icon: Phone },
             ].map((stat, index) => (
               <motion.div
-                key={stat.label}
+                key={index}
                 initial={{ opacity: 0, scale: 0.8 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
@@ -605,10 +606,10 @@ export default function ClientHomePage() {
 
           <div className="relative z-10">
             <h2 className="text-2xl md:text-4xl font-bold text-white mb-4">
-              Vous avez un bien a louer ou vendre ?
+              {t('home.cta.title')}
             </h2>
             <p className="text-neutral-400 mb-8 max-w-2xl mx-auto">
-              Publiez votre annonce gratuitement et touchez des milliers de clients potentiels en Guinee.
+              {t('home.cta.subtitle')}
             </p>
             <Link href="/publier">
               <motion.button
@@ -616,7 +617,7 @@ export default function ClientHomePage() {
                 whileTap={{ scale: 0.95 }}
                 className="px-8 py-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl inline-flex items-center gap-2 transition-colors"
               >
-                Publier une annonce
+                {t('home.cta.button')}
                 <ArrowRight className="w-5 h-5" />
               </motion.button>
             </Link>
@@ -630,11 +631,10 @@ export default function ClientHomePage() {
           <div className="flex flex-col md:flex-row items-center gap-8">
             <div className="flex-1">
               <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white mb-4">
-                Telechargez l'app ImmoGuinee
+                {t('home.app.title')}
               </h2>
               <p className="text-neutral-600 dark:text-neutral-400 mb-6">
-                Recevez des alertes instantanees pour les nouvelles annonces,
-                discutez avec les proprietaires et gerez vos favoris ou que vous soyez.
+                {t('home.app.subtitle')}
               </p>
               <div className="flex gap-4">
                 <motion.button
@@ -644,7 +644,7 @@ export default function ClientHomePage() {
                 >
                   <Play className="w-6 h-6" />
                   <div className="text-left">
-                    <p className="text-[10px] opacity-80">Disponible sur</p>
+                    <p className="text-[10px] opacity-80">{t('home.app.availableOn')}</p>
                     <p className="font-semibold">Google Play</p>
                   </div>
                 </motion.button>
@@ -657,7 +657,7 @@ export default function ClientHomePage() {
                     <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
                   </svg>
                   <div className="text-left">
-                    <p className="text-[10px] opacity-80">Telecharger sur</p>
+                    <p className="text-[10px] opacity-80">{t('home.app.downloadOn')}</p>
                     <p className="font-semibold">App Store</p>
                   </div>
                 </motion.button>

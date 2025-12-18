@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState, Suspense } from 'react';
 import { AuthProvider } from '@/lib/auth/AuthContext';
+import { LocaleProvider } from '@/lib/i18n';
 import NavigationProgress from '@/components/ui/NavigationProgress';
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -21,12 +22,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Suspense fallback={null}>
-          <NavigationProgress />
-        </Suspense>
-        {children}
-      </AuthProvider>
+      <LocaleProvider>
+        <AuthProvider>
+          <Suspense fallback={null}>
+            <NavigationProgress />
+          </Suspense>
+          {children}
+        </AuthProvider>
+      </LocaleProvider>
     </QueryClientProvider>
   );
 }

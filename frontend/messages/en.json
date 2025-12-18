@@ -1,0 +1,505 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "viewAll": "View all",
+    "seeMore": "See more",
+    "seeLess": "See less",
+    "yes": "Yes",
+    "no": "No",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit",
+    "send": "Send",
+    "apply": "Apply",
+    "reset": "Reset",
+    "noResults": "No results",
+    "required": "Required",
+    "optional": "Optional",
+    "perMonth": "/month",
+    "perDay": "/day",
+    "new": "New",
+    "rooms": "bed",
+    "bathrooms": "bath",
+    "area": "sqm"
+  },
+  "nav": {
+    "home": "Home",
+    "search": "Search",
+    "favorites": "Favorites",
+    "messages": "Messages",
+    "profile": "Profile",
+    "publish": "Publish",
+    "login": "Log in",
+    "register": "Sign up",
+    "logout": "Log out",
+    "loggingOut": "Logging out...",
+    "dashboard": "Dashboard",
+    "myListings": "My listings",
+    "contracts": "Contracts",
+    "payments": "Payments",
+    "visits": "Visits",
+    "settings": "Settings",
+    "help": "Help",
+    "notifications": "Notifications",
+    "markAllRead": "Mark all as read",
+    "noNotifications": "No notifications",
+    "viewAllNotifications": "View all notifications",
+    "darkMode": "Dark mode",
+    "lightMode": "Light mode",
+    "visitor": "Visitor",
+    "notConnected": "Not connected",
+    "user": "User"
+  },
+  "home": {
+    "hero": {
+      "title": "Find your home",
+      "titleHighlight": "in Guinea",
+      "subtitle": "Thousands of properties for rent and sale throughout Guinea. Find the one that suits you.",
+      "searchPlaceholder": "Neighborhood, city or property type...",
+      "rental": "Rental",
+      "purchase": "Purchase"
+    },
+    "categories": {
+      "apartments": "Apartments",
+      "houses": "Houses & Villas",
+      "shops": "Shops",
+      "offices": "Offices"
+    },
+    "premium": {
+      "title": "Premium Listings",
+      "subtitle": "The best properties selected for you",
+      "viewAll": "View all",
+      "viewAllListings": "View all listings",
+      "noListings": "No premium listings at the moment"
+    },
+    "quartiers": {
+      "title": "Explore by neighborhood",
+      "subtitle": "Discover the most popular neighborhoods in Conakry",
+      "listings": "listings"
+    },
+    "features": {
+      "title": "Why choose ImmoGuinee?",
+      "subtitle": "The leading real estate platform in Guinea",
+      "verified": {
+        "title": "Verified listings",
+        "description": "All our listings are verified by our team to guarantee their authenticity."
+      },
+      "fast": {
+        "title": "Fast response",
+        "description": "Contact owners directly and get a response within 24 hours."
+      },
+      "simple": {
+        "title": "Simple and effective",
+        "description": "An intuitive interface to find your ideal property in a few clicks."
+      }
+    },
+    "stats": {
+      "activeListings": "Active listings",
+      "users": "Users",
+      "satisfaction": "Satisfaction",
+      "support": "Support"
+    },
+    "cta": {
+      "title": "Do you have a property to rent or sell?",
+      "subtitle": "Publish your listing for free and reach thousands of potential clients in Guinea.",
+      "button": "Publish a listing"
+    },
+    "app": {
+      "title": "Download the ImmoGuinee app",
+      "subtitle": "Receive instant alerts for new listings, chat with owners and manage your favorites wherever you are.",
+      "availableOn": "Available on",
+      "downloadOn": "Download on"
+    }
+  },
+  "search": {
+    "title": "Search",
+    "results": "results",
+    "noResults": "No property matches your criteria",
+    "filters": {
+      "title": "Filters",
+      "propertyType": "Property type",
+      "transactionType": "Transaction type",
+      "location": "Location",
+      "commune": "District",
+      "quartier": "Neighborhood",
+      "priceRange": "Price range",
+      "minPrice": "Min price",
+      "maxPrice": "Max price",
+      "bedrooms": "Bedrooms",
+      "bathrooms": "Bathrooms",
+      "surface": "Surface area",
+      "minSurface": "Min surface",
+      "maxSurface": "Max surface",
+      "amenities": "Amenities",
+      "applyFilters": "Apply filters",
+      "resetFilters": "Reset"
+    },
+    "sort": {
+      "newest": "Newest",
+      "oldest": "Oldest",
+      "priceAsc": "Price: Low to High",
+      "priceDesc": "Price: High to Low",
+      "surfaceAsc": "Surface: Small to Large",
+      "surfaceDesc": "Surface: Large to Small"
+    },
+    "propertyTypes": {
+      "all": "All",
+      "apartment": "Apartment",
+      "house": "House",
+      "villa": "Villa",
+      "studio": "Studio",
+      "land": "Land",
+      "office": "Office",
+      "shop": "Shop",
+      "warehouse": "Warehouse"
+    },
+    "transactionTypes": {
+      "all": "All",
+      "rental": "Rental",
+      "sale": "Sale",
+      "shortRental": "Short-term rental"
+    }
+  },
+  "listing": {
+    "details": "Details",
+    "description": "Description",
+    "amenities": "Amenities",
+    "location": "Location",
+    "contact": "Contact",
+    "contactOwner": "Contact owner",
+    "schedule": "Schedule a visit",
+    "share": "Share",
+    "report": "Report",
+    "similar": "Similar listings",
+    "price": "Price",
+    "surface": "Surface",
+    "bedrooms": "Bedrooms",
+    "bathrooms": "Bathrooms",
+    "floor": "Floor",
+    "furnished": "Furnished",
+    "parking": "Parking",
+    "availability": "Availability",
+    "available": "Available",
+    "unavailable": "Not available",
+    "publishedOn": "Published on",
+    "views": "views",
+    "addToFavorites": "Add to favorites",
+    "removeFromFavorites": "Remove from favorites",
+    "owner": {
+      "title": "Owner",
+      "verified": "Verified",
+      "memberSince": "Member since",
+      "responseTime": "Response time",
+      "responseRate": "Response rate"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Log in",
+      "subtitle": "Welcome to ImmoGuinee",
+      "email": "Email",
+      "phone": "Phone",
+      "password": "Password",
+      "rememberMe": "Remember me",
+      "forgotPassword": "Forgot password?",
+      "loginButton": "Log in",
+      "noAccount": "Don't have an account?",
+      "register": "Sign up",
+      "or": "or",
+      "continueWithGoogle": "Continue with Google",
+      "continueWithFacebook": "Continue with Facebook",
+      "errors": {
+        "invalidCredentials": "Invalid email or password",
+        "accountLocked": "Account locked. Please contact support.",
+        "serverError": "Server error. Please try again."
+      }
+    },
+    "register": {
+      "title": "Sign up",
+      "subtitle": "Join ImmoGuinee",
+      "fullName": "Full name",
+      "email": "Email",
+      "phone": "Phone",
+      "password": "Password",
+      "confirmPassword": "Confirm password",
+      "accountType": "Account type",
+      "individual": "Individual",
+      "professional": "Professional",
+      "agency": "Agency",
+      "terms": "I accept the terms of service",
+      "termsLink": "terms of service",
+      "privacy": "privacy policy",
+      "registerButton": "Sign up",
+      "hasAccount": "Already have an account?",
+      "login": "Log in",
+      "errors": {
+        "emailExists": "This email is already in use",
+        "phoneExists": "This phone number is already in use",
+        "passwordMismatch": "Passwords do not match",
+        "weakPassword": "Password must contain at least 8 characters",
+        "serverError": "Server error. Please try again."
+      }
+    },
+    "forgotPassword": {
+      "title": "Forgot password",
+      "subtitle": "Enter your email to reset your password",
+      "email": "Email",
+      "sendLink": "Send link",
+      "backToLogin": "Back to login",
+      "success": "A reset email has been sent"
+    },
+    "otp": {
+      "title": "Verification",
+      "subtitle": "Enter the code sent to your phone",
+      "resend": "Resend code",
+      "resendIn": "Resend in",
+      "verify": "Verify"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome",
+    "stats": {
+      "activeListings": "Active listings",
+      "totalViews": "Total views",
+      "messages": "Messages",
+      "favorites": "Favorites received"
+    },
+    "recentActivity": "Recent activity",
+    "myListings": {
+      "title": "My listings",
+      "create": "Create a listing",
+      "noListings": "You don't have any listings yet",
+      "status": {
+        "active": "Active",
+        "pending": "Pending",
+        "rejected": "Rejected",
+        "expired": "Expired",
+        "rented": "Rented",
+        "sold": "Sold"
+      }
+    },
+    "contracts": {
+      "title": "My contracts",
+      "noContracts": "No contracts",
+      "status": {
+        "draft": "Draft",
+        "pending": "Pending",
+        "signed": "Signed",
+        "active": "Active",
+        "terminated": "Terminated"
+      }
+    },
+    "visits": {
+      "title": "My visits",
+      "noVisits": "No scheduled visits",
+      "schedule": "Schedule",
+      "status": {
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      }
+    }
+  },
+  "publish": {
+    "title": "Publish a listing",
+    "steps": {
+      "type": "Property type",
+      "details": "Details",
+      "location": "Location",
+      "photos": "Photos",
+      "pricing": "Price",
+      "review": "Review"
+    },
+    "propertyType": {
+      "title": "What type of property do you want to publish?",
+      "transaction": "Transaction type",
+      "rental": "Rental",
+      "sale": "Sale",
+      "shortRental": "Short-term rental"
+    },
+    "details": {
+      "title": "Property details",
+      "name": "Listing title",
+      "description": "Description",
+      "surface": "Surface area (sqm)",
+      "bedrooms": "Number of bedrooms",
+      "bathrooms": "Number of bathrooms",
+      "floor": "Floor",
+      "totalFloors": "Total floors",
+      "furnished": "Furnished",
+      "amenities": "Amenities"
+    },
+    "location": {
+      "title": "Property location",
+      "commune": "District",
+      "quartier": "Neighborhood",
+      "address": "Full address",
+      "selectOnMap": "Select on map"
+    },
+    "photos": {
+      "title": "Property photos",
+      "subtitle": "Add photos to attract more visitors",
+      "upload": "Add photos",
+      "mainPhoto": "Main photo",
+      "setAsMain": "Set as main",
+      "delete": "Delete",
+      "minPhotos": "Minimum 3 photos required",
+      "maxPhotos": "Maximum 20 photos"
+    },
+    "pricing": {
+      "title": "Price",
+      "monthlyRent": "Monthly rent",
+      "dailyRate": "Daily rate",
+      "salePrice": "Sale price",
+      "deposit": "Deposit",
+      "agencyFees": "Agency fees",
+      "negotiable": "Negotiable price"
+    },
+    "review": {
+      "title": "Review",
+      "subtitle": "Check the information before publishing",
+      "publish": "Publish listing",
+      "saveDraft": "Save as draft"
+    },
+    "success": {
+      "title": "Listing published!",
+      "subtitle": "Your listing has been submitted for review",
+      "viewListing": "View listing",
+      "createAnother": "Create another listing"
+    }
+  },
+  "messages": {
+    "title": "Messages",
+    "noMessages": "No messages",
+    "noConversation": "Select a conversation",
+    "typeMessage": "Type your message...",
+    "send": "Send",
+    "online": "Online",
+    "offline": "Offline",
+    "lastSeen": "Seen",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "typing": "is typing..."
+  },
+  "favorites": {
+    "title": "Favorites",
+    "noFavorites": "No favorites",
+    "addedOn": "Added on"
+  },
+  "profile": {
+    "title": "My profile",
+    "edit": "Edit profile",
+    "personalInfo": "Personal information",
+    "fullName": "Full name",
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address",
+    "bio": "Bio",
+    "accountType": "Account type",
+    "memberSince": "Member since",
+    "verification": {
+      "title": "Verification",
+      "verified": "Verified",
+      "notVerified": "Not verified",
+      "verifyNow": "Verify now",
+      "idCard": "ID card",
+      "phone": "Phone",
+      "email": "Email"
+    },
+    "security": {
+      "title": "Security",
+      "changePassword": "Change password",
+      "twoFactor": "Two-factor authentication",
+      "enable": "Enable",
+      "disable": "Disable"
+    },
+    "preferences": {
+      "title": "Preferences",
+      "notifications": "Notifications",
+      "emailNotifications": "Email notifications",
+      "smsNotifications": "SMS notifications",
+      "pushNotifications": "Push notifications"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "theme": "Theme",
+    "lightMode": "Light mode",
+    "darkMode": "Dark mode",
+    "system": "System",
+    "currency": "Currency",
+    "notifications": "Notifications",
+    "privacy": "Privacy",
+    "deleteAccount": "Delete account"
+  },
+  "footer": {
+    "about": "About",
+    "aboutUs": "About us",
+    "careers": "Careers",
+    "press": "Press",
+    "contact": "Contact",
+    "services": "Services",
+    "publishListing": "Publish a listing",
+    "premiumListings": "Premium listings",
+    "certification": "Certification",
+    "insurance": "Insurance",
+    "legal": "Legal",
+    "terms": "Terms of service",
+    "privacy": "Privacy policy",
+    "cookies": "Cookie policy",
+    "help": "Help",
+    "faq": "FAQ",
+    "support": "Support",
+    "guidelines": "Publication guidelines",
+    "social": "Follow us",
+    "copyright": "All rights reserved",
+    "madeWith": "Made with",
+    "inGuinea": "in Guinea"
+  },
+  "errors": {
+    "404": {
+      "title": "Page not found",
+      "subtitle": "The page you are looking for does not exist or has been moved.",
+      "backHome": "Back to home"
+    },
+    "500": {
+      "title": "Server error",
+      "subtitle": "An error occurred. Please try again later.",
+      "retry": "Retry"
+    },
+    "network": {
+      "title": "Connection error",
+      "subtitle": "Check your internet connection and try again.",
+      "retry": "Retry"
+    }
+  },
+  "time": {
+    "justNow": "Just now",
+    "minutesAgo": "{count}min ago",
+    "hoursAgo": "{count}h ago",
+    "daysAgo": "{count}d ago"
+  },
+  "language": {
+    "select": "Select language",
+    "fr": "Francais",
+    "en": "English",
+    "es": "Espanol",
+    "de": "Deutsch",
+    "zh": "Zhongwen"
+  }
+}
