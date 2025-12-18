@@ -3,8 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Globe, Check, ChevronDown } from 'lucide-react';
 import { clsx } from 'clsx';
-import { useLocale } from '@/lib/i18n';
-import { SUPPORTED_LOCALES, type Locale } from '@/lib/i18n/config';
+import { SUPPORTED_LOCALES, type Locale, defaultLocale } from '@/lib/i18n/config';
 
 interface LanguageSelectorProps {
   variant?: 'dropdown' | 'buttons' | 'compact' | 'navbar';
@@ -12,20 +11,61 @@ interface LanguageSelectorProps {
   className?: string;
 }
 
+// Standalone hook for language management (doesn't require context)
+function useLanguage() {
+  const [locale, setLocaleState] = useState<Locale>(defaultLocale);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+    // Read locale from localStorage on mount
+    const savedLocale = localStorage.getItem('immoguinee-locale');
+    if (savedLocale && SUPPORTED_LOCALES.some(l => l.code === savedLocale)) {
+      setLocaleState(savedLocale as Locale);
+    }
+  }, []);
+
+  const setLocale = useCallback((newLocale: Locale) => {
+    setLocaleState(newLocale);
+    localStorage.setItem('immoguinee-locale', newLocale);
+    // Update HTML lang attribute
+    document.documentElement.lang = newLocale;
+    // Reload page to apply new translations
+    window.location.reload();
+  }, []);
+
+  const t = useCallback((key: string) => {
+    // Simple translation - returns key if not found
+    const translations: Record<string, string> = {
+      'language.select': locale === 'fr' ? 'Choisir la langue' :
+                         locale === 'en' ? 'Select language' :
+                         locale === 'es' ? 'Seleccionar idioma' :
+                         locale === 'de' ? 'Sprache wahlen' :
+                         '选择语言',
+      'settings.language': locale === 'fr' ? 'Langue' :
+                           locale === 'en' ? 'Language' :
+                           locale === 'es' ? 'Idioma' :
+                           locale === 'de' ? 'Sprache' :
+                           '语言',
+    };
+    return translations[key] || key;
+  }, [locale]);
+
+  return { locale, setLocale, t, isClient };
+}
+
 export default function LanguageSelector({
   variant = 'dropdown',
   showNativeName = true,
   className,
 }: LanguageSelectorProps) {
-  const { locale, setLocale, t } = useLocale();
+  const { locale, setLocale, t, isClient } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const currentConfig = SUPPORTED_LOCALES.find((l) => l.code === locale) || SUPPORTED_LOCALES[0];
 
-  // Toggle dropdown with useCallback for stability
-  const toggleDropdown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  // Toggle dropdown
+  const toggleDropdown = useCallback(() => {
     setIsOpen((prev) => !prev);
   }, []);
 
@@ -65,23 +105,20 @@ export default function LanguageSelector({
   // Navbar variant - globe icon with dropdown
   if (variant === 'navbar') {
     return (
-      <div ref={dropdownRef} className={clsx('relative z-[60]', className)}>
+      <div ref={dropdownRef} className={clsx('relative', className)} style={{ zIndex: 60 }}>
         <button
           type="button"
-          onClick={toggleDropdown}
-          className="flex items-center gap-2 p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-dark-bg transition-colors cursor-pointer"
-          aria-label={t('language.select')}
-          aria-expanded={isOpen}
-          aria-haspopup="listbox"
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-neutral-100 dark:hover:bg-dark-bg transition-colors"
+          aria-label="Changer de langue"
         >
-          <Globe className="w-5 h-5 text-neutral-700 dark:text-white pointer-events-none" />
+          <Globe className="w-5 h-5 text-neutral-700 dark:text-white" />
         </button>
 
         {isOpen && (
           <div
-            className="absolute right-0 top-12 w-48 bg-white dark:bg-dark-card rounded-xl shadow-2xl py-2 z-[70] border border-neutral-200 dark:border-dark-border"
-            role="listbox"
-            aria-label={t('language.select')}
+            className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-dark-card rounded-xl shadow-2xl py-2 border border-neutral-200 dark:border-dark-border"
+            style={{ zIndex: 9999 }}
           >
             <div className="px-3 py-2 border-b border-neutral-100 dark:border-dark-border">
               <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide">
@@ -93,13 +130,13 @@ export default function LanguageSelector({
               <button
                 type="button"
                 key={loc.code}
-                onClick={() => handleSelect(loc.code)}
+                onClick={() => {
+                  handleSelect(loc.code);
+                }}
                 className={clsx(
-                  'w-full flex items-center gap-3 px-3 py-2.5 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors cursor-pointer',
+                  'w-full flex items-center gap-3 px-3 py-2.5 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors',
                   locale === loc.code ? 'bg-primary-50 dark:bg-primary-500/10' : ''
                 )}
-                role="option"
-                aria-selected={locale === loc.code}
               >
                 <span className="text-lg">{loc.flag}</span>
                 <span
@@ -130,7 +167,7 @@ export default function LanguageSelector({
             key={loc.code}
             onClick={() => handleSelect(loc.code)}
             className={clsx(
-              'px-3 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer',
+              'px-3 py-2 rounded-lg text-sm font-medium transition-colors',
               locale === loc.code
                 ? 'bg-primary-500 text-white'
                 : 'bg-neutral-100 dark:bg-dark-bg text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-dark-hover'
@@ -147,30 +184,28 @@ export default function LanguageSelector({
 
   if (variant === 'compact') {
     return (
-      <div ref={dropdownRef} className={clsx('relative inline-block z-[60]', className)}>
+      <div ref={dropdownRef} className={clsx('relative inline-block', className)} style={{ zIndex: 60 }}>
         <button
           type="button"
-          onClick={toggleDropdown}
-          className="flex items-center gap-1 px-2 py-1 rounded-lg text-sm font-medium bg-neutral-100 dark:bg-dark-bg hover:bg-neutral-200 dark:hover:bg-dark-hover transition-colors text-neutral-700 dark:text-neutral-300 cursor-pointer"
-          aria-expanded={isOpen}
-          aria-haspopup="listbox"
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex items-center gap-1 px-2 py-1 rounded-lg text-sm font-medium bg-neutral-100 dark:bg-dark-bg hover:bg-neutral-200 dark:hover:bg-dark-hover transition-colors text-neutral-700 dark:text-neutral-300"
         >
           <span>{currentConfig.flag}</span>
           <span className="hidden sm:inline">{locale.toUpperCase()}</span>
           <ChevronDown
-            className={clsx('w-4 h-4 transition-transform pointer-events-none', isOpen && 'rotate-180')}
+            className={clsx('w-4 h-4 transition-transform', isOpen && 'rotate-180')}
           />
         </button>
 
         {isOpen && (
-          <div className="absolute right-0 mt-1 w-36 bg-white dark:bg-dark-card rounded-lg shadow-lg border border-neutral-200 dark:border-dark-border py-1 z-[70]">
+          <div className="absolute right-0 mt-1 w-36 bg-white dark:bg-dark-card rounded-lg shadow-lg border border-neutral-200 dark:border-dark-border py-1" style={{ zIndex: 9999 }}>
             {SUPPORTED_LOCALES.map((loc) => (
               <button
                 type="button"
                 key={loc.code}
                 onClick={() => handleSelect(loc.code)}
                 className={clsx(
-                  'w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-neutral-50 dark:hover:bg-dark-hover cursor-pointer',
+                  'w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-neutral-50 dark:hover:bg-dark-hover',
                   locale === loc.code && 'bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400'
                 )}
               >
@@ -192,10 +227,8 @@ export default function LanguageSelector({
       </label>
       <button
         type="button"
-        onClick={toggleDropdown}
-        className="w-full flex items-center justify-between px-4 py-3 bg-white dark:bg-dark-card border border-neutral-300 dark:border-dark-border rounded-xl hover:border-neutral-400 dark:hover:border-neutral-600 transition-colors cursor-pointer"
-        aria-expanded={isOpen}
-        aria-haspopup="listbox"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between px-4 py-3 bg-white dark:bg-dark-card border border-neutral-300 dark:border-dark-border rounded-xl hover:border-neutral-400 dark:hover:border-neutral-600 transition-colors"
       >
         <div className="flex items-center gap-3">
           <span className="text-xl">{currentConfig.flag}</span>
@@ -205,19 +238,19 @@ export default function LanguageSelector({
           </div>
         </div>
         <ChevronDown
-          className={clsx('w-5 h-5 text-neutral-400 transition-transform pointer-events-none', isOpen && 'rotate-180')}
+          className={clsx('w-5 h-5 text-neutral-400 transition-transform', isOpen && 'rotate-180')}
         />
       </button>
 
       {isOpen && (
-        <div className="absolute w-full mt-2 bg-white dark:bg-dark-card rounded-xl shadow-lg border border-neutral-200 dark:border-dark-border py-2 z-[70]">
+        <div className="absolute w-full mt-2 bg-white dark:bg-dark-card rounded-xl shadow-lg border border-neutral-200 dark:border-dark-border py-2" style={{ zIndex: 9999 }}>
           {SUPPORTED_LOCALES.map((loc) => (
             <button
               type="button"
               key={loc.code}
               onClick={() => handleSelect(loc.code)}
               className={clsx(
-                'w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors cursor-pointer',
+                'w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors',
                 locale === loc.code && 'bg-primary-50 dark:bg-primary-500/10'
               )}
             >
