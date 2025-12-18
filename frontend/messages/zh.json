@@ -41,12 +41,16 @@
     "messages": "消息",
     "profile": "个人资料",
     "publish": "发布",
+    "publishListing": "发布房源",
     "login": "登录",
     "register": "注册",
     "logout": "退出登录",
     "loggingOut": "正在退出...",
     "dashboard": "控制面板",
     "myListings": "我的房源",
+    "myProfile": "我的资料",
+    "myFavorites": "我的收藏",
+    "myContracts": "我的合同",
     "contracts": "合同",
     "payments": "付款",
     "visits": "看房",
@@ -60,7 +64,11 @@
     "lightMode": "浅色模式",
     "visitor": "访客",
     "notConnected": "未登录",
-    "user": "用户"
+    "user": "用户",
+    "rent": "租房",
+    "buy": "买房",
+    "commercial": "商业",
+    "estimate": "估价"
   },
   "home": {
     "hero": {

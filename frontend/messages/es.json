@@ -41,12 +41,16 @@
     "messages": "Mensajes",
     "profile": "Perfil",
     "publish": "Publicar",
+    "publishListing": "Publicar un anuncio",
     "login": "Iniciar sesion",
     "register": "Registrarse",
     "logout": "Cerrar sesion",
     "loggingOut": "Cerrando sesion...",
     "dashboard": "Panel de control",
     "myListings": "Mis anuncios",
+    "myProfile": "Mi perfil",
+    "myFavorites": "Mis favoritos",
+    "myContracts": "Mis contratos",
     "contracts": "Contratos",
     "payments": "Pagos",
     "visits": "Visitas",
@@ -60,7 +64,11 @@
     "lightMode": "Modo claro",
     "visitor": "Visitante",
     "notConnected": "No conectado",
-    "user": "Usuario"
+    "user": "Usuario",
+    "rent": "Alquilar",
+    "buy": "Comprar",
+    "commercial": "Comercial",
+    "estimate": "Estimar"
   },
   "home": {
     "hero": {

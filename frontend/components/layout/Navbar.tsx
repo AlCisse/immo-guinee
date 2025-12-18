@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useLocale } from '@/lib/i18n';
+import type { NavItem } from '@/lib/routes';
 import { useUserCounts, useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead, type Notification } from '@/lib/hooks/useNotifications';
 import {
   ROUTES,
@@ -45,6 +46,7 @@ function NotificationDropdown({
   isOpen: boolean;
   onClose: () => void;
 }) {
+  const { t } = useLocale();
   const { data, isLoading } = useNotifications(isOpen);
   const markAsRead = useMarkNotificationRead();
   const markAllAsRead = useMarkAllNotificationsRead();
@@ -82,11 +84,11 @@ function NotificationDropdown({
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
 
-    if (minutes < 1) return "A l'instant";
-    if (minutes < 60) return `Il y a ${minutes}min`;
-    if (hours < 24) return `Il y a ${hours}h`;
-    if (days < 7) return `Il y a ${days}j`;
-    return date.toLocaleDateString('fr-FR');
+    if (minutes < 1) return t('time.justNow');
+    if (minutes < 60) return t('time.minutesAgo').replace('{count}', String(minutes));
+    if (hours < 24) return t('time.hoursAgo').replace('{count}', String(hours));
+    if (days < 7) return t('time.daysAgo').replace('{count}', String(days));
+    return date.toLocaleDateString();
   };
 
   if (!isOpen) return null;
@@ -98,7 +100,7 @@ function NotificationDropdown({
     >
       {/* Header */}
       <div className="px-4 py-3 border-b border-neutral-100 dark:border-dark-border flex items-center justify-between">
-        <h3 className="font-semibold text-neutral-900 dark:text-white">Notifications</h3>
+        <h3 className="font-semibold text-neutral-900 dark:text-white">{t('nav.notifications')}</h3>
         {unreadCount > 0 && (
           <button
             onClick={handleMarkAllAsRead}
@@ -110,7 +112,7 @@ function NotificationDropdown({
             ) : (
               <Check className="w-3 h-3" />
             )}
-            Tout marquer lu
+            {t('nav.markAllRead')}
           </button>
         )}
       </div>
@@ -124,7 +126,7 @@ function NotificationDropdown({
         ) : notifications.length === 0 ? (
           <div className="py-8 text-center">
             <Bell className="w-10 h-10 mx-auto mb-3 text-neutral-300" />
-            <p className="text-sm text-neutral-500">Aucune notification</p>
+            <p className="text-sm text-neutral-500">{t('nav.noNotifications')}</p>
           </div>
         ) : (
           <div className="divide-y divide-neutral-100 dark:divide-dark-border">
@@ -167,7 +169,7 @@ function NotificationDropdown({
             onClick={onClose}
             className="text-sm text-primary-500 hover:text-primary-600 font-medium block text-center"
           >
-            Voir toutes les notifications
+            {t('nav.viewAllNotifications')}
           </Link>
         </div>
       )}
@@ -222,6 +224,7 @@ interface NavbarProps {
 export default function Navbar({ variant = 'full' }: NavbarProps) {
   const pathname = usePathname();
   const { user, isAuthenticated, logout } = useAuth();
+  const { t } = useLocale();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -365,7 +368,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
             <nav className="flex items-center gap-8">
               {DESKTOP_NAV_ITEMS.map((item) => (
                 <Link
-                  key={item.label}
+                  key={item.labelKey}
                   href={item.href}
                   className={`text-sm font-medium transition-colors ${
                     isActiveRoute(pathname, item.href)
@@ -373,7 +376,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
                       : 'text-neutral-700 dark:text-neutral-300 hover:text-primary-500'
                   }`}
                 >
-                  {item.label}
+                  {t(item.labelKey)}
                 </Link>
               ))}
             </nav>
@@ -426,7 +429,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
                   className="flex items-center gap-2 px-4 py-2 bg-primary-500 hover:bg-primary-600 active:scale-95 text-white font-medium rounded-xl transition-all duration-150"
                 >
                   <Plus className="w-4 h-4" />
-                  Publier
+                  {t('nav.publish')}
                 </button>
               </Link>
 
@@ -464,7 +467,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
                         return !item.forAccountTypes;
                       }).map((item) => (
                         <Link
-                          key={item.label}
+                          key={item.labelKey}
                           href={item.href}
                           onClick={() => setShowUserMenu(false)}
                           className={`flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-50 dark:hover:bg-dark-bg text-neutral-700 dark:text-neutral-300 ${
@@ -472,7 +475,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
                           }`}
                         >
                           <item.icon className="w-4 h-4" />
-                          {item.label}
+                          {t(item.labelKey)}
                           {item.badge && getBadgeCount(item.badge) ? (
                             <span className="ml-auto px-2 py-0.5 bg-primary-100 dark:bg-primary-500/10 text-primary-600 text-xs font-semibold rounded-full">
                               {getBadgeCount(item.badge)}
@@ -492,7 +495,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
                           ) : (
                             <LogOut className="w-4 h-4" />
                           )}
-                          {isLoggingOut ? 'Deconnexion...' : 'Deconnexion'}
+                          {isLoggingOut ? t('nav.loggingOut') : t('nav.logout')}
                         </button>
                       </div>
                     </div>
@@ -504,7 +507,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
                     className="flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-150 bg-neutral-100 dark:bg-dark-bg text-neutral-700 dark:text-white hover:bg-neutral-200 dark:hover:bg-dark-hover active:scale-95"
                   >
                     <User className="w-4 h-4" />
-                    Se connecter
+                    {t('nav.login')}
                   </button>
                 </Link>
               )}
@@ -586,8 +589,8 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
                       <User className="w-6 h-6" />
                     </div>
                     <div>
-                      <p className="font-semibold text-neutral-900 dark:text-white">Visiteur</p>
-                      <p className="text-sm text-neutral-500">Non connecte</p>
+                      <p className="font-semibold text-neutral-900 dark:text-white">{t('nav.visitor')}</p>
+                      <p className="text-sm text-neutral-500">{t('nav.notConnected')}</p>
                     </div>
                   </div>
                 )}
@@ -603,7 +606,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
                 <Link href={ROUTES.PUBLISH} onClick={() => setIsMenuOpen(false)}>
                   <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary-500 text-white font-semibold rounded-xl mb-4">
                     <Plus className="w-5 h-5" />
-                    Publier une annonce
+                    {t('nav.publishListing')}
                   </button>
                 </Link>
 
@@ -619,7 +622,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
                     return true;
                   }).map((item) => (
                     <Link
-                      key={item.label}
+                      key={item.labelKey}
                       href={item.href}
                       onClick={() => setIsMenuOpen(false)}
                       className={`flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors ${
@@ -629,7 +632,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
                       }`}
                     >
                       <item.icon className="w-5 h-5" />
-                      {item.label}
+                      {t(item.labelKey)}
                       {item.badge && getBadgeCount(item.badge) ? (
                         <span className="ml-auto px-2 py-0.5 bg-primary-100 dark:bg-primary-500/10 text-primary-600 text-xs font-semibold rounded-full">
                           {getBadgeCount(item.badge)}
@@ -644,7 +647,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
                     onClick={toggleDarkMode}
                     className="flex items-center justify-between w-full px-4 py-3 rounded-xl hover:bg-neutral-50 dark:hover:bg-dark-bg"
                   >
-                    <span className="text-neutral-700 dark:text-neutral-300">Mode sombre</span>
+                    <span className="text-neutral-700 dark:text-neutral-300">{t('nav.darkMode')}</span>
                     <div className={`w-12 h-7 rounded-full p-1 transition-colors ${isDarkMode ? 'bg-primary-500' : 'bg-neutral-200'}`}>
                       <div
                         className={`w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${isDarkMode ? 'translate-x-5' : 'translate-x-0'}`}
@@ -665,7 +668,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
                       ) : (
                         <LogOut className="w-5 h-5" />
                       )}
-                      {isLoggingOut ? 'Deconnexion...' : 'Deconnexion'}
+                      {isLoggingOut ? t('nav.loggingOut') : t('nav.logout')}
                     </button>
                   ) : (
                     <Link
@@ -674,7 +677,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
                       className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary-500 hover:bg-primary-600 text-white w-full font-semibold justify-center"
                     >
                       <User className="w-5 h-5" />
-                      Se connecter
+                      {t('nav.login')}
                     </Link>
                   )}
                 </div>
@@ -691,7 +694,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
               key={item.href}
               href={item.href}
               icon={item.icon}
-              label={item.label}
+              label={t(item.labelKey)}
               isActive={isActiveRoute(pathname, item.href)}
               badge={getBadgeCount(item.badge)}
             />

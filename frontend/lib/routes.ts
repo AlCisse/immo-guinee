@@ -70,7 +70,7 @@ export const ROUTES = {
 export interface NavItem {
   href: string;
   icon: React.ElementType;
-  label: string;
+  labelKey: string; // Translation key for i18n
   requiresAuth?: boolean;
   badge?: 'notifications' | 'messages' | 'favorites';
   // Show only for specific account types (AGENCE, AGENT, PROPRIETAIRE, etc.)
@@ -79,43 +79,43 @@ export interface NavItem {
 
 // Desktop nav items (top header)
 export const DESKTOP_NAV_ITEMS: NavItem[] = [
-  { href: ROUTES.SEARCH_LOCATION, icon: Home, label: 'Louer' },
-  { href: ROUTES.SEARCH_VENTE, icon: Search, label: 'Acheter' },
-  { href: ROUTES.SEARCH_COMMERCIAL, icon: Search, label: 'Commerces' },
-  { href: ROUTES.ESTIMER, icon: Search, label: 'Estimer' },
+  { href: ROUTES.SEARCH_LOCATION, icon: Home, labelKey: 'nav.rent' },
+  { href: ROUTES.SEARCH_VENTE, icon: Search, labelKey: 'nav.buy' },
+  { href: ROUTES.SEARCH_COMMERCIAL, icon: Search, labelKey: 'nav.commercial' },
+  { href: ROUTES.ESTIMER, icon: Search, labelKey: 'nav.estimate' },
 ];
 
 // Mobile bottom navigation items
 export const MOBILE_NAV_ITEMS: NavItem[] = [
-  { href: ROUTES.HOME, icon: Home, label: 'Accueil' },
-  { href: ROUTES.SEARCH, icon: Search, label: 'Recherche' },
-  { href: ROUTES.FAVORITES, icon: Heart, label: 'Favoris', requiresAuth: true, badge: 'favorites' },
-  { href: ROUTES.MESSAGES, icon: MessageSquare, label: 'Messages', requiresAuth: true, badge: 'messages' },
-  { href: ROUTES.PROFILE, icon: User, label: 'Profil', requiresAuth: true },
+  { href: ROUTES.HOME, icon: Home, labelKey: 'nav.home' },
+  { href: ROUTES.SEARCH, icon: Search, labelKey: 'nav.search' },
+  { href: ROUTES.FAVORITES, icon: Heart, labelKey: 'nav.favorites', requiresAuth: true, badge: 'favorites' },
+  { href: ROUTES.MESSAGES, icon: MessageSquare, labelKey: 'nav.messages', requiresAuth: true, badge: 'messages' },
+  { href: ROUTES.PROFILE, icon: User, labelKey: 'nav.profile', requiresAuth: true },
 ];
 
 // User dropdown menu items
 export const USER_MENU_ITEMS: NavItem[] = [
-  { href: ROUTES.DASHBOARD, icon: LayoutDashboard, label: 'Dashboard', requiresAuth: true, forAccountTypes: ['AGENCE', 'AGENT', 'PROPRIETAIRE'] },
-  { href: ROUTES.PROFILE, icon: User, label: 'Mon profil' },
-  { href: ROUTES.FAVORITES, icon: Heart, label: 'Mes favoris' },
-  { href: ROUTES.MESSAGES, icon: MessageSquare, label: 'Messages', badge: 'messages' },
-  { href: ROUTES.CONTRACTS, icon: FileText, label: 'Mes contrats' },
-  { href: ROUTES.SETTINGS, icon: Settings, label: 'Paramètres' },
-  { href: ROUTES.HELP, icon: HelpCircle, label: 'Aide' },
+  { href: ROUTES.DASHBOARD, icon: LayoutDashboard, labelKey: 'nav.dashboard', requiresAuth: true, forAccountTypes: ['AGENCE', 'AGENT', 'PROPRIETAIRE'] },
+  { href: ROUTES.PROFILE, icon: User, labelKey: 'nav.myProfile' },
+  { href: ROUTES.FAVORITES, icon: Heart, labelKey: 'nav.myFavorites' },
+  { href: ROUTES.MESSAGES, icon: MessageSquare, labelKey: 'nav.messages', badge: 'messages' },
+  { href: ROUTES.CONTRACTS, icon: FileText, labelKey: 'nav.myContracts' },
+  { href: ROUTES.SETTINGS, icon: Settings, labelKey: 'nav.settings' },
+  { href: ROUTES.HELP, icon: HelpCircle, labelKey: 'nav.help' },
 ];
 
 // Mobile menu items (slide out menu)
 export const MOBILE_MENU_ITEMS: NavItem[] = [
-  { href: ROUTES.HOME, icon: Home, label: 'Accueil' },
-  { href: ROUTES.DASHBOARD, icon: LayoutDashboard, label: 'Dashboard', requiresAuth: true, forAccountTypes: ['AGENCE', 'AGENT', 'PROPRIETAIRE'] },
-  { href: ROUTES.SEARCH, icon: Search, label: 'Rechercher' },
-  { href: ROUTES.FAVORITES, icon: Heart, label: 'Mes favoris', requiresAuth: true },
-  { href: ROUTES.MESSAGES, icon: MessageSquare, label: 'Messages', requiresAuth: true, badge: 'messages' },
-  { href: ROUTES.CONTRACTS, icon: FileText, label: 'Mes contrats', requiresAuth: true },
-  { href: ROUTES.PROFILE, icon: User, label: 'Mon profil', requiresAuth: true },
-  { href: ROUTES.SETTINGS, icon: Settings, label: 'Paramètres' },
-  { href: ROUTES.HELP, icon: HelpCircle, label: 'Aide' },
+  { href: ROUTES.HOME, icon: Home, labelKey: 'nav.home' },
+  { href: ROUTES.DASHBOARD, icon: LayoutDashboard, labelKey: 'nav.dashboard', requiresAuth: true, forAccountTypes: ['AGENCE', 'AGENT', 'PROPRIETAIRE'] },
+  { href: ROUTES.SEARCH, icon: Search, labelKey: 'nav.search' },
+  { href: ROUTES.FAVORITES, icon: Heart, labelKey: 'nav.myFavorites', requiresAuth: true },
+  { href: ROUTES.MESSAGES, icon: MessageSquare, labelKey: 'nav.messages', requiresAuth: true, badge: 'messages' },
+  { href: ROUTES.CONTRACTS, icon: FileText, labelKey: 'nav.myContracts', requiresAuth: true },
+  { href: ROUTES.PROFILE, icon: User, labelKey: 'nav.myProfile', requiresAuth: true },
+  { href: ROUTES.SETTINGS, icon: Settings, labelKey: 'nav.settings' },
+  { href: ROUTES.HELP, icon: HelpCircle, labelKey: 'nav.help' },
 ];
 
 // Check if current path matches a route
