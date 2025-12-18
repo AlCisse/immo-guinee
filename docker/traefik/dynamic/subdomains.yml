@@ -1,7 +1,7 @@
 # ===============================================
 # Subdomains Configuration - immoguinee.com
 # Routes for admin tools: n8n, waha, grafana, minio, pgadmin
-# Docker Swarm service names use immog_ prefix
+# Docker Swarm service names use immo_ prefix
 # SECURED: All admin UIs require BasicAuth (admin-auth middleware)
 # ===============================================
 
@@ -177,41 +177,41 @@ http:
       priority: 1
 
   services:
-    # All services use Docker Swarm naming: immog_<service>
+    # All services use Docker Swarm naming: immo_<service>
     n8n:
       loadBalancer:
         servers:
-          - url: "http://immog_n8n:5678"
+          - url: "http://immo_n8n:5678"
 
     waha:
       loadBalancer:
         servers:
-          - url: "http://immog_waha:3000"
+          - url: "http://immo_waha:3000"
 
     grafana:
       loadBalancer:
         servers:
-          - url: "http://immog_grafana:3000"
+          - url: "http://immo_grafana:3000"
 
     minio-console:
       loadBalancer:
         servers:
-          - url: "http://immog_minio:9001"
+          - url: "http://immo_minio:9001"
 
     pgadmin:
       loadBalancer:
         servers:
-          - url: "http://immog_pgadmin:80"
+          - url: "http://immo_pgadmin:80"
 
     prometheus:
       loadBalancer:
         servers:
-          - url: "http://immog_prometheus:9090"
+          - url: "http://immo_prometheus:9090"
 
     alertmanager:
       loadBalancer:
         servers:
-          - url: "http://immog_alertmanager:9093"
+          - url: "http://immo_alertmanager:9093"
 
     # Note: traefik-dashboard removed - using api@internal instead
 
