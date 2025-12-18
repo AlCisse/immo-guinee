@@ -445,15 +445,56 @@
   },
   "settings": {
     "title": "设置",
-    "language": "语言",
-    "theme": "主题",
-    "lightMode": "浅色模式",
-    "darkMode": "深色模式",
-    "system": "系统",
-    "currency": "货币",
-    "notifications": "通知",
-    "privacy": "隐私",
-    "deleteAccount": "删除账户"
+    "subtitle": "管理您的偏好设置",
+    "savedSuccess": "设置保存成功！",
+    "save": "保存设置",
+    "saving": "保存中...",
+    "account": {
+      "title": "账户",
+      "myProfile": "我的资料",
+      "myProfileDesc": "编辑您的个人信息",
+      "password": "密码",
+      "passwordDesc": "更改您的密码",
+      "currentPassword": "当前密码",
+      "newPassword": "新密码",
+      "confirmPassword": "确认密码",
+      "changePassword": "更改密码",
+      "passwordMismatch": "密码不匹配"
+    },
+    "appearance": {
+      "title": "外观",
+      "darkMode": "深色模式",
+      "darkModeDesc": "启用深色主题",
+      "language": "语言"
+    },
+    "notifications": {
+      "title": "通知",
+      "channels": "渠道",
+      "email": "邮件",
+      "whatsapp": "WhatsApp",
+      "sms": "短信",
+      "push": "推送通知",
+      "types": "通知类型",
+      "newListings": "符合您条件的新房源",
+      "newMessages": "新消息",
+      "priceAlerts": "降价提醒"
+    },
+    "privacy": {
+      "title": "隐私",
+      "terms": "服务条款",
+      "privacyPolicy": "隐私政策"
+    },
+    "danger": {
+      "title": "危险区域",
+      "logout": "退出登录",
+      "logoutDesc": "登出您的账户",
+      "deleteAccount": "删除我的账户",
+      "deleteAccountDesc": "此操作不可撤销",
+      "deleteConfirmTitle": "删除您的账户？",
+      "deleteConfirmDesc": "此操作不可撤销。您的所有数据、房源和消息将被永久删除。",
+      "cancel": "取消",
+      "delete": "删除"
+    }
   },
   "footer": {
     "about": "关于",

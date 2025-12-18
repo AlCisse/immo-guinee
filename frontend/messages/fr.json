@@ -445,15 +445,56 @@
   },
   "settings": {
     "title": "Parametres",
-    "language": "Langue",
-    "theme": "Theme",
-    "lightMode": "Mode clair",
-    "darkMode": "Mode sombre",
-    "system": "Systeme",
-    "currency": "Devise",
-    "notifications": "Notifications",
-    "privacy": "Confidentialite",
-    "deleteAccount": "Supprimer le compte"
+    "subtitle": "Gerez vos preferences",
+    "savedSuccess": "Parametres enregistres avec succes !",
+    "save": "Enregistrer les parametres",
+    "saving": "Enregistrement...",
+    "account": {
+      "title": "Compte",
+      "myProfile": "Mon profil",
+      "myProfileDesc": "Modifier vos informations personnelles",
+      "password": "Mot de passe",
+      "passwordDesc": "Changer votre mot de passe",
+      "currentPassword": "Mot de passe actuel",
+      "newPassword": "Nouveau mot de passe",
+      "confirmPassword": "Confirmer le mot de passe",
+      "changePassword": "Changer le mot de passe",
+      "passwordMismatch": "Les mots de passe ne correspondent pas"
+    },
+    "appearance": {
+      "title": "Apparence",
+      "darkMode": "Mode sombre",
+      "darkModeDesc": "Activer le theme sombre",
+      "language": "Langue"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "channels": "Canaux",
+      "email": "Email",
+      "whatsapp": "WhatsApp",
+      "sms": "SMS",
+      "push": "Notifications push",
+      "types": "Types de notifications",
+      "newListings": "Nouveaux biens correspondant a vos criteres",
+      "newMessages": "Nouveaux messages",
+      "priceAlerts": "Alertes de baisse de prix"
+    },
+    "privacy": {
+      "title": "Confidentialite",
+      "terms": "Conditions d'utilisation",
+      "privacyPolicy": "Politique de confidentialite"
+    },
+    "danger": {
+      "title": "Zone de danger",
+      "logout": "Se deconnecter",
+      "logoutDesc": "Deconnexion de votre compte",
+      "deleteAccount": "Supprimer mon compte",
+      "deleteAccountDesc": "Cette action est irreversible",
+      "deleteConfirmTitle": "Supprimer votre compte ?",
+      "deleteConfirmDesc": "Cette action est irreversible. Toutes vos donnees, annonces et messages seront definitivement supprimes.",
+      "cancel": "Annuler",
+      "delete": "Supprimer"
+    }
   },
   "footer": {
     "about": "A propos",

@@ -445,15 +445,56 @@
   },
   "settings": {
     "title": "Settings",
-    "language": "Language",
-    "theme": "Theme",
-    "lightMode": "Light mode",
-    "darkMode": "Dark mode",
-    "system": "System",
-    "currency": "Currency",
-    "notifications": "Notifications",
-    "privacy": "Privacy",
-    "deleteAccount": "Delete account"
+    "subtitle": "Manage your preferences",
+    "savedSuccess": "Settings saved successfully!",
+    "save": "Save settings",
+    "saving": "Saving...",
+    "account": {
+      "title": "Account",
+      "myProfile": "My profile",
+      "myProfileDesc": "Edit your personal information",
+      "password": "Password",
+      "passwordDesc": "Change your password",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password",
+      "changePassword": "Change password",
+      "passwordMismatch": "Passwords do not match"
+    },
+    "appearance": {
+      "title": "Appearance",
+      "darkMode": "Dark mode",
+      "darkModeDesc": "Enable dark theme",
+      "language": "Language"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "channels": "Channels",
+      "email": "Email",
+      "whatsapp": "WhatsApp",
+      "sms": "SMS",
+      "push": "Push notifications",
+      "types": "Notification types",
+      "newListings": "New properties matching your criteria",
+      "newMessages": "New messages",
+      "priceAlerts": "Price drop alerts"
+    },
+    "privacy": {
+      "title": "Privacy",
+      "terms": "Terms of service",
+      "privacyPolicy": "Privacy policy"
+    },
+    "danger": {
+      "title": "Danger zone",
+      "logout": "Log out",
+      "logoutDesc": "Sign out of your account",
+      "deleteAccount": "Delete my account",
+      "deleteAccountDesc": "This action is irreversible",
+      "deleteConfirmTitle": "Delete your account?",
+      "deleteConfirmDesc": "This action is irreversible. All your data, listings, and messages will be permanently deleted.",
+      "cancel": "Cancel",
+      "delete": "Delete"
+    }
   },
   "footer": {
     "about": "About",
