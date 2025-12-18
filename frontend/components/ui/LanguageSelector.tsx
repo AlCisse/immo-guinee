@@ -102,7 +102,7 @@ export default function LanguageSelector({
     setIsOpen(false);
   };
 
-  // Navbar variant - native select for guaranteed functionality
+  // Navbar variant - styled native select for guaranteed functionality
   if (variant === 'navbar') {
     const handleNativeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
       const newLocale = e.target.value as Locale;
@@ -112,12 +112,18 @@ export default function LanguageSelector({
     };
 
     return (
-      <div className={clsx('relative flex items-center', className)}>
-        <Globe className="w-5 h-5 text-neutral-700 dark:text-white absolute left-2 pointer-events-none" />
+      <div className={clsx('relative inline-flex items-center', className)}>
+        <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-neutral-100 dark:bg-dark-bg rounded-lg hover:bg-neutral-200 dark:hover:bg-dark-hover transition-colors">
+          <span className="text-base">{currentConfig.flag}</span>
+          <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300 hidden sm:inline">
+            {locale.toUpperCase()}
+          </span>
+          <ChevronDown className="w-3.5 h-3.5 text-neutral-500 dark:text-neutral-400" />
+        </div>
         <select
           value={locale}
           onChange={handleNativeChange}
-          className="appearance-none bg-transparent pl-8 pr-6 py-2 text-sm font-medium text-neutral-700 dark:text-white cursor-pointer hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           aria-label="Changer de langue"
         >
           {SUPPORTED_LOCALES.map((loc) => (
@@ -126,7 +132,6 @@ export default function LanguageSelector({
             </option>
           ))}
         </select>
-        <ChevronDown className="w-4 h-4 text-neutral-500 dark:text-neutral-400 absolute right-1 pointer-events-none" />
       </div>
     );
   }

@@ -41,12 +41,16 @@
     "messages": "Messages",
     "profile": "Profile",
     "publish": "Publish",
+    "publishListing": "Publish a listing",
     "login": "Log in",
     "register": "Sign up",
     "logout": "Log out",
     "loggingOut": "Logging out...",
     "dashboard": "Dashboard",
     "myListings": "My listings",
+    "myProfile": "My profile",
+    "myFavorites": "My favorites",
+    "myContracts": "My contracts",
     "contracts": "Contracts",
     "payments": "Payments",
     "visits": "Visits",
@@ -60,7 +64,11 @@
     "lightMode": "Light mode",
     "visitor": "Visitor",
     "notConnected": "Not connected",
-    "user": "User"
+    "user": "User",
+    "rent": "Rent",
+    "buy": "Buy",
+    "commercial": "Commercial",
+    "estimate": "Estimate"
   },
   "home": {
     "hero": {
