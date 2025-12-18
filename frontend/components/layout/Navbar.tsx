@@ -25,6 +25,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { useLocale } from '@/lib/i18n';
 import { useUserCounts, useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead, type Notification } from '@/lib/hooks/useNotifications';
 import {
   ROUTES,
@@ -34,6 +35,7 @@ import {
   MOBILE_MENU_ITEMS,
   isActiveRoute,
 } from '@/lib/routes';
+import { LanguageSelectorNavbar } from '@/components/ui/LanguageSelector';
 
 // Notification Dropdown Component
 function NotificationDropdown({
@@ -258,13 +260,14 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Initialize dark mode from localStorage
+  // Initialize dark mode from localStorage only (no system preference auto-detection)
   useEffect(() => {
-    const darkMode = localStorage.getItem('darkMode') === 'true' ||
-      (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    const darkMode = localStorage.getItem('darkMode') === 'true';
     setIsDarkMode(darkMode);
     if (darkMode) {
       document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
     }
   }, []);
 
@@ -315,6 +318,9 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
             </Link>
 
             <div className="flex items-center gap-3">
+              {/* Language Selector */}
+              <LanguageSelectorNavbar />
+
               <button
                 onClick={toggleDarkMode}
                 className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-full transition-colors"
@@ -374,6 +380,9 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
 
             {/* Actions */}
             <div className="flex items-center gap-3">
+              {/* Language Selector */}
+              <LanguageSelectorNavbar />
+
               {/* Dark Mode Toggle */}
               <button
                 onClick={toggleDarkMode}
@@ -518,6 +527,9 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
           </Link>
 
           <div className="flex items-center gap-2">
+            {/* Language Selector */}
+            <LanguageSelectorNavbar />
+
             {/* Notifications - Only show when authenticated */}
             {isAuthenticated && (
               <div className="relative">

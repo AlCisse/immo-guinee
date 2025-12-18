@@ -1,0 +1,505 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "error": "Une erreur est survenue",
+    "retry": "Reessayer",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "close": "Fermer",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "sort": "Trier",
+    "viewAll": "Voir tout",
+    "seeMore": "Voir plus",
+    "seeLess": "Voir moins",
+    "yes": "Oui",
+    "no": "Non",
+    "confirm": "Confirmer",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Precedent",
+    "submit": "Soumettre",
+    "send": "Envoyer",
+    "apply": "Appliquer",
+    "reset": "Reinitialiser",
+    "noResults": "Aucun resultat",
+    "required": "Requis",
+    "optional": "Optionnel",
+    "perMonth": "/mois",
+    "perDay": "/jour",
+    "new": "Nouveau",
+    "rooms": "ch.",
+    "bathrooms": "sdb.",
+    "area": "m2"
+  },
+  "nav": {
+    "home": "Accueil",
+    "search": "Recherche",
+    "favorites": "Favoris",
+    "messages": "Messages",
+    "profile": "Profil",
+    "publish": "Publier",
+    "login": "Se connecter",
+    "register": "S'inscrire",
+    "logout": "Deconnexion",
+    "loggingOut": "Deconnexion...",
+    "dashboard": "Tableau de bord",
+    "myListings": "Mes annonces",
+    "contracts": "Contrats",
+    "payments": "Paiements",
+    "visits": "Visites",
+    "settings": "Parametres",
+    "help": "Aide",
+    "notifications": "Notifications",
+    "markAllRead": "Tout marquer lu",
+    "noNotifications": "Aucune notification",
+    "viewAllNotifications": "Voir toutes les notifications",
+    "darkMode": "Mode sombre",
+    "lightMode": "Mode clair",
+    "visitor": "Visiteur",
+    "notConnected": "Non connecte",
+    "user": "Utilisateur"
+  },
+  "home": {
+    "hero": {
+      "title": "Trouvez votre chez-vous",
+      "titleHighlight": "en Guinee",
+      "subtitle": "Des milliers de proprietes a louer et a vendre dans toute la Guinee. Trouvez celle qui vous correspond.",
+      "searchPlaceholder": "Quartier, ville ou type de bien...",
+      "rental": "Location",
+      "purchase": "Achat"
+    },
+    "categories": {
+      "apartments": "Appartements",
+      "houses": "Maisons & Villas",
+      "shops": "Magasins",
+      "offices": "Bureaux"
+    },
+    "premium": {
+      "title": "Annonces Premium",
+      "subtitle": "Les meilleures proprietes selectionnees pour vous",
+      "viewAll": "Voir tout",
+      "viewAllListings": "Voir toutes les annonces",
+      "noListings": "Aucune annonce premium pour le moment"
+    },
+    "quartiers": {
+      "title": "Explorez par quartier",
+      "subtitle": "Decouvrez les quartiers les plus recherches de Conakry",
+      "listings": "annonces"
+    },
+    "features": {
+      "title": "Pourquoi choisir ImmoGuinee ?",
+      "subtitle": "La plateforme immobiliere de reference en Guinee",
+      "verified": {
+        "title": "Annonces verifiees",
+        "description": "Toutes nos annonces sont verifiees par notre equipe pour garantir leur authenticite."
+      },
+      "fast": {
+        "title": "Reponse rapide",
+        "description": "Contactez directement les proprietaires et obtenez une reponse en moins de 24h."
+      },
+      "simple": {
+        "title": "Simple et efficace",
+        "description": "Une interface intuitive pour trouver votre bien ideal en quelques clics."
+      }
+    },
+    "stats": {
+      "activeListings": "Annonces actives",
+      "users": "Utilisateurs",
+      "satisfaction": "Satisfaction",
+      "support": "Support"
+    },
+    "cta": {
+      "title": "Vous avez un bien a louer ou vendre ?",
+      "subtitle": "Publiez votre annonce gratuitement et touchez des milliers de clients potentiels en Guinee.",
+      "button": "Publier une annonce"
+    },
+    "app": {
+      "title": "Telechargez l'app ImmoGuinee",
+      "subtitle": "Recevez des alertes instantanees pour les nouvelles annonces, discutez avec les proprietaires et gerez vos favoris ou que vous soyez.",
+      "availableOn": "Disponible sur",
+      "downloadOn": "Telecharger sur"
+    }
+  },
+  "search": {
+    "title": "Recherche",
+    "results": "resultats",
+    "noResults": "Aucun bien ne correspond a vos criteres",
+    "filters": {
+      "title": "Filtres",
+      "propertyType": "Type de bien",
+      "transactionType": "Type de transaction",
+      "location": "Localisation",
+      "commune": "Commune",
+      "quartier": "Quartier",
+      "priceRange": "Fourchette de prix",
+      "minPrice": "Prix min",
+      "maxPrice": "Prix max",
+      "bedrooms": "Chambres",
+      "bathrooms": "Salles de bain",
+      "surface": "Surface",
+      "minSurface": "Surface min",
+      "maxSurface": "Surface max",
+      "amenities": "Equipements",
+      "applyFilters": "Appliquer les filtres",
+      "resetFilters": "Reinitialiser"
+    },
+    "sort": {
+      "newest": "Plus recent",
+      "oldest": "Plus ancien",
+      "priceAsc": "Prix croissant",
+      "priceDesc": "Prix decroissant",
+      "surfaceAsc": "Surface croissante",
+      "surfaceDesc": "Surface decroissante"
+    },
+    "propertyTypes": {
+      "all": "Tous",
+      "apartment": "Appartement",
+      "house": "Maison",
+      "villa": "Villa",
+      "studio": "Studio",
+      "land": "Terrain",
+      "office": "Bureau",
+      "shop": "Magasin",
+      "warehouse": "Entrepot"
+    },
+    "transactionTypes": {
+      "all": "Tous",
+      "rental": "Location",
+      "sale": "Vente",
+      "shortRental": "Location courte duree"
+    }
+  },
+  "listing": {
+    "details": "Details",
+    "description": "Description",
+    "amenities": "Equipements",
+    "location": "Localisation",
+    "contact": "Contacter",
+    "contactOwner": "Contacter le proprietaire",
+    "schedule": "Planifier une visite",
+    "share": "Partager",
+    "report": "Signaler",
+    "similar": "Annonces similaires",
+    "price": "Prix",
+    "surface": "Surface",
+    "bedrooms": "Chambres",
+    "bathrooms": "Salles de bain",
+    "floor": "Etage",
+    "furnished": "Meuble",
+    "parking": "Parking",
+    "availability": "Disponibilite",
+    "available": "Disponible",
+    "unavailable": "Non disponible",
+    "publishedOn": "Publie le",
+    "views": "vues",
+    "addToFavorites": "Ajouter aux favoris",
+    "removeFromFavorites": "Retirer des favoris",
+    "owner": {
+      "title": "Proprietaire",
+      "verified": "Verifie",
+      "memberSince": "Membre depuis",
+      "responseTime": "Temps de reponse",
+      "responseRate": "Taux de reponse"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Connexion",
+      "subtitle": "Bienvenue sur ImmoGuinee",
+      "email": "Email",
+      "phone": "Telephone",
+      "password": "Mot de passe",
+      "rememberMe": "Se souvenir de moi",
+      "forgotPassword": "Mot de passe oublie ?",
+      "loginButton": "Se connecter",
+      "noAccount": "Vous n'avez pas de compte ?",
+      "register": "S'inscrire",
+      "or": "ou",
+      "continueWithGoogle": "Continuer avec Google",
+      "continueWithFacebook": "Continuer avec Facebook",
+      "errors": {
+        "invalidCredentials": "Email ou mot de passe incorrect",
+        "accountLocked": "Compte bloque. Veuillez contacter le support.",
+        "serverError": "Erreur serveur. Veuillez reessayer."
+      }
+    },
+    "register": {
+      "title": "Inscription",
+      "subtitle": "Rejoignez ImmoGuinee",
+      "fullName": "Nom complet",
+      "email": "Email",
+      "phone": "Telephone",
+      "password": "Mot de passe",
+      "confirmPassword": "Confirmer le mot de passe",
+      "accountType": "Type de compte",
+      "individual": "Particulier",
+      "professional": "Professionnel",
+      "agency": "Agence",
+      "terms": "J'accepte les conditions d'utilisation",
+      "termsLink": "conditions d'utilisation",
+      "privacy": "politique de confidentialite",
+      "registerButton": "S'inscrire",
+      "hasAccount": "Vous avez deja un compte ?",
+      "login": "Se connecter",
+      "errors": {
+        "emailExists": "Cet email est deja utilise",
+        "phoneExists": "Ce numero de telephone est deja utilise",
+        "passwordMismatch": "Les mots de passe ne correspondent pas",
+        "weakPassword": "Le mot de passe doit contenir au moins 8 caracteres",
+        "serverError": "Erreur serveur. Veuillez reessayer."
+      }
+    },
+    "forgotPassword": {
+      "title": "Mot de passe oublie",
+      "subtitle": "Entrez votre email pour reinitialiser votre mot de passe",
+      "email": "Email",
+      "sendLink": "Envoyer le lien",
+      "backToLogin": "Retour a la connexion",
+      "success": "Un email de reinitialisation a ete envoye"
+    },
+    "otp": {
+      "title": "Verification",
+      "subtitle": "Entrez le code envoye a votre telephone",
+      "resend": "Renvoyer le code",
+      "resendIn": "Renvoyer dans",
+      "verify": "Verifier"
+    }
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "welcome": "Bienvenue",
+    "stats": {
+      "activeListings": "Annonces actives",
+      "totalViews": "Vues totales",
+      "messages": "Messages",
+      "favorites": "Favoris recus"
+    },
+    "recentActivity": "Activite recente",
+    "myListings": {
+      "title": "Mes annonces",
+      "create": "Creer une annonce",
+      "noListings": "Vous n'avez pas encore d'annonces",
+      "status": {
+        "active": "Active",
+        "pending": "En attente",
+        "rejected": "Rejetee",
+        "expired": "Expiree",
+        "rented": "Louee",
+        "sold": "Vendue"
+      }
+    },
+    "contracts": {
+      "title": "Mes contrats",
+      "noContracts": "Aucun contrat",
+      "status": {
+        "draft": "Brouillon",
+        "pending": "En attente",
+        "signed": "Signe",
+        "active": "Actif",
+        "terminated": "Resilie"
+      }
+    },
+    "visits": {
+      "title": "Mes visites",
+      "noVisits": "Aucune visite planifiee",
+      "schedule": "Planifier",
+      "status": {
+        "pending": "En attente",
+        "confirmed": "Confirmee",
+        "completed": "Terminee",
+        "cancelled": "Annulee"
+      }
+    }
+  },
+  "publish": {
+    "title": "Publier une annonce",
+    "steps": {
+      "type": "Type de bien",
+      "details": "Details",
+      "location": "Localisation",
+      "photos": "Photos",
+      "pricing": "Prix",
+      "review": "Verification"
+    },
+    "propertyType": {
+      "title": "Quel type de bien souhaitez-vous publier ?",
+      "transaction": "Type de transaction",
+      "rental": "Location",
+      "sale": "Vente",
+      "shortRental": "Location courte duree"
+    },
+    "details": {
+      "title": "Details du bien",
+      "name": "Titre de l'annonce",
+      "description": "Description",
+      "surface": "Surface (m2)",
+      "bedrooms": "Nombre de chambres",
+      "bathrooms": "Nombre de salles de bain",
+      "floor": "Etage",
+      "totalFloors": "Nombre d'etages",
+      "furnished": "Meuble",
+      "amenities": "Equipements"
+    },
+    "location": {
+      "title": "Localisation du bien",
+      "commune": "Commune",
+      "quartier": "Quartier",
+      "address": "Adresse complete",
+      "selectOnMap": "Selectionner sur la carte"
+    },
+    "photos": {
+      "title": "Photos du bien",
+      "subtitle": "Ajoutez des photos pour attirer plus de visiteurs",
+      "upload": "Ajouter des photos",
+      "mainPhoto": "Photo principale",
+      "setAsMain": "Definir comme principale",
+      "delete": "Supprimer",
+      "minPhotos": "Minimum 3 photos requises",
+      "maxPhotos": "Maximum 20 photos"
+    },
+    "pricing": {
+      "title": "Prix",
+      "monthlyRent": "Loyer mensuel",
+      "dailyRate": "Tarif journalier",
+      "salePrice": "Prix de vente",
+      "deposit": "Caution",
+      "agencyFees": "Frais d'agence",
+      "negotiable": "Prix negociable"
+    },
+    "review": {
+      "title": "Verification",
+      "subtitle": "Verifiez les informations avant de publier",
+      "publish": "Publier l'annonce",
+      "saveDraft": "Enregistrer comme brouillon"
+    },
+    "success": {
+      "title": "Annonce publiee !",
+      "subtitle": "Votre annonce a ete soumise pour verification",
+      "viewListing": "Voir l'annonce",
+      "createAnother": "Creer une autre annonce"
+    }
+  },
+  "messages": {
+    "title": "Messages",
+    "noMessages": "Aucun message",
+    "noConversation": "Selectionnez une conversation",
+    "typeMessage": "Ecrivez votre message...",
+    "send": "Envoyer",
+    "online": "En ligne",
+    "offline": "Hors ligne",
+    "lastSeen": "Vu",
+    "today": "Aujourd'hui",
+    "yesterday": "Hier",
+    "typing": "est en train d'ecrire..."
+  },
+  "favorites": {
+    "title": "Favoris",
+    "noFavorites": "Aucun favori",
+    "addedOn": "Ajoute le"
+  },
+  "profile": {
+    "title": "Mon profil",
+    "edit": "Modifier le profil",
+    "personalInfo": "Informations personnelles",
+    "fullName": "Nom complet",
+    "email": "Email",
+    "phone": "Telephone",
+    "address": "Adresse",
+    "bio": "Bio",
+    "accountType": "Type de compte",
+    "memberSince": "Membre depuis",
+    "verification": {
+      "title": "Verification",
+      "verified": "Verifie",
+      "notVerified": "Non verifie",
+      "verifyNow": "Verifier maintenant",
+      "idCard": "Carte d'identite",
+      "phone": "Telephone",
+      "email": "Email"
+    },
+    "security": {
+      "title": "Securite",
+      "changePassword": "Changer le mot de passe",
+      "twoFactor": "Authentification a deux facteurs",
+      "enable": "Activer",
+      "disable": "Desactiver"
+    },
+    "preferences": {
+      "title": "Preferences",
+      "notifications": "Notifications",
+      "emailNotifications": "Notifications par email",
+      "smsNotifications": "Notifications par SMS",
+      "pushNotifications": "Notifications push"
+    }
+  },
+  "settings": {
+    "title": "Parametres",
+    "language": "Langue",
+    "theme": "Theme",
+    "lightMode": "Mode clair",
+    "darkMode": "Mode sombre",
+    "system": "Systeme",
+    "currency": "Devise",
+    "notifications": "Notifications",
+    "privacy": "Confidentialite",
+    "deleteAccount": "Supprimer le compte"
+  },
+  "footer": {
+    "about": "A propos",
+    "aboutUs": "Qui sommes-nous",
+    "careers": "Carrieres",
+    "press": "Presse",
+    "contact": "Contact",
+    "services": "Services",
+    "publishListing": "Publier une annonce",
+    "premiumListings": "Annonces premium",
+    "certification": "Certification",
+    "insurance": "Assurance",
+    "legal": "Legal",
+    "terms": "Conditions d'utilisation",
+    "privacy": "Politique de confidentialite",
+    "cookies": "Politique des cookies",
+    "help": "Aide",
+    "faq": "FAQ",
+    "support": "Support",
+    "guidelines": "Regles de publication",
+    "social": "Suivez-nous",
+    "copyright": "Tous droits reserves",
+    "madeWith": "Fait avec",
+    "inGuinea": "en Guinee"
+  },
+  "errors": {
+    "404": {
+      "title": "Page non trouvee",
+      "subtitle": "La page que vous recherchez n'existe pas ou a ete deplacee.",
+      "backHome": "Retour a l'accueil"
+    },
+    "500": {
+      "title": "Erreur serveur",
+      "subtitle": "Une erreur est survenue. Veuillez reessayer plus tard.",
+      "retry": "Reessayer"
+    },
+    "network": {
+      "title": "Erreur de connexion",
+      "subtitle": "Verifiez votre connexion internet et reessayez.",
+      "retry": "Reessayer"
+    }
+  },
+  "time": {
+    "justNow": "A l'instant",
+    "minutesAgo": "Il y a {count}min",
+    "hoursAgo": "Il y a {count}h",
+    "daysAgo": "Il y a {count}j"
+  },
+  "language": {
+    "select": "Choisir la langue",
+    "fr": "Francais",
+    "en": "English",
+    "es": "Espanol",
+    "de": "Deutsch",
+    "zh": "Zhongwen"
+  }
+}
