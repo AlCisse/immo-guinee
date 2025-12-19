@@ -25,6 +25,8 @@ secrets:
     external: true
   minio_password:
     external: true
+  minio_access_key:
+    external: true
   grafana_password:
     external: true
   pgadmin_password:
@@ -32,6 +34,14 @@ secrets:
   waha_password:
     external: true
   waha_api_key:
+    external: true
+  # DigitalOcean Spaces credentials for backup/sync
+  do_spaces_access_key:
+    external: true
+  do_spaces_secret_key:
+    external: true
+  # Encryption key for database backups (AES-256)
+  backup_encryption_key:
     external: true
 
 volumes:
@@ -613,6 +623,143 @@ services:
       mode: global
       restart_policy:
         condition: on-failure
+      resources:
+        limits:
+          memory: 256M
+
+  # ============================================
+  # Backup & Sync Services
+  # ============================================
+
+  # PostgreSQL Backup Service
+  # Runs on demand via: docker service scale immo_backup-postgres=1
+  # Creates encrypted backup and uploads to DigitalOcean Spaces
+  backup-postgres:
+    image: postgres:16-alpine
+    hostname: backup-postgres
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        apk add --no-cache openssl curl unzip &&
+        curl -O https://downloads.rclone.org/rclone-current-linux-amd64.zip &&
+        unzip rclone-current-linux-amd64.zip &&
+        cp rclone-*-linux-amd64/rclone /usr/bin/ &&
+        chmod +x /usr/bin/rclone &&
+        rm -rf rclone-* &&
+        chmod +x /scripts/backup-postgres.sh &&
+        /scripts/backup-postgres.sh
+    volumes:
+      - ./backup:/scripts:ro
+    secrets:
+      - db_password
+      - do_spaces_access_key
+      - do_spaces_secret_key
+      - backup_encryption_key
+    networks:
+      - immog-network
+    deploy:
+      mode: replicated
+      replicas: 0
+      restart_policy:
+        condition: none
+      resources:
+        limits:
+          memory: 512M
+
+  # MinIO → DigitalOcean Spaces Sync Service
+  # Runs on demand via: docker service scale immo_rclone-sync=1
+  # Syncs all MinIO buckets to Spaces with deletion
+  rclone-sync:
+    image: rclone/rclone:latest
+    hostname: rclone-sync
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        cp /scripts/sync-to-spaces.sh /tmp/sync.sh &&
+        chmod +x /tmp/sync.sh &&
+        /tmp/sync.sh
+    volumes:
+      - ./rclone:/scripts:ro
+    secrets:
+      - minio_access_key
+      - minio_password
+      - do_spaces_access_key
+      - do_spaces_secret_key
+    networks:
+      - immog-network
+    deploy:
+      mode: replicated
+      replicas: 0
+      restart_policy:
+        condition: none
+      resources:
+        limits:
+          memory: 256M
+
+  # PostgreSQL Restore Service (manual use only)
+  # Usage: docker service scale immo_restore-postgres=1
+  # Note: Set BACKUP_FILE env before scaling
+  restore-postgres:
+    image: postgres:16-alpine
+    hostname: restore-postgres
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        apk add --no-cache openssl curl unzip &&
+        curl -O https://downloads.rclone.org/rclone-current-linux-amd64.zip &&
+        unzip rclone-current-linux-amd64.zip &&
+        cp rclone-*-linux-amd64/rclone /usr/bin/ &&
+        chmod +x /usr/bin/rclone &&
+        rm -rf rclone-* &&
+        chmod +x /scripts/restore-postgres.sh &&
+        /scripts/restore-postgres.sh $${BACKUP_FILE:-}
+    environment:
+      - BACKUP_FILE=${BACKUP_FILE:-}
+    volumes:
+      - ./backup:/scripts:ro
+    secrets:
+      - db_password
+      - do_spaces_access_key
+      - do_spaces_secret_key
+      - backup_encryption_key
+    networks:
+      - immog-network
+    deploy:
+      mode: replicated
+      replicas: 0
+      restart_policy:
+        condition: none
+      resources:
+        limits:
+          memory: 512M
+
+  # MinIO Restore Service (manual use only)
+  # Usage: docker service scale immo_restore-minio=1
+  restore-minio:
+    image: rclone/rclone:latest
+    hostname: restore-minio
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        cp /backup-scripts/restore-minio.sh /tmp/restore.sh &&
+        chmod +x /tmp/restore.sh &&
+        /tmp/restore.sh $${BUCKET:-all}
+    environment:
+      - BUCKET=${RESTORE_BUCKET:-all}
+    volumes:
+      - ./backup:/backup-scripts:ro
+    secrets:
+      - minio_access_key
+      - minio_password
+      - do_spaces_access_key
+      - do_spaces_secret_key
+    networks:
+      - immog-network
+    deploy:
+      mode: replicated
+      replicas: 0
+      restart_policy:
+        condition: none
       resources:
         limits:
           memory: 256M

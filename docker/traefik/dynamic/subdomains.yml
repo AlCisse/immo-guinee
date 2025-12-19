@@ -1,56 +1,33 @@
 # ===============================================
 # Subdomains Configuration - immoguinee.com
-# Routes for admin tools: n8n, waha, grafana, minio, pgadmin
+# Routes for admin tools: grafana, pgadmin, traefik, prometheus, alertmanager
 # Docker Swarm service names use immo_ prefix
-# SECURED: All admin UIs require BasicAuth (admin-auth middleware)
+# SECURED: Cloudflare-only access + BasicAuth (admin-auth middleware)
+# INTERNAL ONLY: waha, n8n, minio (no web access - backend use only)
 # ===============================================
 
 http:
   routers:
-    # n8n (Workflow Automation) - automate.immoguinee.com
-    # SECURED with admin-auth middleware
-    n8n-secure:
-      rule: "Host(`automate.immoguinee.com`)"
-      entryPoints:
-        - websecure
-      service: n8n
-      tls: {}
-      middlewares:
-        - admin-auth@file
-      priority: 100
+    # =============================================
+    # INTERNAL SERVICES - NO WEB ACCESS
+    # These services are only accessible from within Docker network
+    # =============================================
 
-    n8n-http:
-      rule: "Host(`automate.immoguinee.com`)"
-      entryPoints:
-        - web
-      middlewares:
-        - https-redirect
-      service: n8n
-      priority: 1
+    # n8n - REMOVED from web access (internal backend use only)
+    # Access via Docker network: http://immo_n8n:5678
 
-    # WAHA (WhatsApp API) - waha.immoguinee.com
-    # SECURED with admin-auth middleware
-    waha-secure:
-      rule: "Host(`waha.immoguinee.com`)"
-      entryPoints:
-        - websecure
-      service: waha
-      tls: {}
-      middlewares:
-        - admin-auth@file
-      priority: 100
+    # WAHA - REMOVED from web access (internal backend use only)
+    # Access via Docker network: http://immo_waha:3000
 
-    waha-http:
-      rule: "Host(`waha.immoguinee.com`)"
-      entryPoints:
-        - web
-      middlewares:
-        - https-redirect
-      service: waha
-      priority: 1
+    # MinIO Console - REMOVED from web access (internal backend use only)
+    # Access via Docker network: http://immo_minio:9001
+
+    # =============================================
+    # ADMIN SERVICES - Cloudflare Only + BasicAuth
+    # =============================================
 
     # Grafana (Monitoring) - monitoring.immoguinee.com
-    # SECURED with admin-auth middleware
+    # SECURED: Cloudflare-only + admin-auth
     grafana-secure:
       rule: "Host(`monitoring.immoguinee.com`)"
       entryPoints:
@@ -58,6 +35,7 @@ http:
       service: grafana
       tls: {}
       middlewares:
+        - cloudflare-only@file
         - admin-auth@file
       priority: 100
 
@@ -70,29 +48,8 @@ http:
       service: grafana
       priority: 1
 
-    # MinIO Console - minio.immoguinee.com
-    # SECURED with admin-auth middleware
-    minio-secure:
-      rule: "Host(`minio.immoguinee.com`)"
-      entryPoints:
-        - websecure
-      service: minio-console
-      tls: {}
-      middlewares:
-        - admin-auth@file
-      priority: 100
-
-    minio-http:
-      rule: "Host(`minio.immoguinee.com`)"
-      entryPoints:
-        - web
-      middlewares:
-        - https-redirect
-      service: minio-console
-      priority: 1
-
     # pgAdmin (Database Admin) - pgadmin.immoguinee.com
-    # SECURED with admin-auth middleware
+    # SECURED: Cloudflare-only + admin-auth
     pgadmin-secure:
       rule: "Host(`pgadmin.immoguinee.com`)"
       entryPoints:
@@ -100,6 +57,7 @@ http:
       service: pgadmin
       tls: {}
       middlewares:
+        - cloudflare-only@file
         - admin-auth@file
       priority: 100
 
@@ -113,8 +71,7 @@ http:
       priority: 1
 
     # Traefik Dashboard - traefik.immoguinee.com
-    # SECURED with admin-auth middleware
-    # Uses api@internal service (built-in Traefik dashboard)
+    # SECURED: Cloudflare-only + admin-auth
     traefik-secure:
       rule: "Host(`traefik.immoguinee.com`)"
       entryPoints:
@@ -122,6 +79,7 @@ http:
       service: api@internal
       tls: {}
       middlewares:
+        - cloudflare-only@file
         - admin-auth@file
       priority: 100
 
@@ -135,7 +93,7 @@ http:
       priority: 1
 
     # Prometheus - prometheus.immoguinee.com
-    # SECURED with admin-auth middleware
+    # SECURED: Cloudflare-only + admin-auth
     prometheus-secure:
       rule: "Host(`prometheus.immoguinee.com`)"
       entryPoints:
@@ -143,6 +101,7 @@ http:
       service: prometheus
       tls: {}
       middlewares:
+        - cloudflare-only@file
         - admin-auth@file
       priority: 100
 
@@ -156,7 +115,7 @@ http:
       priority: 1
 
     # Alertmanager - alertmanager.immoguinee.com
-    # SECURED with admin-auth middleware
+    # SECURED: Cloudflare-only + admin-auth
     alertmanager-secure:
       rule: "Host(`alertmanager.immoguinee.com`)"
       entryPoints:
@@ -164,6 +123,7 @@ http:
       service: alertmanager
       tls: {}
       middlewares:
+        - cloudflare-only@file
         - admin-auth@file
       priority: 100
 

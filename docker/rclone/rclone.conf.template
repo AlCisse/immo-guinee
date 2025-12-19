@@ -1,0 +1,21 @@
+# ===============================================
+# rclone Configuration for MinIO → DigitalOcean Spaces Sync
+# This is a template - actual secrets are injected at runtime
+# ===============================================
+
+[minio]
+type = s3
+provider = Minio
+endpoint = http://immo_minio:9000
+access_key_id = MINIO_ACCESS_KEY_PLACEHOLDER
+secret_access_key = MINIO_SECRET_KEY_PLACEHOLDER
+env_auth = false
+
+[spaces]
+type = s3
+provider = DigitalOcean
+endpoint = fra1.digitaloceanspaces.com
+access_key_id = DO_SPACES_ACCESS_KEY_PLACEHOLDER
+secret_access_key = DO_SPACES_SECRET_KEY_PLACEHOLDER
+acl = public-read
+env_auth = false
