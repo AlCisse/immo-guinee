@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # ===============================================
 # MinIO Restore Script
 # Restores files from DigitalOcean Spaces to MinIO
