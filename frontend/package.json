@@ -7,7 +7,7 @@
     "dev": "next dev -p 3005",
     "dev:3000": "next dev -p 3000",
     "dev:3004": "next dev -p 3004",
-    "build": "next build",
+    "build": "NEXT_DISABLE_TURBOPACK=1 next build",
     "start": "next start -p 3005",
     "lint": "next lint",
     "type-check": "tsc --noEmit"
