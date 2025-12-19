@@ -5,7 +5,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import {
   Locale,
-  DEFAULT_LOCALE,
+  defaultLocale,
+  locales,
   getLocaleConfig,
   isRTL,
   COMMON_TIMEZONES,
@@ -16,11 +17,7 @@ import {
 // Import translations dynamically
 type Translations = Record<string, Record<string, string | Record<string, string>>>;
 
-const translationsCache: Record<Locale, Translations | null> = {
-  fr: null,
-  ar: null,
-  en: null,
-};
+const translationsCache: Partial<Record<Locale, Translations | null>> = {};
 
 async function loadTranslations(locale: Locale): Promise<Translations> {
   if (translationsCache[locale]) {
@@ -72,17 +69,17 @@ export function useLocale(): UseLocaleReturn {
   const [locale, setLocaleState] = useState<Locale>(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('locale') as Locale;
-      if (stored && ['fr', 'ar', 'en'].includes(stored)) {
+      if (stored && (locales as readonly string[]).includes(stored)) {
         return stored;
       }
 
       // Detect from browser
       const browserLang = navigator.language.split('-')[0] as Locale;
-      if (['fr', 'ar', 'en'].includes(browserLang)) {
+      if ((locales as readonly string[]).includes(browserLang)) {
         return browserLang;
       }
     }
-    return DEFAULT_LOCALE;
+    return defaultLocale;
   });
 
   const [timezone, setTimezoneState] = useState<string>(() => {
@@ -250,7 +247,7 @@ export function useLocale(): UseLocaleReturn {
 // Provider component for locale context
 import { createContext, useContext, ReactNode } from 'react';
 
-interface LocaleContextType extends UseLocaleReturn {}
+type LocaleContextType = UseLocaleReturn;
 
 const LocaleContext = createContext<LocaleContextType | null>(null);
 
