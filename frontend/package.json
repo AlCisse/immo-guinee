@@ -7,7 +7,7 @@
     "dev": "next dev -p 3005",
     "dev:3000": "next dev -p 3000",
     "dev:3004": "next dev -p 3004",
-    "build": "next build --no-turbopack",
+    "build": "next build",
     "start": "next start -p 3005",
     "lint": "next lint",
     "type-check": "tsc --noEmit"
@@ -23,7 +23,7 @@
     "laravel-echo": "^1.16.1",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.344.0",
-    "next": "^16.1.0",
+    "next": "^15.1.0",
     "next-intl": "^4.6.1",
     "pusher-js": "^8.4.0-rc2",
     "react": "^18.3.0",
