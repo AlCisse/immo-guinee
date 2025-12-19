@@ -139,6 +139,10 @@ secrets:
     external: true
   db_password:
     external: true
+  db_app_password:
+    external: true
+  db_backup_password:
+    external: true
   redis_password:
     external: true
   minio_password:
@@ -158,4 +162,6 @@ secrets:
   do_spaces_secret_key:
     external: true
   backup_encryption_key:
+    external: true
+  traefik_basicauth_users_v7:
     external: true

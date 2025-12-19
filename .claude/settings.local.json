@@ -172,7 +172,13 @@
       "Bash(do echo -n \"Port $port: \")",
       "Bash(composer audit:*)",
       "Bash(npm audit:*)",
-      "Bash(composer show:*)"
+      "Bash(composer show:*)",
+      "Bash(timeout 5 curl:*)",
+      "Bash(for subdomain in monitoring pgadmin traefik prometheus alertmanager automate minio waha)",
+      "Bash(for sub in monitoring pgadmin prometheus)",
+      "Bash(do echo -n \"$sub.immoguinee.com: \")",
+      "Bash(for i in 1 2 3 4 5 6)",
+      "Bash(do curl -s -o /dev/null -w \"%{http_code} \" -X POST https://immoguinee.com/api/auth/login -H \"Content-Type: application/json\" -d '{\"\"email\"\":\"\"test@test.com\"\",\"\"password\"\":\"\"test\"\"}')"
     ],
     "deny": [],
     "ask": []
