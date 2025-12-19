@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Listing;
 use App\Models\ListingPhoto;
+use App\Helpers\FileSecurityHelper;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
@@ -33,13 +34,33 @@ class ListingPhotoService
     }
 
     /**
+     * Validate an image file before upload.
+     *
+     * @throws \InvalidArgumentException if file is invalid
+     */
+    public function validateImage(UploadedFile $file): array
+    {
+        $validation = FileSecurityHelper::validateUpload($file, 'image', true);
+
+        if (!$validation['valid']) {
+            throw new \InvalidArgumentException($validation['error']);
+        }
+
+        return $validation;
+    }
+
+    /**
      * Upload a photo for a listing.
+     *
+     * @throws \InvalidArgumentException if file fails security validation
      */
     public function upload(Listing $listing, UploadedFile $file, bool $isPrimary = false): ListingPhoto
     {
-        // Generate unique filename
-        $extension = $file->getClientOriginalExtension();
-        $filename = Str::uuid() . '.' . $extension;
+        // Security validation (MIME, extension, virus scan, etc.)
+        $validation = $this->validateImage($file);
+
+        // Use secure filename from validation (UUID-based, never user-provided)
+        $filename = $validation['secure_name'];
         // Note: 'listings' disk root is already storage/app/public/listings, so no prefix needed
         $basePath = "{$listing->id}";
 

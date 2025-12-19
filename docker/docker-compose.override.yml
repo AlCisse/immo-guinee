@@ -48,6 +48,9 @@ services:
     environment:
       - APP_ENV=local
       - APP_DEBUG=true
+      # In dev, use main user for simplicity
+      - DB_USERNAME=${DB_USERNAME:-immog_user}
+      - DB_PASSWORD_FILE=/run/secrets/db_password
 
   # Nginx - Development with backend volume
   nginx:
@@ -70,6 +73,8 @@ services:
       - ../backend:/var/www/backend
     environment:
       - APP_ENV=local
+      - DB_USERNAME=${DB_USERNAME:-immog_user}
+      - DB_PASSWORD_FILE=/run/secrets/db_password
 
   # Scheduler - Development
   scheduler:
@@ -81,6 +86,15 @@ services:
       - ../backend:/var/www/backend
     environment:
       - APP_ENV=local
+      - DB_USERNAME=${DB_USERNAME:-immog_user}
+      - DB_PASSWORD_FILE=/run/secrets/db_password
+
+  # ClamAV - Lighter config for dev
+  clamav:
+    deploy:
+      resources:
+        limits:
+          memory: 1G  # Less memory for dev
 
   # Expose ports for development debugging
   # SECURITY: Bind to 127.0.0.1 only to prevent external access
@@ -178,7 +192,11 @@ services:
 
 # Use bridge network for local development
 networks:
-  immog-network:
+  public-network:
+    driver: bridge
+  backend-network:
+    driver: bridge
+  infra-network:
     driver: bridge
 
 # Override external secrets with local files for development
@@ -191,6 +209,10 @@ secrets:
     file: ./secrets/passport_public_key
   db_password:
     file: ./secrets/db_password
+  db_app_password:
+    file: ./secrets/db_app_password
+  db_backup_password:
+    file: ./secrets/db_backup_password
   redis_password:
     file: ./secrets/redis_password
   minio_password:
