@@ -32,7 +32,7 @@ cat > /tmp/rclone.conf << EOF
 [minio]
 type = s3
 provider = Minio
-endpoint = http://immo_minio:9000
+endpoint = http://minio:9000
 access_key_id = ${MINIO_ACCESS_KEY}
 secret_access_key = ${MINIO_SECRET_KEY}
 env_auth = false
