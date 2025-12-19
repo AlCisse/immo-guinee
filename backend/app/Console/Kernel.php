@@ -82,6 +82,41 @@ class Kernel extends ConsoleKernel
             ->onFailure(function () {
                 \Log::channel('disputes')->error('Mediator auto-assignment failed');
             });
+
+        // ============================================
+        // Backup & Sync Tasks
+        // These tasks signal when backups should run
+        // Actual execution is handled by Docker services
+        // ============================================
+
+        // PostgreSQL backup daily at 2:00 AM UTC
+        // Executed by: docker service scale immo_backup-postgres=1
+        $schedule->call(function () {
+            \Log::channel('backup')->info('[BACKUP] PostgreSQL backup scheduled - triggering Docker service');
+            // Signal file for external backup trigger
+            file_put_contents(storage_path('app/backup-trigger'), date('Y-m-d H:i:s'));
+        })
+            ->dailyAt('02:00')
+            ->timezone('UTC')
+            ->name('backup:postgres')
+            ->withoutOverlapping()
+            ->onSuccess(function () {
+                \Log::channel('backup')->info('[BACKUP] PostgreSQL backup trigger completed');
+            })
+            ->onFailure(function () {
+                \Log::channel('backup')->error('[BACKUP] PostgreSQL backup trigger failed');
+            });
+
+        // MinIO → Spaces sync every 15 minutes
+        // Executed by: docker service scale immo_rclone-sync=1
+        $schedule->call(function () {
+            \Log::channel('backup')->debug('[SYNC] MinIO → Spaces sync scheduled');
+            // Signal file for external sync trigger
+            file_put_contents(storage_path('app/sync-trigger'), date('Y-m-d H:i:s'));
+        })
+            ->everyFifteenMinutes()
+            ->name('sync:minio-spaces')
+            ->withoutOverlapping();
     }
 
     /**

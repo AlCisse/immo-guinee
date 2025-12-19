@@ -164,6 +164,34 @@ return [
             'throw' => false,
         ],
 
+        // DigitalOcean Spaces (CDN backup/mirror)
+        // Used for serving images via Cloudflare CDN: images.immoguinee.com
+        // Synced from MinIO via rclone
+        'spaces' => [
+            'driver' => 's3',
+            'key' => env('DO_SPACES_ACCESS_KEY'),
+            'secret' => env('DO_SPACES_SECRET_KEY'),
+            'region' => env('DO_SPACES_REGION', 'fra1'),
+            'bucket' => env('DO_SPACES_BUCKET', 'immoguinee'),
+            'endpoint' => env('DO_SPACES_ENDPOINT', 'https://fra1.digitaloceanspaces.com'),
+            'url' => env('DO_SPACES_CDN_URL', 'https://images.immoguinee.com'),
+            'visibility' => 'public',
+            'throw' => true,
+        ],
+
+        // DigitalOcean Spaces for backups (private)
+        'spaces-backup' => [
+            'driver' => 's3',
+            'key' => env('DO_SPACES_ACCESS_KEY'),
+            'secret' => env('DO_SPACES_SECRET_KEY'),
+            'region' => env('DO_SPACES_REGION', 'fra1'),
+            'bucket' => env('DO_SPACES_BUCKET', 'immoguinee'),
+            'endpoint' => env('DO_SPACES_ENDPOINT', 'https://fra1.digitaloceanspaces.com'),
+            'root' => 'backups',
+            'visibility' => 'private',
+            'throw' => true,
+        ],
+
     ],
 
     /*
