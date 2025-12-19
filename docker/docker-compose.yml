@@ -641,15 +641,14 @@ services:
     command:
       - |
         apk add --no-cache openssl curl unzip &&
-        curl -O https://downloads.rclone.org/rclone-current-linux-amd64.zip &&
-        unzip rclone-current-linux-amd64.zip &&
+        curl -sO https://downloads.rclone.org/rclone-current-linux-amd64.zip &&
+        unzip -q rclone-current-linux-amd64.zip &&
         cp rclone-*-linux-amd64/rclone /usr/bin/ &&
         chmod +x /usr/bin/rclone &&
         rm -rf rclone-* &&
-        chmod +x /scripts/backup-postgres.sh &&
         /scripts/backup-postgres.sh
     volumes:
-      - ./backup:/scripts:ro
+      - ./backup:/scripts
     secrets:
       - db_password
       - do_spaces_access_key
@@ -674,12 +673,9 @@ services:
     hostname: rclone-sync
     entrypoint: ["/bin/sh", "-c"]
     command:
-      - |
-        cp /scripts/sync-to-spaces.sh /tmp/sync.sh &&
-        chmod +x /tmp/sync.sh &&
-        /tmp/sync.sh
+      - /scripts/sync-to-spaces.sh
     volumes:
-      - ./rclone:/scripts:ro
+      - ./rclone:/scripts
     secrets:
       - minio_access_key
       - minio_password
@@ -706,17 +702,16 @@ services:
     command:
       - |
         apk add --no-cache openssl curl unzip &&
-        curl -O https://downloads.rclone.org/rclone-current-linux-amd64.zip &&
-        unzip rclone-current-linux-amd64.zip &&
+        curl -sO https://downloads.rclone.org/rclone-current-linux-amd64.zip &&
+        unzip -q rclone-current-linux-amd64.zip &&
         cp rclone-*-linux-amd64/rclone /usr/bin/ &&
         chmod +x /usr/bin/rclone &&
         rm -rf rclone-* &&
-        chmod +x /scripts/restore-postgres.sh &&
         /scripts/restore-postgres.sh $${BACKUP_FILE:-}
     environment:
       - BACKUP_FILE=${BACKUP_FILE:-}
     volumes:
-      - ./backup:/scripts:ro
+      - ./backup:/scripts
     secrets:
       - db_password
       - do_spaces_access_key
@@ -740,14 +735,11 @@ services:
     hostname: restore-minio
     entrypoint: ["/bin/sh", "-c"]
     command:
-      - |
-        cp /backup-scripts/restore-minio.sh /tmp/restore.sh &&
-        chmod +x /tmp/restore.sh &&
-        /tmp/restore.sh $${BUCKET:-all}
+      - /scripts/restore-minio.sh $${BUCKET:-all}
     environment:
       - BUCKET=${RESTORE_BUCKET:-all}
     volumes:
-      - ./backup:/backup-scripts:ro
+      - ./backup:/scripts
     secrets:
       - minio_access_key
       - minio_password
