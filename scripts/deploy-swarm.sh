@@ -58,7 +58,7 @@ build_images() {
     # Build PHP (--no-cache to force rebuild)
     echo -e "${YELLOW}Building PHP image...${NC}"
     docker build --no-cache -t immoguinee/php:latest \
-        -f docker/php/Dockerfile .
+        -f docker/php/Dockerfile backend/
 
     echo -e "${GREEN}Images built successfully${NC}"
 }
@@ -133,7 +133,7 @@ update_backend() {
 
     # Build new image (--no-cache to force rebuild)
     docker build --no-cache -t immoguinee/php:latest \
-        -f docker/php/Dockerfile .
+        -f docker/php/Dockerfile backend/
 
     # Update PHP service
     docker service update \
