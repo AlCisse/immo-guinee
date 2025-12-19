@@ -55,6 +55,7 @@ Route::prefix('auth')->group(function () {
     Route::middleware('auth:api')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me', [AuthController::class, 'me']);
+        Route::get('/me/counts', [AuthController::class, 'counts']); // Unread notifications, messages, favorites count
         Route::patch('/me', [AuthController::class, 'updateProfile']);
     });
 });

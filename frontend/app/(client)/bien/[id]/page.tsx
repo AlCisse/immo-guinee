@@ -185,7 +185,7 @@ export default function PropertyDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   const [isFavorite, setIsFavorite] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -230,6 +230,9 @@ export default function PropertyDetailPage() {
 
   const listing: Listing = data.data.listing;
   const similarListings = similarData?.data?.listings || [];
+
+  // Check if current user is the owner of this listing
+  const isOwner = user?.id === listing.user_id || user?.id === listing.user?.id;
 
   // Get images array
   const images = listing.listing_photos?.length > 0
@@ -515,27 +518,35 @@ export default function PropertyDetailPage() {
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setShowContactModal(true)}
-                    className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors"
-                  >
-                    <Phone className="w-5 h-5" />
-                    Contacter
-                  </motion.button>
+                {!isOwner ? (
+                  <div className="space-y-3">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setShowContactModal(true)}
+                      className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors"
+                    >
+                      <Phone className="w-5 h-5" />
+                      Contacter
+                    </motion.button>
 
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setShowBookingModal(true)}
-                    className="w-full flex items-center justify-center gap-2 px-6 py-3.5 border-2 border-primary-500 text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-500/10 font-semibold rounded-xl transition-colors"
-                  >
-                    <Calendar className="w-5 h-5" />
-                    Programmer une visite
-                  </motion.button>
-                </div>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setShowBookingModal(true)}
+                      className="w-full flex items-center justify-center gap-2 px-6 py-3.5 border-2 border-primary-500 text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-500/10 font-semibold rounded-xl transition-colors"
+                    >
+                      <Calendar className="w-5 h-5" />
+                      Programmer une visite
+                    </motion.button>
+                  </div>
+                ) : (
+                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-center">
+                    <p className="text-sm text-blue-600 dark:text-blue-400">
+                      Ceci est votre annonce
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Property Stats */}
@@ -613,13 +624,19 @@ export default function PropertyDetailPage() {
               )}
             </p>
           </div>
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowContactModal(true)}
-            className="px-6 py-3 bg-primary-500 text-white font-semibold rounded-xl"
-          >
-            Contacter
-          </motion.button>
+          {!isOwner ? (
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowContactModal(true)}
+              className="px-6 py-3 bg-primary-500 text-white font-semibold rounded-xl"
+            >
+              Contacter
+            </motion.button>
+          ) : (
+            <span className="px-4 py-2 text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+              Votre annonce
+            </span>
+          )}
         </div>
       </div>
 
