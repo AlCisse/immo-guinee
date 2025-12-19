@@ -638,9 +638,13 @@ services:
         limits:
           memory: 512M
 
-  # MinIO → DigitalOcean Spaces Sync Service
-  # Runs on demand via: docker service scale immo_rclone-sync=1
-  # Syncs all MinIO buckets to Spaces with deletion
+  # [DEPRECATED] MinIO → DigitalOcean Spaces Sync Service
+  # =========================================================
+  # This service is NO LONGER USED. Files are now uploaded
+  # directly to DigitalOcean Spaces. MinIO is only used as
+  # temporary cache and cleaned up daily by minio:cleanup command.
+  # =========================================================
+  # Kept for backwards compatibility / emergency manual sync
   rclone-sync:
     image: rclone/rclone:latest
     hostname: rclone-sync
