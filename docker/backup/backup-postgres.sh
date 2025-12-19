@@ -76,19 +76,21 @@ echo "$LOG_PREFIX Encryption completed. Size: ${ENCRYPTED_SIZE}"
 echo "$LOG_PREFIX Uploading to DigitalOcean Spaces..."
 rclone copy /tmp/${ENCRYPTED_FILE} spaces:immoguinee/backups/db/ \
     --config /tmp/rclone.conf \
+    --s3-no-check-bucket \
     --progress \
     --log-level INFO
 
 echo "$LOG_PREFIX Upload completed: backups/db/${ENCRYPTED_FILE}"
 
-echo "$LOG_PREFIX Cleaning up local files..."
-rm -f /tmp/${BACKUP_FILE} /tmp/${ENCRYPTED_FILE} /tmp/rclone.conf /tmp/encryption_key
-
 echo "$LOG_PREFIX Applying retention policy (14 days)..."
 rclone delete spaces:immoguinee/backups/db/ \
     --config /tmp/rclone.conf \
+    --s3-no-check-bucket \
     --min-age 14d \
     2>/dev/null || true
+
+echo "$LOG_PREFIX Cleaning up local files..."
+rm -f /tmp/${BACKUP_FILE} /tmp/${ENCRYPTED_FILE} /tmp/rclone.conf /tmp/encryption_key
 
 echo "$LOG_PREFIX Backup completed successfully!"
 echo "$LOG_PREFIX File: ${ENCRYPTED_FILE}"

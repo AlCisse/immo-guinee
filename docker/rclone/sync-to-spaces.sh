@@ -51,6 +51,7 @@ EOF
 echo "$LOG_PREFIX Syncing listings bucket..."
 rclone sync minio:listings spaces:immoguinee/listings \
     --config /tmp/rclone.conf \
+    --s3-no-check-bucket \
     --progress \
     --delete-during \
     --transfers 8 \
@@ -61,6 +62,7 @@ rclone sync minio:listings spaces:immoguinee/listings \
 echo "$LOG_PREFIX Syncing documents bucket..."
 rclone sync minio:documents spaces:immoguinee/documents \
     --config /tmp/rclone.conf \
+    --s3-no-check-bucket \
     --progress \
     --delete-during \
     --transfers 4 \
@@ -71,6 +73,7 @@ rclone sync minio:documents spaces:immoguinee/documents \
 echo "$LOG_PREFIX Syncing avatars bucket..."
 rclone sync minio:avatars spaces:immoguinee/avatars \
     --config /tmp/rclone.conf \
+    --s3-no-check-bucket \
     --progress \
     --delete-during \
     --transfers 4 \

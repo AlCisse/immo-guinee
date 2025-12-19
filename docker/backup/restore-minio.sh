@@ -55,6 +55,7 @@ restore_bucket() {
     echo "$LOG_PREFIX Restoring bucket: $bucket"
     rclone sync spaces:immoguinee/${bucket} minio:${bucket} \
         --config /tmp/rclone.conf \
+        --s3-no-check-bucket \
         --progress \
         --transfers 8 \
         --checkers 16 \

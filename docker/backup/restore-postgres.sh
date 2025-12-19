@@ -30,7 +30,7 @@ access_key_id = ${DO_SPACES_ACCESS_KEY}
 secret_access_key = ${DO_SPACES_SECRET_KEY}
 env_auth = false
 EOF
-        rclone ls spaces:immoguinee/backups/db/ --config /tmp/rclone.conf 2>/dev/null | tail -10
+        rclone ls spaces:immoguinee/backups/db/ --config /tmp/rclone.conf --s3-no-check-bucket 2>/dev/null | tail -10
         rm -f /tmp/rclone.conf
     fi
     exit 1
@@ -80,6 +80,7 @@ chmod 600 /tmp/encryption_key
 echo "$LOG_PREFIX Downloading backup from Spaces..."
 rclone copy spaces:immoguinee/backups/db/${BACKUP_FILE} /tmp/ \
     --config /tmp/rclone.conf \
+    --s3-no-check-bucket \
     --progress
 
 if [ ! -f "/tmp/${BACKUP_FILE}" ]; then
