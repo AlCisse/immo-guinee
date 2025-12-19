@@ -10,6 +10,7 @@
         "ext-imagick": "*",
         "ext-pgsql": "*",
         "ext-redis": "*",
+        "aws/aws-sdk-php": "^3.368",
         "barryvdh/laravel-dompdf": "^3.0",
         "guzzlehttp/guzzle": "^7.8",
         "intervention/image": "^3.5",

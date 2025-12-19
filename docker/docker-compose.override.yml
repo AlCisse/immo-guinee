@@ -83,31 +83,37 @@ services:
       - APP_ENV=local
 
   # Expose ports for development debugging
+  # SECURITY: Bind to 127.0.0.1 only to prevent external access
+  # NOTE: Port 5433 used because local PostgreSQL is on 5432
   postgres:
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5433:5432"
 
   redis:
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
 
   elasticsearch:
     ports:
-      - "9200:9200"
-      - "9300:9300"
+      - "127.0.0.1:9200:9200"
+      - "127.0.0.1:9300:9300"
 
   minio:
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
 
   n8n:
     ports:
-      - "5678:5678"
+      - "127.0.0.1:5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_USER:-admin}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD:-Imm0G@2024!}
 
   waha:
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     environment:
       - WHATSAPP_API_KEY=${WAHA_API_KEY:-immog2024}
       - WAHA_API_KEY=${WAHA_API_KEY:-immog2024}
@@ -118,39 +124,90 @@ services:
 
   laravel-echo:
     ports:
-      - "6001:6001"
+      - "127.0.0.1:6001:6001"
+    environment:
+      - REDIS_PASSWORD=immog_secret_2024
 
   traefik:
     command:
-      - "--api.insecure=true"
+      - "--api.insecure=false"
       - "--api.dashboard=true"
+      - "--api.debug=false"
       - "--providers.file.directory=/etc/traefik/dynamic"
       - "--providers.file.watch=true"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
-      - "--log.level=DEBUG"
+      - "--log.level=WARN"
+      - "--accesslog=true"
+      - "--accesslog.filters.statuscodes=400-599"
     ports:
       - "8888:80"
       - "8889:443"
-      - "8081:8080"
+      - "127.0.0.1:8081:8080"
 
   varnish:
     ports:
-      - "8082:80"
+      - "127.0.0.1:8082:80"
 
   prometheus:
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
 
   grafana:
+    # Override entrypoint to not use secret file in dev
+    entrypoint: []
+    command: ["/run.sh"]
     ports:
-      - "3001:3000"
+      - "127.0.0.1:3001:3000"
+    environment:
+      # Clear the __FILE variant to avoid conflict
+      - GF_SECURITY_ADMIN_PASSWORD__FILE=
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-Imm0G@2024!}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SECURITY_DISABLE_GRAVATAR=true
+      - GF_SECURITY_COOKIE_SECURE=true
+      - GF_SECURITY_COOKIE_SAMESITE=strict
 
   pgadmin:
     ports:
-      - "5050:80"
+      - "127.0.0.1:5050:80"
+    environment:
+      - PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION=True
+      - PGADMIN_CONFIG_LOGIN_BANNER="Acces autorise uniquement"
+      - PGADMIN_CONFIG_CONSOLE_LOG_LEVEL=30
 
 # Use bridge network for local development
 networks:
   immog-network:
     driver: bridge
+
+# Override external secrets with local files for development
+secrets:
+  app_key:
+    file: ./secrets/app_key
+  passport_private_key:
+    file: ./secrets/passport_private_key
+  passport_public_key:
+    file: ./secrets/passport_public_key
+  db_password:
+    file: ./secrets/db_password
+  redis_password:
+    file: ./secrets/redis_password
+  minio_password:
+    file: ./secrets/minio_password
+  minio_access_key:
+    file: ./secrets/minio_access_key
+  grafana_password:
+    file: ./secrets/grafana_password
+  pgadmin_password:
+    file: ./secrets/pgadmin_password
+  waha_password:
+    file: ./secrets/waha_password
+  waha_api_key:
+    file: ./secrets/waha_api_key
+  do_spaces_access_key:
+    file: ./secrets/do_spaces_access_key
+  do_spaces_secret_key:
+    file: ./secrets/do_spaces_secret_key
+  backup_encryption_key:
+    file: ./secrets/backup_encryption_key

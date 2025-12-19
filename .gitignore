@@ -159,3 +159,6 @@ docs/api/.cache/
 !.gitkeep
 !.env.example
 !README.md
+
+# Local dev secrets
+docker/secrets/

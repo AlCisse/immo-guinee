@@ -128,3 +128,34 @@ services:
         - "traefik.http.routers.traefik.tls=true"
         - "traefik.http.routers.traefik.service=api@internal"
         - "traefik.http.routers.traefik.middlewares=admin-auth@file"
+
+# External secrets for Docker Swarm (must be created first with: docker secret create)
+secrets:
+  app_key:
+    external: true
+  passport_private_key:
+    external: true
+  passport_public_key:
+    external: true
+  db_password:
+    external: true
+  redis_password:
+    external: true
+  minio_password:
+    external: true
+  minio_access_key:
+    external: true
+  grafana_password:
+    external: true
+  pgadmin_password:
+    external: true
+  waha_password:
+    external: true
+  waha_api_key:
+    external: true
+  do_spaces_access_key:
+    external: true
+  do_spaces_secret_key:
+    external: true
+  backup_encryption_key:
+    external: true

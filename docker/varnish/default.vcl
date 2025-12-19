@@ -1,8 +1,8 @@
 vcl 4.1;
 
-# Backend definition (Nginx) - Use Docker Swarm service VIP
+# Backend definition (Nginx) - Use service name for Docker Compose/Swarm
 backend default {
-    .host = "immo_nginx";
+    .host = "nginx";
     .port = "80";
     .connect_timeout = 5s;
     .first_byte_timeout = 60s;
@@ -14,7 +14,7 @@ acl purge {
     "localhost";
     "127.0.0.1";
     "::1";
-    "immo_nginx";
+    "nginx";
     "10.0.0.0"/8;
 }
 
