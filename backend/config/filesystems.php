@@ -17,6 +17,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Storage Strategy
+    |--------------------------------------------------------------------------
+    |
+    | 'spaces' = Direct upload to DigitalOcean Spaces (recommended for production)
+    | 'minio'  = Upload to MinIO first, then sync to Spaces (legacy)
+    | 'local'  = Local storage only (development)
+    |
+    */
+    'strategy' => env('STORAGE_STRATEGY', 'spaces'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Filesystem Disks
     |--------------------------------------------------------------------------
     |
@@ -164,9 +176,94 @@ return [
             'throw' => false,
         ],
 
-        // DigitalOcean Spaces (CDN backup/mirror)
-        // Used for serving images via Cloudflare CDN: images.immoguinee.com
-        // Synced from MinIO via rclone
+        // =========================================================================
+        // DigitalOcean Spaces - PRIMARY PERMANENT STORAGE
+        // =========================================================================
+        // All files are stored permanently on Spaces with CDN via images.immoguinee.com
+        // MinIO is only used as temporary cache (48h) for upload processing
+
+        // Spaces - Listings images (public, CDN)
+        'spaces-listings' => [
+            'driver' => 's3',
+            'key' => env('DO_SPACES_ACCESS_KEY'),
+            'secret' => env('DO_SPACES_SECRET_KEY'),
+            'region' => env('DO_SPACES_REGION', 'fra1'),
+            'bucket' => env('DO_SPACES_BUCKET', 'immoguinee'),
+            'endpoint' => env('DO_SPACES_ENDPOINT', 'https://fra1.digitaloceanspaces.com'),
+            'url' => env('DO_SPACES_CDN_URL', 'https://images.immoguinee.com') . '/listings',
+            'root' => 'listings',
+            'visibility' => 'public',
+            'throw' => true,
+        ],
+
+        // Spaces - User avatars (public, CDN)
+        'spaces-avatars' => [
+            'driver' => 's3',
+            'key' => env('DO_SPACES_ACCESS_KEY'),
+            'secret' => env('DO_SPACES_SECRET_KEY'),
+            'region' => env('DO_SPACES_REGION', 'fra1'),
+            'bucket' => env('DO_SPACES_BUCKET', 'immoguinee'),
+            'endpoint' => env('DO_SPACES_ENDPOINT', 'https://fra1.digitaloceanspaces.com'),
+            'url' => env('DO_SPACES_CDN_URL', 'https://images.immoguinee.com') . '/avatars',
+            'root' => 'avatars',
+            'visibility' => 'public',
+            'throw' => true,
+        ],
+
+        // Spaces - Documents (private, no CDN)
+        'spaces-documents' => [
+            'driver' => 's3',
+            'key' => env('DO_SPACES_ACCESS_KEY'),
+            'secret' => env('DO_SPACES_SECRET_KEY'),
+            'region' => env('DO_SPACES_REGION', 'fra1'),
+            'bucket' => env('DO_SPACES_BUCKET', 'immoguinee'),
+            'endpoint' => env('DO_SPACES_ENDPOINT', 'https://fra1.digitaloceanspaces.com'),
+            'root' => 'documents',
+            'visibility' => 'private',
+            'throw' => true,
+        ],
+
+        // Spaces - Contracts (private, legal retention)
+        'spaces-contracts' => [
+            'driver' => 's3',
+            'key' => env('DO_SPACES_ACCESS_KEY'),
+            'secret' => env('DO_SPACES_SECRET_KEY'),
+            'region' => env('DO_SPACES_REGION', 'fra1'),
+            'bucket' => env('DO_SPACES_BUCKET', 'immoguinee'),
+            'endpoint' => env('DO_SPACES_ENDPOINT', 'https://fra1.digitaloceanspaces.com'),
+            'root' => 'contracts',
+            'visibility' => 'private',
+            'throw' => true,
+        ],
+
+        // Spaces - Certificates (private)
+        'spaces-certificates' => [
+            'driver' => 's3',
+            'key' => env('DO_SPACES_ACCESS_KEY'),
+            'secret' => env('DO_SPACES_SECRET_KEY'),
+            'region' => env('DO_SPACES_REGION', 'fra1'),
+            'bucket' => env('DO_SPACES_BUCKET', 'immoguinee'),
+            'endpoint' => env('DO_SPACES_ENDPOINT', 'https://fra1.digitaloceanspaces.com'),
+            'root' => 'certificates',
+            'visibility' => 'private',
+            'throw' => true,
+        ],
+
+        // Spaces - Messages/voice (public)
+        'spaces-messages' => [
+            'driver' => 's3',
+            'key' => env('DO_SPACES_ACCESS_KEY'),
+            'secret' => env('DO_SPACES_SECRET_KEY'),
+            'region' => env('DO_SPACES_REGION', 'fra1'),
+            'bucket' => env('DO_SPACES_BUCKET', 'immoguinee'),
+            'endpoint' => env('DO_SPACES_ENDPOINT', 'https://fra1.digitaloceanspaces.com'),
+            'url' => env('DO_SPACES_CDN_URL', 'https://images.immoguinee.com') . '/messages',
+            'root' => 'messages',
+            'visibility' => 'public',
+            'throw' => true,
+        ],
+
+        // Spaces - Generic (for legacy compatibility)
         'spaces' => [
             'driver' => 's3',
             'key' => env('DO_SPACES_ACCESS_KEY'),
@@ -179,8 +276,8 @@ return [
             'throw' => true,
         ],
 
-        // DigitalOcean Spaces for backups (private)
-        'spaces-backup' => [
+        // Spaces - Backups (private, encrypted)
+        'spaces-backups' => [
             'driver' => 's3',
             'key' => env('DO_SPACES_ACCESS_KEY'),
             'secret' => env('DO_SPACES_SECRET_KEY'),

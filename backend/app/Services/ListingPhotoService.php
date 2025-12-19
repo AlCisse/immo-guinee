@@ -5,14 +5,14 @@ namespace App\Services;
 use App\Models\Listing;
 use App\Models\ListingPhoto;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 
 class ListingPhotoService
 {
-    protected string $disk = 'listings';
+    protected string $storageType = 'listings';
+    protected StorageService $storage;
     protected ImageManager $imageManager;
 
     // Image sizes configuration
@@ -26,8 +26,9 @@ class ListingPhotoService
     protected int $maxWidth = 2000;
     protected int $maxHeight = 2000;
 
-    public function __construct()
+    public function __construct(StorageService $storage)
     {
+        $this->storage = $storage;
         $this->imageManager = new ImageManager(new Driver());
     }
 
@@ -76,7 +77,7 @@ class ListingPhotoService
         // Create the photo record
         $photo = ListingPhoto::create([
             'listing_id' => $listing->id,
-            'disk' => $this->disk,
+            'disk' => $this->storage->getDisk($this->storageType),
             'path' => $originalPath,
             'original_name' => $file->getClientOriginalName(),
             'mime_type' => $file->getMimeType(),
@@ -184,11 +185,11 @@ class ListingPhotoService
     }
 
     /**
-     * Upload content to MinIO storage.
+     * Upload content to storage (DigitalOcean Spaces or MinIO based on strategy).
      */
     protected function uploadToStorage(string $path, $content): bool
     {
-        return Storage::disk($this->disk)->put($path, $content, 'public');
+        return $this->storage->put($this->storageType, $path, $content, 'public');
     }
 
     /**

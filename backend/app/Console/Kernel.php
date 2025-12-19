@@ -84,7 +84,7 @@ class Kernel extends ConsoleKernel
             });
 
         // ============================================
-        // Backup & Sync Tasks
+        // Backup Tasks
         // These tasks signal when backups should run
         // Actual execution is handled by Docker services
         // ============================================
@@ -107,16 +107,25 @@ class Kernel extends ConsoleKernel
                 \Log::channel('backup')->error('[BACKUP] PostgreSQL backup trigger failed');
             });
 
-        // MinIO → Spaces sync every 15 minutes
-        // Executed by: docker service scale immo_rclone-sync=1
-        $schedule->call(function () {
-            \Log::channel('backup')->debug('[SYNC] MinIO → Spaces sync scheduled');
-            // Signal file for external sync trigger
-            file_put_contents(storage_path('app/sync-trigger'), date('Y-m-d H:i:s'));
-        })
-            ->everyFifteenMinutes()
-            ->name('sync:minio-spaces')
-            ->withoutOverlapping();
+        // ============================================
+        // Storage Tasks
+        // DigitalOcean Spaces is now primary storage
+        // MinIO is only used as temporary cache
+        // ============================================
+
+        // MinIO cache cleanup daily at 3:00 AM UTC
+        // Removes files older than 48 hours from MinIO
+        $schedule->command('minio:cleanup --hours=48')
+            ->dailyAt('03:00')
+            ->timezone('UTC')
+            ->name('storage:minio-cleanup')
+            ->withoutOverlapping()
+            ->onSuccess(function () {
+                \Log::info('[STORAGE] MinIO cache cleanup completed');
+            })
+            ->onFailure(function () {
+                \Log::error('[STORAGE] MinIO cache cleanup failed');
+            });
     }
 
     /**
