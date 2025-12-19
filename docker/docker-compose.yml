@@ -7,10 +7,26 @@
 #   Prod: docker stack deploy -c docker-compose.yml -c docker-compose.prod.yml immog
 # ===============================================
 
+# ============================================
+# NETWORK ISOLATION
+# ============================================
+# public-network: Internet-facing services (Traefik, frontend, varnish)
+# backend-network: Application services (php, databases, cache)
+# infra-network: Monitoring & admin (Grafana, Prometheus, PgAdmin)
+# ============================================
+
 networks:
-  immog-network:
+  public-network:
     driver: overlay
     attachable: true
+  backend-network:
+    driver: overlay
+    attachable: true
+    internal: true  # No direct internet access
+  infra-network:
+    driver: overlay
+    attachable: true
+    internal: true  # No direct internet access
 
 # Secrets are defined in docker-compose.override.yml (dev) or docker-compose.prod.yml (production)
 # For production with Docker Swarm, secrets must be created externally first:
@@ -26,10 +42,11 @@ volumes:
   grafana-data:
   prometheus-data:
   alertmanager-data:
+  clamav-data:
 
 services:
   # ============================================
-  # Database Services
+  # Database Services (backend-network only)
   # ============================================
 
   postgres:
@@ -37,6 +54,8 @@ services:
     hostname: postgres
     secrets:
       - db_password
+      - db_app_password
+      - db_backup_password
     environment:
       POSTGRES_DB: ${DB_DATABASE:-immog_db}
       POSTGRES_USER: ${DB_USERNAME:-immog_user}
@@ -47,7 +66,7 @@ services:
       - postgres-data:/var/lib/postgresql/data
       - ./postgres/init:/docker-entrypoint-initdb.d
     networks:
-      - immog-network
+      - backend-network
     deploy:
       replicas: 1
       restart_policy:
@@ -72,7 +91,7 @@ services:
     volumes:
       - redis-data:/data
     networks:
-      - immog-network
+      - backend-network
     deploy:
       replicas: 1
       restart_policy:
@@ -94,7 +113,7 @@ services:
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
     networks:
-      - immog-network
+      - backend-network
     deploy:
       replicas: 1
       restart_policy:
@@ -119,7 +138,7 @@ services:
       - NODE_ENV=${NODE_ENV:-production}
       - NEXT_PUBLIC_API_URL=/api
     networks:
-      - immog-network
+      - public-network
     deploy:
       replicas: 1
       restart_policy:
@@ -155,7 +174,7 @@ services:
       - app_key
       - passport_private_key
       - passport_public_key
-      - db_password
+      - db_app_password
       - redis_password
     environment:
       - APP_ENV=${APP_ENV:-production}
@@ -165,15 +184,20 @@ services:
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_DATABASE=${DB_DATABASE:-immog_db}
-      - DB_USERNAME=${DB_USERNAME:-immog_user}
-      - DB_PASSWORD_FILE=/run/secrets/db_password
+      # Use app_user with limited privileges (no DDL)
+      - DB_USERNAME=${DB_APP_USERNAME:-immog_app}
+      - DB_PASSWORD_FILE=/run/secrets/db_app_password
       - REDIS_HOST=redis
       - REDIS_PASSWORD_FILE=/run/secrets/redis_password
       - REDIS_PORT=6379
       - ELASTICSEARCH_HOST=elasticsearch
       - ELASTICSEARCH_PORT=9200
+      # ClamAV configuration
+      - CLAMAV_HOST=clamav
+      - CLAMAV_PORT=3310
     networks:
-      - immog-network
+      - backend-network
+      - public-network  # Needs to be reachable by nginx
     deploy:
       replicas: 1
       restart_policy:
@@ -194,7 +218,8 @@ services:
       - ./nginx/sites:/etc/nginx/conf.d:ro
       - ../backend/storage/app/public:/var/www/backend/storage/app/public:ro
     networks:
-      - immog-network
+      - public-network
+      - backend-network  # Needs to reach php-fpm
     deploy:
       replicas: 1
       restart_policy:
@@ -212,7 +237,7 @@ services:
       - ../backend/storage:/var/www/backend/storage
     secrets:
       - app_key
-      - db_password
+      - db_app_password
       - redis_password
     environment:
       - APP_ENV=${APP_ENV:-production}
@@ -220,12 +245,14 @@ services:
       - DB_CONNECTION=pgsql
       - DB_HOST=postgres
       - DB_DATABASE=${DB_DATABASE:-immog_db}
-      - DB_USERNAME=${DB_USERNAME:-immog_user}
-      - DB_PASSWORD_FILE=/run/secrets/db_password
+      - DB_USERNAME=${DB_APP_USERNAME:-immog_app}
+      - DB_PASSWORD_FILE=/run/secrets/db_app_password
       - REDIS_HOST=redis
       - REDIS_PASSWORD_FILE=/run/secrets/redis_password
+      - CLAMAV_HOST=clamav
+      - CLAMAV_PORT=3310
     networks:
-      - immog-network
+      - backend-network
     deploy:
       replicas: 1
       restart_policy:
@@ -249,7 +276,40 @@ services:
       - ../backend/storage:/var/www/backend/storage
     secrets:
       - app_key
-      - db_password
+      - db_app_password
+      - redis_password
+    environment:
+      - APP_ENV=${APP_ENV:-production}
+      - APP_KEY_FILE=/run/secrets/app_key
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_DATABASE=${DB_DATABASE:-immog_db}
+      - DB_USERNAME=${DB_APP_USERNAME:-immog_app}
+      - DB_PASSWORD_FILE=/run/secrets/db_app_password
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD_FILE=/run/secrets/redis_password
+    networks:
+      - backend-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    depends_on:
+      - postgres
+      - redis
+
+  # ============================================
+  # Migration Runner (uses migration_user with DDL privileges)
+  # ============================================
+
+  migrate:
+    image: ${PHP_IMAGE:-immoguinee/php:latest}
+    hostname: migrate
+    working_dir: /var/www/backend
+    command: php artisan migrate --force
+    secrets:
+      - app_key
+      - db_password  # Uses main user for migrations (DDL)
       - redis_password
     environment:
       - APP_ENV=${APP_ENV:-production}
@@ -262,14 +322,40 @@ services:
       - REDIS_HOST=redis
       - REDIS_PASSWORD_FILE=/run/secrets/redis_password
     networks:
-      - immog-network
+      - backend-network
+    deploy:
+      mode: replicated
+      replicas: 0  # Only run manually
+      restart_policy:
+        condition: none
+    depends_on:
+      - postgres
+
+  # ============================================
+  # Security Services
+  # ============================================
+
+  # ClamAV Antivirus Scanner
+  clamav:
+    image: clamav/clamav:stable
+    hostname: clamav
+    volumes:
+      - clamav-data:/var/lib/clamav
+    networks:
+      - backend-network
     deploy:
       replicas: 1
       restart_policy:
         condition: on-failure
-    depends_on:
-      - postgres
-      - redis
+      resources:
+        limits:
+          memory: 2G  # ClamAV needs memory for virus definitions
+    healthcheck:
+      test: ["CMD", "clamdscan", "--ping", "3"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 120s  # Virus definitions take time to load
 
   # ============================================
   # Storage & External Services
@@ -287,7 +373,7 @@ services:
     volumes:
       - minio-data:/data
     networks:
-      - immog-network
+      - backend-network
     deploy:
       replicas: 1
       restart_policy:
@@ -313,7 +399,8 @@ services:
     volumes:
       - n8n-data:/home/node/.n8n
     networks:
-      - immog-network
+      - backend-network
+      - public-network  # Needs webhooks from Traefik
     deploy:
       replicas: 1
       restart_policy:
@@ -336,7 +423,7 @@ services:
     volumes:
       - ./waha/.sessions:/app/.sessions
     networks:
-      - immog-network
+      - backend-network
     deploy:
       replicas: 1
       restart_policy:
@@ -348,7 +435,8 @@ services:
     volumes:
       - ./laravel-echo/laravel-echo-server.json:/app/laravel-echo-server.json:ro
     networks:
-      - immog-network
+      - backend-network
+      - public-network  # WebSocket connections from clients
     deploy:
       replicas: 1
       restart_policy:
@@ -357,7 +445,7 @@ services:
       - redis
 
   # ============================================
-  # Infrastructure Services
+  # Infrastructure Services (public-network)
   # ============================================
 
   traefik:
@@ -372,7 +460,7 @@ services:
       - "--api.insecure=false"
       - "--providers.swarm=true"
       - "--providers.swarm.exposedbydefault=false"
-      - "--providers.swarm.network=immog_immog-network"
+      - "--providers.swarm.network=immog_public-network"
       - "--providers.file.directory=/etc/traefik/dynamic"
       - "--providers.file.watch=true"
       - "--entrypoints.web.address=:80"
@@ -395,7 +483,8 @@ services:
       - ./traefik/dynamic:/etc/traefik/dynamic:ro
       - ./traefik/certs:/certs:ro
     networks:
-      - immog-network
+      - public-network
+      - infra-network  # For metrics scraping
     deploy:
       replicas: 1
       placement:
@@ -412,7 +501,7 @@ services:
     environment:
       - VARNISH_SIZE=256M
     networks:
-      - immog-network
+      - public-network
     deploy:
       replicas: 1
       restart_policy:
@@ -421,7 +510,7 @@ services:
       - nginx
 
   # ============================================
-  # Monitoring Services
+  # Monitoring Services (infra-network)
   # ============================================
 
   prometheus:
@@ -436,7 +525,8 @@ services:
       - '--storage.tsdb.path=/prometheus'
       - '--web.enable-lifecycle'
     networks:
-      - immog-network
+      - infra-network
+      - backend-network  # To scrape exporters
     deploy:
       replicas: 1
       restart_policy:
@@ -454,7 +544,7 @@ services:
       - '--storage.path=/alertmanager'
       - '--web.external-url=https://alertmanager.immoguinee.com'
     networks:
-      - immog-network
+      - infra-network
     deploy:
       replicas: 1
       restart_policy:
@@ -468,7 +558,7 @@ services:
     user: "0"  # Run as root to read secrets, Grafana drops privileges later
     secrets:
       - grafana_password
-      - db_password
+      - db_backup_password
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana_password
@@ -480,7 +570,8 @@ services:
       - ../monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
       - ../monitoring/grafana/entrypoint.sh:/custom-entrypoint.sh:ro
     networks:
-      - immog-network
+      - infra-network
+      - backend-network  # Read-only access to postgres for dashboards
     deploy:
       replicas: 1
       restart_policy:
@@ -501,7 +592,8 @@ services:
     volumes:
       - ./pgadmin:/var/lib/pgadmin
     networks:
-      - immog-network
+      - infra-network
+      - backend-network  # Needs to connect to postgres
     deploy:
       replicas: 1
       restart_policy:
@@ -510,7 +602,7 @@ services:
       - postgres
 
   # ============================================
-  # Monitoring Exporters
+  # Monitoring Exporters (backend-network for scraping)
   # ============================================
 
   node-exporter:
@@ -526,7 +618,7 @@ services:
       - /sys:/host/sys:ro
       - /:/rootfs:ro
     networks:
-      - immog-network
+      - infra-network
     deploy:
       mode: global
       restart_policy:
@@ -544,7 +636,8 @@ services:
     command:
       - '/redis_exporter --redis.addr=redis://redis:6379 --redis.password="$$(cat /run/secrets/redis_password)"'
     networks:
-      - immog-network
+      - backend-network
+      - infra-network
     deploy:
       replicas: 1
       restart_policy:
@@ -559,12 +652,13 @@ services:
     image: prometheuscommunity/postgres-exporter:latest
     hostname: postgres-exporter
     secrets:
-      - db_password
+      - db_backup_password
     environment:
-      - DATA_SOURCE_NAME=postgresql://${DB_USERNAME:-immog_user}:PLACEHOLDER@postgres:5432/${DB_DATABASE:-immog_db}?sslmode=disable
-    entrypoint: ["/bin/sh", "-c", "export DATA_SOURCE_NAME=\"postgresql://${DB_USERNAME:-immog_user}:$$(cat /run/secrets/db_password)@postgres:5432/${DB_DATABASE:-immog_db}?sslmode=disable\" && /bin/postgres_exporter"]
+      - DATA_SOURCE_NAME=postgresql://immog_backup:PLACEHOLDER@postgres:5432/${DB_DATABASE:-immog_db}?sslmode=disable
+    entrypoint: ["/bin/sh", "-c", "export DATA_SOURCE_NAME=\"postgresql://immog_backup:$$(cat /run/secrets/db_backup_password)@postgres:5432/${DB_DATABASE:-immog_db}?sslmode=disable\" && /bin/postgres_exporter"]
     networks:
-      - immog-network
+      - backend-network
+      - infra-network
     deploy:
       replicas: 1
       restart_policy:
@@ -591,7 +685,7 @@ services:
       - /var/lib/docker/:/var/lib/docker:ro
       - /dev/disk/:/dev/disk:ro
     networks:
-      - immog-network
+      - infra-network
     deploy:
       mode: global
       restart_policy:
@@ -623,12 +717,16 @@ services:
     volumes:
       - ./backup:/scripts
     secrets:
-      - db_password
+      - db_backup_password
       - do_spaces_access_key
       - do_spaces_secret_key
       - backup_encryption_key
+    environment:
+      - DB_HOST=postgres
+      - DB_DATABASE=${DB_DATABASE:-immog_db}
+      - DB_USERNAME=immog_backup
     networks:
-      - immog-network
+      - backend-network
     deploy:
       mode: replicated
       replicas: 0
@@ -659,7 +757,7 @@ services:
       - do_spaces_access_key
       - do_spaces_secret_key
     networks:
-      - immog-network
+      - backend-network
     deploy:
       mode: replicated
       replicas: 0
@@ -695,7 +793,7 @@ services:
       - do_spaces_secret_key
       - backup_encryption_key
     networks:
-      - immog-network
+      - backend-network
     deploy:
       mode: replicated
       replicas: 0
@@ -723,7 +821,7 @@ services:
       - do_spaces_access_key
       - do_spaces_secret_key
     networks:
-      - immog-network
+      - backend-network
     deploy:
       mode: replicated
       replicas: 0
