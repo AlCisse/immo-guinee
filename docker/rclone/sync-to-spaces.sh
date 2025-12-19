@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # ===============================================
 # MinIO → DigitalOcean Spaces Synchronization Script
 # Syncs all buckets from MinIO to Spaces with deletion
