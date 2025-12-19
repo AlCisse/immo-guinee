@@ -6,9 +6,6 @@ const nextConfig = {
   reactStrictMode: true,
   output: 'standalone', // Enable standalone mode for Docker
 
-  // Enable Turbopack (default in Next.js 16)
-  turbopack: {},
-
   // Disable TypeScript errors during builds (fix issues separately)
   typescript: {
     ignoreBuildErrors: true,
