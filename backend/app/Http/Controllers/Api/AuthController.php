@@ -611,6 +611,69 @@ class AuthController extends Controller
     }
 
     /**
+     * Get user counts (notifications, messages, favorites)
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function counts(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        try {
+            // Count unread notifications
+            $unreadNotifications = $user->unreadNotifications()->count();
+
+            // Count unread messages (from conversations)
+            $unreadMessages = 0;
+            if (class_exists(\App\Models\Conversation::class)) {
+                $unreadMessages = \App\Models\Conversation::where(function ($query) use ($user) {
+                    $query->where('user1_id', $user->id)
+                          ->orWhere('user2_id', $user->id);
+                })
+                ->where(function ($query) use ($user) {
+                    $query->where('user1_id', $user->id)
+                          ->where('user1_unread_count', '>', 0)
+                          ->orWhere(function ($q) use ($user) {
+                              $q->where('user2_id', $user->id)
+                                ->where('user2_unread_count', '>', 0);
+                          });
+                })
+                ->sum(\Illuminate\Support\Facades\DB::raw(
+                    "CASE WHEN user1_id = '{$user->id}' THEN user1_unread_count ELSE user2_unread_count END"
+                ));
+            }
+
+            // Count favorites
+            $favoritesCount = $user->favorites()->count();
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'unread_notifications' => (int) $unreadNotifications,
+                    'unread_messages' => (int) $unreadMessages,
+                    'favorites_count' => (int) $favoritesCount,
+                ],
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Failed to get user counts', [
+                'error' => $e->getMessage(),
+                'user_id' => $user->id,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'unread_notifications' => 0,
+                    'unread_messages' => 0,
+                    'favorites_count' => 0,
+                ],
+            ]);
+        }
+    }
+
+    /**
      * Request password reset (forgot password)
      *
      * @param Request $request

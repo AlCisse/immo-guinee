@@ -23,10 +23,17 @@ const nextConfig = {
       { protocol: 'http', hostname: 'minio' },
       { protocol: 'https', hostname: 'minio' },
       { protocol: 'https', hostname: 'via.placeholder.com' },
-      // Production domains
+      // Production domains (.com)
+      { protocol: 'https', hostname: 'immoguinee.com' },
+      { protocol: 'https', hostname: 'www.immoguinee.com' },
+      { protocol: 'https', hostname: 'images.immoguinee.com' },
+      // Legacy domains (.gn)
       { protocol: 'https', hostname: 'immoguinee.gn' },
       { protocol: 'https', hostname: 'www.immoguinee.gn' },
       { protocol: 'https', hostname: 'storage.immoguinee.gn' },
+      // DigitalOcean Spaces CDN
+      { protocol: 'https', hostname: 'immoguinee.fra1.digitaloceanspaces.com' },
+      { protocol: 'https', hostname: 'fra1.digitaloceanspaces.com' },
     ],
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
