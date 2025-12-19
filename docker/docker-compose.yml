@@ -12,37 +12,10 @@ networks:
     driver: overlay
     attachable: true
 
-secrets:
-  app_key:
-    external: true
-  passport_private_key:
-    external: true
-  passport_public_key:
-    external: true
-  db_password:
-    external: true
-  redis_password:
-    external: true
-  minio_password:
-    external: true
-  minio_access_key:
-    external: true
-  grafana_password:
-    external: true
-  pgadmin_password:
-    external: true
-  waha_password:
-    external: true
-  waha_api_key:
-    external: true
-  # DigitalOcean Spaces credentials for backup/sync
-  do_spaces_access_key:
-    external: true
-  do_spaces_secret_key:
-    external: true
-  # Encryption key for database backups (AES-256)
-  backup_encryption_key:
-    external: true
+# Secrets are defined in docker-compose.override.yml (dev) or docker-compose.prod.yml (production)
+# For production with Docker Swarm, secrets must be created externally first:
+#   echo "password" | docker secret create db_password -
+# For local development, secrets are loaded from ./secrets/ directory
 
 volumes:
   postgres-data:

@@ -58,7 +58,8 @@ RUN pecl install imagick \
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Copy backend application directory
-COPY backend /var/www/backend
+# Context is set to ../backend in docker-compose.override.yml, so we copy from current dir
+COPY . /var/www/backend
 
 # Install Composer dependencies
 RUN composer install --optimize-autoloader --no-interaction --ignore-platform-reqs --no-scripts

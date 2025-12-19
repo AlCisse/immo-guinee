@@ -1,0 +1,32 @@
+# Local development routing configuration
+# Routes traffic from localhost:8888 to frontend and backend services
+
+http:
+  routers:
+    # Backend API - routes /api/* to nginx/php (higher priority)
+    api-local:
+      rule: "PathPrefix(`/api`)"
+      entryPoints:
+        - web
+      service: api-local
+      priority: 100
+
+    # Frontend - catch all other routes
+    frontend-local:
+      rule: "PathPrefix(`/`)"
+      entryPoints:
+        - web
+      service: frontend-local
+      priority: 1
+
+  services:
+    frontend-local:
+      loadBalancer:
+        servers:
+          # Port 3005 for development (see docker-compose.override.yml)
+          - url: "http://frontend:3005"
+
+    api-local:
+      loadBalancer:
+        servers:
+          - url: "http://nginx:80"

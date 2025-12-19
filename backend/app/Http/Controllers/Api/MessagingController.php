@@ -8,9 +8,11 @@ use App\Http\Resources\MessageResource;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Events\NewMessageEvent;
+use App\Helpers\FileSecurityHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class MessagingController extends Controller
 {
@@ -68,7 +70,7 @@ class MessagingController extends Controller
         $validated = $request->validate([
             'type_message' => 'required|in:TEXT,VOCAL,PHOTO,SYSTEM',
             'contenu' => 'required_if:type_message,TEXT|nullable|string|max:2000',
-            'fichier' => 'required_if:type_message,VOCAL,PHOTO|nullable|file|max:10240', // 10MB
+            'fichier' => 'required_if:type_message,VOCAL,PHOTO|nullable|file|mimes:jpeg,jpg,png,webp,mp3,mp4,m4a,ogg,wav,webm,aac|max:10240', // 10MB
         ]);
 
         DB::beginTransaction();
@@ -82,10 +84,21 @@ class MessagingController extends Controller
                 'is_delivered' => false,
             ];
 
-            // Handle file upload - store in MinIO
+            // Handle file upload - store in MinIO with security validation
             if ($request->hasFile('fichier')) {
                 $file = $request->file('fichier');
-                $filename = uniqid() . '_' . time() . '.' . ($file->getClientOriginalExtension() ?: 'mp4');
+
+                // Security validation with magic bytes check
+                $category = $validated['type_message'] === 'PHOTO' ? 'image' : 'audio';
+                $securityCheck = FileSecurityHelper::validateFile($file, $category === 'image' ? 'image' : 'media', 10240);
+
+                if (!$securityCheck['valid']) {
+                    DB::rollBack();
+                    return response()->json(['error' => $securityCheck['error']], 422);
+                }
+
+                // Generate secure filename with UUID
+                $filename = FileSecurityHelper::generateSecureFilename($file);
 
                 // Store in MinIO messages bucket
                 $path = $file->storeAs('', $filename, 'messages');

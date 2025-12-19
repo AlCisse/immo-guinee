@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
 use App\Models\CertificationDocument;
 use App\Services\CertificationService;
+use App\Helpers\FileSecurityHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -29,8 +30,21 @@ class CertificationController extends Controller
             'fichier' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120', // 5MB max
         ]);
 
-        // Upload to S3/MinIO
-        $path = $request->file('fichier')->store('certifications', 's3');
+        // Security validation with magic bytes and PDF scan
+        $file = $request->file('fichier');
+        $securityCheck = FileSecurityHelper::validateFile($file, 'document', 5120);
+
+        if (!$securityCheck['valid']) {
+            return response()->json([
+                'message' => $securityCheck['error'],
+            ], 422);
+        }
+
+        // Generate secure filename
+        $filename = FileSecurityHelper::generateSecureFilename($file);
+
+        // Upload to S3/MinIO with secure filename
+        $path = $file->storeAs('certifications', $filename, 's3');
 
         // Create document record
         $document = CertificationDocument::create([

@@ -712,14 +712,18 @@ class AuthController extends Controller
                 'mot_de_passe' => Hash::make($request->mot_de_passe),
             ]);
 
+            // SECURITY: Revoke all existing tokens to prevent stolen tokens from being used
+            $user->tokens()->delete();
+
             Log::info('Password reset successful', [
                 'user_id' => $user->id,
                 'telephone' => $user->telephone,
+                'tokens_revoked' => true,
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Mot de passe réinitialisé avec succès',
+                'message' => 'Mot de passe réinitialisé avec succès. Veuillez vous reconnecter.',
             ]);
 
         } catch (Exception $e) {

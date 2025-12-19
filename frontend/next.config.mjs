@@ -6,10 +6,8 @@ const nextConfig = {
   reactStrictMode: true,
   output: 'standalone', // Enable standalone mode for Docker
 
-  // Disable ESLint during builds (fix issues separately)
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // Enable Turbopack (default in Next.js 16)
+  turbopack: {},
 
   // Disable TypeScript errors during builds (fix issues separately)
   typescript: {

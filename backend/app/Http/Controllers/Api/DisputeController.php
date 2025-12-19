@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DisputeResource;
 use App\Models\Dispute;
+use App\Helpers\FileSecurityHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -45,11 +46,24 @@ class DisputeController extends Controller
 
         DB::beginTransaction();
         try {
-            // Upload proofs
+            // Upload proofs with security validation
             $preuves = [];
             if ($request->hasFile('preuves')) {
                 foreach ($request->file('preuves') as $file) {
-                    $path = $file->store('disputes', 's3');
+                    // Security validation with magic bytes and PDF scan
+                    $securityCheck = FileSecurityHelper::validateFile($file, 'document', 5120);
+                    if (!$securityCheck['valid']) {
+                        DB::rollBack();
+                        return response()->json([
+                            'error' => $securityCheck['error'],
+                            'file' => $file->getClientOriginalName(),
+                        ], 422);
+                    }
+
+                    // Generate secure filename
+                    $filename = FileSecurityHelper::generateSecureFilename($file);
+                    $path = $file->storeAs('disputes', $filename, 's3');
+
                     $preuves[] = [
                         'type' => str_contains($file->getMimeType(), 'image') ? 'photo' : 'document',
                         'url' => Storage::disk('s3')->url($path),
