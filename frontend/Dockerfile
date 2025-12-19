@@ -36,6 +36,10 @@ ENV NEXT_PUBLIC_ECHO_PORT=$NEXT_PUBLIC_ECHO_PORT
 # Disable Next.js telemetry
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Disable Turbopack for production build (use Webpack instead)
+# Turbopack has issues with production builds in Next.js 16
+ENV NEXT_DISABLE_TURBOPACK=1
+
 # Build the Next.js application
 RUN npm run build
 
