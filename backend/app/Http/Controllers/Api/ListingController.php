@@ -85,6 +85,18 @@ class ListingController extends Controller
             $mapped['avance'] = $prix * 1;
         }
 
+        // Store commission in months (default to 1 month)
+        if (isset($validated['commission_mois'])) {
+            $mapped['commission_mois'] = $validated['commission_mois'];
+        } else {
+            $mapped['commission_mois'] = 1;
+        }
+
+        // Store tenant type preference
+        if (isset($validated['type_locataire_prefere'])) {
+            $mapped['type_locataire_prefere'] = $validated['type_locataire_prefere'];
+        }
+
         if (isset($validated['equipements'])) {
             $mapped['commodites'] = $validated['equipements'];
         }
