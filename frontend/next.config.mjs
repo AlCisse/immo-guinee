@@ -33,6 +33,7 @@ const nextConfig = {
       { protocol: 'https', hostname: 'storage.immoguinee.gn' },
       // DigitalOcean Spaces CDN
       { protocol: 'https', hostname: 'immoguinee.fra1.digitaloceanspaces.com' },
+      { protocol: 'https', hostname: 'immoguinee-images.fra1.digitaloceanspaces.com' },
       { protocol: 'https', hostname: 'fra1.digitaloceanspaces.com' },
     ],
     formats: ['image/avif', 'image/webp'],
