@@ -70,7 +70,7 @@ Route::prefix('listings')->group(function () {
     Route::middleware('auth:api')->group(function () {
         Route::get('/my', [ListingController::class, 'myListings']); // Get current user's listings
         Route::post('/', [ListingController::class, 'store']);
-        Route::patch('/{id}', [ListingController::class, 'update']);
+        Route::match(['patch', 'put', 'post'], '/{id}', [ListingController::class, 'update']); // Support POST for FormData with _method
         Route::delete('/{id}', [ListingController::class, 'destroy']);
         Route::post('/{id}/premium', [ListingController::class, 'applyPremium']);
         Route::get('/{id}/contacts', [ListingController::class, 'getListingContacts']); // Get contacts from conversations
