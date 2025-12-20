@@ -624,24 +624,16 @@ class AuthController extends Controller
             // Count unread notifications
             $unreadNotifications = $user->unreadNotifications()->count();
 
-            // Count unread messages (from conversations)
+            // Count unread messages (from conversations where user is initiator or participant)
             $unreadMessages = 0;
-            if (class_exists(\App\Models\Conversation::class)) {
-                $unreadMessages = \App\Models\Conversation::where(function ($query) use ($user) {
-                    $query->where('user1_id', $user->id)
-                          ->orWhere('user2_id', $user->id);
+            if (class_exists(\App\Models\Conversation::class) && class_exists(\App\Models\Message::class)) {
+                $unreadMessages = \App\Models\Message::whereHas('conversation', function ($query) use ($user) {
+                    $query->where('initiator_id', $user->id)
+                          ->orWhere('participant_id', $user->id);
                 })
-                ->where(function ($query) use ($user) {
-                    $query->where('user1_id', $user->id)
-                          ->where('user1_unread_count', '>', 0)
-                          ->orWhere(function ($q) use ($user) {
-                              $q->where('user2_id', $user->id)
-                                ->where('user2_unread_count', '>', 0);
-                          });
-                })
-                ->sum(\Illuminate\Support\Facades\DB::raw(
-                    "CASE WHEN user1_id = '{$user->id}' THEN user1_unread_count ELSE user2_unread_count END"
-                ));
+                ->where('sender_id', '!=', $user->id)
+                ->where('is_read', false)
+                ->count();
             }
 
             // Count favorites
@@ -656,10 +648,10 @@ class AuthController extends Controller
                 ],
             ]);
 
-        } catch (Exception $e) {
-            Log::error('Failed to get user counts', [
+        } catch (\Exception $e) {
+            \Log::error('Failed to get user counts', [
                 'error' => $e->getMessage(),
-                'user_id' => $user->id,
+                'user_id' => $user->id ?? 'unknown',
             ]);
 
             return response()->json([

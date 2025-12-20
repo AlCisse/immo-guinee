@@ -24,6 +24,7 @@ RUN apt-get update && apt-get install -y \
     libicu-dev \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
+    libwebp-dev \
     jpegoptim \
     optipng \
     pngquant \
@@ -31,8 +32,8 @@ RUN apt-get update && apt-get install -y \
     webp \
     && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+# Install PHP extensions with WebP support
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install -j$(nproc) \
     pdo \
     pdo_pgsql \
