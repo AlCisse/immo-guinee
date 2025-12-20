@@ -124,11 +124,33 @@ class ListingPhoto extends Model
     // ==================== HELPERS ====================
 
     /**
+     * Get the effective disk name based on storage strategy.
+     * Remaps 'listings' to 'spaces-listings' when using Spaces strategy.
+     */
+    protected function getEffectiveDisk(): string
+    {
+        $strategy = config('filesystems.strategy', 'local');
+
+        // Remap disk names when using Spaces strategy
+        if ($strategy === 'spaces') {
+            $mapping = [
+                'listings' => 'spaces-listings',
+                'listings-minio' => 'spaces-listings',
+            ];
+
+            return $mapping[$this->disk] ?? $this->disk;
+        }
+
+        return $this->disk;
+    }
+
+    /**
      * Get URL from storage disk.
      */
     protected function getStorageUrl(string $path): string
     {
-        $disk = Storage::disk($this->disk);
+        $effectiveDisk = $this->getEffectiveDisk();
+        $disk = Storage::disk($effectiveDisk);
 
         // Try to get a URL, fallback to temporary URL for private disks
         try {
@@ -144,7 +166,7 @@ class ListingPhoto extends Model
      */
     public function deleteFromStorage(): bool
     {
-        $disk = Storage::disk($this->disk);
+        $disk = Storage::disk($this->getEffectiveDisk());
         $deleted = true;
 
         // Delete all variants
@@ -169,7 +191,7 @@ class ListingPhoto extends Model
      */
     public function existsInStorage(): bool
     {
-        return Storage::disk($this->disk)->exists($this->path);
+        return Storage::disk($this->getEffectiveDisk())->exists($this->path);
     }
 
     /**
