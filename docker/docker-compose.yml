@@ -205,7 +205,7 @@ services:
       - DO_SPACES_REGION=fra1
       - DO_SPACES_BUCKET=immoguinee
       - DO_SPACES_ENDPOINT=https://fra1.digitaloceanspaces.com
-      - DO_SPACES_CDN_URL=https://images.immoguinee.com
+      - DO_SPACES_CDN_URL=https://immoguinee.fra1.cdn.digitaloceanspaces.com
       # WAHA WhatsApp API
       - WAHA_URL=http://waha:3000
       - WAHA_API_KEY_FILE=/run/secrets/waha_api_key
