@@ -453,7 +453,7 @@ class ListingController extends Controller
             }
 
             // Check ownership
-            if ($listing->proprietaire_id !== $request->user()->id) {
+            if ($listing->user_id !== $request->user()->id) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Non autorisé',
@@ -549,7 +549,7 @@ class ListingController extends Controller
             }
 
             // Check ownership
-            if ($listing->proprietaire_id !== $request->user()->id) {
+            if ($listing->user_id !== $request->user()->id) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Non autorisé',
@@ -605,7 +605,7 @@ class ListingController extends Controller
             }
 
             // Check ownership
-            if ($listing->proprietaire_id !== $request->user()->id) {
+            if ($listing->user_id !== $request->user()->id) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Non autorisé',
