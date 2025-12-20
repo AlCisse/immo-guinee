@@ -55,7 +55,7 @@ class StoreListingRequest extends FormRequest
             'prix' => ['required', 'numeric', 'min:0', 'max:999999999999'],
             'caution_mois' => ['nullable', 'integer', 'min:0', 'max:12'],
             'avance_mois' => ['nullable', 'integer', 'min:1', 'max:12'],
-            'commission_mois' => ['nullable', 'integer', 'min:0', 'max:3'],
+            'commission_mois' => ['nullable', 'integer', 'min:0', 'max:1'],
             'duree_minimum_jours' => ['nullable', 'integer', 'min:1', 'max:365'],
             'type_locataire_prefere' => ['nullable', 'string', 'in:tous,couple,marie_absent,celibataire,etudiant'],
             'surface_m2' => ['nullable', 'numeric', 'min:0'],
