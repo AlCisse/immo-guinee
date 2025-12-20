@@ -178,6 +178,7 @@ services:
       - redis_password
       - do_spaces_access_key
       - do_spaces_secret_key
+      - waha_api_key
     environment:
       - APP_ENV=${APP_ENV:-production}
       - APP_DEBUG=${APP_DEBUG:-false}
@@ -205,6 +206,10 @@ services:
       - DO_SPACES_BUCKET=immoguinee
       - DO_SPACES_ENDPOINT=https://fra1.digitaloceanspaces.com
       - DO_SPACES_CDN_URL=https://images.immoguinee.com
+      # WAHA WhatsApp API
+      - WAHA_URL=http://waha:3000
+      - WAHA_API_KEY_FILE=/run/secrets/waha_api_key
+      - WAHA_SESSION_NAME=default
     networks:
       - backend-network
       - public-network  # Needs to be reachable by nginx
@@ -249,6 +254,7 @@ services:
       - app_key
       - db_app_password
       - redis_password
+      - waha_api_key
     environment:
       - APP_ENV=${APP_ENV:-production}
       - APP_KEY_FILE=/run/secrets/app_key
@@ -261,6 +267,10 @@ services:
       - REDIS_PASSWORD_FILE=/run/secrets/redis_password
       - CLAMAV_HOST=clamav
       - CLAMAV_PORT=3310
+      # WAHA WhatsApp API
+      - WAHA_URL=http://waha:3000
+      - WAHA_API_KEY_FILE=/run/secrets/waha_api_key
+      - WAHA_SESSION_NAME=default
     networks:
       - backend-network
     deploy:
@@ -288,6 +298,7 @@ services:
       - app_key
       - db_app_password
       - redis_password
+      - waha_api_key
     environment:
       - APP_ENV=${APP_ENV:-production}
       - APP_KEY_FILE=/run/secrets/app_key
@@ -298,6 +309,10 @@ services:
       - DB_PASSWORD_FILE=/run/secrets/db_app_password
       - REDIS_HOST=redis
       - REDIS_PASSWORD_FILE=/run/secrets/redis_password
+      # WAHA WhatsApp API
+      - WAHA_URL=http://waha:3000
+      - WAHA_API_KEY_FILE=/run/secrets/waha_api_key
+      - WAHA_SESSION_NAME=default
     networks:
       - backend-network
     deploy:
