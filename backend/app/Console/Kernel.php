@@ -8,6 +8,56 @@ use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 class Kernel extends ConsoleKernel
 {
     /**
+     * Bootstrap the console kernel.
+     */
+    public function bootstrap(): void
+    {
+        parent::bootstrap();
+
+        // Run WAHA session check immediately on scheduler startup
+        // This ensures the session is started as soon as possible after a restart
+        if ($this->isRunningScheduler()) {
+            $this->ensureWahaSessionOnStartup();
+        }
+    }
+
+    /**
+     * Check if we're running the scheduler.
+     */
+    protected function isRunningScheduler(): bool
+    {
+        return isset($_SERVER['argv']) &&
+               in_array('schedule:run', $_SERVER['argv'], true);
+    }
+
+    /**
+     * Ensure WAHA session is running on scheduler startup.
+     */
+    protected function ensureWahaSessionOnStartup(): void
+    {
+        static $hasRun = false;
+
+        if ($hasRun) {
+            return;
+        }
+        $hasRun = true;
+
+        // Use a cache flag to prevent running too frequently
+        $cacheKey = 'waha_startup_check_' . date('Y-m-d-H-i');
+        if (cache()->has($cacheKey)) {
+            return;
+        }
+        cache()->put($cacheKey, true, 60);
+
+        try {
+            \Artisan::call('waha:ensure-session');
+            \Log::info('[WAHA] Startup session check completed');
+        } catch (\Exception $e) {
+            \Log::error('[WAHA] Startup session check failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Define the application's command schedule.
      */
     protected function schedule(Schedule $schedule): void
@@ -132,9 +182,9 @@ class Kernel extends ConsoleKernel
         // CRITICAL: Ensures OTP messages can be sent
         // ============================================
 
-        // Check WAHA session every 5 minutes
+        // Check WAHA session every minute for rapid recovery
         $schedule->command('waha:ensure-session')
-            ->everyFiveMinutes()
+            ->everyMinute()
             ->withoutOverlapping()
             ->runInBackground()
             ->onSuccess(function () {

@@ -34,6 +34,16 @@ class EnsureWahaSession extends Command
         $this->info("Checking WAHA session '{$sessionName}' at {$wahaUrl}...");
 
         try {
+            // First, check if WAHA is reachable
+            if (!$this->isWahaReachable($wahaUrl, $apiKey)) {
+                $this->warn("WAHA is not reachable yet, waiting...");
+                sleep(5);
+                if (!$this->isWahaReachable($wahaUrl, $apiKey)) {
+                    $this->error("WAHA is not reachable after retry");
+                    return Command::FAILURE;
+                }
+            }
+
             // Check current session status
             $response = Http::withHeaders([
                 'X-Api-Key' => $apiKey,
@@ -49,66 +59,30 @@ class EnsureWahaSession extends Command
                     return Command::SUCCESS;
                 }
 
-                $this->warn("Session status: {$status}. Restarting...");
-            } else {
-                $this->warn("Session not found or error. Creating new session...");
-            }
-
-            // Start/restart the session
-            $startResponse = Http::withHeaders([
-                'X-Api-Key' => $apiKey,
-            ])->timeout(30)->post("{$wahaUrl}/api/sessions/start", [
-                'name' => $sessionName,
-            ]);
-
-            if ($startResponse->successful()) {
-                $result = $startResponse->json();
-                $this->info("✓ Session started: " . ($result['status'] ?? 'STARTING'));
-                Log::info('WAHA session started', ['session' => $sessionName, 'result' => $result]);
-
-                // Wait for session to be ready
-                $this->info("Waiting for session to connect...");
-                $attempts = 0;
-                $maxAttempts = 10;
-
-                while ($attempts < $maxAttempts) {
-                    sleep(3);
-                    $attempts++;
-
-                    $checkResponse = Http::withHeaders([
-                        'X-Api-Key' => $apiKey,
-                    ])->timeout(10)->get("{$wahaUrl}/api/sessions/{$sessionName}");
-
-                    if ($checkResponse->successful()) {
-                        $checkResult = $checkResponse->json();
-                        $status = $checkResult['status'] ?? 'UNKNOWN';
-
-                        if ($status === 'WORKING') {
-                            $this->info("✓ Session is now WORKING!");
-                            return Command::SUCCESS;
-                        }
-
-                        if ($status === 'SCAN_QR_CODE') {
-                            $this->warn("⚠ Session requires QR code scan. Access WAHA dashboard to scan.");
-                            Log::warning('WAHA session requires QR code scan', ['session' => $sessionName]);
-                            return Command::FAILURE;
-                        }
-
-                        $this->line("  Status: {$status} (attempt {$attempts}/{$maxAttempts})");
-                    }
+                // Session exists but not working - restart it
+                if (in_array($status, ['STOPPED', 'FAILED', 'UNKNOWN'])) {
+                    $this->warn("Session status: {$status}. Starting session...");
+                    return $this->startSession($wahaUrl, $apiKey, $sessionName);
                 }
 
-                $this->error("Session did not reach WORKING status after {$maxAttempts} attempts");
-                return Command::FAILURE;
+                // Session is starting or scanning QR
+                if ($status === 'STARTING') {
+                    $this->info("Session is still starting, waiting...");
+                    return $this->waitForSession($wahaUrl, $apiKey, $sessionName);
+                }
 
+                if ($status === 'SCAN_QR_CODE') {
+                    $this->warn("⚠ Session requires QR code scan. Access WAHA dashboard: https://waha.immoguinee.com");
+                    Log::warning('WAHA session requires QR code scan', ['session' => $sessionName]);
+                    return Command::FAILURE;
+                }
+
+                $this->warn("Session status: {$status}. Attempting restart...");
             } else {
-                $this->error("Failed to start session: " . $startResponse->body());
-                Log::error('Failed to start WAHA session', [
-                    'session' => $sessionName,
-                    'response' => $startResponse->body(),
-                ]);
-                return Command::FAILURE;
+                $this->warn("Session not found. Creating new session...");
             }
+
+            return $this->startSession($wahaUrl, $apiKey, $sessionName);
 
         } catch (\Exception $e) {
             $this->error("Error: " . $e->getMessage());
@@ -118,6 +92,97 @@ class EnsureWahaSession extends Command
             ]);
             return Command::FAILURE;
         }
+    }
+
+    /**
+     * Check if WAHA is reachable.
+     */
+    private function isWahaReachable(string $wahaUrl, string $apiKey): bool
+    {
+        try {
+            $response = Http::withHeaders([
+                'X-Api-Key' => $apiKey,
+            ])->timeout(5)->get("{$wahaUrl}/api/health");
+
+            return $response->successful() || $response->status() === 401;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Start a WAHA session.
+     */
+    private function startSession(string $wahaUrl, string $apiKey, string $sessionName): int
+    {
+        $startResponse = Http::withHeaders([
+            'X-Api-Key' => $apiKey,
+        ])->timeout(30)->post("{$wahaUrl}/api/sessions/start", [
+            'name' => $sessionName,
+        ]);
+
+        if ($startResponse->successful()) {
+            $result = $startResponse->json();
+            $this->info("✓ Session start requested: " . ($result['status'] ?? 'STARTING'));
+            Log::info('WAHA session start requested', ['session' => $sessionName, 'result' => $result]);
+
+            return $this->waitForSession($wahaUrl, $apiKey, $sessionName);
+        } else {
+            // If session already exists, try to get its status
+            if (str_contains($startResponse->body(), 'already exists')) {
+                $this->info("Session already exists, checking status...");
+                return $this->waitForSession($wahaUrl, $apiKey, $sessionName);
+            }
+
+            $this->error("Failed to start session: " . $startResponse->body());
+            Log::error('Failed to start WAHA session', [
+                'session' => $sessionName,
+                'response' => $startResponse->body(),
+            ]);
+            return Command::FAILURE;
+        }
+    }
+
+    /**
+     * Wait for session to be ready.
+     */
+    private function waitForSession(string $wahaUrl, string $apiKey, string $sessionName): int
+    {
+        $this->info("Waiting for session to connect...");
+        $attempts = 0;
+        $maxAttempts = 15;
+
+        while ($attempts < $maxAttempts) {
+            sleep(2);
+            $attempts++;
+
+            $checkResponse = Http::withHeaders([
+                'X-Api-Key' => $apiKey,
+            ])->timeout(10)->get("{$wahaUrl}/api/sessions/{$sessionName}");
+
+            if ($checkResponse->successful()) {
+                $checkResult = $checkResponse->json();
+                $status = $checkResult['status'] ?? 'UNKNOWN';
+
+                if ($status === 'WORKING') {
+                    $this->info("✓ Session is now WORKING!");
+                    Log::info('WAHA session is now working', ['session' => $sessionName]);
+                    return Command::SUCCESS;
+                }
+
+                if ($status === 'SCAN_QR_CODE') {
+                    $this->warn("⚠ Session requires QR code scan. Access WAHA dashboard: https://waha.immoguinee.com");
+                    Log::warning('WAHA session requires QR code scan', ['session' => $sessionName]);
+                    return Command::FAILURE;
+                }
+
+                $this->line("  Status: {$status} (attempt {$attempts}/{$maxAttempts})");
+            }
+        }
+
+        $this->error("Session did not reach WORKING status after {$maxAttempts} attempts");
+        Log::error('WAHA session did not reach WORKING status', ['session' => $sessionName, 'attempts' => $maxAttempts]);
+        return Command::FAILURE;
     }
 
     /**
