@@ -68,10 +68,10 @@ return [
             'throw' => false,
         ],
 
-        // Listings images storage
-        // TODO: Switch to MinIO S3 when flysystem-aws-s3-v3 is compatible with Laravel 12
+        // Listings images storage (local - for legacy compatibility)
+        // In production with STORAGE_STRATEGY=spaces, ListingPhoto model redirects to spaces-listings
         'listings' => [
-            'driver' => env('LISTINGS_DISK_DRIVER', 'local'),
+            'driver' => 'local',
             'root' => storage_path('app/public/listings'),
             'url' => env('APP_URL').'/storage/listings',
             'visibility' => 'public',
