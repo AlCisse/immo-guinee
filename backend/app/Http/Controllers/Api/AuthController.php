@@ -245,6 +245,7 @@ class AuthController extends Controller
             }
 
             // Create new user with normalized phone
+            // User is inactive until phone is verified via OTP
             $user = User::create([
                 'nom_complet' => $request->nom_complet,
                 'telephone' => $normalizedPhone,
@@ -255,6 +256,7 @@ class AuthController extends Controller
                 'numero_registre_commerce' => $request->numero_registre_commerce,
                 'adresse' => $request->adresse,
                 'badge' => 'BRONZE',
+                'is_active' => false, // Inactive until OTP verified
             ]);
 
             // Generate and send OTP
@@ -354,8 +356,11 @@ class AuthController extends Controller
                 ], 422);
             }
 
-            // Mark phone as verified
-            $user->update(['telephone_verified_at' => now()]);
+            // Mark phone as verified and activate user
+            $user->update([
+                'telephone_verified_at' => now(),
+                'is_active' => true, // Activate user after OTP verification
+            ]);
 
             // Assign default role based on account type if no roles
             if ($user->roles->isEmpty()) {
