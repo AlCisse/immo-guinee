@@ -187,6 +187,7 @@ return [
         // Spaces - Listings images (public, CDN)
         // Uses SecretHelper to read from Docker secrets (/run/secrets/do_spaces_*)
         // Note: ACL disabled on bucket, objects inherit bucket-level permissions
+        // Note: 'root' handles the folder prefix, 'url' should be just the CDN base
         'spaces-listings' => [
             'driver' => 's3',
             'key' => SecretHelper::get('DO_SPACES_ACCESS_KEY'),
@@ -194,7 +195,7 @@ return [
             'region' => env('DO_SPACES_REGION', 'fra1'),
             'bucket' => env('DO_SPACES_BUCKET', 'immoguinee'),
             'endpoint' => env('DO_SPACES_ENDPOINT', 'https://fra1.digitaloceanspaces.com'),
-            'url' => env('DO_SPACES_CDN_URL', 'https://images.immoguinee.com') . '/listings',
+            'url' => env('DO_SPACES_CDN_URL', 'https://images.immoguinee.com'),
             'root' => 'listings',
             'throw' => true,
             // Don't send ACL header - bucket has ACLs disabled
@@ -211,7 +212,7 @@ return [
             'region' => env('DO_SPACES_REGION', 'fra1'),
             'bucket' => env('DO_SPACES_BUCKET', 'immoguinee'),
             'endpoint' => env('DO_SPACES_ENDPOINT', 'https://fra1.digitaloceanspaces.com'),
-            'url' => env('DO_SPACES_CDN_URL', 'https://images.immoguinee.com') . '/avatars',
+            'url' => env('DO_SPACES_CDN_URL', 'https://images.immoguinee.com'),
             'root' => 'avatars',
             'throw' => true,
             'options' => [
@@ -272,7 +273,7 @@ return [
             'region' => env('DO_SPACES_REGION', 'fra1'),
             'bucket' => env('DO_SPACES_BUCKET', 'immoguinee'),
             'endpoint' => env('DO_SPACES_ENDPOINT', 'https://fra1.digitaloceanspaces.com'),
-            'url' => env('DO_SPACES_CDN_URL', 'https://images.immoguinee.com') . '/messages',
+            'url' => env('DO_SPACES_CDN_URL', 'https://images.immoguinee.com'),
             'root' => 'messages',
             'throw' => true,
             'options' => [
