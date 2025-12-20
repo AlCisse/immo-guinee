@@ -43,6 +43,7 @@ volumes:
   prometheus-data:
   alertmanager-data:
   clamav-data:
+  waha-sessions:  # Persist WhatsApp sessions for auto-restart
 
 services:
   # ============================================
@@ -439,6 +440,8 @@ services:
     environment:
       - WHATSAPP_HOOK_URL=${WHATSAPP_HOOK_URL:-http://nginx/api/webhooks/waha}
       - WHATSAPP_HOOK_EVENTS=message,message.any,message.ack,session.status
+      # Auto-restart sessions on container restart (CRITICAL for production)
+      - WHATSAPP_RESTART_ALL_SESSIONS=true
       # Dashboard disabled in production - only internal container access
       - WAHA_DASHBOARD_ENABLED=false
       # API key is read from secret file via entrypoint
@@ -446,7 +449,7 @@ services:
       - WHATSAPP_API_KEY=${WAHA_API_KEY:-}
     entrypoint: ["/bin/sh", "-c", "export WAHA_API_KEY=$$(cat /run/secrets/waha_api_key 2>/dev/null || echo $$WAHA_API_KEY) && export WHATSAPP_API_KEY=$$WAHA_API_KEY && exec /usr/bin/tini -- /entrypoint.sh"]
     volumes:
-      - ./waha/.sessions:/app/.sessions
+      - waha-sessions:/app/.sessions
     networks:
       - backend-network
       - public-network  # Needs external access to web.whatsapp.com
@@ -454,6 +457,14 @@ services:
       replicas: 1
       restart_policy:
         condition: on-failure
+        delay: 5s
+        max_attempts: 5
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/sessions"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   laravel-echo:
     image: oanhnn/laravel-echo-server:latest

@@ -126,6 +126,23 @@ class Kernel extends ConsoleKernel
             ->onFailure(function () {
                 \Log::error('[STORAGE] MinIO cache cleanup failed');
             });
+
+        // ============================================
+        // WAHA WhatsApp Session Health Check
+        // CRITICAL: Ensures OTP messages can be sent
+        // ============================================
+
+        // Check WAHA session every 5 minutes
+        $schedule->command('waha:ensure-session')
+            ->everyFiveMinutes()
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->onSuccess(function () {
+                \Log::info('[WAHA] Session health check passed');
+            })
+            ->onFailure(function () {
+                \Log::error('[WAHA] Session health check failed - OTP messages may not work!');
+            });
     }
 
     /**
