@@ -690,7 +690,7 @@ export default function PropertyDetailPage() {
         </div>
       </div>
 
-      {/* Gallery Modal */}
+      {/* Gallery Modal - Fullscreen */}
       <AnimatePresence>
         {showGallery && (
           <motion.div
@@ -699,52 +699,141 @@ export default function PropertyDetailPage() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black z-50"
           >
-            <div className="absolute top-4 right-4 z-10">
+            {/* Close button */}
+            <div className="absolute top-4 right-4 z-20">
               <button
                 onClick={() => setShowGallery(false)}
-                className="p-3 bg-white/10 backdrop-blur-sm rounded-full"
+                className="p-3 bg-white/10 backdrop-blur-sm rounded-full hover:bg-white/20 transition-colors"
               >
                 <X className="w-6 h-6 text-white" />
               </button>
             </div>
 
-            <div className="h-full flex items-center justify-center">
-              {images[currentImageIndex] && images[currentImageIndex] !== '/images/placeholder.jpg' ? (
-                <div className="relative w-full max-w-4xl aspect-video mx-4">
+            {/* Mobile: Swipeable fullscreen carousel */}
+            <div className="md:hidden h-full">
+              <div
+                className="flex h-full overflow-x-auto snap-x snap-mandatory"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
+                onScroll={(e) => {
+                  const container = e.currentTarget;
+                  const scrollLeft = container.scrollLeft;
+                  const itemWidth = container.offsetWidth;
+                  const newIndex = Math.round(scrollLeft / itemWidth);
+                  if (newIndex !== currentImageIndex && newIndex >= 0 && newIndex < images.length) {
+                    setCurrentImageIndex(newIndex);
+                  }
+                }}
+              >
+                {images.map((img, index) => (
+                  <div
+                    key={index}
+                    className="flex-shrink-0 w-full h-full snap-center flex items-center justify-center"
+                  >
+                    {img && img !== '/images/placeholder.jpg' ? (
+                      <div className="relative w-full h-full">
+                        <Image
+                          src={img}
+                          alt={`Photo ${index + 1}`}
+                          fill
+                          className="object-contain"
+                          priority={index === currentImageIndex}
+                        />
+                      </div>
+                    ) : (
+                      <Home className="w-16 h-16 text-neutral-600" />
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Mobile navigation dots */}
+              {images.length > 1 && (
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
+                  {images.map((_, index) => (
+                    <div
+                      key={index}
+                      className={`h-2 rounded-full transition-all ${
+                        index === currentImageIndex ? 'bg-white w-6' : 'bg-white/40 w-2'
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Image count */}
+              <div className="absolute top-4 left-4 px-3 py-1.5 bg-black/50 backdrop-blur-sm rounded-full text-white text-sm z-10">
+                {currentImageIndex + 1} / {images.length}
+              </div>
+            </div>
+
+            {/* Desktop: Centered image with navigation arrows */}
+            <div className="hidden md:flex h-full items-center justify-center">
+              {/* Left arrow */}
+              {images.length > 1 && (
+                <button
+                  onClick={() => setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length)}
+                  className="absolute left-4 p-4 bg-white/10 backdrop-blur-sm rounded-full hover:bg-white/20 transition-colors z-10"
+                >
+                  <ChevronLeft className="w-8 h-8 text-white" />
+                </button>
+              )}
+
+              {/* Main image */}
+              <div className="relative w-full h-full max-w-6xl max-h-[85vh] mx-16">
+                {images[currentImageIndex] && images[currentImageIndex] !== '/images/placeholder.jpg' ? (
                   <Image
                     src={images[currentImageIndex]}
                     alt={`Photo ${currentImageIndex + 1}`}
                     fill
                     className="object-contain"
+                    priority
                   />
-                </div>
-              ) : (
-                <div className="w-full max-w-4xl aspect-video bg-neutral-800 mx-4 rounded-xl flex items-center justify-center">
-                  <Home className="w-16 h-16 text-neutral-600" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Home className="w-16 h-16 text-neutral-600" />
+                  </div>
+                )}
+              </div>
+
+              {/* Right arrow */}
+              {images.length > 1 && (
+                <button
+                  onClick={() => setCurrentImageIndex((prev) => (prev + 1) % images.length)}
+                  className="absolute right-4 p-4 bg-white/10 backdrop-blur-sm rounded-full hover:bg-white/20 transition-colors z-10"
+                >
+                  <ChevronRight className="w-8 h-8 text-white" />
+                </button>
+              )}
+
+              {/* Desktop counter and thumbnails */}
+              {images.length > 1 && (
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 z-10">
+                  {/* Thumbnail strip */}
+                  <div className="flex gap-2">
+                    {images.map((img, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentImageIndex(index)}
+                        className={`relative w-16 h-12 rounded-lg overflow-hidden transition-all ${
+                          index === currentImageIndex ? 'ring-2 ring-white scale-110' : 'opacity-60 hover:opacity-100'
+                        }`}
+                      >
+                        {img && img !== '/images/placeholder.jpg' ? (
+                          <Image src={img} alt={`Thumbnail ${index + 1}`} fill className="object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-neutral-700 flex items-center justify-center">
+                            <Home className="w-4 h-4 text-neutral-500" />
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                  <span className="text-white font-medium">
+                    {currentImageIndex + 1} / {images.length}
+                  </span>
                 </div>
               )}
             </div>
-
-            {/* Navigation */}
-            {images.length > 1 && (
-              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4">
-                <button
-                  onClick={() => setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length)}
-                  className="p-3 bg-white/10 backdrop-blur-sm rounded-full"
-                >
-                  <ChevronLeft className="w-6 h-6 text-white" />
-                </button>
-                <span className="text-white font-medium">
-                  {currentImageIndex + 1} / {images.length}
-                </span>
-                <button
-                  onClick={() => setCurrentImageIndex((prev) => (prev + 1) % images.length)}
-                  className="p-3 bg-white/10 backdrop-blur-sm rounded-full"
-                >
-                  <ChevronRight className="w-6 h-6 text-white" />
-                </button>
-              </div>
-            )}
           </motion.div>
         )}
       </AnimatePresence>
