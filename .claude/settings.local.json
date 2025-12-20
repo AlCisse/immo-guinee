@@ -178,7 +178,13 @@
       "Bash(for sub in monitoring pgadmin prometheus)",
       "Bash(do echo -n \"$sub.immoguinee.com: \")",
       "Bash(for i in 1 2 3 4 5 6)",
-      "Bash(do curl -s -o /dev/null -w \"%{http_code} \" -X POST https://immoguinee.com/api/auth/login -H \"Content-Type: application/json\" -d '{\"\"email\"\":\"\"test@test.com\"\",\"\"password\"\":\"\"test\"\"}')"
+      "Bash(do curl -s -o /dev/null -w \"%{http_code} \" -X POST https://immoguinee.com/api/auth/login -H \"Content-Type: application/json\" -d '{\"\"email\"\":\"\"test@test.com\"\",\"\"password\"\":\"\"test\"\"}')",
+      "Bash(ping:*)",
+      "Bash(timeout:*)",
+      "Bash(echo:*)",
+      "Bash(git status:*)",
+      "Bash(for url in \"https://immoguinee-images.fra1.digitaloceanspaces.com/listings/019b3baa-1e7b-70e2-bc91-843c8f519c35/medium/efff07da-f8f7-4586-82d0-6af25304447c.webp\" \"https://immoguinee-images.fra1.digitaloceanspaces.com/listings/019b3baa-1e7b-70e2-bc91-843c8f519c35/medium/f6ae4289-9310-4c3a-b960-5d4e9bff51cb.webp\" \"https://immoguinee-images.fra1.digitaloceanspaces.com/listings/019b3baa-1e7b-70e2-bc91-843c8f519c35/medium/121dbb96-fa8f-46da-be2b-6fe6ff9da0b0.webp\")",
+      "Bash(do echo -n \"$url: \")"
     ],
     "deny": [],
     "ask": []
