@@ -186,6 +186,7 @@ return [
 
         // Spaces - Listings images (public, CDN)
         // Uses SecretHelper to read from Docker secrets (/run/secrets/do_spaces_*)
+        // Note: ACL disabled on bucket, objects inherit bucket-level permissions
         'spaces-listings' => [
             'driver' => 's3',
             'key' => SecretHelper::get('DO_SPACES_ACCESS_KEY'),
@@ -195,8 +196,11 @@ return [
             'endpoint' => env('DO_SPACES_ENDPOINT', 'https://fra1.digitaloceanspaces.com'),
             'url' => env('DO_SPACES_CDN_URL', 'https://images.immoguinee.com') . '/listings',
             'root' => 'listings',
-            'visibility' => 'public',
             'throw' => true,
+            // Don't send ACL header - bucket has ACLs disabled
+            'options' => [
+                'ACL' => '',
+            ],
         ],
 
         // Spaces - User avatars (public, CDN)
@@ -209,8 +213,10 @@ return [
             'endpoint' => env('DO_SPACES_ENDPOINT', 'https://fra1.digitaloceanspaces.com'),
             'url' => env('DO_SPACES_CDN_URL', 'https://images.immoguinee.com') . '/avatars',
             'root' => 'avatars',
-            'visibility' => 'public',
             'throw' => true,
+            'options' => [
+                'ACL' => '',
+            ],
         ],
 
         // Spaces - Documents (private, no CDN)
@@ -222,8 +228,10 @@ return [
             'bucket' => env('DO_SPACES_BUCKET', 'immoguinee'),
             'endpoint' => env('DO_SPACES_ENDPOINT', 'https://fra1.digitaloceanspaces.com'),
             'root' => 'documents',
-            'visibility' => 'private',
             'throw' => true,
+            'options' => [
+                'ACL' => '',
+            ],
         ],
 
         // Spaces - Contracts (private, legal retention)
@@ -235,8 +243,10 @@ return [
             'bucket' => env('DO_SPACES_BUCKET', 'immoguinee'),
             'endpoint' => env('DO_SPACES_ENDPOINT', 'https://fra1.digitaloceanspaces.com'),
             'root' => 'contracts',
-            'visibility' => 'private',
             'throw' => true,
+            'options' => [
+                'ACL' => '',
+            ],
         ],
 
         // Spaces - Certificates (private)
@@ -248,8 +258,10 @@ return [
             'bucket' => env('DO_SPACES_BUCKET', 'immoguinee'),
             'endpoint' => env('DO_SPACES_ENDPOINT', 'https://fra1.digitaloceanspaces.com'),
             'root' => 'certificates',
-            'visibility' => 'private',
             'throw' => true,
+            'options' => [
+                'ACL' => '',
+            ],
         ],
 
         // Spaces - Messages/voice (public)
@@ -262,8 +274,10 @@ return [
             'endpoint' => env('DO_SPACES_ENDPOINT', 'https://fra1.digitaloceanspaces.com'),
             'url' => env('DO_SPACES_CDN_URL', 'https://images.immoguinee.com') . '/messages',
             'root' => 'messages',
-            'visibility' => 'public',
             'throw' => true,
+            'options' => [
+                'ACL' => '',
+            ],
         ],
 
         // Spaces - Generic (for legacy compatibility)
@@ -275,8 +289,10 @@ return [
             'bucket' => env('DO_SPACES_BUCKET', 'immoguinee'),
             'endpoint' => env('DO_SPACES_ENDPOINT', 'https://fra1.digitaloceanspaces.com'),
             'url' => env('DO_SPACES_CDN_URL', 'https://images.immoguinee.com'),
-            'visibility' => 'public',
             'throw' => true,
+            'options' => [
+                'ACL' => '',
+            ],
         ],
 
         // Spaces - Backups (private, encrypted)
@@ -288,8 +304,10 @@ return [
             'bucket' => env('DO_SPACES_BUCKET', 'immoguinee'),
             'endpoint' => env('DO_SPACES_ENDPOINT', 'https://fra1.digitaloceanspaces.com'),
             'root' => 'backups',
-            'visibility' => 'private',
             'throw' => true,
+            'options' => [
+                'ACL' => '',
+            ],
         ],
 
     ],
