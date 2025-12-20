@@ -296,18 +296,14 @@ class ListingController extends Controller
         try {
             $user = $request->user();
 
-            // Only verified users can create listings
-            if (!$user->telephone_verified_at) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Vous devez vérifier votre numéro de téléphone avant de publier une annonce.',
-                    'data' => ['action' => 'verify_phone'],
-                ], 403);
-            }
-
             $data = $this->mapRequestToModel($request->validated());
             $data['user_id'] = $user->id;
-            $data['statut'] = 'BROUILLON';
+
+            // Status depends on phone verification:
+            // - Verified phone → ACTIVE (published)
+            // - Unverified phone → BROUILLON (draft, not visible publicly)
+            $isVerified = $user->telephone_verified_at !== null;
+            $data['statut'] = $isVerified ? 'ACTIVE' : 'BROUILLON';
 
             // Check for duplicate submission (same title by same user within 30 seconds)
             $recentDuplicate = Listing::where('user_id', $data['user_id'])
@@ -338,31 +334,30 @@ class ListingController extends Controller
                 $this->photoService->uploadMultiple($listing, $request->file('photos'));
             }
 
-            // Auto-publish since user is already verified (checked above)
-            // This applies to all user types: CHERCHEUR, AGENT, AGENCE
-            if ($user->telephone_verified_at || $user->email_verified_at) {
-                $listing->update([
-                    'statut' => 'ACTIVE',
-                    'publie_at' => now(),
-                ]);
-                Log::info('Listing auto-published (verified user)', [
+            // Set publie_at for verified users
+            if ($isVerified) {
+                $listing->update(['publie_at' => now()]);
+                Log::info('Listing published (verified user)', [
                     'listing_id' => $listing->id,
                     'user_type' => $user->type_compte,
-                    'phone_verified' => (bool) $user->telephone_verified_at,
-                    'email_verified' => (bool) $user->email_verified_at,
+                ]);
+            } else {
+                Log::info('Listing saved as draft (unverified user)', [
+                    'listing_id' => $listing->id,
+                    'user_id' => $user->id,
                 ]);
             }
 
-            Log::info('Listing created', [
-                'listing_id' => $listing->id,
-                'user_id' => $request->user()->id,
-            ]);
+            $message = $isVerified
+                ? 'Annonce créée et publiée avec succès'
+                : 'Annonce enregistrée en brouillon. Vérifiez votre numéro WhatsApp pour la publier.';
 
             return response()->json([
                 'success' => true,
-                'message' => 'Annonce créée avec succès',
+                'message' => $message,
                 'data' => [
                     'listing' => $listing,
+                    'is_published' => $isVerified,
                 ],
             ], 201);
 

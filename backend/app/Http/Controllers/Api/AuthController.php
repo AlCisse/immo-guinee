@@ -6,6 +6,7 @@ use App\Actions\Auth\LoginResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
+use App\Models\Listing;
 use App\Models\User;
 use App\Services\OtpService;
 use App\Services\RoleRedirectService;
@@ -361,6 +362,21 @@ class AuthController extends Controller
                 'telephone_verified_at' => now(),
                 'is_active' => true, // Activate user after OTP verification
             ]);
+
+            // Auto-publish all BROUILLON listings from this user
+            $publishedCount = Listing::where('user_id', $user->id)
+                ->where('statut', 'BROUILLON')
+                ->update([
+                    'statut' => 'ACTIVE',
+                    'publie_at' => now(),
+                ]);
+
+            if ($publishedCount > 0) {
+                Log::info('Auto-published draft listings after phone verification', [
+                    'user_id' => $user->id,
+                    'count' => $publishedCount,
+                ]);
+            }
 
             // Assign default role based on account type if no roles
             if ($user->roles->isEmpty()) {
