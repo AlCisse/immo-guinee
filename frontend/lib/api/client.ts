@@ -113,11 +113,14 @@ export const api = {
         timeout: 120000, // 2 minutes for photo uploads
       }),
 
-    update: (id: string, data: FormData) =>
-      apiClient.patch(`/listings/${id}`, data, {
+    update: (id: string, data: FormData) => {
+      // Use POST with _method=PUT for FormData (better file upload support)
+      data.append('_method', 'PUT');
+      return apiClient.post(`/listings/${id}`, data, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 120000, // 2 minutes for photo uploads
-      }),
+      });
+    },
 
     delete: (id: string) =>
       apiClient.delete(`/listings/${id}`),

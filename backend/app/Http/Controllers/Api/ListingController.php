@@ -462,7 +462,30 @@ class ListingController extends Controller
 
             $data = $request->validated();
 
+            // Map 'prix' to 'loyer_mensuel' if provided
+            if (isset($data['prix'])) {
+                $data['loyer_mensuel'] = $data['prix'];
+                unset($data['prix']);
+            }
+
+            // Remove delete_photos from data before update
+            $deletePhotos = null;
+            if (isset($data['delete_photos'])) {
+                $deletePhotos = json_decode($data['delete_photos'], true);
+                unset($data['delete_photos']);
+            }
+
             $listing = $this->listingRepository->update($id, $data);
+
+            // Handle photo deletions
+            if (!empty($deletePhotos) && is_array($deletePhotos)) {
+                foreach ($deletePhotos as $photoId) {
+                    $photo = $listing->listingPhotos()->find($photoId);
+                    if ($photo) {
+                        $photo->delete(); // This will also delete from storage via model event
+                    }
+                }
+            }
 
             // Handle photo uploads using ListingPhotoService
             if ($request->hasFile('photos')) {
