@@ -32,6 +32,7 @@ class UpdateListingRequest extends FormRequest
             'photos' => ['sometimes', 'array', 'max:10'],
             'photos.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'delete_photos' => ['sometimes', 'string'],
+            'primary_photo_id' => ['sometimes', 'string', 'uuid'],
             'disponible_a_partir_de' => ['sometimes', 'nullable', 'date', 'after_or_equal:today'],
         ];
     }
