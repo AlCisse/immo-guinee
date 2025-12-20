@@ -38,20 +38,20 @@ interface Listing {
   description: string;
   type_bien: string;
   type_transaction: string;
-  loyer_mensuel: number;
-  caution?: number;
-  avance?: number;
+  loyer_mensuel: number | string;
+  caution?: number | string;
+  avance?: number | string;
   duree_minimum_jours?: number;
   commune: string;
   quartier: string;
-  surface_m2?: number;
-  nombre_chambres?: number;
-  nombre_salles_bain?: number;
+  surface_m2?: number | null;
+  nombre_chambres?: number | null;
+  nombre_salles_bain?: number | null;
   meuble: boolean;
   commodites?: string[];
   statut: string;
   photos?: ListingPhoto[];
-  listingPhotos?: ListingPhoto[];
+  listing_photos?: ListingPhoto[];
 }
 
 export default function ModifierAnnoncePage() {
@@ -78,7 +78,7 @@ export default function ModifierAnnoncePage() {
     queryKey: ['listing', listingId],
     queryFn: async () => {
       const response = await api.listings.get(listingId);
-      return response.data?.data as Listing;
+      return response.data?.data?.listing as Listing;
     },
   });
 
@@ -190,7 +190,7 @@ export default function ModifierAnnoncePage() {
     );
   }
 
-  const existingPhotos = (listing.listingPhotos || listing.photos || []).filter(
+  const existingPhotos = (listing.listing_photos || listing.photos || []).filter(
     p => !photosToDelete.includes(p.id)
   );
 
