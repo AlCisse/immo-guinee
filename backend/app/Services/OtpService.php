@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Helpers\SecretHelper;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -125,8 +126,9 @@ class OtpService
     protected function sendDirectWaha(string $phoneNumber, string $otp, string $type = 'verification'): bool
     {
         try {
-            $wahaUrl = config('services.waha.url', 'http://immog-waha:3000');
-            $wahaApiKey = config('services.waha.api_key', 'immog2024');
+            $wahaUrl = config('services.waha.url', 'http://waha:3000');
+            // Use SecretHelper for Docker secrets support
+            $wahaApiKey = SecretHelper::get('WAHA_API_KEY');
 
             Log::info('Sending OTP via WAHA', [
                 'phone' => $phoneNumber,
