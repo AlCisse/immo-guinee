@@ -18,14 +18,17 @@ class ListingPhotoService
 
     // Image sizes configuration
     protected array $sizes = [
-        'thumbnail' => ['width' => 150, 'height' => 150],
-        'medium' => ['width' => 600, 'height' => 400],
-        'large' => ['width' => 1200, 'height' => 800],
+        'thumbnail' => ['width' => 150, 'height' => 150, 'quality' => 75],
+        'medium' => ['width' => 600, 'height' => 400, 'quality' => 80],
+        'large' => ['width' => 1200, 'height' => 800, 'quality' => 82],
     ];
 
     // Max dimensions for original image
     protected int $maxWidth = 2000;
     protected int $maxHeight = 2000;
+
+    // WebP quality for original (high quality archive)
+    protected int $originalQuality = 85;
 
     public function __construct(StorageService $storage)
     {
@@ -59,8 +62,10 @@ class ListingPhotoService
         // Security validation (MIME, extension, virus scan, etc.)
         $validation = $this->validateImage($file);
 
-        // Use secure filename from validation (UUID-based, never user-provided)
-        $filename = $validation['secure_name'];
+        // Generate WebP filename (UUID-based, never user-provided)
+        $baseFilename = pathinfo($validation['secure_name'], PATHINFO_FILENAME);
+        $filename = $baseFilename . '.webp';
+
         // Note: 'listings' disk root is already storage/app/public/listings, so no prefix needed
         $basePath = "{$listing->id}";
 
@@ -76,11 +81,15 @@ class ListingPhotoService
             $image->scaleDown($this->maxWidth, $this->maxHeight);
         }
 
-        // Upload original
+        // Upload original as WebP (high quality)
         $originalPath = "{$basePath}/original/{$filename}";
-        $this->uploadToStorage($originalPath, $image->toJpeg(85));
+        $this->uploadToStorage($originalPath, $image->toWebp($this->originalQuality));
 
-        // Generate and upload variants (re-read image for each since Intervention v3 removed clone())
+        // Calculate compressed size for metadata
+        $webpContent = $image->toWebp($this->originalQuality);
+        $compressedSize = strlen($webpContent);
+
+        // Generate and upload variants as WebP
         $filePath = $file->getPathname();
         $thumbnailPath = $this->generateVariant($filePath, 'thumbnail', $basePath, $filename);
         $mediumPath = $this->generateVariant($filePath, 'medium', $basePath, $filename);
@@ -101,14 +110,15 @@ class ListingPhotoService
             'disk' => $this->storage->getDisk($this->storageType),
             'path' => $originalPath,
             'original_name' => $file->getClientOriginalName(),
-            'mime_type' => $file->getMimeType(),
-            'size' => $file->getSize(),
+            'mime_type' => 'image/webp',
+            'size' => $compressedSize,
             'thumbnail_path' => $thumbnailPath,
             'medium_path' => $mediumPath,
             'large_path' => $largePath,
             'is_primary' => $isPrimary || $maxOrder < 0, // First photo is always primary
             'order' => $maxOrder + 1,
             'metadata' => [
+                'format' => 'webp',
                 'dimensions' => [
                     'width' => $image->width(),
                     'height' => $image->height(),
@@ -117,6 +127,8 @@ class ListingPhotoService
                     'width' => $originalWidth,
                     'height' => $originalHeight,
                 ],
+                'original_size' => $file->getSize(),
+                'compression_ratio' => round((1 - $compressedSize / $file->getSize()) * 100, 1),
             ],
         ]);
 
@@ -187,7 +199,7 @@ class ListingPhotoService
     }
 
     /**
-     * Generate image variant and upload to storage.
+     * Generate image variant and upload to storage as WebP.
      */
     protected function generateVariant(string $filePath, string $variant, string $basePath, string $filename): string
     {
@@ -200,7 +212,9 @@ class ListingPhotoService
         // Cover fit to exact dimensions
         $image->cover($size['width'], $size['height']);
 
-        $this->uploadToStorage($path, $image->toJpeg(85));
+        // Use variant-specific quality for optimal size/quality balance
+        $quality = $size['quality'] ?? 80;
+        $this->uploadToStorage($path, $image->toWebp($quality));
 
         return $path;
     }
