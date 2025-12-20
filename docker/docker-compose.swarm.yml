@@ -405,12 +405,20 @@ services:
   waha:
     image: devlikeapro/waha:latest
     environment:
-      - WHATSAPP_HOOK_URL=https://api.${DOMAIN}/webhooks/whatsapp
-      - WHATSAPP_HOOK_EVENTS=message,message.any
+      # Session persistence - CRITICAL for auto-restart
+      - WHATSAPP_RESTART_ALL_SESSIONS=true
+      - WHATSAPP_START_SESSION=default
+      - WAHA_PRINT_QR=false
+      # Webhook configuration
+      - WHATSAPP_HOOK_URL=http://nginx/api/webhooks/waha
+      - WHATSAPP_HOOK_EVENTS=message,message.any,message.ack,session.status
+      # Dashboard configuration
       - WAHA_DASHBOARD_ENABLED=true
-      - WHATSAPP_API_KEY=${WAHA_API_KEY}
       - WAHA_DASHBOARD_USERNAME=admin
       - WAHA_DASHBOARD_PASSWORD=${WAHA_PASSWORD:-admin123}
+      # API configuration
+      - WAHA_API_KEY=${WAHA_API_KEY}
+      - WHATSAPP_API_KEY=${WAHA_API_KEY}
     volumes:
       - waha-sessions:/app/.sessions
     networks:
@@ -420,11 +428,14 @@ services:
       replicas: 1
       restart_policy:
         condition: on-failure
+        delay: 5s
+        max_attempts: 5
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.waha.rule=Host(`waha.${DOMAIN}`)"
         - "traefik.http.routers.waha.entrypoints=websecure"
         - "traefik.http.routers.waha.tls.certresolver=letsencrypt"
+        - "traefik.http.routers.waha.middlewares=admin-auth@file"
         - "traefik.http.services.waha.loadbalancer.server.port=3000"
 
   # ==============================================
