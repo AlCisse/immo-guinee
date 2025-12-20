@@ -9,6 +9,7 @@ import { Eye, EyeOff, Lock, User, Building2, Loader2, ChevronDown, ArrowRight, A
 import { ROUTES } from '@/lib/routes';
 import { inputStyles } from '@/lib/utils';
 import PhoneInput from '@/components/ui/PhoneInput';
+import toast from 'react-hot-toast';
 
 const accountTypes = [
   { value: 'PARTICULIER', label: 'Particulier', description: 'Chercher, louer ou vendre' },
@@ -29,7 +30,6 @@ export default function RegisterPage() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const [showLoginRedirect, setShowLoginRedirect] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<'google' | 'facebook' | null>(null);
 
@@ -67,17 +67,20 @@ export default function RegisterPage() {
     } catch (err: any) {
       console.error('Registration error:', err);
 
-      // Check if user needs to be redirected to login
+      // Check if user needs to be redirected to login (account already exists and verified)
       if (err.action === 'redirect_login') {
-        setError(err.message);
-        setShowLoginRedirect(true);
+        toast.success('Ce compte existe déjà. Redirection vers la connexion...', {
+          duration: 3000,
+          icon: '👋',
+        });
+        router.push('/auth/login');
+        return;
       } else {
         setError(
           err.response?.data?.message ||
           err.message ||
           'Une erreur est survenue lors de l\'inscription'
         );
-        setShowLoginRedirect(false);
       }
     } finally {
       setIsLoading(false);
@@ -210,22 +213,10 @@ export default function RegisterPage() {
             </div>
 
             {error && (
-              <div className={`mb-4 sm:mb-6 p-3 sm:p-4 ${showLoginRedirect ? 'bg-amber-50 dark:bg-amber-500/10 border-l-4 border-amber-500' : 'bg-error-50 dark:bg-error-500/10 border-l-4 border-error-500'} rounded-r-lg`}>
+              <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-error-50 dark:bg-error-500/10 border-l-4 border-error-500 rounded-r-lg">
                 <div className="flex items-start gap-2 sm:gap-3">
-                  <AlertCircle className={`w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0 ${showLoginRedirect ? 'text-amber-600' : 'text-error-500'}`} />
-                  <div className="flex-1">
-                    <p className={`text-xs sm:text-sm ${showLoginRedirect ? 'text-amber-700 dark:text-amber-400' : 'text-error-700 dark:text-error-400'}`}>{error}</p>
-                    {showLoginRedirect && (
-                      <button
-                        type="button"
-                        onClick={() => router.push('/auth/login')}
-                        className="mt-2 sm:mt-3 inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-primary-500 hover:bg-primary-600 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors"
-                      >
-                        Se connecter
-                        <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
-                      </button>
-                    )}
-                  </div>
+                  <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0 text-error-500" />
+                  <p className="text-xs sm:text-sm text-error-700 dark:text-error-400">{error}</p>
                 </div>
               </div>
             )}

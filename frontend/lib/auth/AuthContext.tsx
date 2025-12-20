@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api, ApiResponse } from '../api/client';
+import toast from 'react-hot-toast';
 
 // User type based on Laravel backend
 export interface User {
@@ -117,6 +118,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Check if user needs to verify OTP (unverified phone)
       if (data.success && action === 'verify_otp') {
         const userPhone = user?.telephone || telephone;
+        toast('Veuillez vérifier votre numéro pour continuer', {
+          duration: 4000,
+          icon: '📱',
+        });
         router.push(`/auth/verify-otp?telephone=${encodeURIComponent(userPhone)}`);
         return;
       }
@@ -156,9 +161,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (action === 'verify_otp') {
           // User needs to verify OTP (new user or existing unverified user)
+          toast.success('Code de vérification envoyé par WhatsApp', {
+            duration: 4000,
+            icon: '📱',
+          });
           router.push(`/auth/verify-otp?telephone=${encodeURIComponent(telephone)}`);
         } else {
           // Default: navigate to OTP verification
+          toast.success('Code de vérification envoyé par WhatsApp', {
+            duration: 4000,
+            icon: '📱',
+          });
           router.push(`/auth/verify-otp?telephone=${encodeURIComponent(telephone)}`);
         }
       } else {
