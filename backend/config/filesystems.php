@@ -1,5 +1,7 @@
 <?php
 
+use App\Helpers\SecretHelper;
+
 return [
 
     /*
@@ -183,10 +185,11 @@ return [
         // MinIO is only used as temporary cache (48h) for upload processing
 
         // Spaces - Listings images (public, CDN)
+        // Uses SecretHelper to read from Docker secrets (/run/secrets/do_spaces_*)
         'spaces-listings' => [
             'driver' => 's3',
-            'key' => env('DO_SPACES_ACCESS_KEY'),
-            'secret' => env('DO_SPACES_SECRET_KEY'),
+            'key' => SecretHelper::get('DO_SPACES_ACCESS_KEY'),
+            'secret' => SecretHelper::get('DO_SPACES_SECRET_KEY'),
             'region' => env('DO_SPACES_REGION', 'fra1'),
             'bucket' => env('DO_SPACES_BUCKET', 'immoguinee'),
             'endpoint' => env('DO_SPACES_ENDPOINT', 'https://fra1.digitaloceanspaces.com'),
@@ -199,8 +202,8 @@ return [
         // Spaces - User avatars (public, CDN)
         'spaces-avatars' => [
             'driver' => 's3',
-            'key' => env('DO_SPACES_ACCESS_KEY'),
-            'secret' => env('DO_SPACES_SECRET_KEY'),
+            'key' => SecretHelper::get('DO_SPACES_ACCESS_KEY'),
+            'secret' => SecretHelper::get('DO_SPACES_SECRET_KEY'),
             'region' => env('DO_SPACES_REGION', 'fra1'),
             'bucket' => env('DO_SPACES_BUCKET', 'immoguinee'),
             'endpoint' => env('DO_SPACES_ENDPOINT', 'https://fra1.digitaloceanspaces.com'),
@@ -213,8 +216,8 @@ return [
         // Spaces - Documents (private, no CDN)
         'spaces-documents' => [
             'driver' => 's3',
-            'key' => env('DO_SPACES_ACCESS_KEY'),
-            'secret' => env('DO_SPACES_SECRET_KEY'),
+            'key' => SecretHelper::get('DO_SPACES_ACCESS_KEY'),
+            'secret' => SecretHelper::get('DO_SPACES_SECRET_KEY'),
             'region' => env('DO_SPACES_REGION', 'fra1'),
             'bucket' => env('DO_SPACES_BUCKET', 'immoguinee'),
             'endpoint' => env('DO_SPACES_ENDPOINT', 'https://fra1.digitaloceanspaces.com'),
@@ -226,8 +229,8 @@ return [
         // Spaces - Contracts (private, legal retention)
         'spaces-contracts' => [
             'driver' => 's3',
-            'key' => env('DO_SPACES_ACCESS_KEY'),
-            'secret' => env('DO_SPACES_SECRET_KEY'),
+            'key' => SecretHelper::get('DO_SPACES_ACCESS_KEY'),
+            'secret' => SecretHelper::get('DO_SPACES_SECRET_KEY'),
             'region' => env('DO_SPACES_REGION', 'fra1'),
             'bucket' => env('DO_SPACES_BUCKET', 'immoguinee'),
             'endpoint' => env('DO_SPACES_ENDPOINT', 'https://fra1.digitaloceanspaces.com'),
@@ -239,8 +242,8 @@ return [
         // Spaces - Certificates (private)
         'spaces-certificates' => [
             'driver' => 's3',
-            'key' => env('DO_SPACES_ACCESS_KEY'),
-            'secret' => env('DO_SPACES_SECRET_KEY'),
+            'key' => SecretHelper::get('DO_SPACES_ACCESS_KEY'),
+            'secret' => SecretHelper::get('DO_SPACES_SECRET_KEY'),
             'region' => env('DO_SPACES_REGION', 'fra1'),
             'bucket' => env('DO_SPACES_BUCKET', 'immoguinee'),
             'endpoint' => env('DO_SPACES_ENDPOINT', 'https://fra1.digitaloceanspaces.com'),
@@ -252,8 +255,8 @@ return [
         // Spaces - Messages/voice (public)
         'spaces-messages' => [
             'driver' => 's3',
-            'key' => env('DO_SPACES_ACCESS_KEY'),
-            'secret' => env('DO_SPACES_SECRET_KEY'),
+            'key' => SecretHelper::get('DO_SPACES_ACCESS_KEY'),
+            'secret' => SecretHelper::get('DO_SPACES_SECRET_KEY'),
             'region' => env('DO_SPACES_REGION', 'fra1'),
             'bucket' => env('DO_SPACES_BUCKET', 'immoguinee'),
             'endpoint' => env('DO_SPACES_ENDPOINT', 'https://fra1.digitaloceanspaces.com'),
@@ -266,8 +269,8 @@ return [
         // Spaces - Generic (for legacy compatibility)
         'spaces' => [
             'driver' => 's3',
-            'key' => env('DO_SPACES_ACCESS_KEY'),
-            'secret' => env('DO_SPACES_SECRET_KEY'),
+            'key' => SecretHelper::get('DO_SPACES_ACCESS_KEY'),
+            'secret' => SecretHelper::get('DO_SPACES_SECRET_KEY'),
             'region' => env('DO_SPACES_REGION', 'fra1'),
             'bucket' => env('DO_SPACES_BUCKET', 'immoguinee'),
             'endpoint' => env('DO_SPACES_ENDPOINT', 'https://fra1.digitaloceanspaces.com'),
@@ -279,8 +282,8 @@ return [
         // Spaces - Backups (private, encrypted)
         'spaces-backups' => [
             'driver' => 's3',
-            'key' => env('DO_SPACES_ACCESS_KEY'),
-            'secret' => env('DO_SPACES_SECRET_KEY'),
+            'key' => SecretHelper::get('DO_SPACES_ACCESS_KEY'),
+            'secret' => SecretHelper::get('DO_SPACES_SECRET_KEY'),
             'region' => env('DO_SPACES_REGION', 'fra1'),
             'bucket' => env('DO_SPACES_BUCKET', 'immoguinee'),
             'endpoint' => env('DO_SPACES_ENDPOINT', 'https://fra1.digitaloceanspaces.com'),

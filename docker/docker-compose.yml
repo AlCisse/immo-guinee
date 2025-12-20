@@ -176,6 +176,8 @@ services:
       - passport_public_key
       - db_app_password
       - redis_password
+      - do_spaces_access_key
+      - do_spaces_secret_key
     environment:
       - APP_ENV=${APP_ENV:-production}
       - APP_DEBUG=${APP_DEBUG:-false}
@@ -195,6 +197,14 @@ services:
       # ClamAV configuration
       - CLAMAV_HOST=clamav
       - CLAMAV_PORT=3310
+      # DigitalOcean Spaces (secrets mounted at /run/secrets/)
+      - STORAGE_STRATEGY=spaces
+      - DO_SPACES_ACCESS_KEY_FILE=/run/secrets/do_spaces_access_key
+      - DO_SPACES_SECRET_KEY_FILE=/run/secrets/do_spaces_secret_key
+      - DO_SPACES_REGION=fra1
+      - DO_SPACES_BUCKET=immoguinee
+      - DO_SPACES_ENDPOINT=https://fra1.digitaloceanspaces.com
+      - DO_SPACES_CDN_URL=https://images.immoguinee.com
     networks:
       - backend-network
       - public-network  # Needs to be reachable by nginx
