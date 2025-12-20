@@ -52,13 +52,13 @@ http:
     frontend:
       loadBalancer:
         servers:
-          - url: "http://immo_frontend:3000"
+          - url: "http://immog_frontend:3000"
 
     # Backend service - Docker Swarm service name
     backend:
       loadBalancer:
         servers:
-          - url: "http://immo_nginx:80"
+          - url: "http://immog_nginx:80"
 
   middlewares:
     compress:
