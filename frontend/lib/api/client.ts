@@ -114,9 +114,8 @@ export const api = {
       }),
 
     update: (id: string, data: FormData) => {
-      // Use POST with _method=PUT for FormData (better file upload support)
-      data.append('_method', 'PUT');
-      return apiClient.post(`/listings/${id}`, data, {
+      // Use dedicated POST endpoint for FormData with file uploads
+      return apiClient.post(`/listings/${id}/update`, data, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 120000, // 2 minutes for photo uploads
       });
