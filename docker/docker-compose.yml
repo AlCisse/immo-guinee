@@ -460,11 +460,11 @@ services:
         delay: 5s
         max_attempts: 5
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/sessions"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 30s
+      start_period: 60s
 
   laravel-echo:
     image: oanhnn/laravel-echo-server:latest
