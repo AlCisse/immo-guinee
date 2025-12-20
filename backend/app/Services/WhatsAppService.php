@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Helpers\SecretHelper;
 use App\Models\WhatsAppMessage;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -42,8 +43,9 @@ class WhatsAppService
 
     public function __construct()
     {
-        $this->baseUrl = rtrim(config('services.waha.url', 'http://immog-waha:3000'), '/');
-        $this->apiKey = config('services.waha.api_key');
+        $this->baseUrl = rtrim(config('services.waha.url', 'http://waha:3000'), '/');
+        // Use SecretHelper for Docker secrets support
+        $this->apiKey = SecretHelper::get('WAHA_API_KEY');
         $this->sessionName = config('services.waha.session_name', 'default');
     }
 
