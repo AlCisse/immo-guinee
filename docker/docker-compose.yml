@@ -459,7 +459,7 @@ services:
   # ============================================
 
   traefik:
-    image: traefik:v3.3
+    image: traefik:v3.2
     hostname: traefik
     environment:
       - DOCKER_API_VERSION=1.46
@@ -471,6 +471,7 @@ services:
       - "--providers.swarm=true"
       - "--providers.swarm.exposedbydefault=false"
       - "--providers.swarm.network=immog_public-network"
+      - "--providers.swarm.endpoint=unix:///var/run/docker.sock"
       - "--providers.file.directory=/etc/traefik/dynamic"
       - "--providers.file.watch=true"
       - "--entrypoints.web.address=:80"
