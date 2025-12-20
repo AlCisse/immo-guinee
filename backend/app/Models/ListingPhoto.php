@@ -248,5 +248,19 @@ class ListingPhoto extends Model
         static::deleting(function (ListingPhoto $photo) {
             $photo->deleteFromStorage();
         });
+
+        // After deleting, promote next photo to primary if this was primary
+        static::deleted(function (ListingPhoto $photo) {
+            if ($photo->is_primary) {
+                // Find next photo by order and promote to primary
+                $nextPhoto = self::where('listing_id', $photo->listing_id)
+                    ->orderBy('order')
+                    ->first();
+
+                if ($nextPhoto) {
+                    $nextPhoto->update(['is_primary' => true]);
+                }
+            }
+        });
     }
 }
