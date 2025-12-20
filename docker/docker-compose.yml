@@ -434,6 +434,7 @@ services:
       - ./waha/.sessions:/app/.sessions
     networks:
       - backend-network
+      - public-network  # Needs external access to web.whatsapp.com
     deploy:
       replicas: 1
       restart_policy:
