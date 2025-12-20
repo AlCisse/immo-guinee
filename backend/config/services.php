@@ -1,5 +1,7 @@
 <?php
 
+use App\Helpers\SecretHelper;
+
 return [
 
     /*
@@ -37,7 +39,7 @@ return [
 
     'waha' => [
         'url' => env('WAHA_URL', 'http://waha:3000'),
-        'api_key' => env('WAHA_API_KEY'),
+        'api_key' => SecretHelper::get('WAHA_API_KEY'),
         'session_name' => env('WAHA_SESSION_NAME', 'default'),
     ],
 
