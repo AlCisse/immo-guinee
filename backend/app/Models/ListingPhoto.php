@@ -125,39 +125,61 @@ class ListingPhoto extends Model
 
     /**
      * Get the effective disk name based on storage strategy.
-     * Remaps 'listings' to 'spaces-listings' when using Spaces strategy.
+     * Remaps 'listings' to 'spaces-listings' when using Spaces strategy,
+     * but only if the file actually exists on Spaces.
      */
     protected function getEffectiveDisk(): string
     {
         $strategy = config('filesystems.strategy', 'local');
 
-        // Remap disk names when using Spaces strategy
+        // Only remap if strategy is spaces
         if ($strategy === 'spaces') {
             $mapping = [
                 'listings' => 'spaces-listings',
                 'listings-minio' => 'spaces-listings',
             ];
 
-            return $mapping[$this->disk] ?? $this->disk;
+            $spacesDisk = $mapping[$this->disk] ?? null;
+
+            // Check if file exists on Spaces, otherwise use original disk
+            if ($spacesDisk && Storage::disk($spacesDisk)->exists($this->path)) {
+                return $spacesDisk;
+            }
         }
 
+        // Use stored disk (local) if file doesn't exist on Spaces
         return $this->disk;
     }
 
     /**
      * Get URL from storage disk.
+     * Handles both local and Spaces storage with proper URL generation.
      */
     protected function getStorageUrl(string $path): string
     {
         $effectiveDisk = $this->getEffectiveDisk();
+
+        // For local disk, check if file exists and generate proper URL
+        if ($effectiveDisk === 'listings') {
+            $disk = Storage::disk('listings');
+            if ($disk->exists($path)) {
+                return $disk->url($path);
+            }
+        }
+
+        // For Spaces or other S3 disks
         $disk = Storage::disk($effectiveDisk);
 
-        // Try to get a URL, fallback to temporary URL for private disks
         try {
             return $disk->url($path);
         } catch (\Exception $e) {
             // For private disks, generate a temporary URL valid for 1 hour
-            return $disk->temporaryUrl($path, now()->addHour());
+            try {
+                return $disk->temporaryUrl($path, now()->addHour());
+            } catch (\Exception $e2) {
+                // Fallback to local disk URL as last resort
+                return Storage::disk('listings')->url($path);
+            }
         }
     }
 
