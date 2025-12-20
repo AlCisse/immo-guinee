@@ -281,9 +281,77 @@ export default function PropertyDetailPage() {
 
       {/* Image Gallery */}
       <div className="relative">
-        {/* Main Image */}
+        {/* Mobile Swipeable Carousel */}
+        <div className="md:hidden relative">
+          <div
+            className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
+            onScroll={(e) => {
+              const container = e.currentTarget;
+              const scrollLeft = container.scrollLeft;
+              const itemWidth = container.offsetWidth;
+              const newIndex = Math.round(scrollLeft / itemWidth);
+              if (newIndex !== currentImageIndex && newIndex >= 0 && newIndex < images.length) {
+                setCurrentImageIndex(newIndex);
+              }
+            }}
+          >
+            {images.map((img, index) => (
+              <div
+                key={index}
+                className="flex-shrink-0 w-full h-72 snap-center relative bg-neutral-200 dark:bg-neutral-800"
+                onClick={() => setShowGallery(true)}
+              >
+                {img && img !== '/images/placeholder.jpg' ? (
+                  <Image
+                    src={img}
+                    alt={`${listing.titre} - Photo ${index + 1}`}
+                    fill
+                    className="object-cover"
+                    priority={index === 0}
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Home className="w-16 h-16 text-neutral-400" />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Navigation dots */}
+          {images.length > 1 && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+              {images.slice(0, 7).map((_, index) => (
+                <div
+                  key={index}
+                  className={`h-2 rounded-full transition-all ${
+                    index === currentImageIndex ? 'bg-white w-6' : 'bg-white/50 w-2'
+                  }`}
+                />
+              ))}
+              {images.length > 7 && (
+                <div className="h-2 w-2 rounded-full bg-white/50" />
+              )}
+            </div>
+          )}
+
+          {/* Image count */}
+          <div className="absolute bottom-4 right-4 px-3 py-1.5 bg-black/50 backdrop-blur-sm rounded-full text-white text-sm z-10">
+            {currentImageIndex + 1}/{images.length}
+          </div>
+
+          {/* Status Badge */}
+          {listing.statut === 'BROUILLON' && (
+            <div className="absolute top-4 left-4 px-3 py-1.5 bg-amber-500 text-white text-sm font-semibold rounded-full z-10">
+              Brouillon
+            </div>
+          )}
+        </div>
+
+        {/* Desktop Main Image */}
         <div
-          className="relative h-64 md:h-96 bg-neutral-200 dark:bg-neutral-800 cursor-pointer overflow-hidden"
+          className="hidden md:block relative h-96 bg-neutral-200 dark:bg-neutral-800 cursor-pointer overflow-hidden"
           onClick={() => setShowGallery(true)}
         >
           {images[currentImageIndex] && images[currentImageIndex] !== '/images/placeholder.jpg' ? (
@@ -300,24 +368,6 @@ export default function PropertyDetailPage() {
             </div>
           )}
 
-          {/* Navigation dots */}
-          {images.length > 1 && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-              {images.slice(0, 5).map((_, index) => (
-                <button
-                  key={index}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentImageIndex(index);
-                  }}
-                  className={`w-2 h-2 rounded-full transition-all ${
-                    index === currentImageIndex ? 'bg-white w-6' : 'bg-white/50'
-                  }`}
-                />
-              ))}
-            </div>
-          )}
-
           {/* Image count */}
           <div className="absolute bottom-4 right-4 px-3 py-1.5 bg-black/50 backdrop-blur-sm rounded-full text-white text-sm">
             {currentImageIndex + 1}/{images.length}
@@ -325,7 +375,7 @@ export default function PropertyDetailPage() {
 
           {/* Status Badge */}
           {listing.statut === 'BROUILLON' && (
-            <div className="absolute top-20 md:top-4 left-4 px-3 py-1.5 bg-amber-500 text-white text-sm font-semibold rounded-full">
+            <div className="absolute top-4 left-4 px-3 py-1.5 bg-amber-500 text-white text-sm font-semibold rounded-full">
               Brouillon
             </div>
           )}
