@@ -50,7 +50,7 @@ services:
   # ============================================
 
   postgres:
-    image: postgis/postgis:16-3.5
+    image: postgis/postgis:15-3.5
     hostname: postgres
     secrets:
       - db_password
