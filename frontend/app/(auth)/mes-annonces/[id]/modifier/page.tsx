@@ -21,6 +21,7 @@ import {
   Trash2,
   Plus,
   GripVertical,
+  Star,
 } from 'lucide-react';
 import { api } from '@/lib/api/client';
 
@@ -72,6 +73,7 @@ export default function ModifierAnnoncePage() {
 
   const [newPhotos, setNewPhotos] = useState<File[]>([]);
   const [photosToDelete, setPhotosToDelete] = useState<string[]>([]);
+  const [primaryPhotoId, setPrimaryPhotoId] = useState<string | null>(null);
 
   // Fetch listing data
   const { data: listing, isLoading, error } = useQuery({
@@ -94,6 +96,12 @@ export default function ModifierAnnoncePage() {
         nombre_salles_bain: String(listing.nombre_salles_bain || ''),
         meuble: listing.meuble || false,
       });
+      // Set initial primary photo
+      const photos = listing.listing_photos || listing.photos || [];
+      const primary = photos.find(p => p.is_primary);
+      if (primary) {
+        setPrimaryPhotoId(primary.id);
+      }
     }
   }, [listing]);
 
@@ -135,6 +143,11 @@ export default function ModifierAnnoncePage() {
     // Add photos to delete
     if (photosToDelete.length > 0) {
       submitData.append('delete_photos', JSON.stringify(photosToDelete));
+    }
+
+    // Set primary photo
+    if (primaryPhotoId) {
+      submitData.append('primary_photo_id', primaryPhotoId);
     }
 
     updateMutation.mutate(submitData);
@@ -354,29 +367,47 @@ export default function ModifierAnnoncePage() {
             {/* Existing Photos */}
             {existingPhotos.length > 0 && (
               <div className="mb-4">
-                <p className="text-sm text-neutral-500 mb-2">Photos actuelles</p>
+                <p className="text-sm text-neutral-500 mb-2">Photos actuelles (cliquez sur l'etoile pour definir l'image principale)</p>
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                  {existingPhotos.map((photo) => (
-                    <div key={photo.id} className="relative aspect-square rounded-xl overflow-hidden group">
-                      <img
-                        src={photo.thumbnail_url || photo.url}
-                        alt="Photo"
-                        className="w-full h-full object-cover"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => markPhotoForDeletion(photo.id)}
-                        className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                      >
-                        <Trash2 className="w-6 h-6 text-white" />
-                      </button>
-                      {photo.is_primary && (
-                        <span className="absolute top-2 left-2 px-2 py-0.5 bg-primary-500 text-white text-xs rounded-full">
-                          Principale
-                        </span>
-                      )}
-                    </div>
-                  ))}
+                  {existingPhotos.map((photo) => {
+                    const isPrimary = primaryPhotoId === photo.id;
+                    return (
+                      <div key={photo.id} className={`relative aspect-square rounded-xl overflow-hidden group ${isPrimary ? 'ring-2 ring-primary-500' : ''}`}>
+                        <img
+                          src={photo.thumbnail_url || photo.url}
+                          alt="Photo"
+                          className="w-full h-full object-cover"
+                        />
+                        {/* Primary photo selector */}
+                        <button
+                          type="button"
+                          onClick={() => setPrimaryPhotoId(photo.id)}
+                          className={`absolute top-2 left-2 p-1.5 rounded-full transition-all ${
+                            isPrimary
+                              ? 'bg-primary-500 text-white'
+                              : 'bg-black/50 text-white/70 hover:bg-primary-500 hover:text-white'
+                          }`}
+                          title={isPrimary ? 'Image principale' : 'Definir comme principale'}
+                        >
+                          <Star className={`w-4 h-4 ${isPrimary ? 'fill-current' : ''}`} />
+                        </button>
+                        {/* Delete button */}
+                        <button
+                          type="button"
+                          onClick={() => markPhotoForDeletion(photo.id)}
+                          className="absolute top-2 right-2 p-1.5 bg-red-500/80 hover:bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Supprimer"
+                        >
+                          <Trash2 className="w-4 h-4 text-white" />
+                        </button>
+                        {isPrimary && (
+                          <span className="absolute bottom-2 left-2 px-2 py-0.5 bg-primary-500 text-white text-xs rounded-full">
+                            Principale
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

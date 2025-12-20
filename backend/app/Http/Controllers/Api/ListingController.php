@@ -475,6 +475,13 @@ class ListingController extends Controller
                 unset($data['delete_photos']);
             }
 
+            // Remove primary_photo_id from data before update
+            $primaryPhotoId = null;
+            if (isset($data['primary_photo_id'])) {
+                $primaryPhotoId = $data['primary_photo_id'];
+                unset($data['primary_photo_id']);
+            }
+
             $listing = $this->listingRepository->update($id, $data);
 
             // Handle photo deletions
@@ -495,6 +502,14 @@ class ListingController extends Controller
 
                 if (!empty($photosToUpload)) {
                     $this->photoService->uploadMultiple($listing, $photosToUpload);
+                }
+            }
+
+            // Set primary photo if specified
+            if ($primaryPhotoId) {
+                $photo = $listing->listingPhotos()->find($primaryPhotoId);
+                if ($photo) {
+                    $this->photoService->setPrimary($photo);
                 }
             }
 
