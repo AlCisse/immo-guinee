@@ -33,6 +33,10 @@ import {
   XCircle,
   Wand2,
   Calendar,
+  UtensilsCrossed,
+  Waves,
+  Users,
+  Percent,
 } from 'lucide-react';
 import TypeBienSelector, { type TypeBien } from './TypeBienSelector';
 import LocationSelector from './LocationSelector';
@@ -57,6 +61,8 @@ interface FormData {
   nombreSalons: string;
   cautionMois: string;
   avanceMois: string;
+  commissionMois: string;
+  typeLocatairePrefere: string;
   dureeMinimumJours: string;
   meuble: boolean;
   photos: PhotoFile[];
@@ -87,6 +93,8 @@ const INITIAL_FORM_DATA: FormData = {
   nombreSalons: '',
   cautionMois: '1',
   avanceMois: '1',
+  commissionMois: '1',
+  typeLocatairePrefere: 'tous',
   dureeMinimumJours: '1',
   meuble: false,
   photos: [],
@@ -100,6 +108,18 @@ const AMENITIES = [
   { id: 'securite', label: 'Sécurité 24h', icon: Shield },
   { id: 'piscine', label: 'Piscine', icon: Droplets },
   { id: 'groupe_electrogene', label: 'Groupe électrogène', icon: Zap },
+  { id: 'balcon', label: 'Balcon', icon: Building2 },
+  { id: 'cuisine', label: 'Cuisine équipée', icon: UtensilsCrossed },
+  { id: 'forage', label: 'Forage', icon: Waves },
+  { id: 'seg_uniquement', label: 'SEG uniquement', icon: Droplets },
+];
+
+const TENANT_TYPES = [
+  { value: 'tous', label: 'Tous les profils' },
+  { value: 'couple', label: 'Couple' },
+  { value: 'marie_absent', label: 'Marié(e) (conjoint absent)' },
+  { value: 'celibataire', label: 'Célibataire' },
+  { value: 'etudiant', label: 'Étudiant(e)' },
 ];
 
 interface ListingFormStepperProps {
@@ -335,10 +355,14 @@ export default function ListingFormStepper({
       submitData.append('commune', commune);
       submitData.append('quartier', formData.quartier || 'Centre');
 
-      // Caution and Avance for long-term rental
+      // Caution, Avance, Commission and Tenant type for long-term rental
       if (formData.operationType === 'LOCATION') {
         submitData.append('caution_mois', formData.cautionMois || '1');
         submitData.append('avance_mois', formData.avanceMois || '1');
+        submitData.append('commission_mois', formData.commissionMois || '1');
+        if (formData.typeLocatairePrefere && formData.typeLocatairePrefere !== 'tous') {
+          submitData.append('type_locataire_prefere', formData.typeLocatairePrefere);
+        }
       }
 
       // Short-term rental specific fields
@@ -358,6 +382,10 @@ export default function ListingFormStepper({
         'securite': 'gardien',
         'piscine': 'piscine',
         'groupe_electrogene': 'electricite',
+        'balcon': 'balcon',
+        'cuisine': 'cuisine',
+        'forage': 'forage',
+        'seg_uniquement': 'seg_uniquement',
       };
 
       if (formData.amenities.length > 0) {
@@ -795,39 +823,80 @@ export default function ListingFormStepper({
                   )}
                 </div>
 
-                {/* Caution & Avance (only for LOCATION longue durée) */}
+                {/* Caution, Avance & Commission (only for LOCATION longue durée) */}
                 {formData.operationType === 'LOCATION' && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
-                        Caution
-                      </label>
-                      <select
-                        name="cautionMois"
-                        value={formData.cautionMois}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3.5 rounded-xl border-2 border-neutral-200 dark:border-dark-border focus:border-primary-500 bg-neutral-50 dark:bg-dark-bg focus:bg-white dark:focus:bg-dark-card focus:outline-none focus:ring-4 focus:ring-primary-500/10 text-neutral-900 dark:text-white"
-                      >
-                        {[1, 2, 3, 4, 5, 6].map((month) => (
-                          <option key={month} value={month}>
-                            {month} mois de loyer
-                          </option>
-                        ))}
-                      </select>
+                  <div className="space-y-4">
+                    {/* Row 1: Caution, Avance, Commission - Mobile first grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-xs sm:text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
+                          Caution
+                        </label>
+                        <select
+                          name="cautionMois"
+                          value={formData.cautionMois}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2.5 sm:py-3 rounded-xl border-2 border-neutral-200 dark:border-dark-border focus:border-primary-500 bg-neutral-50 dark:bg-dark-bg focus:bg-white dark:focus:bg-dark-card focus:outline-none focus:ring-4 focus:ring-primary-500/10 text-sm text-neutral-900 dark:text-white"
+                        >
+                          {[1, 2, 3, 4, 5, 6].map((month) => (
+                            <option key={month} value={month}>
+                              {month} mois
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs sm:text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
+                          Avance
+                        </label>
+                        <select
+                          name="avanceMois"
+                          value={formData.avanceMois}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2.5 sm:py-3 rounded-xl border-2 border-neutral-200 dark:border-dark-border focus:border-primary-500 bg-neutral-50 dark:bg-dark-bg focus:bg-white dark:focus:bg-dark-card focus:outline-none focus:ring-4 focus:ring-primary-500/10 text-sm text-neutral-900 dark:text-white"
+                        >
+                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((month) => (
+                            <option key={month} value={month}>
+                              {month} mois
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
+                          <Percent className="w-3.5 h-3.5 text-primary-500" />
+                          Commission
+                        </label>
+                        <select
+                          name="commissionMois"
+                          value={formData.commissionMois}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2.5 sm:py-3 rounded-xl border-2 border-neutral-200 dark:border-dark-border focus:border-primary-500 bg-neutral-50 dark:bg-dark-bg focus:bg-white dark:focus:bg-dark-card focus:outline-none focus:ring-4 focus:ring-primary-500/10 text-sm text-neutral-900 dark:text-white"
+                        >
+                          {[0, 1, 2].map((month) => (
+                            <option key={month} value={month}>
+                              {month === 0 ? 'Pas de commission' : `${month} mois`}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
+
+                    {/* Row 2: Type de locataire préféré */}
                     <div>
-                      <label className="block text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
-                        Avance
+                      <label className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
+                        <Users className="w-3.5 h-3.5 text-primary-500" />
+                        Type de locataire préféré
                       </label>
                       <select
-                        name="avanceMois"
-                        value={formData.avanceMois}
+                        name="typeLocatairePrefere"
+                        value={formData.typeLocatairePrefere}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3.5 rounded-xl border-2 border-neutral-200 dark:border-dark-border focus:border-primary-500 bg-neutral-50 dark:bg-dark-bg focus:bg-white dark:focus:bg-dark-card focus:outline-none focus:ring-4 focus:ring-primary-500/10 text-neutral-900 dark:text-white"
+                        className="w-full px-3 py-2.5 sm:py-3 rounded-xl border-2 border-neutral-200 dark:border-dark-border focus:border-primary-500 bg-neutral-50 dark:bg-dark-bg focus:bg-white dark:focus:bg-dark-card focus:outline-none focus:ring-4 focus:ring-primary-500/10 text-sm text-neutral-900 dark:text-white"
                       >
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((month) => (
-                          <option key={month} value={month}>
-                            {month} mois
+                        {TENANT_TYPES.map((type) => (
+                          <option key={type.value} value={type.value}>
+                            {type.label}
                           </option>
                         ))}
                       </select>
