@@ -294,8 +294,19 @@ class ListingController extends Controller
     public function store(StoreListingRequest $request): JsonResponse
     {
         try {
+            $user = $request->user();
+
+            // Only verified users can create listings
+            if (!$user->telephone_verified_at) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vous devez vérifier votre numéro de téléphone avant de publier une annonce.',
+                    'data' => ['action' => 'verify_phone'],
+                ], 403);
+            }
+
             $data = $this->mapRequestToModel($request->validated());
-            $data['user_id'] = $request->user()->id;
+            $data['user_id'] = $user->id;
             $data['statut'] = 'BROUILLON';
 
             // Check for duplicate submission (same title by same user within 30 seconds)
@@ -327,9 +338,8 @@ class ListingController extends Controller
                 $this->photoService->uploadMultiple($listing, $request->file('photos'));
             }
 
-            // Auto-publish if user has verified phone OR email
+            // Auto-publish since user is already verified (checked above)
             // This applies to all user types: CHERCHEUR, AGENT, AGENCE
-            $user = $request->user();
             if ($user->telephone_verified_at || $user->email_verified_at) {
                 $listing->update([
                     'statut' => 'ACTIVE',
