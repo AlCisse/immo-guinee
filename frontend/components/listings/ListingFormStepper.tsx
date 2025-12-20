@@ -873,9 +873,9 @@ export default function ListingFormStepper({
                           onChange={handleInputChange}
                           className="w-full px-3 py-2.5 sm:py-3 rounded-xl border-2 border-neutral-200 dark:border-dark-border focus:border-primary-500 bg-neutral-50 dark:bg-dark-bg focus:bg-white dark:focus:bg-dark-card focus:outline-none focus:ring-4 focus:ring-primary-500/10 text-sm text-neutral-900 dark:text-white"
                         >
-                          {[0, 1, 2].map((month) => (
+                          {[0, 1].map((month) => (
                             <option key={month} value={month}>
-                              {month === 0 ? 'Pas de commission' : `${month} mois`}
+                              {month === 0 ? 'Pas de commission' : '1 mois'}
                             </option>
                           ))}
                         </select>
