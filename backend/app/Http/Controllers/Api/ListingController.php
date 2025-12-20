@@ -11,6 +11,7 @@ use App\Services\ListingPhotoService;
 use App\Events\ListingUpdated;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Exception;
@@ -296,6 +297,16 @@ class ListingController extends Controller
         try {
             $user = $request->user();
 
+            // Prevent duplicate submissions with Redis lock (10 seconds)
+            $lockKey = "listing_create:{$user->id}";
+            if (!Cache::lock($lockKey, 10)->get()) {
+                Log::warning('Duplicate submission blocked by lock', ['user_id' => $user->id]);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Veuillez patienter, une soumission est en cours...',
+                ], 429);
+            }
+
             $data = $this->mapRequestToModel($request->validated());
             $data['user_id'] = $user->id;
 
@@ -305,13 +316,14 @@ class ListingController extends Controller
             $isVerified = $user->telephone_verified_at !== null;
             $data['statut'] = $isVerified ? 'ACTIVE' : 'BROUILLON';
 
-            // Check for duplicate submission (same title by same user within 30 seconds)
+            // Check for duplicate submission (same title by same user within 60 seconds)
             $recentDuplicate = Listing::where('user_id', $data['user_id'])
                 ->where('titre', $data['titre'])
-                ->where('created_at', '>=', now()->subSeconds(30))
+                ->where('created_at', '>=', now()->subSeconds(60))
                 ->first();
 
             if ($recentDuplicate) {
+                Cache::lock($lockKey)->forceRelease();
                 Log::warning('Duplicate listing submission blocked', [
                     'user_id' => $data['user_id'],
                     'titre' => $data['titre'],
@@ -348,6 +360,9 @@ class ListingController extends Controller
                 ]);
             }
 
+            // Release the lock after successful creation
+            Cache::lock($lockKey)->forceRelease();
+
             $message = $isVerified
                 ? 'Annonce créée et publiée avec succès'
                 : 'Annonce enregistrée en brouillon. Vérifiez votre numéro WhatsApp pour la publier.';
@@ -362,6 +377,9 @@ class ListingController extends Controller
             ], 201);
 
         } catch (Exception $e) {
+            // Release lock on error
+            Cache::lock("listing_create:{$request->user()->id}")->forceRelease();
+
             Log::error('Failed to create listing', [
                 'error' => $e->getMessage(),
                 'user_id' => $request->user()->id,
