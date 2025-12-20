@@ -5,6 +5,7 @@ import { useState, Suspense } from 'react';
 import { AuthProvider } from '@/lib/auth/AuthContext';
 import { LocaleProvider } from '@/lib/i18n';
 import NavigationProgress from '@/components/ui/NavigationProgress';
+import { Toaster } from 'react-hot-toast';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -28,6 +29,36 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <NavigationProgress />
           </Suspense>
           {children}
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: '#333',
+                color: '#fff',
+                borderRadius: '12px',
+                padding: '12px 16px',
+              },
+              success: {
+                style: {
+                  background: '#10b981',
+                },
+                iconTheme: {
+                  primary: '#fff',
+                  secondary: '#10b981',
+                },
+              },
+              error: {
+                style: {
+                  background: '#ef4444',
+                },
+                iconTheme: {
+                  primary: '#fff',
+                  secondary: '#ef4444',
+                },
+              },
+            }}
+          />
         </AuthProvider>
       </LocaleProvider>
     </QueryClientProvider>
