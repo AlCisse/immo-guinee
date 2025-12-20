@@ -107,7 +107,7 @@ export default function ModifierAnnoncePage() {
       queryClient.invalidateQueries({ queryKey: ['my-listings'] });
       queryClient.invalidateQueries({ queryKey: ['listing', listingId] });
       toast.success('Annonce mise a jour avec succes');
-      router.push('/mes-annonces');
+      router.back();
     },
     onError: (error: any) => {
       const message = error.response?.data?.message || 'Erreur lors de la mise a jour';
@@ -136,9 +136,6 @@ export default function ModifierAnnoncePage() {
     if (photosToDelete.length > 0) {
       submitData.append('delete_photos', JSON.stringify(photosToDelete));
     }
-
-    // Use PUT method via _method field
-    submitData.append('_method', 'PUT');
 
     updateMutation.mutate(submitData);
   };

@@ -25,10 +25,28 @@ class UpdateListingRequest extends FormRequest
             'titre' => ['sometimes', 'string', 'max:200'],
             'description' => ['sometimes', 'string', 'max:5000'],
             'prix' => ['sometimes', 'numeric', 'min:0', 'max:999999999999'],
+            'surface_m2' => ['sometimes', 'nullable', 'numeric', 'min:1', 'max:100000'],
+            'nombre_chambres' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:50'],
+            'nombre_salles_bain' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:20'],
+            'meuble' => ['sometimes', 'boolean'],
             'photos' => ['sometimes', 'array', 'max:10'],
             'photos.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'delete_photos' => ['sometimes', 'string'],
             'disponible_a_partir_de' => ['sometimes', 'nullable', 'date', 'after_or_equal:today'],
         ];
+    }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        // Convert string boolean to actual boolean
+        if ($this->has('meuble')) {
+            $this->merge([
+                'meuble' => filter_var($this->meuble, FILTER_VALIDATE_BOOLEAN),
+            ]);
+        }
     }
 
     /**
