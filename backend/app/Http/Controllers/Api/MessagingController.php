@@ -141,35 +141,42 @@ class MessagingController extends Controller
             // Broadcast to other participant
             broadcast(new NewMessageEvent($message))->toOthers();
 
-            // Create notification for the recipient
-            $senderId = auth()->id();
-            $recipientId = $conversation->initiator_id === $senderId
-                ? $conversation->participant_id
-                : $conversation->initiator_id;
+            DB::commit();
 
-            if ($recipientId) {
-                $sender = auth()->user();
-                $messagePreview = $validated['type_message'] === 'VOCAL'
-                    ? 'Message vocal'
-                    : Str::limit($validated['contenu'] ?? '', 50);
+            // Create notification for the recipient (non-blocking)
+            try {
+                $senderId = auth()->id();
+                $recipientId = $conversation->initiator_id === $senderId
+                    ? $conversation->participant_id
+                    : $conversation->initiator_id;
 
-                Notification::create([
-                    'user_id' => $recipientId,
-                    'type' => Notification::TYPE_MESSAGE_RECEIVED,
-                    'titre' => 'Nouveau message',
-                    'message' => $sender->nom_complet . ': ' . $messagePreview,
-                    'data' => [
-                        'conversation_id' => $conversation->id,
-                        'message_id' => $message->id,
-                        'sender_id' => $senderId,
-                        'sender_name' => $sender->nom_complet,
-                    ],
-                    'action_url' => '/messages',
-                    'priority' => Notification::PRIORITY_NORMAL,
+                if ($recipientId) {
+                    $sender = auth()->user();
+                    $messagePreview = $validated['type_message'] === 'VOCAL'
+                        ? 'Message vocal'
+                        : Str::limit($validated['contenu'] ?? '', 50);
+
+                    Notification::create([
+                        'user_id' => $recipientId,
+                        'type' => Notification::TYPE_MESSAGE_RECEIVED,
+                        'titre' => 'Nouveau message',
+                        'message' => $sender->nom_complet . ': ' . $messagePreview,
+                        'data' => [
+                            'conversation_id' => $conversation->id,
+                            'message_id' => $message->id,
+                            'sender_id' => $senderId,
+                            'sender_name' => $sender->nom_complet,
+                        ],
+                        'action_url' => '/messages',
+                        'priority' => Notification::PRIORITY_NORMAL,
+                    ]);
+                }
+            } catch (\Exception $notifError) {
+                \Log::warning('Failed to create message notification', [
+                    'error' => $notifError->getMessage(),
+                    'conversation_id' => $conversation->id,
                 ]);
             }
-
-            DB::commit();
 
             return new MessageResource($message->load('sender'));
         } catch (\Exception $e) {
