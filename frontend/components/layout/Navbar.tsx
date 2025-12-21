@@ -354,14 +354,12 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link href={ROUTES.HOME} className="flex items-center gap-3 group">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/25 group-hover:shadow-primary-500/40 transition-shadow">
-                <Home className="w-5 h-5 text-white" strokeWidth={2.5} />
-              </div>
-              <span className="text-xl font-bold">
-                <span className="text-neutral-900 dark:text-white">Immo</span>
-                <span className="text-orange-500">Guinée</span>
-              </span>
+            <Link href={ROUTES.HOME} className="flex items-center group">
+              <img
+                src="/images/logo.png"
+                alt="ImmoGuinee"
+                className="h-12 w-auto object-contain"
+              />
             </Link>
 
             {/* Desktop Nav */}
