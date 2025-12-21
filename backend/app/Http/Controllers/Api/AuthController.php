@@ -659,8 +659,10 @@ class AuthController extends Controller
         $user = $request->user();
 
         try {
-            // Count unread notifications
-            $unreadNotifications = $user->unreadNotifications()->count();
+            // Count unread notifications (using custom Notification model)
+            $unreadNotifications = \App\Models\Notification::where('user_id', $user->id)
+                ->where('is_read', false)
+                ->count();
 
             // Count unread messages (from conversations where user is initiator or participant)
             $unreadMessages = 0;
