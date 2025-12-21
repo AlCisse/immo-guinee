@@ -262,28 +262,74 @@ class ListingController extends Controller
             $latitude = $request->latitude;
             $longitude = $request->longitude;
             $radiusKm = $request->radius_km ?? 5;
+            $perPage = min($request->per_page ?? $request->limit ?? 20, 100);
 
-            // Use Elasticsearch for text search
+            // Get filters from request
+            $typeBien = $request->type_bien ?? $request->type_propriete;
+            $typeTransaction = $request->type_transaction;
+            $commune = $request->commune;
+            $prixMin = $request->prix_min;
+            $prixMax = $request->prix_max;
+            $chambresMin = $request->chambres_min;
+            $meuble = $request->meuble;
+
+            // Use Elasticsearch for text search with filters
             if ($query) {
-                $listings = Listing::search($query)
-                    ->where('statut', 'publiee')
-                    ->paginate($request->per_page ?? 20);
+                $searchBuilder = Listing::search($query)
+                    ->where('statut', 'publiee');
+
+                // Apply filters to Scout search
+                if ($typeBien) {
+                    $searchBuilder->where('type_bien', $typeBien);
+                }
+                if ($typeTransaction) {
+                    $searchBuilder->where('type_transaction', $typeTransaction);
+                }
+                if ($commune) {
+                    $searchBuilder->where('commune', $commune);
+                }
+                if ($meuble !== null) {
+                    $searchBuilder->where('meuble', filter_var($meuble, FILTER_VALIDATE_BOOLEAN));
+                }
+
+                $listings = $searchBuilder->paginate($perPage);
+
+                // Apply additional filters via collection for price/chambres (not well supported by all drivers)
+                $filteredItems = collect($listings->items())->filter(function ($listing) use ($prixMin, $prixMax, $chambresMin) {
+                    if ($prixMin && $listing->loyer_mensuel < $prixMin) return false;
+                    if ($prixMax && $listing->loyer_mensuel > $prixMax) return false;
+                    if ($chambresMin && $listing->nombre_chambres < $chambresMin) return false;
+                    return true;
+                })->values();
+
+                return response()->json([
+                    'success' => true,
+                    'data' => [
+                        'listings' => $filteredItems,
+                        'query' => $query,
+                        'pagination' => [
+                            'current_page' => $listings->currentPage(),
+                            'per_page' => $listings->perPage(),
+                            'total' => $listings->total(),
+                            'last_page' => $listings->lastPage(),
+                        ],
+                    ],
+                ]);
             }
             // Use PostGIS for geospatial search
             elseif ($latitude && $longitude) {
                 $listings = $this->listingRepository->getNearbyListings($latitude, $longitude, $radiusKm);
+                return response()->json([
+                    'success' => true,
+                    'data' => [
+                        'listings' => $listings,
+                    ],
+                ]);
             }
+            // Fall back to index method for filter-only searches
             else {
                 return $this->index($request);
             }
-
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'listings' => $listings,
-                    'query' => $query,
-                ],
-            ]);
 
         } catch (Exception $e) {
             Log::error('Search failed', [
