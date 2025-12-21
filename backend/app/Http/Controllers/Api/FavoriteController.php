@@ -15,12 +15,20 @@ class FavoriteController extends Controller
     {
         $user = $request->user();
 
+        \Log::info("GET /favorites for user: {$user->id} ({$user->nom_complet})");
+
+        // Debug: check raw favorites count
+        $rawCount = \DB::table('favorites')->where('user_id', $user->id)->count();
+        \Log::info("Raw favorites count in DB: {$rawCount}");
+
         $favorites = $user->favorites()
             ->with(['photos' => function ($query) {
                 $query->orderBy('ordre')->limit(1);
             }, 'user:id,nom_complet,telephone,badge'])
             ->orderByPivot('created_at', 'desc')
             ->get();
+
+        \Log::info("Favorites via relationship: " . $favorites->count());
 
         return response()->json([
             'success' => true,
