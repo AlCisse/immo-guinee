@@ -23,7 +23,7 @@ class FavoriteController extends Controller
 
         $favorites = $user->favorites()
             ->with(['photos' => function ($query) {
-                $query->orderBy('ordre')->limit(1);
+                $query->orderBy('order')->limit(1);
             }, 'user:id,nom_complet,telephone,badge'])
             ->orderByPivot('created_at', 'desc')
             ->get();
