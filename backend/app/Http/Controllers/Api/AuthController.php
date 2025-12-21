@@ -172,6 +172,7 @@ class AuthController extends Controller
                         'numero_registre_commerce' => $request->numero_registre_commerce,
                         'adresse' => $request->adresse,
                         'telephone_verified_at' => null, // Reset verification
+                        'is_active' => false, // Reset to inactive until OTP verified
                     ]);
 
                     // Generate and send OTP
@@ -362,6 +363,19 @@ class AuthController extends Controller
                 'telephone_verified_at' => now(),
                 'is_active' => true, // Activate user after OTP verification
             ]);
+
+            // Refresh user to verify update worked
+            $user->refresh();
+
+            // Safeguard: ensure is_active is true (in case update partially failed)
+            if (!$user->is_active) {
+                Log::warning('User is_active not set after OTP verification, forcing update', [
+                    'user_id' => $user->id,
+                    'telephone' => $user->telephone,
+                ]);
+                $user->is_active = true;
+                $user->save();
+            }
 
             // Auto-publish all BROUILLON listings from this user
             $publishedCount = Listing::where('user_id', $user->id)
