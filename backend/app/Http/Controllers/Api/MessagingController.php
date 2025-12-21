@@ -98,31 +98,64 @@ class MessagingController extends Controller
                     return response()->json(['error' => $securityCheck['error']], 422);
                 }
 
-                // Generate secure filename with UUID
-                $filename = FileSecurityHelper::generateSecureFilename($file->getClientOriginalExtension());
+                // Generate secure filename with UUID - always use MP3 for compatibility
+                $baseFilename = Str::uuid()->toString();
+                $mp3Filename = $baseFilename . '.mp3';
 
                 // Determine storage disk based on strategy
                 $storageStrategy = env('STORAGE_STRATEGY', 'minio');
                 $disk = $storageStrategy === 'spaces' ? 'spaces-messages' : 'messages';
 
-                // Store file
-                $path = $file->storeAs('', $filename, $disk);
+                // Save original file temporarily
+                $tempPath = sys_get_temp_dir() . '/' . $baseFilename . '_original.' . $file->getClientOriginalExtension();
+                $mp3TempPath = sys_get_temp_dir() . '/' . $mp3Filename;
+                file_put_contents($tempPath, file_get_contents($file->getRealPath()));
+
+                // Convert to MP3 using FFmpeg for iOS/Safari compatibility
+                $ffmpegPath = '/usr/bin/ffmpeg';
+                $convertCommand = sprintf(
+                    '%s -i %s -vn -acodec libmp3lame -ab 128k -ar 44100 -y %s 2>&1',
+                    escapeshellarg($ffmpegPath),
+                    escapeshellarg($tempPath),
+                    escapeshellarg($mp3TempPath)
+                );
+
+                exec($convertCommand, $output, $returnCode);
+
+                if ($returnCode !== 0 || !file_exists($mp3TempPath)) {
+                    \Log::warning('FFmpeg conversion failed, using original file', [
+                        'return_code' => $returnCode,
+                        'output' => implode("\n", $output),
+                    ]);
+                    // Fallback: use original file
+                    $mp3TempPath = $tempPath;
+                    $mp3Filename = $baseFilename . '.' . $file->getClientOriginalExtension();
+                }
+
+                // Upload converted file
+                $path = Storage::disk($disk)->put($mp3Filename, file_get_contents($mp3TempPath));
+
+                // Clean up temp files
+                @unlink($tempPath);
+                if ($mp3TempPath !== $tempPath) {
+                    @unlink($mp3TempPath);
+                }
 
                 // Build public URL based on storage strategy
                 if ($storageStrategy === 'spaces') {
-                    $messageData['media_url'] = env('DO_SPACES_CDN_URL', 'https://immoguinee-images.fra1.digitaloceanspaces.com') . '/messages/' . $filename;
+                    $messageData['media_url'] = env('DO_SPACES_CDN_URL', 'https://immoguinee-images.fra1.digitaloceanspaces.com') . '/messages/' . $mp3Filename;
                 } else {
-                    $messageData['media_url'] = env('MINIO_URL') . '/' . env('MINIO_MESSAGES_BUCKET', 'immog-messages') . '/' . $filename;
+                    $messageData['media_url'] = env('MINIO_URL') . '/' . env('MINIO_MESSAGES_BUCKET', 'immog-messages') . '/' . $mp3Filename;
                 }
-                $messageData['media_mime_type'] = $file->getMimeType();
-                $messageData['media_size'] = $file->getSize();
+                $messageData['media_mime_type'] = 'audio/mpeg';
+                $messageData['media_size'] = filesize($mp3TempPath) ?: $file->getSize();
 
                 \Log::info('Voice message uploaded', [
                     'disk' => $disk,
                     'path' => $path,
-                    'filename' => $filename,
+                    'filename' => $mp3Filename,
                     'url' => $messageData['media_url'],
-                    'size' => $messageData['media_size']
+                    'converted' => $returnCode === 0,
                 ]);
             } else {
                 \Log::warning('No file received for vocal message', [
