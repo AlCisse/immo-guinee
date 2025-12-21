@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 import {
   ArrowLeft,
   ArrowRight,
@@ -19,9 +21,12 @@ import {
   TrendingUp,
   Building2,
   DollarSign,
-  Images
+  Images,
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 import ListingFormStepper from '@/components/listings/ListingFormStepper';
+import { useAuth } from '@/lib/auth/AuthContext';
 
 const STEPS = [
   { id: 1, title: 'Type', icon: Home, description: 'Opération & bien' },
@@ -38,6 +43,51 @@ const STATS = [
 
 export default function PublierPage() {
   const [currentStep, setCurrentStep] = useState(1);
+  const { user, hasVerifiedPhone, resendOtp } = useAuth();
+  const router = useRouter();
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
+  // Check phone verification on page load
+  useEffect(() => {
+    if (user && !hasVerifiedPhone()) {
+      setIsRedirecting(true);
+      // Send OTP and redirect to verify page
+      toast(
+        'Vous devez vérifier votre numéro pour publier une annonce. Un code a été envoyé sur WhatsApp.',
+        {
+          duration: 5000,
+          icon: '📱',
+        }
+      );
+      resendOtp(user.telephone).catch(() => {
+        // Silent fail - user will be able to request resend on verify page
+      });
+      router.push(`/auth/verify-otp?telephone=${encodeURIComponent(user.telephone)}`);
+    }
+  }, [user, hasVerifiedPhone, resendOtp, router]);
+
+  // Show loading while redirecting unverified users
+  if (isRedirecting || (user && !hasVerifiedPhone())) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-dark-bg">
+        <div className="text-center max-w-md px-4">
+          <div className="w-16 h-16 mx-auto mb-6 bg-orange-100 dark:bg-orange-500/20 rounded-full flex items-center justify-center">
+            <AlertCircle className="w-8 h-8 text-orange-500" />
+          </div>
+          <h2 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">
+            Vérification requise
+          </h2>
+          <p className="text-neutral-600 dark:text-neutral-400 mb-6">
+            Pour publier une annonce, vous devez d'abord vérifier votre numéro de téléphone.
+          </p>
+          <div className="flex items-center justify-center gap-2 text-primary-500">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <span>Redirection vers la vérification...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-white dark:from-dark-bg dark:to-dark-card">

@@ -15,6 +15,7 @@ export interface User {
   badge: 'BRONZE' | 'ARGENT' | 'OR' | 'DIAMANT';
   statut_verification: 'NON_VERIFIE' | 'EN_ATTENTE' | 'VERIFIE' | 'REJETE';
   is_active: boolean;
+  telephone_verified_at: string | null;
   total_transactions: number;
   avg_rating: number;
   notification_preferences: {
@@ -54,6 +55,8 @@ interface AuthContextType {
   hasPermission: (permission: string) => boolean;
   isAdmin: () => boolean;
   isMediator: () => boolean;
+  hasVerifiedPhone: () => boolean;
+  requirePhoneVerification: (action?: string) => boolean;
 }
 
 interface RegisterData {
@@ -316,6 +319,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return hasRole('mediator');
   };
 
+  // Phone verification functions
+  const hasVerifiedPhone = (): boolean => {
+    return !!user?.telephone_verified_at;
+  };
+
+  /**
+   * Check if phone is verified, if not redirect to verify page with OTP
+   * @param action - Optional action description to show in toast
+   * @returns true if verified, false if redirecting to verify
+   */
+  const requirePhoneVerification = (action?: string): boolean => {
+    if (!user) {
+      // Not logged in, redirect to login
+      router.push('/auth/login');
+      return false;
+    }
+
+    if (hasVerifiedPhone()) {
+      return true;
+    }
+
+    // Phone not verified - resend OTP and redirect to verify page
+    const actionText = action || 'effectuer cette action';
+    toast(
+      `Vous devez vérifier votre numéro pour ${actionText}. Un code a été envoyé sur WhatsApp.`,
+      {
+        duration: 5000,
+        icon: '📱',
+      }
+    );
+
+    // Resend OTP in background
+    resendOtp(user.telephone).catch(() => {
+      // Silent fail - user will be able to request resend on verify page
+    });
+
+    // Redirect to verify page
+    router.push(`/auth/verify-otp?telephone=${encodeURIComponent(user.telephone)}`);
+    return false;
+  };
+
   const value: AuthContextType = {
     user,
     isLoading,
@@ -332,6 +376,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     hasPermission,
     isAdmin,
     isMediator,
+    hasVerifiedPhone,
+    requirePhoneVerification,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
