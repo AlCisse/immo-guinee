@@ -276,7 +276,7 @@ class ListingController extends Controller
             // Use Elasticsearch for text search with filters
             if ($query) {
                 $searchBuilder = Listing::search($query)
-                    ->where('statut', 'publiee');
+                    ->where('statut', 'ACTIVE');
 
                 // Apply filters to Scout search
                 if ($typeBien) {
