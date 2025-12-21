@@ -84,7 +84,7 @@ class MessagingController extends Controller
                 'is_delivered' => false,
             ];
 
-            // Handle file upload - store in MinIO with security validation
+            // Handle file upload - store with security validation
             if ($request->hasFile('fichier')) {
                 $file = $request->file('fichier');
 
@@ -100,15 +100,24 @@ class MessagingController extends Controller
                 // Generate secure filename with UUID
                 $filename = FileSecurityHelper::generateSecureFilename($file->getClientOriginalExtension());
 
-                // Store in MinIO messages bucket
-                $path = $file->storeAs('', $filename, 'messages');
+                // Determine storage disk based on strategy
+                $storageStrategy = env('STORAGE_STRATEGY', 'minio');
+                $disk = $storageStrategy === 'spaces' ? 'spaces-messages' : 'messages';
 
-                // Build MinIO public URL
-                $messageData['media_url'] = env('MINIO_URL') . '/' . env('MINIO_MESSAGES_BUCKET', 'immog-messages') . '/' . $filename;
+                // Store file
+                $path = $file->storeAs('', $filename, $disk);
+
+                // Build public URL based on storage strategy
+                if ($storageStrategy === 'spaces') {
+                    $messageData['media_url'] = env('DO_SPACES_CDN_URL', 'https://immoguinee-images.fra1.digitaloceanspaces.com') . '/messages/' . $filename;
+                } else {
+                    $messageData['media_url'] = env('MINIO_URL') . '/' . env('MINIO_MESSAGES_BUCKET', 'immog-messages') . '/' . $filename;
+                }
                 $messageData['media_mime_type'] = $file->getMimeType();
                 $messageData['media_size'] = $file->getSize();
 
-                \Log::info('Voice message uploaded to MinIO', [
+                \Log::info('Voice message uploaded', [
+                    'disk' => $disk,
                     'path' => $path,
                     'filename' => $filename,
                     'url' => $messageData['media_url'],
