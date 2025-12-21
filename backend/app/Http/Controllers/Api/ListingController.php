@@ -273,39 +273,48 @@ class ListingController extends Controller
             $chambresMin = $request->chambres_min;
             $meuble = $request->meuble;
 
-            // Use Elasticsearch for text search with filters
+            // Use SQL ILIKE for text search with filters
             if ($query) {
-                $searchBuilder = Listing::search($query)
-                    ->where('statut', 'ACTIVE');
+                $searchQuery = Listing::query()
+                    ->with(['user', 'listingPhotos'])
+                    ->whereIn('statut', ['ACTIVE', 'publie', 'published'])
+                    ->where(function ($q) use ($query) {
+                        $searchTerm = '%' . $query . '%';
+                        $q->where('titre', 'ILIKE', $searchTerm)
+                          ->orWhere('description', 'ILIKE', $searchTerm)
+                          ->orWhere('commune', 'ILIKE', $searchTerm)
+                          ->orWhere('quartier', 'ILIKE', $searchTerm);
+                    });
 
-                // Apply filters to Scout search
+                // Apply filters
                 if ($typeBien) {
-                    $searchBuilder->where('type_bien', $typeBien);
+                    $searchQuery->where('type_bien', $typeBien);
                 }
                 if ($typeTransaction) {
-                    $searchBuilder->where('type_transaction', $typeTransaction);
+                    $searchQuery->where('type_transaction', $typeTransaction);
                 }
                 if ($commune) {
-                    $searchBuilder->where('commune', $commune);
+                    $searchQuery->where('commune', $commune);
                 }
                 if ($meuble !== null) {
-                    $searchBuilder->where('meuble', filter_var($meuble, FILTER_VALIDATE_BOOLEAN));
+                    $searchQuery->where('meuble', filter_var($meuble, FILTER_VALIDATE_BOOLEAN));
+                }
+                if ($prixMin) {
+                    $searchQuery->where('loyer_mensuel', '>=', $prixMin);
+                }
+                if ($prixMax) {
+                    $searchQuery->where('loyer_mensuel', '<=', $prixMax);
+                }
+                if ($chambresMin) {
+                    $searchQuery->where('nombre_chambres', '>=', $chambresMin);
                 }
 
-                $listings = $searchBuilder->paginate($perPage);
-
-                // Apply additional filters via collection for price/chambres (not well supported by all drivers)
-                $filteredItems = collect($listings->items())->filter(function ($listing) use ($prixMin, $prixMax, $chambresMin) {
-                    if ($prixMin && $listing->loyer_mensuel < $prixMin) return false;
-                    if ($prixMax && $listing->loyer_mensuel > $prixMax) return false;
-                    if ($chambresMin && $listing->nombre_chambres < $chambresMin) return false;
-                    return true;
-                })->values();
+                $listings = $searchQuery->orderBy('created_at', 'desc')->paginate($perPage);
 
                 return response()->json([
                     'success' => true,
                     'data' => [
-                        'listings' => $filteredItems,
+                        'listings' => $listings->items(),
                         'query' => $query,
                         'pagination' => [
                             'current_page' => $listings->currentPage(),
