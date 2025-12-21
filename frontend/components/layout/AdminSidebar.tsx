@@ -286,11 +286,9 @@ export default function AdminSidebar({ onToggle }: AdminSidebarProps) {
         {/* Header */}
         <div className="h-20 flex items-center justify-between px-4 border-b border-neutral-100 dark:border-dark-border">
           <Link href="/admin" className="flex items-center gap-3">
-            <img
-              src="/images/logo.png"
-              alt="ImmoGuinee"
-              className="h-10 w-10 object-contain rounded-lg"
-            />
+            <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/30">
+              <Building2 className="w-6 h-6 text-white" />
+            </div>
             <AnimatePresence>
               {!isCollapsed && (
                 <motion.div

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Image, StyleSheet, ViewStyle } from 'react-native';
+import { Text, StyleSheet, TextStyle, ViewStyle } from 'react-native';
+import Colors, { lightTheme } from '@/constants/Colors';
 
 interface LogoProps {
   size?: 'small' | 'medium' | 'large' | 'xlarge';
@@ -7,26 +8,32 @@ interface LogoProps {
 }
 
 const SIZES = {
-  small: { width: 80, height: 80 },
-  medium: { width: 120, height: 120 },
-  large: { width: 160, height: 160 },
-  xlarge: { width: 200, height: 200 },
+  small: 18,
+  medium: 24,
+  large: 32,
+  xlarge: 40,
 };
 
 export default function Logo({ size = 'medium', style }: LogoProps) {
-  const dimensions = SIZES[size];
+  const fontSize = SIZES[size];
 
   return (
-    <Image
-      source={require('@/assets/images/logo.png')}
-      style={[styles.logo, dimensions, style]}
-      resizeMode="contain"
-    />
+    <Text style={[styles.logo, { fontSize }, style]}>
+      <Text style={styles.logoImmo}>Immo</Text>
+      <Text style={styles.logoGuinee}>Guinee</Text>
+    </Text>
   );
 }
 
 const styles = StyleSheet.create({
   logo: {
-    // Base styles if needed
+    fontWeight: '800',
+    letterSpacing: -0.5,
+  },
+  logoImmo: {
+    color: Colors.secondary[800],
+  },
+  logoGuinee: {
+    color: lightTheme.colors.primary,
   },
 });
