@@ -7,6 +7,7 @@ use App\Http\Resources\ConversationResource;
 use App\Http\Resources\MessageResource;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\Notification;
 use App\Events\NewMessageEvent;
 use App\Helpers\FileSecurityHelper;
 use Illuminate\Http\Request;
@@ -139,6 +140,34 @@ class MessagingController extends Controller
 
             // Broadcast to other participant
             broadcast(new NewMessageEvent($message))->toOthers();
+
+            // Create notification for the recipient
+            $senderId = auth()->id();
+            $recipientId = $conversation->initiator_id === $senderId
+                ? $conversation->participant_id
+                : $conversation->initiator_id;
+
+            if ($recipientId) {
+                $sender = auth()->user();
+                $messagePreview = $validated['type_message'] === 'VOCAL'
+                    ? 'Message vocal'
+                    : Str::limit($validated['contenu'] ?? '', 50);
+
+                Notification::create([
+                    'user_id' => $recipientId,
+                    'type' => Notification::TYPE_MESSAGE_RECEIVED,
+                    'titre' => 'Nouveau message',
+                    'message' => $sender->nom_complet . ': ' . $messagePreview,
+                    'data' => [
+                        'conversation_id' => $conversation->id,
+                        'message_id' => $message->id,
+                        'sender_id' => $senderId,
+                        'sender_name' => $sender->nom_complet,
+                    ],
+                    'action_url' => '/messages',
+                    'priority' => Notification::PRIORITY_NORMAL,
+                ]);
+            }
 
             DB::commit();
 
