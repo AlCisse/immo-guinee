@@ -304,10 +304,10 @@ export default function ClientHomePage() {
     <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg">
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        {/* Background SVG Image */}
+        {/* Background Image */}
         <div className="absolute inset-0">
           <img
-            src="/images/banner-hero.svg"
+            src="/images/banner-hero.jpg"
             alt="ImmoGuinee Banner"
             className="w-full h-full object-cover"
             style={{ objectPosition: 'center 30%' }}
