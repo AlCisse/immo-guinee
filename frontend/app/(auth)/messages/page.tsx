@@ -186,11 +186,11 @@ function VoiceMessage({ url, isMine }: { url: string; isMine: boolean }) {
   };
 
   // Don't render if no valid URL
-  // Accept: /storage/messages/xxx.mp4, MinIO URLs, or DO Spaces CDN URLs
+  // Accept: audio files from /storage/, MinIO, or DO Spaces CDN
   const isValidUrl = url &&
-    url.length > 20 &&
-    (url.endsWith('.mp4') || url.endsWith('.webm') || url.endsWith('.wav') || url.endsWith('.mp3')) &&
-    (url.startsWith('/storage/') || url.includes('immog-messages') || url.includes('digitaloceanspaces.com') || url.includes('immoguinee'));
+    url.length > 10 &&
+    (url.endsWith('.mp4') || url.endsWith('.webm') || url.endsWith('.wav') || url.endsWith('.mp3') || url.endsWith('.m4a')) &&
+    (url.startsWith('/storage/') || url.startsWith('http://') || url.startsWith('https://'));
 
   if (!isValidUrl) {
     return (
