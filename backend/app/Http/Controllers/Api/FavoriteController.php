@@ -125,26 +125,50 @@ class FavoriteController extends Controller
     {
         $user = $request->user();
 
-        $exists = $user->favorites()->where('listings.id', $listingId)->exists();
+        try {
+            $exists = $user->favorites()->where('listings.id', $listingId)->exists();
 
-        if ($exists) {
-            $user->favorites()->detach($listingId);
+            if ($exists) {
+                $user->favorites()->detach($listingId);
+                \Log::info("Favorite removed: user={$user->id}, listing={$listingId}");
+                return response()->json([
+                    'success' => true,
+                    'data' => [
+                        'is_favorite' => false,
+                    ],
+                    'message' => 'Annonce retirée des favoris',
+                ]);
+            }
+
+            // Verify listing exists
+            $listing = \App\Models\Listing::find($listingId);
+            if (!$listing) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Annonce introuvable',
+                ], 404);
+            }
+
+            $user->favorites()->attach($listingId);
+            \Log::info("Favorite added: user={$user->id}, listing={$listingId}");
+
+            // Verify it was actually saved
+            $saved = $user->favorites()->where('listings.id', $listingId)->exists();
+            \Log::info("Favorite verified saved: " . ($saved ? 'yes' : 'no'));
+
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'is_favorite' => false,
+                    'is_favorite' => true,
                 ],
-                'message' => 'Annonce retirée des favoris',
+                'message' => 'Annonce ajoutée aux favoris',
             ]);
+        } catch (\Exception $e) {
+            \Log::error("Favorite toggle error: " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la modification des favoris: ' . $e->getMessage(),
+            ], 500);
         }
-
-        $user->favorites()->attach($listingId);
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'is_favorite' => true,
-            ],
-            'message' => 'Annonce ajoutée aux favoris',
-        ]);
     }
 }
