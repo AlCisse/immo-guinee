@@ -24,7 +24,6 @@ import {
   Users,
   Zap
 } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -305,21 +304,17 @@ export default function ClientHomePage() {
     <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg">
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        {/* Background Image */}
-        <Image
-          src="/images/banner.jpg"
-          alt="ImmoGuinee Banner"
-          fill
-          priority
-          quality={80}
-          placeholder="blur"
-          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAAAAUH/8QAIhAAAgEDAwUBAAAAAAAAAAAAAQIDAAQRBRIhBhMiMUFR/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAZEQADAQEBAAAAAAAAAAAAAAAAAQIRITH/2gAMAwEAAhEDEEA/AKOi6Pp+n6hJc21tGkrptLAkEj+VKpSlKJjT/9k="
-          className="object-cover"
-          sizes="100vw"
-          style={{ objectPosition: 'center 30%' }}
-        />
+        {/* Background SVG Image */}
+        <div className="absolute inset-0">
+          <img
+            src="/images/banner-hero.svg"
+            alt="ImmoGuinee Banner"
+            className="w-full h-full object-cover"
+            style={{ objectPosition: 'center 30%' }}
+          />
+        </div>
         {/* Overlay for better text readability */}
-        <div className="absolute inset-0 bg-black/5 pointer-events-none" />
+        <div className="absolute inset-0 bg-black/10 pointer-events-none" />
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 pt-8 pb-16 md:pt-16 md:pb-24">
           {/* Header */}
