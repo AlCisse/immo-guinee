@@ -39,6 +39,13 @@ import {
 import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 
+// Action names for verification messages
+const VERIFICATION_ACTIONS = {
+  contact: 'contacter le propriétaire',
+  favorite: 'ajouter aux favoris',
+  booking: 'programmer une visite',
+};
+
 // Types
 interface ListingPhoto {
   id: string;
@@ -185,7 +192,7 @@ export default function PropertyDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, requirePhoneVerification, hasVerifiedPhone } = useAuth();
 
   const [isFavorite, setIsFavorite] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -270,7 +277,15 @@ export default function PropertyDetailPage() {
             </button>
             <motion.button
               whileTap={{ scale: 0.9 }}
-              onClick={() => setIsFavorite(!isFavorite)}
+              onClick={() => {
+                if (!isAuthenticated) {
+                  router.push(`/auth/login?redirect=/bien/${id}`);
+                  return;
+                }
+                if (!requirePhoneVerification(VERIFICATION_ACTIONS.favorite)) return;
+                setIsFavorite(!isFavorite);
+                // TODO: Call API to toggle favorite
+              }}
               className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-full"
             >
               <Heart className={`w-5 h-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-neutral-700 dark:text-white'}`} />
@@ -573,7 +588,14 @@ export default function PropertyDetailPage() {
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => setShowContactModal(true)}
+                      onClick={() => {
+                        if (!isAuthenticated) {
+                          router.push(`/auth/login?redirect=/bien/${id}`);
+                          return;
+                        }
+                        if (!requirePhoneVerification(VERIFICATION_ACTIONS.contact)) return;
+                        setShowContactModal(true);
+                      }}
                       className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors"
                     >
                       <Phone className="w-5 h-5" />
@@ -583,7 +605,14 @@ export default function PropertyDetailPage() {
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => setShowBookingModal(true)}
+                      onClick={() => {
+                        if (!isAuthenticated) {
+                          router.push(`/auth/login?redirect=/bien/${id}`);
+                          return;
+                        }
+                        if (!requirePhoneVerification(VERIFICATION_ACTIONS.booking)) return;
+                        setShowBookingModal(true);
+                      }}
                       className="w-full flex items-center justify-center gap-2 px-6 py-3.5 border-2 border-primary-500 text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-500/10 font-semibold rounded-xl transition-colors"
                     >
                       <Calendar className="w-5 h-5" />
@@ -677,7 +706,14 @@ export default function PropertyDetailPage() {
           {!isOwner ? (
             <motion.button
               whileTap={{ scale: 0.95 }}
-              onClick={() => setShowContactModal(true)}
+              onClick={() => {
+                if (!isAuthenticated) {
+                  router.push(`/auth/login?redirect=/bien/${id}`);
+                  return;
+                }
+                if (!requirePhoneVerification(VERIFICATION_ACTIONS.contact)) return;
+                setShowContactModal(true);
+              }}
               className="px-6 py-3 bg-primary-500 text-white font-semibold rounded-xl"
             >
               Contacter

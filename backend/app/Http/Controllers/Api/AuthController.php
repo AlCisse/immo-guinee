@@ -498,15 +498,9 @@ class AuthController extends Controller
                 ], 403);
             }
 
-            // Check if user is active
-            if (!$user->is_active) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Votre compte n\'est pas actif.',
-                ], 403);
-            }
-
-            // Check if phone is verified - if not, send OTP and redirect to verification
+            // IMPORTANT: Check phone verification BEFORE is_active
+            // This allows unverified users to be redirected to OTP verification
+            // instead of being blocked by the is_active check
             if (!$user->telephone_verified_at) {
                 // Generate and send OTP
                 $otpResult = $this->otpService->generate($user->telephone);
@@ -538,6 +532,15 @@ class AuthController extends Controller
                     'message' => 'Votre numéro n\'est pas vérifié. Un code OTP a été envoyé sur WhatsApp.',
                     'data' => $responseData,
                 ], 200);
+            }
+
+            // Check if user is active (only for verified users)
+            // Unverified users are handled above with OTP redirect
+            if (!$user->is_active) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Votre compte n\'est pas actif. Veuillez contacter le support.',
+                ], 403);
             }
 
             // Create access token
