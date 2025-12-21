@@ -60,6 +60,14 @@ Route::prefix('auth')->group(function () {
     });
 });
 
+// User notifications endpoints
+Route::prefix('notifications')->middleware('auth:api')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\NotificationController::class, 'index']);
+    Route::post('/{id}/read', [\App\Http\Controllers\Api\NotificationController::class, 'markAsRead']);
+    Route::post('/read-all', [\App\Http\Controllers\Api\NotificationController::class, 'markAllAsRead']);
+    Route::delete('/{id}', [\App\Http\Controllers\Api\NotificationController::class, 'destroy']);
+});
+
 // Listings endpoints
 Route::prefix('listings')->group(function () {
     // Public routes (no auth required)
