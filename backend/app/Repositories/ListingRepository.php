@@ -136,6 +136,30 @@ class ListingRepository
             $query->where('commune', $filters['commune']);
         }
 
+        // Text search across multiple fields
+        if (isset($filters['q']) && !empty($filters['q'])) {
+            $searchTerm = '%' . $filters['q'] . '%';
+            $query->where(function($q) use ($searchTerm) {
+                $q->whereRaw('LOWER(titre) LIKE LOWER(?)', [$searchTerm])
+                  ->orWhereRaw('LOWER(description) LIKE LOWER(?)', [$searchTerm])
+                  ->orWhereRaw('LOWER(commune) LIKE LOWER(?)', [$searchTerm])
+                  ->orWhereRaw('LOWER(quartier) LIKE LOWER(?)', [$searchTerm]);
+            });
+        }
+
+        // Support both prix and loyer_mensuel for price filters
+        if (isset($filters['prix_min']) && !isset($filters['prix'])) {
+            $query->where('loyer_mensuel', '>=', $filters['prix_min']);
+        }
+        if (isset($filters['prix_max']) && !isset($filters['prix'])) {
+            $query->where('loyer_mensuel', '<=', $filters['prix_max']);
+        }
+
+        // Support chambres_min filter
+        if (isset($filters['chambres_min'])) {
+            $query->where('nombre_chambres', '>=', $filters['chambres_min']);
+        }
+
         // Filter by user_id (for "my listings")
         if (isset($filters['user_id'])) {
             $query->where('user_id', $filters['user_id']);
