@@ -127,7 +127,7 @@ class FileSecurityHelper
         'audio' => ['mp3', 'mp4', 'm4a', 'ogg', 'wav', 'webm', 'aac', 'flac'],
         'avatar' => ['jpg', 'jpeg', 'png', 'webp'],
         'certificate' => ['pdf', 'jpg', 'jpeg', 'png'],
-        'media' => ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp3', 'mp4', 'm4a', 'ogg', 'wav'],
+        'media' => ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp3', 'mp4', 'm4a', 'ogg', 'wav', 'webm', 'aac'],
     ];
 
     /**
