@@ -276,8 +276,9 @@ return [
             'url' => env('DO_SPACES_CDN_URL', 'https://images.immoguinee.com'),
             'root' => 'messages',
             'throw' => true,
+            'visibility' => 'public',
             'options' => [
-                'ACL' => '',
+                'ACL' => 'public-read',
             ],
         ],
 
