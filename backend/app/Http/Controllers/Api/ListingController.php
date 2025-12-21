@@ -273,60 +273,8 @@ class ListingController extends Controller
             $chambresMin = $request->chambres_min;
             $meuble = $request->meuble;
 
-            // Use SQL ILIKE for text search with filters
-            if ($query) {
-                $searchQuery = Listing::query()
-                    ->with(['user', 'listingPhotos'])
-                    ->whereIn('statut', ['ACTIVE', 'publie', 'published'])
-                    ->where(function ($q) use ($query) {
-                        $searchTerm = '%' . $query . '%';
-                        $q->where('titre', 'ILIKE', $searchTerm)
-                          ->orWhere('description', 'ILIKE', $searchTerm)
-                          ->orWhere('commune', 'ILIKE', $searchTerm)
-                          ->orWhere('quartier', 'ILIKE', $searchTerm);
-                    });
-
-                // Apply filters
-                if ($typeBien) {
-                    $searchQuery->where('type_bien', $typeBien);
-                }
-                if ($typeTransaction) {
-                    $searchQuery->where('type_transaction', $typeTransaction);
-                }
-                if ($commune) {
-                    $searchQuery->where('commune', $commune);
-                }
-                if ($meuble !== null) {
-                    $searchQuery->where('meuble', filter_var($meuble, FILTER_VALIDATE_BOOLEAN));
-                }
-                if ($prixMin) {
-                    $searchQuery->where('loyer_mensuel', '>=', $prixMin);
-                }
-                if ($prixMax) {
-                    $searchQuery->where('loyer_mensuel', '<=', $prixMax);
-                }
-                if ($chambresMin) {
-                    $searchQuery->where('nombre_chambres', '>=', $chambresMin);
-                }
-
-                $listings = $searchQuery->orderBy('created_at', 'desc')->paginate($perPage);
-
-                return response()->json([
-                    'success' => true,
-                    'data' => [
-                        'listings' => $listings->items(),
-                        'query' => $query,
-                        'pagination' => [
-                            'current_page' => $listings->currentPage(),
-                            'per_page' => $listings->perPage(),
-                            'total' => $listings->total(),
-                            'last_page' => $listings->lastPage(),
-                        ],
-                    ],
-                ]);
-            }
             // Use PostGIS for geospatial search
-            elseif ($latitude && $longitude) {
+            if ($latitude && $longitude) {
                 $listings = $this->listingRepository->getNearbyListings($latitude, $longitude, $radiusKm);
                 return response()->json([
                     'success' => true,
@@ -335,10 +283,36 @@ class ListingController extends Controller
                     ],
                 ]);
             }
-            // Fall back to index method for filter-only searches
-            else {
-                return $this->index($request);
-            }
+
+            // For text search and/or filters, use the repository with text search support
+            $filters = [
+                'type_bien' => $typeBien,
+                'type_transaction' => $typeTransaction,
+                'commune' => $commune,
+                'prix_min' => $prixMin,
+                'prix_max' => $prixMax,
+                'chambres_min' => $chambresMin,
+                'meuble' => $meuble,
+                'q' => $query, // text search
+                'sort_by' => 'created_at',
+                'sort_order' => 'desc',
+            ];
+
+            $listings = $this->listingRepository->getAllPaginated($perPage, $filters);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'listings' => $listings->items(),
+                    'query' => $query,
+                    'pagination' => [
+                        'current_page' => $listings->currentPage(),
+                        'per_page' => $listings->perPage(),
+                        'total' => $listings->total(),
+                        'last_page' => $listings->lastPage(),
+                    ],
+                ],
+            ]);
 
         } catch (Exception $e) {
             Log::error('Search failed', [
