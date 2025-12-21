@@ -98,7 +98,7 @@ class MessagingController extends Controller
                 }
 
                 // Generate secure filename with UUID
-                $filename = FileSecurityHelper::generateSecureFilename($file);
+                $filename = FileSecurityHelper::generateSecureFilename($file->getClientOriginalExtension());
 
                 // Store in MinIO messages bucket
                 $path = $file->storeAs('', $filename, 'messages');
