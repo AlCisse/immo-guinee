@@ -6,7 +6,18 @@ import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import toast from 'react-hot-toast';
+
+// Dynamically import map component to avoid SSR issues
+const MapView = dynamic(() => import('@/app/(public)/annonces/[id]/MapView'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full flex items-center justify-center bg-neutral-100 dark:bg-dark-bg rounded-xl">
+      <div className="text-neutral-500">Chargement de la carte...</div>
+    </div>
+  ),
+});
 import {
   ChevronLeft,
   Heart,
@@ -201,6 +212,11 @@ export default function PropertyDetailPage() {
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [contactMessage, setContactMessage] = useState('');
   const [isSendingMessage, setIsSendingMessage] = useState(false);
+  // Visit booking form states
+  const [visitDate, setVisitDate] = useState('');
+  const [visitTime, setVisitTime] = useState('');
+  const [visitNotes, setVisitNotes] = useState('');
+  const [isSubmittingVisit, setIsSubmittingVisit] = useState(false);
 
   // Fetch listing data
   const { data, isLoading, error, refetch } = useQuery({
@@ -221,6 +237,45 @@ export default function PropertyDetailPage() {
     },
     enabled: !!id,
   });
+
+  // Handle visit booking submission
+  const handleSubmitVisit = async () => {
+    if (!isAuthenticated) {
+      router.push(`/auth/login?redirect=/bien/${id}`);
+      return;
+    }
+
+    if (!visitDate || !visitTime) {
+      toast.error('Veuillez sélectionner une date et un créneau horaire');
+      return;
+    }
+
+    setIsSubmittingVisit(true);
+    try {
+      await api.visits.create({
+        listing_id: id,
+        client_nom: user?.nom_complet || 'Client',
+        client_telephone: user?.telephone || '',
+        client_email: user?.email || undefined,
+        date_visite: visitDate,
+        heure_visite: visitTime,
+        notes: visitNotes || undefined,
+      });
+
+      toast.success('Demande de visite envoyée avec succès !');
+      setShowBookingModal(false);
+      // Reset form
+      setVisitDate('');
+      setVisitTime('');
+      setVisitNotes('');
+    } catch (error: unknown) {
+      console.error('Error submitting visit:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erreur lors de l\'envoi de la demande';
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmittingVisit(false);
+    }
+  };
 
   if (isLoading) {
     return <LoadingSkeleton />;
@@ -542,13 +597,13 @@ export default function PropertyDetailPage() {
               <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
                 Localisation
               </h2>
-              <div className="aspect-video bg-neutral-100 dark:bg-dark-bg rounded-xl flex items-center justify-center">
-                <div className="text-center">
-                  <MapPin className="w-10 h-10 text-neutral-400 mx-auto mb-2" />
-                  <p className="text-neutral-500">Carte interactive</p>
-                  <p className="text-sm text-neutral-400">{listing.quartier}, {listing.commune}</p>
-                </div>
+              <div className="h-72 md:h-96 rounded-xl overflow-hidden">
+                <MapView commune={listing.commune} quartier={listing.quartier} />
               </div>
+              <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400 flex items-center gap-2">
+                <MapPin className="w-4 h-4" />
+                {listing.quartier}, {listing.commune}
+              </p>
             </div>
           </div>
 
@@ -1037,6 +1092,9 @@ export default function PropertyDetailPage() {
                   </label>
                   <input
                     type="date"
+                    value={visitDate}
+                    onChange={(e) => setVisitDate(e.target.value)}
+                    min={new Date().toISOString().split('T')[0]}
                     className="w-full px-4 py-3 bg-neutral-50 dark:bg-dark-bg border border-neutral-200 dark:border-dark-border rounded-xl focus:ring-2 focus:ring-primary-500 dark:text-white"
                   />
                 </div>
@@ -1049,7 +1107,13 @@ export default function PropertyDetailPage() {
                     {['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'].map((time) => (
                       <button
                         key={time}
-                        className="px-4 py-2 border border-neutral-200 dark:border-dark-border rounded-lg text-sm hover:border-primary-500 hover:text-primary-500 transition-colors dark:text-white"
+                        type="button"
+                        onClick={() => setVisitTime(time)}
+                        className={`px-4 py-2 border rounded-lg text-sm transition-colors ${
+                          visitTime === time
+                            ? 'border-primary-500 bg-primary-50 dark:bg-primary-500/10 text-primary-500'
+                            : 'border-neutral-200 dark:border-dark-border hover:border-primary-500 hover:text-primary-500 dark:text-white'
+                        }`}
                       >
                         {time}
                       </button>
@@ -1063,6 +1127,8 @@ export default function PropertyDetailPage() {
                   </label>
                   <textarea
                     rows={3}
+                    value={visitNotes}
+                    onChange={(e) => setVisitNotes(e.target.value)}
                     placeholder="Questions ou précisions..."
                     className="w-full px-4 py-3 bg-neutral-50 dark:bg-dark-bg border border-neutral-200 dark:border-dark-border rounded-xl focus:ring-2 focus:ring-primary-500 dark:text-white resize-none"
                   />
@@ -1070,9 +1136,18 @@ export default function PropertyDetailPage() {
 
                 <motion.button
                   whileTap={{ scale: 0.98 }}
-                  className="w-full px-6 py-4 bg-primary-500 text-white font-semibold rounded-xl"
+                  onClick={handleSubmitVisit}
+                  disabled={isSubmittingVisit || !visitDate || !visitTime}
+                  className="w-full px-6 py-4 bg-primary-500 text-white font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  Envoyer la demande
+                  {isSubmittingVisit ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Envoi en cours...
+                    </>
+                  ) : (
+                    'Envoyer la demande'
+                  )}
                 </motion.button>
               </div>
 

@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useRef, useMemo } from 'react';
-import 'leaflet/dist/leaflet.css';
 import { CONAKRY_QUARTIERS } from '@/lib/data/communes';
 
 interface MapViewProps {
@@ -75,6 +74,7 @@ export default function MapView({ commune, quartier }: MapViewProps) {
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          maxZoom: 19,
         }).addTo(map);
 
         L.marker(position)
@@ -82,6 +82,12 @@ export default function MapView({ commune, quartier }: MapViewProps) {
           .bindPopup(`${quartier}, ${commune}`);
 
         mapInstanceRef.current = map;
+
+        // Force map to recalculate size after container is fully rendered
+        setTimeout(() => {
+          map.invalidateSize();
+        }, 100);
+
         setIsReady(true);
       } catch (error) {
         // Map already initialized, just mark as ready
