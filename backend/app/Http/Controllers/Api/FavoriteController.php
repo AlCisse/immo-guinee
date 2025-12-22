@@ -34,26 +34,44 @@ class FavoriteController extends Controller
             'success' => true,
             'data' => [
                 'favorites' => $favorites->map(function ($listing) {
+                    // Get first photo URL safely - convert to array first to avoid type issues
+                    $photoUrl = null;
+                    $photos = $listing->photos;
+                    if ($photos) {
+                        // Convert to array if it's a collection
+                        $photosArray = is_array($photos) ? $photos : (method_exists($photos, 'toArray') ? $photos->toArray() : []);
+                        if (!empty($photosArray)) {
+                            $firstPhoto = $photosArray[0] ?? null;
+                            if ($firstPhoto) {
+                                $photoUrl = is_object($firstPhoto) ? ($firstPhoto->url ?? null) : ($firstPhoto['url'] ?? null);
+                            }
+                        }
+                    }
+
                     return [
                         'id' => $listing->id,
                         'titre' => $listing->titre,
                         'type_bien' => $listing->type_bien,
                         'type_transaction' => $listing->type_transaction,
-                        'prix' => $listing->prix,
+                        'prix' => $listing->loyer_mensuel,
+                        'loyer_mensuel' => $listing->loyer_mensuel,
                         'quartier' => $listing->quartier,
                         'commune' => $listing->commune,
-                        'nb_chambres' => $listing->nb_chambres,
-                        'nb_salles_bain' => $listing->nb_salles_bain,
-                        'surface' => $listing->surface,
-                        'photo_principale' => $listing->photos->first()?->url,
-                        'est_premium' => $listing->est_premium,
-                        'est_verifie' => $listing->est_verifie,
+                        'nb_chambres' => $listing->nombre_chambres,
+                        'nombre_chambres' => $listing->nombre_chambres,
+                        'nb_salles_bain' => $listing->nombre_salles_bain,
+                        'nombre_salles_bain' => $listing->nombre_salles_bain,
+                        'surface' => $listing->surface_m2,
+                        'surface_m2' => $listing->surface_m2,
+                        'photo_principale' => $photoUrl,
+                        'est_premium' => $listing->est_premium ?? false,
+                        'est_verifie' => $listing->est_verifie ?? false,
                         'added_at' => $listing->pivot->created_at,
-                        'proprietaire' => [
+                        'proprietaire' => $listing->user ? [
                             'id' => $listing->user->id,
                             'nom_complet' => $listing->user->nom_complet,
                             'badge' => $listing->user->badge,
-                        ],
+                        ] : null,
                     ];
                 }),
             ],
