@@ -155,11 +155,63 @@
 /* Leaflet map styles fixes for Next.js */
 .leaflet-container {
   @apply h-full w-full;
+  z-index: 0;
+  font-family: inherit;
+}
+
+/* CRITICAL: Fix Tailwind breaking Leaflet tiles */
+.leaflet-tile,
+.leaflet-tile-container,
+.leaflet-tile-pane img {
+  max-width: none !important;
+  max-height: none !important;
+}
+
+/* Ensure tiles are visible */
+.leaflet-tile-pane {
+  z-index: 2;
+}
+
+.leaflet-tile {
+  filter: none;
+  visibility: visible !important;
 }
 
 /* Fix for Leaflet marker icons in Next.js */
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+  max-width: none !important;
+}
+
 .leaflet-default-icon-path {
   background-image: url('https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png');
+}
+
+/* Fix popup and control z-index */
+.leaflet-popup-pane,
+.leaflet-tooltip-pane {
+  z-index: 7;
+}
+
+.leaflet-control {
+  z-index: 8;
+}
+
+/* Ensure map panes have proper stacking */
+.leaflet-pane {
+  z-index: 4;
+}
+
+.leaflet-overlay-pane {
+  z-index: 4;
+}
+
+.leaflet-shadow-pane {
+  z-index: 5;
+}
+
+.leaflet-marker-pane {
+  z-index: 6;
 }
 
 /* Custom scrollbar */
