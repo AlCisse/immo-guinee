@@ -29,6 +29,16 @@ import {
   Zap,
   Layers,
   GitBranch,
+  Calendar,
+  Scale,
+  Star,
+  FileCheck,
+  Umbrella,
+  AlertTriangle,
+  Award,
+  Send,
+  Eye,
+  Download,
 } from 'lucide-react';
 
 // Documentation Section Component
@@ -149,6 +159,27 @@ function ApiEndpoint({
   );
 }
 
+// Feature Card Component
+function FeatureCard({
+  icon: Icon,
+  title,
+  description,
+}: {
+  icon: any;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="p-4 bg-neutral-50 dark:bg-dark-bg rounded-xl">
+      <div className="flex items-center gap-2 mb-2">
+        <Icon className="w-5 h-5 text-primary-500" />
+        <span className="font-medium text-neutral-900 dark:text-white">{title}</span>
+      </div>
+      <p className="text-sm text-neutral-600 dark:text-neutral-400">{description}</p>
+    </div>
+  );
+}
+
 // Table of Contents Item
 function TocItem({ href, children }: { href: string; children: React.ReactNode }) {
   return (
@@ -176,11 +207,11 @@ export default function AdminDocumentationPage() {
             <div className="flex items-center gap-3 mb-4">
               <BookOpen className="w-8 h-8 text-white" />
               <h1 className="text-2xl md:text-3xl font-bold text-white">
-                Documentation
+                Documentation ImmoGuinee
               </h1>
             </div>
             <p className="text-white/80 max-w-2xl">
-              Guide complet de la plateforme ImmoGuinee - Architecture, API, fonctionnalites et bonnes pratiques.
+              Guide complet de la plateforme - Architecture, API, Fonctionnalites, Securite et Deploiement.
             </p>
 
             {/* Search */}
@@ -212,10 +243,17 @@ export default function AdminDocumentationPage() {
                 <TocItem href="#api">API Reference</TocItem>
                 <TocItem href="#auth">Authentification</TocItem>
                 <TocItem href="#listings">Annonces</TocItem>
-                <TocItem href="#users">Utilisateurs</TocItem>
+                <TocItem href="#contracts">Contrats</TocItem>
                 <TocItem href="#payments">Paiements</TocItem>
-                <TocItem href="#messages">Messages</TocItem>
+                <TocItem href="#visits">Visites</TocItem>
+                <TocItem href="#messages">Messagerie</TocItem>
+                <TocItem href="#disputes">Litiges</TocItem>
+                <TocItem href="#ratings">Notations</TocItem>
+                <TocItem href="#certifications">Certifications</TocItem>
+                <TocItem href="#insurances">Assurances</TocItem>
                 <TocItem href="#notifications">Notifications</TocItem>
+                <TocItem href="#security">Securite & 2FA</TocItem>
+                <TocItem href="#admin">Panel Admin</TocItem>
                 <TocItem href="#docker">Docker</TocItem>
                 <TocItem href="#deployment">Deploiement</TocItem>
               </nav>
@@ -228,7 +266,7 @@ export default function AdminDocumentationPage() {
             <DocSection id="architecture" icon={Layers} title="Architecture" defaultOpen>
               <div className="space-y-4">
                 <p className="text-neutral-600 dark:text-neutral-300">
-                  ImmoGuinee est une plateforme immobiliere moderne basee sur une architecture microservices.
+                  ImmoGuinee est une plateforme immobiliere complete pour la Guinee, basee sur une architecture microservices moderne.
                 </p>
 
                 <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Stack Technique</h3>
@@ -243,6 +281,7 @@ export default function AdminDocumentationPage() {
                       <li>PostgreSQL 15 + PostGIS</li>
                       <li>Redis 7 (Cache & Queues)</li>
                       <li>Elasticsearch 8.11</li>
+                      <li>Laravel Passport (OAuth2)</li>
                     </ul>
                   </div>
                   <div className="p-4 bg-neutral-50 dark:bg-dark-bg rounded-xl">
@@ -255,6 +294,7 @@ export default function AdminDocumentationPage() {
                       <li>TypeScript</li>
                       <li>Tailwind CSS</li>
                       <li>Framer Motion</li>
+                      <li>i18n (FR, EN)</li>
                     </ul>
                   </div>
                   <div className="p-4 bg-neutral-50 dark:bg-dark-bg rounded-xl">
@@ -266,45 +306,48 @@ export default function AdminDocumentationPage() {
                       <li>React Native (Expo)</li>
                       <li>TypeScript</li>
                       <li>NativeWind</li>
+                      <li>Expo Router</li>
                     </ul>
                   </div>
                   <div className="p-4 bg-neutral-50 dark:bg-dark-bg rounded-xl">
                     <div className="flex items-center gap-2 mb-2">
                       <Zap className="w-5 h-5 text-primary-500" />
-                      <span className="font-medium text-neutral-900 dark:text-white">Services</span>
+                      <span className="font-medium text-neutral-900 dark:text-white">Services Externes</span>
                     </div>
                     <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-1">
                       <li>WAHA (WhatsApp API)</li>
-                      <li>MinIO (Stockage S3)</li>
+                      <li>MinIO / DigitalOcean Spaces (S3)</li>
+                      <li>Orange Money & MTN MoMo</li>
                       <li>n8n (Automatisation)</li>
-                      <li>Traefik (Reverse Proxy)</li>
+                      <li>Traefik (Reverse Proxy + SSL)</li>
                     </ul>
                   </div>
                 </div>
 
-                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Services Docker (17)</h3>
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Services Docker (17+)</h3>
                 <CodeBlock
                   code={`# Services principaux
 postgres      # Base de donnees PostgreSQL + PostGIS
 redis         # Cache et queues
-elasticsearch # Moteur de recherche
-php           # Application Laravel
+elasticsearch # Moteur de recherche full-text
+php           # Application Laravel (2 replicas)
 nginx         # Serveur web
-frontend      # Application Next.js
+frontend      # Application Next.js (2 replicas)
 
 # Services auxiliaires
-queue-worker  # Traitement des jobs
-scheduler     # Taches planifiees
+queue-worker  # Traitement des jobs (2 replicas)
+scheduler     # Taches planifiees (cron)
 waha          # API WhatsApp
-minio         # Stockage S3
-n8n           # Workflows
-laravel-echo  # WebSocket
+minio         # Stockage S3 compatible
+n8n           # Workflows automatises
+laravel-echo  # WebSocket server
 
 # Infrastructure
-traefik       # Reverse proxy + SSL
+traefik       # Reverse proxy + SSL auto
 varnish       # Cache HTTP
 prometheus    # Metriques
-grafana       # Dashboards
+grafana       # Dashboards monitoring
+alertmanager  # Alertes
 pgadmin       # Admin PostgreSQL`}
                 />
               </div>
@@ -337,7 +380,19 @@ Authorization: Bearer {token}  # Pour les routes authentifiees`}
 {
   "success": false,
   "message": "Message d'erreur",
-  "errors": { "field": ["erreur"] }
+  "errors": { "field": ["erreur de validation"] }
+}
+
+// Avec pagination
+{
+  "success": true,
+  "data": [...],
+  "pagination": {
+    "current_page": 1,
+    "total": 150,
+    "per_page": 20,
+    "last_page": 8
+  }
 }`}
                 />
               </div>
@@ -347,55 +402,44 @@ Authorization: Bearer {token}  # Pour les routes authentifiees`}
             <DocSection id="auth" icon={Lock} title="Authentification">
               <div className="space-y-4">
                 <p className="text-neutral-600 dark:text-neutral-300">
-                  L'authentification utilise Laravel Passport avec des tokens JWT.
+                  Authentification via Laravel Passport (OAuth2) avec verification OTP par WhatsApp.
                 </p>
 
                 <h3 className="font-semibold text-neutral-900 dark:text-white mt-4">Endpoints</h3>
                 <div className="space-y-2">
-                  <ApiEndpoint
-                    method="POST"
-                    path="/api/auth/register"
-                    description="Inscription d'un nouvel utilisateur"
-                    auth={false}
-                  />
-                  <ApiEndpoint
-                    method="POST"
-                    path="/api/auth/login"
-                    description="Connexion et obtention du token"
-                    auth={false}
-                  />
-                  <ApiEndpoint
-                    method="POST"
-                    path="/api/auth/logout"
-                    description="Deconnexion et revocation du token"
-                  />
-                  <ApiEndpoint
-                    method="GET"
-                    path="/api/auth/me"
-                    description="Informations de l'utilisateur connecte"
-                  />
-                  <ApiEndpoint
-                    method="POST"
-                    path="/api/auth/verify-phone"
-                    description="Verification du numero de telephone"
-                  />
-                  <ApiEndpoint
-                    method="POST"
-                    path="/api/auth/forgot-password"
-                    description="Demande de reinitialisation du mot de passe"
-                    auth={false}
-                  />
+                  <ApiEndpoint method="POST" path="/api/auth/register" description="Inscription (envoie OTP WhatsApp)" auth={false} />
+                  <ApiEndpoint method="POST" path="/api/auth/verify-otp" description="Verifier le code OTP" auth={false} />
+                  <ApiEndpoint method="POST" path="/api/auth/resend-otp" description="Renvoyer le code OTP" auth={false} />
+                  <ApiEndpoint method="POST" path="/api/auth/login" description="Connexion (telephone + mot de passe)" auth={false} />
+                  <ApiEndpoint method="POST" path="/api/auth/logout" description="Deconnexion et revocation du token" />
+                  <ApiEndpoint method="GET" path="/api/auth/me" description="Informations utilisateur connecte" />
+                  <ApiEndpoint method="GET" path="/api/auth/counts" description="Compteurs (notifications, messages, favoris)" />
+                  <ApiEndpoint method="POST" path="/api/auth/forgot-password" description="Demande reinitialisation mot de passe" auth={false} />
+                  <ApiEndpoint method="POST" path="/api/auth/reset-password" description="Reinitialiser avec code OTP" auth={false} />
+                  <ApiEndpoint method="PUT" path="/api/auth/profile" description="Modifier le profil" />
                 </div>
 
-                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Exemple de connexion</h3>
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Flux d'inscription</h3>
                 <CodeBlock
-                  code={`curl -X POST https://immoguinee.com/api/auth/login \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "telephone": "+224620000000",
-    "mot_de_passe": "password123"
-  }'`}
+                  code={`1. POST /api/auth/register
+   → Cree le compte (is_active=false)
+   → Envoie OTP via WhatsApp
+
+2. POST /api/auth/verify-otp
+   → Valide le code OTP (6 chiffres, 5 min)
+   → Active le compte (is_active=true)
+   → Retourne le token d'acces
+
+3. Utilisateur connecte !`}
                 />
+
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Types de compte</h3>
+                <ul className="list-disc list-inside text-neutral-600 dark:text-neutral-400 space-y-1">
+                  <li><strong>PARTICULIER</strong> - Locataire/Acheteur standard</li>
+                  <li><strong>PROPRIETAIRE</strong> - Proprietaire/Bailleur</li>
+                  <li><strong>AGENT</strong> - Agent immobilier independant</li>
+                  <li><strong>AGENCE</strong> - Agence immobiliere</li>
+                </ul>
               </div>
             </DocSection>
 
@@ -403,113 +447,126 @@ Authorization: Bearer {token}  # Pour les routes authentifiees`}
             <DocSection id="listings" icon={Building2} title="Annonces">
               <div className="space-y-4">
                 <p className="text-neutral-600 dark:text-neutral-300">
-                  Gestion des annonces immobilieres (CRUD, recherche, filtres).
+                  Gestion complete des annonces immobilieres avec recherche Elasticsearch, photos MinIO et geolocalisation PostGIS.
                 </p>
 
-                <h3 className="font-semibold text-neutral-900 dark:text-white mt-4">Endpoints publics</h3>
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-4">Types de bien</h3>
+                <div className="flex flex-wrap gap-2">
+                  {['APPARTEMENT', 'MAISON', 'VILLA', 'STUDIO', 'TERRAIN', 'COMMERCIAL', 'BUREAU'].map(type => (
+                    <span key={type} className="px-3 py-1 bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 text-sm rounded-full">
+                      {type}
+                    </span>
+                  ))}
+                </div>
+
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-4">Types de transaction</h3>
+                <ul className="list-disc list-inside text-neutral-600 dark:text-neutral-400 space-y-1">
+                  <li><strong>LOCATION</strong> - Location longue duree (loyer mensuel)</li>
+                  <li><strong>LOCATION_COURTE</strong> - Location courte duree (prix/jour)</li>
+                  <li><strong>VENTE</strong> - Vente immobiliere</li>
+                </ul>
+
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-4">Statuts</h3>
+                <ul className="list-disc list-inside text-neutral-600 dark:text-neutral-400 space-y-1">
+                  <li><strong>BROUILLON</strong> - En cours de creation</li>
+                  <li><strong>EN_ATTENTE</strong> - En attente de moderation</li>
+                  <li><strong>ACTIVE</strong> - Publiee et visible</li>
+                  <li><strong>SUSPENDUE</strong> - Suspendue par admin</li>
+                  <li><strong>EXPIREE</strong> - Expiree (30 jours)</li>
+                  <li><strong>LOUEE/VENDUE</strong> - Transaction conclue</li>
+                </ul>
+
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Endpoints publics</h3>
                 <div className="space-y-2">
-                  <ApiEndpoint
-                    method="GET"
-                    path="/api/listings"
-                    description="Liste des annonces avec pagination et filtres"
-                    auth={false}
-                  />
-                  <ApiEndpoint
-                    method="GET"
-                    path="/api/listings/{id}"
-                    description="Details d'une annonce"
-                    auth={false}
-                  />
-                  <ApiEndpoint
-                    method="GET"
-                    path="/api/listings/search"
-                    description="Recherche avancee (Elasticsearch)"
-                    auth={false}
-                  />
+                  <ApiEndpoint method="GET" path="/api/listings" description="Liste avec pagination et filtres" auth={false} />
+                  <ApiEndpoint method="GET" path="/api/listings/{id}" description="Details d'une annonce" auth={false} />
+                  <ApiEndpoint method="GET" path="/api/listings/search" description="Recherche avancee Elasticsearch" auth={false} />
+                  <ApiEndpoint method="GET" path="/api/listings/{id}/similar" description="Annonces similaires" auth={false} />
                 </div>
 
                 <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Endpoints authentifies</h3>
                 <div className="space-y-2">
-                  <ApiEndpoint
-                    method="POST"
-                    path="/api/listings"
-                    description="Creer une nouvelle annonce"
-                  />
-                  <ApiEndpoint
-                    method="PUT"
-                    path="/api/listings/{id}"
-                    description="Modifier une annonce"
-                  />
-                  <ApiEndpoint
-                    method="DELETE"
-                    path="/api/listings/{id}"
-                    description="Supprimer une annonce"
-                  />
-                  <ApiEndpoint
-                    method="POST"
-                    path="/api/listings/{id}/photos"
-                    description="Ajouter des photos"
-                  />
+                  <ApiEndpoint method="POST" path="/api/listings" description="Creer une annonce" />
+                  <ApiEndpoint method="PATCH" path="/api/listings/{id}" description="Modifier une annonce" />
+                  <ApiEndpoint method="DELETE" path="/api/listings/{id}" description="Supprimer une annonce" />
+                  <ApiEndpoint method="POST" path="/api/listings/{id}/photos" description="Ajouter des photos (max 10)" />
+                  <ApiEndpoint method="DELETE" path="/api/listings/{id}/photos/{photoId}" description="Supprimer une photo" />
+                  <ApiEndpoint method="POST" path="/api/listings/{id}/contact" description="Contacter le proprietaire" />
+                  <ApiEndpoint method="POST" path="/api/listings/{id}/renew" description="Renouveler (si expiree)" />
                 </div>
 
                 <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Filtres disponibles</h3>
                 <CodeBlock
                   code={`GET /api/listings?
-  type_bien=APPARTEMENT,MAISON      # Types de bien
-  &type_transaction=LOCATION        # LOCATION ou VENTE
+  type_bien=APPARTEMENT,MAISON      # Types (virgule separee)
+  &type_transaction=LOCATION        # LOCATION, LOCATION_COURTE, VENTE
   &commune=Ratoma                   # Commune
-  &quartier=Kipé                    # Quartier
+  &quartier=Kipe                    # Quartier
   &prix_min=500000                  # Prix minimum (GNF)
   &prix_max=2000000                 # Prix maximum (GNF)
-  &chambres_min=2                   # Nombre de chambres min
-  &surface_min=50                   # Surface minimum (m²)
+  &chambres_min=2                   # Nombre chambres min
+  &surface_min=50                   # Surface minimum (m2)
   &meuble=true                      # Meuble uniquement
-  &sort=prix_asc                    # Tri
+  &disponible=true                  # Disponible uniquement
+  &sort=prix_asc                    # Tri: prix_asc, prix_desc, recent
   &page=1&limit=20                  # Pagination`}
                 />
               </div>
             </DocSection>
 
-            {/* Users */}
-            <DocSection id="users" icon={Users} title="Utilisateurs">
+            {/* Contracts */}
+            <DocSection id="contracts" icon={FileText} title="Contrats">
               <div className="space-y-4">
                 <p className="text-neutral-600 dark:text-neutral-300">
-                  Gestion des utilisateurs et des profils.
+                  Systeme complet de contrats electroniques avec generation PDF, signatures electroniques et chiffrement AES-256-GCM.
                 </p>
 
-                <h3 className="font-semibold text-neutral-900 dark:text-white mt-4">Types de compte</h3>
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-4">Types de contrat</h3>
                 <ul className="list-disc list-inside text-neutral-600 dark:text-neutral-400 space-y-1">
-                  <li><strong>PARTICULIER</strong> - Utilisateur standard</li>
-                  <li><strong>AGENCE</strong> - Agence immobiliere</li>
-                  <li><strong>PROMOTEUR</strong> - Promoteur immobilier</li>
+                  <li><strong>BAIL_LOCATION_RESIDENTIEL</strong> - Contrat de location standard</li>
+                  <li><strong>MANDAT_DE_VENTE</strong> - Mandat de vente immobiliere</li>
+                  <li><strong>MANDAT_DE_LOCATION</strong> - Mandat de gestion locative</li>
                 </ul>
 
-                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Badges</h3>
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-4">Statuts</h3>
                 <ul className="list-disc list-inside text-neutral-600 dark:text-neutral-400 space-y-1">
-                  <li><strong>BRONZE</strong> - Nouveau membre</li>
-                  <li><strong>ARGENT</strong> - 5+ transactions</li>
-                  <li><strong>OR</strong> - 20+ transactions, note &gt; 4.0</li>
-                  <li><strong>DIAMANT</strong> - 50+ transactions, note &gt; 4.5</li>
+                  <li><strong>BROUILLON</strong> - En cours de redaction</li>
+                  <li><strong>EN_ATTENTE_BAILLEUR</strong> - Attente signature proprietaire</li>
+                  <li><strong>EN_ATTENTE_LOCATAIRE</strong> - Attente signature locataire</li>
+                  <li><strong>SIGNE</strong> - Signe par les deux parties</li>
+                  <li><strong>ACTIF</strong> - Contrat en cours</li>
+                  <li><strong>RESILIE</strong> - Contrat resilie</li>
                 </ul>
 
-                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Endpoints Admin</h3>
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Endpoints</h3>
                 <div className="space-y-2">
-                  <ApiEndpoint
-                    method="GET"
-                    path="/api/admin/users"
-                    description="Liste des utilisateurs (admin)"
-                  />
-                  <ApiEndpoint
-                    method="PUT"
-                    path="/api/admin/users/{id}/verify"
-                    description="Verifier un utilisateur"
-                  />
-                  <ApiEndpoint
-                    method="POST"
-                    path="/api/admin/users/{id}/suspend"
-                    description="Suspendre un utilisateur"
-                  />
+                  <ApiEndpoint method="GET" path="/api/contracts" description="Lister mes contrats" />
+                  <ApiEndpoint method="POST" path="/api/contracts" description="Creer un contrat" />
+                  <ApiEndpoint method="GET" path="/api/contracts/{id}" description="Details du contrat" />
+                  <ApiEndpoint method="GET" path="/api/contracts/{id}/preview" description="Apercu PDF" />
+                  <ApiEndpoint method="GET" path="/api/contracts/{id}/download" description="Telecharger PDF (watermark)" />
+                  <ApiEndpoint method="POST" path="/api/contracts/{id}/sign/request-otp" description="Demander OTP signature" />
+                  <ApiEndpoint method="POST" path="/api/contracts/{id}/sign" description="Signer avec OTP" />
+                  <ApiEndpoint method="POST" path="/api/contracts/{id}/send" description="Envoyer au locataire (WhatsApp/Email)" />
+                  <ApiEndpoint method="POST" path="/api/contracts/{id}/terminate" description="Demander resiliation (3 mois preavis)" />
                 </div>
+
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Signature publique (sans auth)</h3>
+                <div className="space-y-2">
+                  <ApiEndpoint method="GET" path="/api/contracts/sign/{token}" description="Voir contrat via lien" auth={false} />
+                  <ApiEndpoint method="POST" path="/api/contracts/sign/{token}/request-otp" description="Demander OTP" auth={false} />
+                  <ApiEndpoint method="POST" path="/api/contracts/sign/{token}" description="Signer le contrat" auth={false} />
+                </div>
+
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Securite</h3>
+                <ul className="list-disc list-inside text-neutral-600 dark:text-neutral-400 space-y-1">
+                  <li>PDF chiffre avec AES-256-GCM</li>
+                  <li>Hash SHA-256 pour integrite</li>
+                  <li>Signature electronique avec OTP</li>
+                  <li>IP et timestamp enregistres</li>
+                  <li>Periode de retraction (7 jours)</li>
+                  <li>Archive WORM (Write Once Read Many)</li>
+                </ul>
               </div>
             </DocSection>
 
@@ -517,61 +574,260 @@ Authorization: Bearer {token}  # Pour les routes authentifiees`}
             <DocSection id="payments" icon={CreditCard} title="Paiements">
               <div className="space-y-4">
                 <p className="text-neutral-600 dark:text-neutral-300">
-                  Integration des paiements mobile money (Orange Money, MTN MoMo).
+                  Paiements Mobile Money (Orange Money, MTN MoMo) avec systeme d'escrow pour les cautions.
                 </p>
 
                 <h3 className="font-semibold text-neutral-900 dark:text-white mt-4">Moyens de paiement</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="p-4 bg-orange-50 dark:bg-orange-500/10 rounded-xl">
+                    <span className="font-medium text-orange-600 dark:text-orange-400">Orange Money</span>
+                    <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">Principal en Guinee - Frais 0.5%</p>
+                  </div>
+                  <div className="p-4 bg-yellow-50 dark:bg-yellow-500/10 rounded-xl">
+                    <span className="font-medium text-yellow-600 dark:text-yellow-400">MTN Mobile Money</span>
+                    <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">Alternative disponible</p>
+                  </div>
+                </div>
+
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Types de paiement</h3>
                 <ul className="list-disc list-inside text-neutral-600 dark:text-neutral-400 space-y-1">
-                  <li><strong>Orange Money</strong> - Principal en Guinee</li>
-                  <li><strong>MTN Mobile Money</strong> - Alternative</li>
+                  <li><strong>CAUTION</strong> - Depot de garantie (escrow 60 jours)</li>
+                  <li><strong>LOYER</strong> - Loyer mensuel</li>
+                  <li><strong>ADVANCE</strong> - Avance sur loyer</li>
+                  <li><strong>COMMISSION</strong> - Commission plateforme</li>
+                </ul>
+
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Commissions plateforme</h3>
+                <CodeBlock
+                  code={`LOCATION:          50% d'un mois de loyer
+VENTE_TERRAIN:     1% du prix de vente
+VENTE_MAISON:      2% du prix de vente
+VENTE_VILLA:       2% du prix de vente
+VENTE_APPARTEMENT: 2% du prix de vente
+MANDAT_GESTION:    8% mensuel
+
+Reductions par badge:
+  BRONZE:   0%
+  ARGENT:  -5%
+  OR:     -10%
+  DIAMANT: -15%`}
+                />
+
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Endpoints</h3>
+                <div className="space-y-2">
+                  <ApiEndpoint method="GET" path="/api/payments" description="Lister mes paiements" />
+                  <ApiEndpoint method="POST" path="/api/payments" description="Initier un paiement" />
+                  <ApiEndpoint method="GET" path="/api/payments/{id}" description="Details du paiement" />
+                  <ApiEndpoint method="GET" path="/api/payments/{id}/status" description="Verifier le statut" />
+                </div>
+
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Webhooks</h3>
+                <div className="space-y-2">
+                  <ApiEndpoint method="POST" path="/api/webhooks/orange-money" description="Callback Orange Money" auth={false} />
+                  <ApiEndpoint method="POST" path="/api/webhooks/mtn-momo" description="Callback MTN MoMo" auth={false} />
+                </div>
+              </div>
+            </DocSection>
+
+            {/* Visits */}
+            <DocSection id="visits" icon={Calendar} title="Visites">
+              <div className="space-y-4">
+                <p className="text-neutral-600 dark:text-neutral-300">
+                  Systeme de reservation de visites avec notifications automatiques et calendrier.
+                </p>
+
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-4">Statuts</h3>
+                <ul className="list-disc list-inside text-neutral-600 dark:text-neutral-400 space-y-1">
+                  <li><strong>DEMANDEE</strong> - Demande initiale</li>
+                  <li><strong>CONFIRMEE</strong> - Confirmee par proprietaire</li>
+                  <li><strong>COMPLETEE</strong> - Visite realisee</li>
+                  <li><strong>ANNULEE</strong> - Annulee</li>
                 </ul>
 
                 <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Endpoints</h3>
                 <div className="space-y-2">
-                  <ApiEndpoint
-                    method="POST"
-                    path="/api/payments/initiate"
-                    description="Initier un paiement"
-                  />
-                  <ApiEndpoint
-                    method="GET"
-                    path="/api/payments/{id}/status"
-                    description="Verifier le statut d'un paiement"
-                  />
-                  <ApiEndpoint
-                    method="POST"
-                    path="/api/webhooks/orange-money"
-                    description="Webhook Orange Money"
-                    auth={false}
-                  />
+                  <ApiEndpoint method="GET" path="/api/visits" description="Lister mes visites" />
+                  <ApiEndpoint method="GET" path="/api/visits/upcoming" description="Visites a venir" />
+                  <ApiEndpoint method="GET" path="/api/visits/by-date" description="Visites par date" />
+                  <ApiEndpoint method="GET" path="/api/visits/stats" description="Statistiques" />
+                  <ApiEndpoint method="POST" path="/api/visits" description="Demander une visite" />
+                  <ApiEndpoint method="POST" path="/api/visits/{id}/confirm" description="Confirmer" />
+                  <ApiEndpoint method="POST" path="/api/visits/{id}/complete" description="Marquer completee" />
+                  <ApiEndpoint method="POST" path="/api/visits/{id}/cancel" description="Annuler" />
+                </div>
+
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Reponse publique</h3>
+                <div className="space-y-2">
+                  <ApiEndpoint method="GET" path="/api/visits/response/{token}" description="Voir demande de visite" auth={false} />
+                  <ApiEndpoint method="POST" path="/api/visits/response/{token}" description="Repondre (accepter/proposer/refuser)" auth={false} />
                 </div>
               </div>
             </DocSection>
 
             {/* Messages */}
-            <DocSection id="messages" icon={MessageSquare} title="Messages">
+            <DocSection id="messages" icon={MessageSquare} title="Messagerie">
               <div className="space-y-4">
                 <p className="text-neutral-600 dark:text-neutral-300">
-                  Systeme de messagerie interne entre utilisateurs.
+                  Messagerie interne avec support texte, audio et photos.
                 </p>
 
-                <h3 className="font-semibold text-neutral-900 dark:text-white mt-4">Endpoints</h3>
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-4">Types de messages</h3>
+                <ul className="list-disc list-inside text-neutral-600 dark:text-neutral-400 space-y-1">
+                  <li><strong>TEXT</strong> - Message texte</li>
+                  <li><strong>VOCAL</strong> - Message audio</li>
+                  <li><strong>PHOTO</strong> - Image</li>
+                  <li><strong>SYSTEM</strong> - Message systeme</li>
+                </ul>
+
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Endpoints</h3>
                 <div className="space-y-2">
-                  <ApiEndpoint
-                    method="GET"
-                    path="/api/conversations"
-                    description="Liste des conversations"
-                  />
-                  <ApiEndpoint
-                    method="GET"
-                    path="/api/conversations/{id}/messages"
-                    description="Messages d'une conversation"
-                  />
-                  <ApiEndpoint
-                    method="POST"
-                    path="/api/conversations/{id}/messages"
-                    description="Envoyer un message"
-                  />
+                  <ApiEndpoint method="GET" path="/api/messaging/conversations" description="Lister conversations" />
+                  <ApiEndpoint method="POST" path="/api/messaging/conversations/start" description="Demarrer conversation" />
+                  <ApiEndpoint method="GET" path="/api/messaging/{id}/messages" description="Messages d'une conversation" />
+                  <ApiEndpoint method="POST" path="/api/messaging/{id}/messages" description="Envoyer message" />
+                  <ApiEndpoint method="POST" path="/api/messaging/{id}/archive" description="Archiver conversation" />
+                  <ApiEndpoint method="POST" path="/api/messages/{id}/report" description="Signaler message" />
+                </div>
+              </div>
+            </DocSection>
+
+            {/* Disputes */}
+            <DocSection id="disputes" icon={Scale} title="Litiges">
+              <div className="space-y-4">
+                <p className="text-neutral-600 dark:text-neutral-300">
+                  Systeme de gestion des litiges avec mediation integree.
+                </p>
+
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-4">Categories</h3>
+                <ul className="list-disc list-inside text-neutral-600 dark:text-neutral-400 space-y-1">
+                  <li><strong>IMPAYE</strong> - Non-paiement de loyer</li>
+                  <li><strong>DEGATS</strong> - Degats locatifs</li>
+                  <li><strong>EXPULSION_ABUSIVE</strong> - Expulsion sans procedure</li>
+                  <li><strong>CAUTION_NON_REMBOURSEE</strong> - Caution non restituee</li>
+                  <li><strong>AUTRE</strong> - Autre motif</li>
+                </ul>
+
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-4">Statuts</h3>
+                <ul className="list-disc list-inside text-neutral-600 dark:text-neutral-400 space-y-1">
+                  <li><strong>OUVERT</strong> - Litige initie</li>
+                  <li><strong>EN_COURS</strong> - En mediation</li>
+                  <li><strong>RESOLU_AMIABLE</strong> - Accord a l'amiable</li>
+                  <li><strong>RESOLU_COMPENSATION</strong> - Compensation ordonnee</li>
+                  <li><strong>ESCALADE_JUDICIAIRE</strong> - Escalade legale</li>
+                  <li><strong>FERME</strong> - Clos</li>
+                </ul>
+
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Endpoints</h3>
+                <div className="space-y-2">
+                  <ApiEndpoint method="GET" path="/api/disputes" description="Lister mes litiges" />
+                  <ApiEndpoint method="POST" path="/api/disputes" description="Ouvrir un litige" />
+                  <ApiEndpoint method="GET" path="/api/disputes/{id}" description="Details du litige" />
+                  <ApiEndpoint method="POST" path="/api/disputes/{id}/assign" description="Assigner mediateur (admin)" />
+                  <ApiEndpoint method="POST" path="/api/disputes/{id}/resolve" description="Resoudre (admin/mediator)" />
+                </div>
+              </div>
+            </DocSection>
+
+            {/* Ratings */}
+            <DocSection id="ratings" icon={Star} title="Notations">
+              <div className="space-y-4">
+                <p className="text-neutral-600 dark:text-neutral-300">
+                  Systeme de notation a 5 criteres avec moderation automatique du contenu.
+                </p>
+
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-4">Criteres (1-5)</h3>
+                <ul className="list-disc list-inside text-neutral-600 dark:text-neutral-400 space-y-1">
+                  <li>Note globale</li>
+                  <li>Communication</li>
+                  <li>Ponctualite</li>
+                  <li>Proprete</li>
+                  <li>Respect du contrat</li>
+                </ul>
+
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Endpoints</h3>
+                <div className="space-y-2">
+                  <ApiEndpoint method="POST" path="/api/ratings" description="Creer une notation (apres contrat)" />
+                  <ApiEndpoint method="GET" path="/api/ratings/{userId}" description="Notations d'un utilisateur" />
+                  <ApiEndpoint method="POST" path="/api/ratings/{id}/moderate" description="Moderer (admin)" />
+                </div>
+              </div>
+            </DocSection>
+
+            {/* Certifications */}
+            <DocSection id="certifications" icon={FileCheck} title="Certifications">
+              <div className="space-y-4">
+                <p className="text-neutral-600 dark:text-neutral-300">
+                  Verification d'identite et de propriete pour debloquer les badges.
+                </p>
+
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-4">Documents acceptes</h3>
+                <ul className="list-disc list-inside text-neutral-600 dark:text-neutral-400 space-y-1">
+                  <li><strong>CNI</strong> - Carte Nationale d'Identite</li>
+                  <li><strong>PASSEPORT</strong> - Passeport valide</li>
+                  <li><strong>TITRE_FONCIER</strong> - Titre de propriete</li>
+                </ul>
+
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Systeme de badges</h3>
+                <CodeBlock
+                  code={`BRONZE → ARGENT:
+  - CNI verifiee
+  - 1+ transaction complete
+
+ARGENT → OR:
+  - Titre foncier verifie
+  - 5+ transactions
+  - Note moyenne >= 4.0
+
+OR → DIAMANT:
+  - 20+ transactions
+  - Note moyenne >= 4.5
+  - 0 litiges ouverts`}
+                />
+
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Endpoints</h3>
+                <div className="space-y-2">
+                  <ApiEndpoint method="GET" path="/api/certifications/me" description="Mes certifications" />
+                  <ApiEndpoint method="POST" path="/api/certifications/upload" description="Soumettre un document" />
+                  <ApiEndpoint method="DELETE" path="/api/certifications/{id}" description="Supprimer" />
+                  <ApiEndpoint method="POST" path="/api/certifications/{id}/verify" description="Verifier (admin)" />
+                </div>
+              </div>
+            </DocSection>
+
+            {/* Insurances */}
+            <DocSection id="insurances" icon={Umbrella} title="Assurances">
+              <div className="space-y-4">
+                <p className="text-neutral-600 dark:text-neutral-300">
+                  Assurances optionnelles pour proteger locataires et proprietaires.
+                </p>
+
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-4">Types d'assurance</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="p-4 bg-blue-50 dark:bg-blue-500/10 rounded-xl">
+                    <span className="font-medium text-blue-600 dark:text-blue-400">Sejour Serein (Locataire)</span>
+                    <ul className="text-sm text-neutral-600 dark:text-neutral-400 mt-2 space-y-1">
+                      <li>Protection expulsion abusive</li>
+                      <li>Garantie caution</li>
+                      <li>Assistance juridique</li>
+                      <li>Prime: 2% du loyer mensuel</li>
+                    </ul>
+                  </div>
+                  <div className="p-4 bg-green-50 dark:bg-green-500/10 rounded-xl">
+                    <span className="font-medium text-green-600 dark:text-green-400">Loyer Garanti (Proprietaire)</span>
+                    <ul className="text-sm text-neutral-600 dark:text-neutral-400 mt-2 space-y-1">
+                      <li>Garantie loyers impayes (6 mois)</li>
+                      <li>Couverture degats locatifs (2 mois)</li>
+                      <li>Prime: selon profil</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Endpoints</h3>
+                <div className="space-y-2">
+                  <ApiEndpoint method="POST" path="/api/insurances/subscribe" description="Souscrire une assurance" />
+                  <ApiEndpoint method="GET" path="/api/insurances/my" description="Mes assurances" />
+                  <ApiEndpoint method="POST" path="/api/insurances/{id}/claim" description="Faire une reclamation" />
+                  <ApiEndpoint method="GET" path="/api/insurances/{id}/certificate" description="Telecharger certificat" />
                 </div>
               </div>
             </DocSection>
@@ -580,26 +836,118 @@ Authorization: Bearer {token}  # Pour les routes authentifiees`}
             <DocSection id="notifications" icon={Bell} title="Notifications">
               <div className="space-y-4">
                 <p className="text-neutral-600 dark:text-neutral-300">
-                  Notifications multi-canal (WhatsApp, SMS, Email, Push).
+                  Notifications multi-canal: WhatsApp (WAHA), Email, SMS.
                 </p>
 
                 <h3 className="font-semibold text-neutral-900 dark:text-white mt-4">Canaux</h3>
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div className="p-4 bg-green-50 dark:bg-green-500/10 rounded-xl text-center">
+                    <MessageSquare className="w-8 h-8 text-green-500 mx-auto mb-2" />
+                    <span className="font-medium text-green-600 dark:text-green-400">WhatsApp</span>
+                    <p className="text-xs text-neutral-500 mt-1">Via WAHA API</p>
+                  </div>
+                  <div className="p-4 bg-blue-50 dark:bg-blue-500/10 rounded-xl text-center">
+                    <Send className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+                    <span className="font-medium text-blue-600 dark:text-blue-400">Email</span>
+                    <p className="text-xs text-neutral-500 mt-1">Via SMTP</p>
+                  </div>
+                  <div className="p-4 bg-purple-50 dark:bg-purple-500/10 rounded-xl text-center">
+                    <Smartphone className="w-8 h-8 text-purple-500 mx-auto mb-2" />
+                    <span className="font-medium text-purple-600 dark:text-purple-400">SMS</span>
+                    <p className="text-xs text-neutral-500 mt-1">Via Twilio</p>
+                  </div>
+                </div>
+
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Types de notifications</h3>
+                <div className="text-sm text-neutral-600 dark:text-neutral-400 space-y-1">
+                  <p>listing_created, listing_approved, listing_rejected, listing_expired</p>
+                  <p>contract_created, contract_signed, contract_cancelled</p>
+                  <p>payment_received, payment_reminder</p>
+                  <p>message_received, visit_requested, visit_confirmed</p>
+                  <p>rating_received, dispute_opened, dispute_resolved</p>
+                  <p>certification_approved, badge_upgraded</p>
+                </div>
+
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Endpoints</h3>
+                <div className="space-y-2">
+                  <ApiEndpoint method="GET" path="/api/notifications" description="Lister mes notifications" />
+                  <ApiEndpoint method="POST" path="/api/notifications/{id}/read" description="Marquer comme lu" />
+                  <ApiEndpoint method="POST" path="/api/notifications/read-all" description="Tout marquer comme lu" />
+                  <ApiEndpoint method="DELETE" path="/api/notifications/{id}" description="Supprimer" />
+                </div>
+              </div>
+            </DocSection>
+
+            {/* Security & 2FA */}
+            <DocSection id="security" icon={Shield} title="Securite & 2FA">
+              <div className="space-y-4">
+                <p className="text-neutral-600 dark:text-neutral-300">
+                  Securite renforcee avec 2FA obligatoire pour les admins et chiffrement des donnees sensibles.
+                </p>
+
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-4">2FA Admin (Google Authenticator)</h3>
+                <div className="space-y-2">
+                  <ApiEndpoint method="GET" path="/api/admin/2fa/status" description="Statut 2FA" />
+                  <ApiEndpoint method="POST" path="/api/admin/2fa/setup" description="Configurer 2FA (QR code)" />
+                  <ApiEndpoint method="POST" path="/api/admin/2fa/confirm" description="Confirmer avec code" />
+                  <ApiEndpoint method="POST" path="/api/admin/2fa/verify" description="Verifier a la connexion" />
+                  <ApiEndpoint method="POST" path="/api/admin/2fa/disable" description="Desactiver" />
+                  <ApiEndpoint method="POST" path="/api/admin/2fa/recovery-codes" description="Regenerer codes de secours" />
+                </div>
+
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">OTP WhatsApp</h3>
                 <ul className="list-disc list-inside text-neutral-600 dark:text-neutral-400 space-y-1">
-                  <li><strong>WhatsApp</strong> - Via WAHA (principal)</li>
-                  <li><strong>SMS</strong> - Via Twilio</li>
-                  <li><strong>Email</strong> - Via SMTP</li>
-                  <li><strong>Push</strong> - Via Firebase (mobile)</li>
+                  <li>Code 6 chiffres</li>
+                  <li>Expiration: 5 minutes</li>
+                  <li>Max 3 tentatives (blocage 30 min)</li>
+                  <li>Envoye via WAHA (WhatsApp)</li>
                 </ul>
 
-                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Configuration WAHA</h3>
-                <CodeBlock
-                  code={`# Variables d'environnement
-WAHA_URL=http://waha:3000
-WAHA_API_KEY=your_api_key
-WAHA_SESSION_NAME=default
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Chiffrement</h3>
+                <ul className="list-disc list-inside text-neutral-600 dark:text-neutral-400 space-y-1">
+                  <li><strong>Contrats PDF</strong> - AES-256-GCM</li>
+                  <li><strong>Integrite</strong> - Hash SHA-256</li>
+                  <li><strong>Signatures</strong> - Token + OTP + IP + Timestamp</li>
+                  <li><strong>Fichiers</strong> - Validation magic bytes + scan virus</li>
+                </ul>
+              </div>
+            </DocSection>
 
-# Webhook URL (configure dans WAHA)
-WHATSAPP_HOOK_URL=http://nginx/api/webhooks/waha`}
+            {/* Admin Panel */}
+            <DocSection id="admin" icon={Settings} title="Panel Admin">
+              <div className="space-y-4">
+                <p className="text-neutral-600 dark:text-neutral-300">
+                  Dashboard complet avec 40+ endpoints et 15 KPIs en temps reel.
+                </p>
+
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-4">Fonctionnalites</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <FeatureCard icon={Building2} title="Annonces" description="Moderation, approbation, suspension, statistiques" />
+                  <FeatureCard icon={Users} title="Utilisateurs" description="Gestion, verification, suspension, roles" />
+                  <FeatureCard icon={FileText} title="Contrats" description="Suivi, statistiques, interventions" />
+                  <FeatureCard icon={CreditCard} title="Paiements" description="Transactions, commissions, remboursements" />
+                  <FeatureCard icon={Scale} title="Litiges" description="Mediation, resolution, escalade" />
+                  <FeatureCard icon={FileCheck} title="Certifications" description="Verification documents, badges" />
+                  <FeatureCard icon={Star} title="Notations" description="Moderation avis, signalements" />
+                  <FeatureCard icon={Eye} title="Analytics" description="15 KPIs, graphiques, exports" />
+                </div>
+
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">KPIs Dashboard</h3>
+                <CodeBlock
+                  code={`# Utilisateurs
+total_users, new_users_30d, verified_users
+
+# Annonces
+total_listings, active_listings, pending_moderation
+
+# Transactions
+total_contracts, signed_contracts, total_revenue
+
+# Performance
+avg_response_time, conversion_rate, churn_rate
+
+# Litiges
+open_disputes, resolution_rate, avg_resolution_time`}
                 />
               </div>
             </DocSection>
@@ -608,7 +956,7 @@ WHATSAPP_HOOK_URL=http://nginx/api/webhooks/waha`}
             <DocSection id="docker" icon={Terminal} title="Docker">
               <div className="space-y-4">
                 <p className="text-neutral-600 dark:text-neutral-300">
-                  Configuration Docker pour developpement et production.
+                  Deploiement containerise avec Docker Swarm pour la haute disponibilite.
                 </p>
 
                 <h3 className="font-semibold text-neutral-900 dark:text-white mt-4">Developpement local</h3>
@@ -618,11 +966,12 @@ cd docker
 docker compose up -d
 
 # Voir les logs
-docker compose logs -f
+docker compose logs -f php
 
 # Executer des commandes Laravel
-docker exec -it immog-php php artisan migrate
-docker exec -it immog-php php artisan db:seed`}
+docker exec -it docker-php-1 php artisan migrate
+docker exec -it docker-php-1 php artisan db:seed
+docker exec -it docker-php-1 php artisan tinker`}
                 />
 
                 <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Production (Docker Swarm)</h3>
@@ -634,18 +983,27 @@ docker stack deploy -c docker-compose.yml -c docker-compose.prod.yml immog
 docker service ls
 
 # Mettre a jour un service
-docker service update --image immoguinee/frontend:latest --force immog_frontend`}
+docker service update --force immog_frontend
+docker service update --force immog_php
+
+# Voir les logs d'un service
+docker service logs -f immog_php`}
                 />
 
-                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Secrets Docker</h3>
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Commandes utiles</h3>
                 <CodeBlock
-                  code={`# Creer les secrets
-echo "password" | docker secret create db_password -
-echo "password" | docker secret create redis_password -
-echo "base64_key" | docker secret create app_key -
+                  code={`# Reset admin
+docker exec $(docker ps -q -f name=immog_php) php artisan admin:reset
 
-# Lister les secrets
-docker secret ls`}
+# Vider le cache
+docker exec $(docker ps -q -f name=immog_php) php artisan cache:clear
+docker exec $(docker ps -q -f name=immog_php) php artisan config:clear
+
+# Migrations
+docker exec $(docker ps -q -f name=immog_php) php artisan migrate --force
+
+# Queue worker restart
+docker service update --force immog_queue-worker`}
                 />
               </div>
             </DocSection>
@@ -654,35 +1012,34 @@ docker secret ls`}
             <DocSection id="deployment" icon={GitBranch} title="Deploiement">
               <div className="space-y-4">
                 <p className="text-neutral-600 dark:text-neutral-300">
-                  Guide de deploiement en production.
+                  Guide de deploiement sur serveur OVH VPS avec Docker Swarm.
                 </p>
 
                 <h3 className="font-semibold text-neutral-900 dark:text-white mt-4">Pre-requis serveur</h3>
                 <ul className="list-disc list-inside text-neutral-600 dark:text-neutral-400 space-y-1">
                   <li>Ubuntu 22.04 LTS</li>
                   <li>Docker Engine 24+</li>
-                  <li>Docker Compose v2</li>
-                  <li>4 GB RAM minimum (8 GB recommande)</li>
-                  <li>50 GB stockage SSD</li>
+                  <li>8 GB RAM minimum</li>
+                  <li>100 GB SSD</li>
+                  <li>Domaine configure (DNS)</li>
                 </ul>
 
-                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Etapes de deploiement</h3>
+                <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">Deploiement</h3>
                 <CodeBlock
-                  code={`# 1. Cloner le repository
-git clone https://github.com/AlCisse/immo-guinee.git
-cd immo-guinee
+                  code={`# 1. Connexion SSH
+ssh ubuntu@vps-f9ab3c93.vps.ovh.net
 
-# 2. Configurer les secrets Docker
-./scripts/create-secrets.sh
+# 2. Pull des changements
+cd /home/ubuntu/immoguinee
+git pull origin main
 
-# 3. Deployer
-./scripts/deploy-swarm.sh
+# 3. Rebuild et redeploy
+docker service update --force immog_frontend
+docker service update --force immog_php
 
 # 4. Verifier les services
 docker service ls
-
-# 5. Executer les migrations
-docker exec $(docker ps -q -f name=immog_php) php artisan migrate --force`}
+docker service ps immog_frontend`}
                 />
 
                 <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">URLs de production</h3>
@@ -698,8 +1055,12 @@ docker exec $(docker ps -q -f name=immog_php) php artisan migrate --force`}
                     <code className="text-sm text-neutral-800 dark:text-neutral-200">immoguinee.com/api</code>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-dark-bg rounded-xl">
-                    <span className="text-neutral-600 dark:text-neutral-400">Grafana</span>
+                    <span className="text-neutral-600 dark:text-neutral-400">Monitoring</span>
                     <code className="text-sm text-neutral-800 dark:text-neutral-200">monitoring.immoguinee.com</code>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-dark-bg rounded-xl">
+                    <span className="text-neutral-600 dark:text-neutral-400">PgAdmin</span>
+                    <code className="text-sm text-neutral-800 dark:text-neutral-200">pgadmin.immoguinee.com</code>
                   </div>
                 </div>
               </div>
@@ -724,12 +1085,33 @@ docker exec $(docker ps -q -f name=immog_php) php artisan migrate --force`}
                   <ExternalLink className="w-4 h-4 ml-auto" />
                 </a>
                 <a
-                  href="/api/documentation"
+                  href="https://monitoring.immoguinee.com"
                   target="_blank"
+                  rel="noopener noreferrer"
                   className="flex items-center gap-2 p-3 bg-white/10 rounded-xl hover:bg-white/20 transition-colors"
                 >
-                  <FileText className="w-5 h-5" />
-                  <span>API Swagger</span>
+                  <Eye className="w-5 h-5" />
+                  <span>Monitoring Grafana</span>
+                  <ExternalLink className="w-4 h-4 ml-auto" />
+                </a>
+                <a
+                  href="https://pgadmin.immoguinee.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 p-3 bg-white/10 rounded-xl hover:bg-white/20 transition-colors"
+                >
+                  <Database className="w-5 h-5" />
+                  <span>PgAdmin</span>
+                  <ExternalLink className="w-4 h-4 ml-auto" />
+                </a>
+                <a
+                  href="https://waha.immoguinee.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 p-3 bg-white/10 rounded-xl hover:bg-white/20 transition-colors"
+                >
+                  <MessageSquare className="w-5 h-5" />
+                  <span>WAHA WhatsApp</span>
                   <ExternalLink className="w-4 h-4 ml-auto" />
                 </a>
               </div>
