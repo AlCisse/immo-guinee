@@ -352,46 +352,91 @@ class Listing extends Model
     /**
      * Get the main photo URL or placeholder.
      * Prioritizes the primary photo from listingPhotos relationship.
+     * Uses already-loaded relationship when available (for eager loading optimization).
      */
     public function getMainPhotoUrlAttribute(): string
     {
-        // First, try to get the primary photo from the relationship
-        $primaryPhoto = $this->listingPhotos()->where('is_primary', true)->first();
-        if ($primaryPhoto) {
-            return $primaryPhoto->medium_url ?? $primaryPhoto->url;
+        // Use already-loaded relationship if available (eager loading)
+        if ($this->relationLoaded('listingPhotos')) {
+            $photos = $this->listingPhotos;
+
+            // Find primary photo
+            $primaryPhoto = $photos->firstWhere('is_primary', true);
+            if ($primaryPhoto) {
+                return $primaryPhoto->medium_url ?? $primaryPhoto->url;
+            }
+
+            // Fallback to first photo
+            $firstPhoto = $photos->sortBy('order')->first();
+            if ($firstPhoto) {
+                return $firstPhoto->medium_url ?? $firstPhoto->url;
+            }
+        } else {
+            // Fallback to query if relationship not loaded
+            $primaryPhoto = $this->listingPhotos()->where('is_primary', true)->first();
+            if ($primaryPhoto) {
+                return $primaryPhoto->medium_url ?? $primaryPhoto->url;
+            }
+
+            $firstPhoto = $this->listingPhotos()->orderBy('order')->first();
+            if ($firstPhoto) {
+                return $firstPhoto->medium_url ?? $firstPhoto->url;
+            }
         }
 
-        // Fallback to first photo in relationship
-        $firstPhoto = $this->listingPhotos()->orderBy('order')->first();
-        if ($firstPhoto) {
-            return $firstPhoto->medium_url ?? $firstPhoto->url;
+        // Final fallback to legacy photo_principale column
+        if (!empty($this->attributes['photo_principale']) && is_string($this->attributes['photo_principale'])) {
+            return $this->attributes['photo_principale'];
         }
 
-        // Final fallback to legacy photo_principale column or photos array
-        return $this->attributes['photo_principale'] ?? ($this->photos[0] ?? '/images/placeholder.jpg');
+        // Fallback to photos array if it contains valid URLs
+        if (!empty($this->photos) && is_array($this->photos)) {
+            $firstPhoto = $this->photos[0] ?? null;
+            if (is_string($firstPhoto) && filter_var($firstPhoto, FILTER_VALIDATE_URL)) {
+                return $firstPhoto;
+            }
+        }
+
+        // Default placeholder - return absolute URL
+        return config('app.url', 'https://immoguinee.com') . '/images/placeholder.jpg';
     }
 
     /**
      * Get the photo_principale attribute (accessor).
      * Returns the primary photo URL from listingPhotos relationship.
+     * Uses already-loaded relationship when available (for eager loading optimization).
      */
     public function getPhotoPrincipaleAttribute(): ?string
     {
         // Check if there's a stored value
-        if (!empty($this->attributes['photo_principale'])) {
+        if (!empty($this->attributes['photo_principale']) && is_string($this->attributes['photo_principale'])) {
             return $this->attributes['photo_principale'];
         }
 
-        // Get from relationship
-        $primaryPhoto = $this->listingPhotos()->where('is_primary', true)->first();
-        if ($primaryPhoto) {
-            return $primaryPhoto->medium_url ?? $primaryPhoto->url;
-        }
+        // Use already-loaded relationship if available
+        if ($this->relationLoaded('listingPhotos')) {
+            $photos = $this->listingPhotos;
 
-        // Fallback to first photo
-        $firstPhoto = $this->listingPhotos()->orderBy('order')->first();
-        if ($firstPhoto) {
-            return $firstPhoto->medium_url ?? $firstPhoto->url;
+            $primaryPhoto = $photos->firstWhere('is_primary', true);
+            if ($primaryPhoto) {
+                return $primaryPhoto->medium_url ?? $primaryPhoto->url;
+            }
+
+            $firstPhoto = $photos->sortBy('order')->first();
+            if ($firstPhoto) {
+                return $firstPhoto->medium_url ?? $firstPhoto->url;
+            }
+        } else {
+            // Fallback to query if relationship not loaded
+            $primaryPhoto = $this->listingPhotos()->where('is_primary', true)->first();
+            if ($primaryPhoto) {
+                return $primaryPhoto->medium_url ?? $primaryPhoto->url;
+            }
+
+            $firstPhoto = $this->listingPhotos()->orderBy('order')->first();
+            if ($firstPhoto) {
+                return $firstPhoto->medium_url ?? $firstPhoto->url;
+            }
         }
 
         return null;
