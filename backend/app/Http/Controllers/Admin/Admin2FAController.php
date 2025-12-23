@@ -62,7 +62,7 @@ class Admin2FAController extends Controller
         $user->two_factor_recovery_codes = encrypt(json_encode($recoveryCodes));
         $user->save();
 
-        Log::channel('security')->info('2FA setup initiated', [
+        Log::info('2FA setup initiated', [
             'user_id' => $user->id,
             'ip' => $request->ip(),
         ]);
@@ -100,7 +100,7 @@ class Admin2FAController extends Controller
         $valid = $this->google2fa->verifyKey($secret, $request->code);
 
         if (!$valid) {
-            Log::channel('security')->warning('2FA confirmation failed', [
+            Log::warning('2FA confirmation failed', [
                 'user_id' => $user->id,
                 'ip' => $request->ip(),
             ]);
@@ -114,7 +114,7 @@ class Admin2FAController extends Controller
         $user->two_factor_confirmed_at = now();
         $user->save();
 
-        Log::channel('security')->info('2FA confirmed successfully', [
+        Log::info('2FA confirmed successfully', [
             'user_id' => $user->id,
             'ip' => $request->ip(),
         ]);
@@ -148,7 +148,7 @@ class Admin2FAController extends Controller
         $attempts = Cache::get($rateLimitKey, 0);
 
         if ($attempts >= 5) {
-            Log::channel('security')->warning('2FA rate limit exceeded', [
+            Log::warning('2FA rate limit exceeded', [
                 'user_id' => $user->id,
                 'ip' => $request->ip(),
             ]);
@@ -173,7 +173,7 @@ class Admin2FAController extends Controller
         if (!$valid) {
             Cache::put($rateLimitKey, $attempts + 1, now()->addMinutes(15));
 
-            Log::channel('security')->warning('2FA verification failed', [
+            Log::warning('2FA verification failed', [
                 'user_id' => $user->id,
                 'ip' => $request->ip(),
                 'attempts' => $attempts + 1,
@@ -192,7 +192,7 @@ class Admin2FAController extends Controller
         $sessionKey = "2fa_verified:{$user->id}";
         Cache::put($sessionKey, true, now()->addHours(8));
 
-        Log::channel('security')->info('2FA verification successful', [
+        Log::info('2FA verification successful', [
             'user_id' => $user->id,
             'ip' => $request->ip(),
         ]);
@@ -219,7 +219,7 @@ class Admin2FAController extends Controller
         $codeIndex = array_search($code, $recoveryCodes);
 
         if ($codeIndex === false) {
-            Log::channel('security')->warning('Invalid recovery code attempt', [
+            Log::warning('Invalid recovery code attempt', [
                 'user_id' => $user->id,
                 'ip' => $request->ip(),
             ]);
@@ -239,7 +239,7 @@ class Admin2FAController extends Controller
         $sessionKey = "2fa_verified:{$user->id}";
         Cache::put($sessionKey, true, now()->addHours(8));
 
-        Log::channel('security')->info('Recovery code used', [
+        Log::info('Recovery code used', [
             'user_id' => $user->id,
             'ip' => $request->ip(),
             'remaining_codes' => count($recoveryCodes),
@@ -293,7 +293,7 @@ class Admin2FAController extends Controller
         // Clear verification cache
         Cache::forget("2fa_verified:{$user->id}");
 
-        Log::channel('security')->warning('2FA disabled', [
+        Log::warning('2FA disabled', [
             'user_id' => $user->id,
             'ip' => $request->ip(),
         ]);
@@ -338,7 +338,7 @@ class Admin2FAController extends Controller
         $user->two_factor_recovery_codes = encrypt(json_encode($recoveryCodes));
         $user->save();
 
-        Log::channel('security')->info('Recovery codes regenerated', [
+        Log::info('Recovery codes regenerated', [
             'user_id' => $user->id,
             'ip' => $request->ip(),
         ]);
