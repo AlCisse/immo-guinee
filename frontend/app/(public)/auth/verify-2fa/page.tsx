@@ -14,12 +14,23 @@ export default function Verify2FAPage() {
   const [error, setError] = useState('');
   const [showRecoveryInput, setShowRecoveryInput] = useState(false);
   const [recoveryCode, setRecoveryCode] = useState('');
+  const [hasValidSession, setHasValidSession] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Focus first input on mount
+  // Check for valid 2FA session on mount
   useEffect(() => {
+    const pending2fa = sessionStorage.getItem('pending_2fa');
+    const pendingToken = sessionStorage.getItem('pending_2fa_token');
+
+    if (!pending2fa || !pendingToken) {
+      // No pending 2FA session - redirect to login
+      router.push('/auth/login');
+      return;
+    }
+
+    setHasValidSession(true);
     inputRefs.current[0]?.focus();
-  }, []);
+  }, [router]);
 
   const handleChange = (index: number, value: string) => {
     // Only allow numbers
@@ -72,14 +83,49 @@ export default function Verify2FAPage() {
     setError('');
 
     try {
-      const response = await apiClient.post('/admin/2fa/verify', { code: codeToSubmit });
+      // Get the pending token from sessionStorage
+      const pendingToken = sessionStorage.getItem('pending_2fa_token');
+      if (!pendingToken) {
+        setError('Session expiree. Veuillez vous reconnecter.');
+        router.push('/auth/login');
+        return;
+      }
+
+      // Use the pending token for this request
+      const response = await apiClient.post('/admin/2fa/verify', { code: codeToSubmit }, {
+        headers: {
+          'Authorization': `Bearer ${pendingToken}`
+        }
+      });
 
       if (response.data.success) {
+        // SECURITY: Now that 2FA is verified, move credentials to localStorage
+        const pendingUser = sessionStorage.getItem('pending_2fa_user');
+        const pendingRedirect = sessionStorage.getItem('pending_2fa_redirect');
+
+        // Store token and user in localStorage (permanent storage)
+        localStorage.setItem('access_token', pendingToken);
+        if (pendingUser) {
+          localStorage.setItem('user', pendingUser);
+        }
+        if (pendingRedirect) {
+          localStorage.setItem('redirect_data', pendingRedirect);
+        }
+
+        // Clean up ALL pending 2FA data from sessionStorage
+        sessionStorage.removeItem('pending_2fa');
+        sessionStorage.removeItem('pending_2fa_token');
+        sessionStorage.removeItem('pending_2fa_user');
+        sessionStorage.removeItem('pending_2fa_redirect');
+
         toast.success('Verification reussie');
+
         // Get the intended destination from session storage or redirect to admin
         const intendedPath = sessionStorage.getItem('2fa_redirect') || '/admin';
         sessionStorage.removeItem('2fa_redirect');
-        router.push(intendedPath);
+
+        // Force page reload to re-initialize auth context with new credentials
+        window.location.href = intendedPath;
       }
     } catch (err: any) {
       console.error('2FA verification error:', err);
@@ -103,13 +149,45 @@ export default function Verify2FAPage() {
     setError('');
 
     try {
-      const response = await apiClient.post('/admin/2fa/verify', { code: recoveryCode.trim() });
+      // Get the pending token from sessionStorage
+      const pendingToken = sessionStorage.getItem('pending_2fa_token');
+      if (!pendingToken) {
+        setError('Session expiree. Veuillez vous reconnecter.');
+        router.push('/auth/login');
+        return;
+      }
+
+      const response = await apiClient.post('/admin/2fa/verify', { code: recoveryCode.trim() }, {
+        headers: {
+          'Authorization': `Bearer ${pendingToken}`
+        }
+      });
 
       if (response.data.success) {
+        // SECURITY: Now that 2FA is verified, move credentials to localStorage
+        const pendingUser = sessionStorage.getItem('pending_2fa_user');
+        const pendingRedirect = sessionStorage.getItem('pending_2fa_redirect');
+
+        localStorage.setItem('access_token', pendingToken);
+        if (pendingUser) {
+          localStorage.setItem('user', pendingUser);
+        }
+        if (pendingRedirect) {
+          localStorage.setItem('redirect_data', pendingRedirect);
+        }
+
+        // Clean up ALL pending 2FA data
+        sessionStorage.removeItem('pending_2fa');
+        sessionStorage.removeItem('pending_2fa_token');
+        sessionStorage.removeItem('pending_2fa_user');
+        sessionStorage.removeItem('pending_2fa_redirect');
+
         toast.success(response.data.message || 'Verification reussie');
         const intendedPath = sessionStorage.getItem('2fa_redirect') || '/admin';
         sessionStorage.removeItem('2fa_redirect');
-        router.push(intendedPath);
+
+        // Force page reload to re-initialize auth context
+        window.location.href = intendedPath;
       }
     } catch (err: any) {
       console.error('Recovery code error:', err);
@@ -120,11 +198,32 @@ export default function Verify2FAPage() {
   };
 
   const handleLogout = () => {
+    // Clean up localStorage
     localStorage.removeItem('access_token');
     localStorage.removeItem('user');
+    localStorage.removeItem('redirect_data');
+
+    // Clean up ALL pending 2FA data from sessionStorage
+    sessionStorage.removeItem('pending_2fa');
+    sessionStorage.removeItem('pending_2fa_token');
+    sessionStorage.removeItem('pending_2fa_user');
+    sessionStorage.removeItem('pending_2fa_redirect');
     sessionStorage.removeItem('2fa_redirect');
+
     router.push('/auth/login');
   };
+
+  // Show loading while checking session or redirecting
+  if (!hasValidSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-dark-bg">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent mx-auto mb-4" />
+          <p className="text-neutral-500">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)] md:min-h-[calc(100vh-4rem)]">

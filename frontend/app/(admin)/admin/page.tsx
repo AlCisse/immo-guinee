@@ -356,8 +356,8 @@ export default function AdminDashboardPage() {
                 />
                 <QuickAction
                   icon={Activity}
-                  label="Logs d'audit"
-                  href="/admin/logs"
+                  label="Statistiques"
+                  href="/admin/stats"
                 />
               </div>
             </motion.div>
@@ -512,12 +512,12 @@ export default function AdminDashboardPage() {
                   <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link
-                  href="/admin/export"
+                  href="/admin/documentation"
                   className="flex items-center justify-between py-2 text-sm text-neutral-600 dark:text-neutral-400 hover:text-primary-500"
                 >
                   <span className="flex items-center gap-2">
                     <Download className="w-4 h-4" />
-                    Exporter donnees
+                    Documentation
                   </span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
