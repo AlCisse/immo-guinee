@@ -97,25 +97,55 @@ export default function ListingDetailScreen() {
     },
   });
 
+  // Format phone number for Guinée (+224)
+  const formatPhoneForCall = (phone: string): string => {
+    let cleaned = phone.replace(/\D/g, '');
+    // Si le numéro commence par 6 (mobile guinéen), ajouter +224
+    if (cleaned.startsWith('6') && cleaned.length === 9) {
+      return `+224${cleaned}`;
+    }
+    // Si déjà avec 224
+    if (cleaned.startsWith('224')) {
+      return `+${cleaned}`;
+    }
+    return phone;
+  };
+
+  const formatPhoneForWhatsApp = (phone: string): string => {
+    let cleaned = phone.replace(/\D/g, '');
+    // Si le numéro commence par 6 (mobile guinéen), ajouter 224
+    if (cleaned.startsWith('6') && cleaned.length === 9) {
+      return `224${cleaned}`;
+    }
+    // Si commence par +, enlever le +
+    if (cleaned.startsWith('224')) {
+      return cleaned;
+    }
+    return cleaned;
+  };
+
   const handleCall = () => {
-    if (!listing?.user?.telephone) {
+    const phone = listing?.user?.telephone;
+    if (!phone) {
       Alert.alert('Erreur', 'Numero de telephone non disponible');
       return;
     }
-    Linking.openURL(`tel:${listing.user.telephone}`);
+    const formattedPhone = formatPhoneForCall(phone);
+    Linking.openURL(`tel:${formattedPhone}`);
   };
 
   const handleWhatsApp = () => {
-    if (!listing?.user?.telephone) {
+    const phone = listing?.user?.telephone;
+    if (!phone) {
       Alert.alert('Erreur', 'Numero de telephone non disponible');
       return;
     }
-    const phone = listing.user.telephone.replace(/\D/g, '');
-    const message = encodeURIComponent(`Bonjour, je suis interesse par votre annonce "${listing.titre}" sur ImmoGuinee.`);
-    Linking.openURL(`https://wa.me/${phone}?text=${message}`);
+    const formattedPhone = formatPhoneForWhatsApp(phone);
+    const message = encodeURIComponent(`Bonjour, je suis intéressé par votre annonce "${listing?.titre}" sur ImmoGuinée.`);
+    Linking.openURL(`https://wa.me/${formattedPhone}?text=${message}`);
   };
 
-  const handleMessage = async () => {
+  const handleMessage = () => {
     if (!isAuthenticated) {
       Alert.alert('Connexion requise', 'Veuillez vous connecter pour envoyer un message', [
         { text: 'Annuler', style: 'cancel' },
@@ -123,7 +153,11 @@ export default function ListingDetailScreen() {
       ]);
       return;
     }
-    Alert.alert('Info', 'Fonctionnalite de messagerie en cours de developpement');
+
+    if (!id || !listing) return;
+
+    // Navigate directly to chat with listing info
+    router.push(`/chat/${id}?listingId=${id}&listingTitle=${encodeURIComponent(listing.titre)}&listingPhoto=${encodeURIComponent(listing.photo_principale || listing.main_photo_url || '')}&listingLocation=${encodeURIComponent(`${listing.quartier}, ${listing.commune}`)}&listingPrice=${encodeURIComponent(listing.formatted_price || `${listing.loyer_mensuel?.toLocaleString()} GNF`)}&ownerName=${encodeURIComponent(listing.user?.nom_complet || 'Proprietaire')}&ownerPhoto=${encodeURIComponent(listing.user?.photo_profil || '')}` as any);
   };
 
   const handleFavorite = () => {
@@ -228,7 +262,7 @@ export default function ListingDetailScreen() {
           >
             {images.length > 0 ? (
               images.map((img, index) => (
-                <Image key={index} source={{ uri: img }} style={[styles.galleryImage, { width, height: imageHeight }]} />
+                <Image key={index} source={{ uri: img }} style={[styles.galleryImage, { width, height: imageHeight }]} resizeMode="cover" />
               ))
             ) : (
               <View style={[styles.galleryImage, styles.imagePlaceholder, { width, height: imageHeight }]}>
@@ -481,7 +515,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   galleryImage: {
-    resizeMode: 'cover',
+    // resizeMode is set on Image component directly
   },
   imagePlaceholder: {
     backgroundColor: Colors.neutral[100],
