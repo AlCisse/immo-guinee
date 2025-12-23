@@ -132,7 +132,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (data.success && token) {
-        // Store token and user
+        // Check if 2FA verification is required BEFORE storing credentials
+        if (requires2fa) {
+          // SECURITY: Do NOT store the token yet - only store it after 2FA verification
+          // Store temporary data needed for 2FA flow in sessionStorage (not localStorage)
+          sessionStorage.setItem('pending_2fa_token', token);
+          sessionStorage.setItem('pending_2fa_user', JSON.stringify(user));
+          if (redirect) {
+            sessionStorage.setItem('pending_2fa_redirect', JSON.stringify(redirect));
+          }
+          // Store the original intended destination for after 2FA
+          const originalDashboard = user?.roles?.includes('admin') ? '/admin' : '/dashboard';
+          sessionStorage.setItem('2fa_redirect', originalDashboard);
+          // Mark that 2FA is pending - this prevents access to protected routes
+          sessionStorage.setItem('pending_2fa', 'true');
+          router.push('/auth/verify-2fa');
+          return;
+        }
+
+        // No 2FA required - store token and user normally
         localStorage.setItem('access_token', token);
         localStorage.setItem('user', JSON.stringify(user));
         if (redirect) {
@@ -141,15 +159,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         setUser(user);
         setRedirectData(redirect || null);
-
-        // Check if 2FA verification is required
-        if (requires2fa) {
-          // Store the original intended destination for after 2FA
-          const originalDashboard = user?.roles?.includes('admin') ? '/admin' : '/dashboard';
-          sessionStorage.setItem('2fa_redirect', originalDashboard);
-          router.push('/auth/verify-2fa');
-          return;
-        }
 
         // Redirect to role-based dashboard
         const redirectPath = redirect?.dashboard_path || '/dashboard';
@@ -277,7 +286,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Clear local storage
       localStorage.removeItem('access_token');
       localStorage.removeItem('user');
+      localStorage.removeItem('redirect_data');
+
+      // SECURITY: Clear any pending 2FA data from sessionStorage
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('pending_2fa');
+        sessionStorage.removeItem('pending_2fa_token');
+        sessionStorage.removeItem('pending_2fa_user');
+        sessionStorage.removeItem('pending_2fa_redirect');
+        sessionStorage.removeItem('2fa_redirect');
+      }
+
       setUser(null);
+      setRedirectData(null);
 
       // Redirect to home
       router.push('/');
@@ -408,10 +429,30 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   React.useEffect(() => {
+    // SECURITY: Check if 2FA verification is pending
+    const pending2fa = typeof window !== 'undefined' && sessionStorage.getItem('pending_2fa') === 'true';
+    if (pending2fa) {
+      // User logged in but hasn't completed 2FA - redirect to verify
+      router.push('/auth/verify-2fa');
+      return;
+    }
+
     if (!isLoading && !isAuthenticated) {
       router.push('/connexion?redirect=' + encodeURIComponent(window.location.pathname));
     }
   }, [isAuthenticated, isLoading, router]);
+
+  // Check pending 2FA on render as well
+  if (typeof window !== 'undefined' && sessionStorage.getItem('pending_2fa') === 'true') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-dark-bg">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent mx-auto mb-4" />
+          <p className="text-neutral-500">Redirection vers la verification 2FA...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -437,6 +478,14 @@ export function AdminRoute({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   React.useEffect(() => {
+    // SECURITY: Check if 2FA verification is pending
+    const pending2fa = typeof window !== 'undefined' && sessionStorage.getItem('pending_2fa') === 'true';
+    if (pending2fa) {
+      // User logged in but hasn't completed 2FA - redirect to verify
+      router.push('/auth/verify-2fa');
+      return;
+    }
+
     if (!isLoading) {
       if (!isAuthenticated) {
         router.push('/connexion?redirect=' + encodeURIComponent(window.location.pathname));
@@ -447,6 +496,18 @@ export function AdminRoute({ children }: { children: React.ReactNode }) {
       }
     }
   }, [isAuthenticated, isLoading, isAdmin, redirectData, router]);
+
+  // Check pending 2FA on render as well
+  if (typeof window !== 'undefined' && sessionStorage.getItem('pending_2fa') === 'true') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-dark-bg">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent mx-auto mb-4" />
+          <p className="text-neutral-500">Redirection vers la verification 2FA...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Show loading spinner while checking auth or redirecting
   if (isLoading || !isAuthenticated || !isAdmin()) {
@@ -475,6 +536,13 @@ export function RoleRoute({
   const router = useRouter();
 
   React.useEffect(() => {
+    // SECURITY: Check if 2FA verification is pending
+    const pending2fa = typeof window !== 'undefined' && sessionStorage.getItem('pending_2fa') === 'true';
+    if (pending2fa) {
+      router.push('/auth/verify-2fa');
+      return;
+    }
+
     if (!isLoading) {
       if (!isAuthenticated) {
         router.push('/connexion?redirect=' + encodeURIComponent(window.location.pathname));
@@ -484,6 +552,18 @@ export function RoleRoute({
       }
     }
   }, [isAuthenticated, isLoading, hasAnyRole, roles, redirectData, router]);
+
+  // Check pending 2FA on render as well
+  if (typeof window !== 'undefined' && sessionStorage.getItem('pending_2fa') === 'true') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-dark-bg">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent mx-auto mb-4" />
+          <p className="text-neutral-500">Redirection vers la verification 2FA...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

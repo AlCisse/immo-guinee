@@ -17,7 +17,6 @@ import {
   Settings,
   Shield,
   Bell,
-  HelpCircle,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -95,7 +94,6 @@ const getBottomNavItems = (counts: SidebarCounts): NavItem[] => [
   { name: 'Notifications', href: '/admin/notifications', icon: Bell, badgeKey: 'notifications' },
   { name: 'Documentation', href: '/admin/documentation', icon: BookOpen },
   { name: 'Paramètres', href: '/admin/settings', icon: Settings },
-  { name: 'Aide', href: '/admin/aide', icon: HelpCircle },
 ];
 
 interface AdminSidebarProps {
