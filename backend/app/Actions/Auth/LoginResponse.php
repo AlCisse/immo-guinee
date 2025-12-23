@@ -30,15 +30,27 @@ class LoginResponse
         // Update last login timestamp
         $user->update(['last_login_at' => now()]);
 
+        // Check if user has 2FA enabled and confirmed
+        $requires2fa = !empty($user->two_factor_secret) && !empty($user->two_factor_confirmed_at);
+
+        $responseData = [
+            'user' => $this->formatUser($user),
+            'token' => $token,
+            'token_type' => $tokenType,
+            'redirect' => $redirectData,
+        ];
+
+        // If 2FA is required, modify the redirect to go to verify-2fa page
+        if ($requires2fa) {
+            $responseData['requires_2fa'] = true;
+            $responseData['redirect']['redirect_url'] = config('app.frontend_url', 'https://immoguinee.com') . '/auth/verify-2fa';
+            $responseData['redirect']['dashboard_path'] = '/auth/verify-2fa';
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Login successful',
-            'data' => [
-                'user' => $this->formatUser($user),
-                'token' => $token,
-                'token_type' => $tokenType,
-                'redirect' => $redirectData,
-            ],
+            'data' => $responseData,
         ]);
     }
 

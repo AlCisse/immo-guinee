@@ -107,6 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user: User;
         redirect: RedirectData;
         action?: string;
+        requires_2fa?: boolean;
       }> = response.data;
 
       console.log('Login response:', data);
@@ -117,11 +118,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const token = responseData.token || responseData.access_token || (data as any).token || (data as any).access_token;
       const user = responseData.user || (data as any).user;
       const redirect = responseData.redirect || (data as any).redirect;
+      const requires2fa = responseData.requires_2fa || (data as any).requires_2fa;
 
       // Check if user needs to verify OTP (unverified phone)
       if (data.success && action === 'verify_otp') {
         const userPhone = user?.telephone || telephone;
-        toast('Veuillez vérifier votre numéro pour continuer', {
+        toast('Veuillez verifier votre numero pour continuer', {
           duration: 4000,
           icon: '📱',
         });
@@ -139,6 +141,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         setUser(user);
         setRedirectData(redirect || null);
+
+        // Check if 2FA verification is required
+        if (requires2fa) {
+          // Store the original intended destination for after 2FA
+          const originalDashboard = user?.roles?.includes('admin') ? '/admin' : '/dashboard';
+          sessionStorage.setItem('2fa_redirect', originalDashboard);
+          router.push('/auth/verify-2fa');
+          return;
+        }
 
         // Redirect to role-based dashboard
         const redirectPath = redirect?.dashboard_path || '/dashboard';
