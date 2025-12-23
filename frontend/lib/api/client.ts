@@ -38,6 +38,7 @@ apiClient.interceptors.response.use(
   },
   async (error: AxiosError) => {
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+    const responseData = error.response?.data as { requires_2fa?: boolean; message?: string } | undefined;
 
     // Handle 401 Unauthorized
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -49,6 +50,16 @@ apiClient.interceptors.response.use(
         localStorage.removeItem('user');
         window.location.href = '/auth/login';
       }
+    }
+
+    // Handle 403 with 2FA required
+    if (error.response?.status === 403 && responseData?.requires_2fa) {
+      if (typeof window !== 'undefined') {
+        // Store the current path to redirect back after 2FA
+        sessionStorage.setItem('2fa_redirect', window.location.pathname);
+        window.location.href = '/auth/verify-2fa';
+      }
+      return Promise.reject(error);
     }
 
     // Handle 419 CSRF token mismatch
