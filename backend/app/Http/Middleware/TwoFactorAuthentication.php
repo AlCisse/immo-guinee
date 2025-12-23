@@ -29,14 +29,7 @@ class TwoFactorAuthentication
 
         // Check if 2FA is enabled and confirmed for this user
         if (empty($user->two_factor_secret) || empty($user->two_factor_confirmed_at)) {
-            // 2FA not configured - require setup for admins
-            if ($user->hasRole('admin')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Configuration 2FA requise pour les administrateurs.',
-                    'requires_2fa_setup' => true,
-                ], 403);
-            }
+            // 2FA not configured - allow access (user can configure later in settings)
             return $next($request);
         }
 
