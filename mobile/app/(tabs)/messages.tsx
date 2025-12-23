@@ -10,10 +10,10 @@ import {
   ActivityIndicator,
   useWindowDimensions,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { Conversation } from '@/types';
@@ -21,6 +21,7 @@ import Colors, { lightTheme } from '@/constants/Colors';
 
 export default function MessagesScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { isAuthenticated, user } = useAuth();
   const { width } = useWindowDimensions();
   const [refreshing, setRefreshing] = useState(false);
@@ -38,13 +39,24 @@ export default function MessagesScreen() {
     enabled: isAuthenticated,
   });
 
+  // Refetch conversations and unread count when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      if (isAuthenticated) {
+        refetch();
+        queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
+      }
+    }, [isAuthenticated, refetch, queryClient])
+  );
+
   const conversations = data || [];
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await refetch();
+    queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
     setRefreshing(false);
-  }, [refetch]);
+  }, [refetch, queryClient]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
