@@ -457,7 +457,7 @@ class ListingController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'listing' => $listing->load(['user:id,nom_complet,telephone,photo_profil,badge,type_compte,telephone_verified_at,statut_verification', 'listingPhotos']),
+                    'listing' => $listing->load(['user:id,nom_complet,telephone,badge,type_compte,telephone_verified_at,statut_verification', 'listingPhotos']),
                 ],
             ]);
 
