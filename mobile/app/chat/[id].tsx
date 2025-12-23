@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { Message } from '@/types';
@@ -32,6 +33,7 @@ export default function ChatScreen() {
   }>();
 
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const flatListRef = useRef<FlatList>(null);
 
@@ -58,16 +60,21 @@ export default function ChatScreen() {
 
           if (existing) {
             setConversationId(existing.id);
-            // Load messages
+            // Load messages (this marks them as read on the backend)
             const msgResponse = await api.messaging.getMessages(existing.id);
             setMessages(msgResponse.data?.data || []);
+            // Refresh unread count since messages were marked as read
+            queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
           }
           // If no existing conversation, we'll create one on first message
         } else {
           // Coming from messages list - we have a conversation ID
           setConversationId(params.id);
+          // Load messages (this marks them as read on the backend)
           const msgResponse = await api.messaging.getMessages(params.id);
           setMessages(msgResponse.data?.data || []);
+          // Refresh unread count since messages were marked as read
+          queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
         }
       } catch (error) {
         console.error('Error loading conversation:', error);
@@ -77,7 +84,7 @@ export default function ChatScreen() {
     };
 
     loadConversation();
-  }, [params.id, listingId, isNewConversation]);
+  }, [params.id, listingId, isNewConversation, queryClient]);
 
   // Poll for new messages
   useEffect(() => {
@@ -87,13 +94,15 @@ export default function ChatScreen() {
       try {
         const response = await api.messaging.getMessages(conversationId);
         setMessages(response.data?.data || []);
+        // Refresh unread count (marks messages as read on backend)
+        queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
       } catch (error) {
         // Silent fail for polling
       }
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [conversationId]);
+  }, [conversationId, queryClient]);
 
   const handleSend = async () => {
     const trimmedMessage = message.trim();
