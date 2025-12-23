@@ -100,7 +100,14 @@ Route::prefix('listings')->group(function () {
     Route::get('/{id}/photos', [ListingPhotoController::class, 'index']);
 });
 
-// Contracts endpoints
+// Public contract signing endpoints (no auth required)
+Route::prefix('contracts/sign')->group(function () {
+    Route::get('/{token}', [ContractController::class, 'showByToken']); // View contract with token
+    Route::post('/{token}/request-otp', [ContractController::class, 'requestOtpByToken']); // Request OTP
+    Route::post('/{token}', [ContractController::class, 'signByToken']); // Sign with token + OTP
+});
+
+// Contracts endpoints (protected)
 Route::prefix('contracts')->middleware('auth:api')->group(function () {
     Route::get('/', [ContractController::class, 'index']);
     Route::get('/my', [ContractController::class, 'index']); // Alias for user's contracts
@@ -223,8 +230,18 @@ Route::prefix('insurances')->middleware('auth:api')->group(function () {
     Route::get('/{insurance}/certificate', [\App\Http\Controllers\Api\InsuranceController::class, 'downloadCertificate']);
 });
 
-// Admin endpoints - strictly admin-only
-Route::prefix('admin')->middleware(['auth:api', 'ensure.role:admin'])->group(function () {
+// Admin 2FA setup routes (before 2FA middleware)
+Route::prefix('admin/2fa')->middleware(['auth:api', 'ensure.role:admin'])->group(function () {
+    Route::get('/status', [\App\Http\Controllers\Admin\Admin2FAController::class, 'status']);
+    Route::post('/setup', [\App\Http\Controllers\Admin\Admin2FAController::class, 'setup']);
+    Route::post('/confirm', [\App\Http\Controllers\Admin\Admin2FAController::class, 'confirm']);
+    Route::post('/verify', [\App\Http\Controllers\Admin\Admin2FAController::class, 'verify']);
+    Route::post('/disable', [\App\Http\Controllers\Admin\Admin2FAController::class, 'disable']);
+    Route::post('/recovery-codes', [\App\Http\Controllers\Admin\Admin2FAController::class, 'regenerateRecoveryCodes']);
+});
+
+// Admin endpoints - strictly admin-only with 2FA required
+Route::prefix('admin')->middleware(['auth:api', 'ensure.role:admin', '2fa'])->group(function () {
     // Dashboard and sidebar
     Route::get('/sidebar-counts', [\App\Http\Controllers\Api\AdminController::class, 'sidebarCounts']);
     Route::get('/dashboard-stats', [\App\Http\Controllers\Api\AdminController::class, 'dashboardStats']);
