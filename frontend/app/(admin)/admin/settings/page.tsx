@@ -25,7 +25,7 @@ import {
   X,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { api } from '@/lib/api/client';
+import { apiClient } from '@/lib/api/client';
 import QRCode from 'qrcode';
 
 // Settings Section Component
@@ -352,7 +352,7 @@ export default function AdminSettingsPage() {
   const { data: twoFAStatus, refetch: refetch2FAStatus, isLoading: is2FALoading } = useQuery({
     queryKey: ['admin-2fa-status'],
     queryFn: async () => {
-      const response = await api.get('/admin/2fa/status');
+      const response = await apiClient.get('/admin/2fa/status');
       return response.data?.data;
     },
     staleTime: 0, // Always fetch fresh data
@@ -362,7 +362,7 @@ export default function AdminSettingsPage() {
   // Setup 2FA mutation
   const setup2FAMutation = useMutation({
     mutationFn: async () => {
-      const response = await api.post('/admin/2fa/setup');
+      const response = await apiClient.post('/admin/2fa/setup');
       return response.data?.data;
     },
     onSuccess: (data) => {
@@ -377,7 +377,7 @@ export default function AdminSettingsPage() {
   // Confirm 2FA mutation
   const confirm2FAMutation = useMutation({
     mutationFn: async (code: string) => {
-      const response = await api.post('/admin/2fa/confirm', { code });
+      const response = await apiClient.post('/admin/2fa/confirm', { code });
       return response.data;
     },
     onSuccess: () => {
@@ -392,7 +392,7 @@ export default function AdminSettingsPage() {
   // Disable 2FA mutation
   const disable2FAMutation = useMutation({
     mutationFn: async ({ password, code }: { password: string; code: string }) => {
-      const response = await api.post('/admin/2fa/disable', { password, code });
+      const response = await apiClient.post('/admin/2fa/disable', { password, code });
       return response.data;
     },
     onSuccess: () => {
@@ -553,7 +553,7 @@ export default function AdminSettingsPage() {
                     onClick={() => {
                       const code = prompt('Entrez le code 2FA actuel pour regenerer les codes:');
                       if (code) {
-                        api.post('/admin/2fa/recovery-codes', { code })
+                        apiClient.post('/admin/2fa/recovery-codes', { code })
                           .then((res) => {
                             const codes = res.data?.data?.recovery_codes;
                             if (codes) {
