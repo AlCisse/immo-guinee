@@ -37,16 +37,8 @@ function useLanguage() {
   const t = useCallback((key: string) => {
     // Simple translation - returns key if not found
     const translations: Record<string, string> = {
-      'language.select': locale === 'fr' ? 'Choisir la langue' :
-                         locale === 'en' ? 'Select language' :
-                         locale === 'es' ? 'Seleccionar idioma' :
-                         locale === 'de' ? 'Sprache wahlen' :
-                         '选择语言',
-      'settings.language': locale === 'fr' ? 'Langue' :
-                           locale === 'en' ? 'Language' :
-                           locale === 'es' ? 'Idioma' :
-                           locale === 'de' ? 'Sprache' :
-                           '语言',
+      'language.select': locale === 'fr' ? 'Choisir la langue' : 'Select language',
+      'settings.language': locale === 'fr' ? 'Langue' : 'Language',
     };
     return translations[key] || key;
   }, [locale]);
@@ -102,36 +94,49 @@ export default function LanguageSelector({
     setIsOpen(false);
   };
 
-  // Navbar variant - styled native select for guaranteed functionality
+  // Navbar variant - custom dropdown with flags
   if (variant === 'navbar') {
-    const handleNativeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const newLocale = e.target.value as Locale;
-      if (newLocale !== locale) {
-        handleSelect(newLocale);
-      }
-    };
-
     return (
-      <div className={clsx('relative inline-flex items-center', className)}>
-        <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-neutral-100 dark:bg-dark-bg rounded-lg hover:bg-neutral-200 dark:hover:bg-dark-hover transition-colors">
-          <span className="text-base">{currentConfig.flag}</span>
-          <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300 hidden sm:inline">
-            {locale.toUpperCase()}
-          </span>
-          <ChevronDown className="w-3.5 h-3.5 text-neutral-500 dark:text-neutral-400" />
-        </div>
-        <select
-          value={locale}
-          onChange={handleNativeChange}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+      <div ref={dropdownRef} className={clsx('relative inline-block', className)}>
+        <button
+          type="button"
+          onClick={toggleDropdown}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-neutral-100 dark:bg-dark-bg rounded-lg hover:bg-neutral-200 dark:hover:bg-dark-hover transition-colors"
           aria-label="Changer de langue"
         >
-          {SUPPORTED_LOCALES.map((loc) => (
-            <option key={loc.code} value={loc.code}>
-              {loc.flag} {loc.nativeName}
-            </option>
-          ))}
-        </select>
+          <span className="text-lg">{currentConfig.flag}</span>
+          <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300 hidden sm:inline">
+            {currentConfig.nativeName}
+          </span>
+          <ChevronDown className={clsx('w-3.5 h-3.5 text-neutral-500 dark:text-neutral-400 transition-transform', isOpen && 'rotate-180')} />
+        </button>
+
+        {isOpen && (
+          <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-dark-card rounded-xl shadow-xl border border-neutral-200 dark:border-dark-border py-1 z-50">
+            {SUPPORTED_LOCALES.map((loc) => (
+              <button
+                type="button"
+                key={loc.code}
+                onClick={() => handleSelect(loc.code)}
+                className={clsx(
+                  'w-full px-3 py-2.5 text-left flex items-center gap-3 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors',
+                  locale === loc.code && 'bg-primary-50 dark:bg-primary-500/10'
+                )}
+              >
+                <span className="text-lg">{loc.flag}</span>
+                <span className={clsx(
+                  'text-sm font-medium',
+                  locale === loc.code ? 'text-primary-600 dark:text-primary-400' : 'text-neutral-700 dark:text-neutral-300'
+                )}>
+                  {loc.nativeName}
+                </span>
+                {locale === loc.code && (
+                  <Check className="w-4 h-4 text-primary-500 ml-auto" />
+                )}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     );
   }

@@ -162,3 +162,6 @@ docs/api/.cache/
 
 # Local dev secrets
 docker/secrets/
+
+# Windows reserved names (cannot delete on Windows)
+nul

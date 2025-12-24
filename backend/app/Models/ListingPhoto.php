@@ -167,7 +167,18 @@ class ListingPhoto extends Model
             }
         }
 
-        // For Spaces or other S3 disks
+        // For Spaces disks, use CDN URL with proper folder prefix
+        // Laravel S3 driver's url() doesn't include the 'root' config in the URL
+        if (str_starts_with($effectiveDisk, 'spaces-')) {
+            $cdnUrl = config('filesystems.disks.spaces-listings.url', 'https://images.immoguinee.com');
+            $root = config("filesystems.disks.{$effectiveDisk}.root", '');
+
+            // Build URL: {cdn_url}/{root}/{path}
+            $fullPath = $root ? "{$root}/{$path}" : $path;
+            return rtrim($cdnUrl, '/') . '/' . ltrim($fullPath, '/');
+        }
+
+        // For other S3 disks
         $disk = Storage::disk($effectiveDisk);
 
         try {

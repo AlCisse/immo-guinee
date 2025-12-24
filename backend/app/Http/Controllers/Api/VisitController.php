@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Visit;
 use App\Models\Listing;
 use App\Models\User;
+use App\Models\Notification as AppNotification;
 use App\Notifications\VisitRequestNotification;
 use App\Services\WhatsAppService;
 use Illuminate\Http\JsonResponse;
@@ -153,7 +154,25 @@ class VisitController extends Controller
         // Generate response token for client
         $visit->generateResponseToken();
 
-        // Send notification to client if requested
+        // Send in-app notification to property owner
+        $owner = User::find($listing->user_id);
+        if ($owner) {
+            $dateFormatted = \Carbon\Carbon::parse($validated['date_visite'])->format('d/m/Y');
+            AppNotification::notify(
+                $owner,
+                AppNotification::TYPE_VISIT_REQUESTED,
+                'Nouvelle demande de visite',
+                "Une visite est demandée pour \"{$listing->titre}\" le {$dateFormatted} à {$validated['heure_visite']}",
+                [
+                    'visit_id' => $visit->id,
+                    'listing_id' => $listing->id,
+                    'client_nom' => $validated['client_nom'],
+                ],
+                '/dashboard/visites' // action_url - redirect to visits page
+            );
+        }
+
+        // Send WhatsApp notification to client if requested
         if ($validated['send_notification'] ?? true) {
             $this->sendVisitNotification($visit);
         }

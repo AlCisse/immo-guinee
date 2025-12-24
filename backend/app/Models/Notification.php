@@ -60,11 +60,11 @@ class Notification extends Model
     const TYPE_SYSTEM = 'system';
     const TYPE_WELCOME = 'welcome';
 
-    // Priorités
-    const PRIORITY_LOW = 'low';
-    const PRIORITY_NORMAL = 'normal';
-    const PRIORITY_HIGH = 'high';
-    const PRIORITY_URGENT = 'urgent';
+    // Priorités (en majuscules pour correspondre à la contrainte DB)
+    const PRIORITY_LOW = 'LOW';
+    const PRIORITY_NORMAL = 'NORMAL';
+    const PRIORITY_HIGH = 'HIGH';
+    const PRIORITY_URGENT = 'URGENT';
 
     /**
      * Relation avec l'utilisateur

@@ -46,6 +46,8 @@ class Contract extends Model
         'locataire_signature_ip',
         'locataire_signature_data',
         'locataire_signature_otp',
+        'locataire_signature_token',
+        'locataire_signature_token_expires_at',
         // Lock/archive fields
         'cachet_electronique',
         'cachet_applied_at',
@@ -93,7 +95,32 @@ class Contract extends Model
             'resiliation_effective_date' => 'date',
             'preavis_months' => 'integer',
             'resiliation_confirmed_at' => 'datetime',
+            'locataire_signature_token_expires_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Generate a unique signature token for the locataire
+     * Token expires in 7 days
+     */
+    public function generateSignatureToken(): string
+    {
+        $token = bin2hex(random_bytes(32));
+        $this->update([
+            'locataire_signature_token' => $token,
+            'locataire_signature_token_expires_at' => now()->addDays(7),
+        ]);
+        return $token;
+    }
+
+    /**
+     * Verify signature token
+     */
+    public function verifySignatureToken(string $token): bool
+    {
+        return $this->locataire_signature_token === $token
+            && $this->locataire_signature_token_expires_at
+            && $this->locataire_signature_token_expires_at->isFuture();
     }
 
     /**

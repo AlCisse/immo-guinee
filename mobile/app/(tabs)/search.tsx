@@ -63,7 +63,8 @@ export default function SearchScreen() {
       if (filters.meuble !== undefined) params.meuble = filters.meuble ? '1' : '0';
 
       try {
-        const response = await api.listings.search(params);
+        // Use listings endpoint instead of search (both support 'q' parameter)
+        const response = await api.listings.list(params);
         return response.data?.data?.listings || [];
       } catch (err: any) {
         console.error('Search API error:', err?.response?.data || err?.message || err);

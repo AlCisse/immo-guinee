@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Home,
   Search,
@@ -47,6 +47,7 @@ function NotificationDropdown({
   onClose: () => void;
 }) {
   const { t } = useLocale();
+  const router = useRouter();
   const { data, isLoading } = useNotifications(isOpen);
   const markAsRead = useMarkNotificationRead();
   const markAllAsRead = useMarkAllNotificationsRead();
@@ -68,8 +69,18 @@ function NotificationDropdown({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen, onClose]);
 
-  const handleMarkAsRead = (id: string) => {
-    markAsRead.mutate(id);
+  const handleNotificationClick = (notification: Notification) => {
+    // Mark as read if not already
+    if (!notification.read_at) {
+      markAsRead.mutate(notification.id);
+    }
+
+    // Close the dropdown
+    onClose();
+
+    // Navigate to action URL or default notifications page
+    const targetUrl = notification.action_url || '/notifications';
+    router.push(targetUrl);
   };
 
   const handleMarkAllAsRead = () => {
@@ -136,7 +147,7 @@ function NotificationDropdown({
                 className={`px-4 py-3 hover:bg-neutral-50 dark:hover:bg-dark-hover cursor-pointer transition-colors ${
                   !notification.read_at ? 'bg-primary-50/50 dark:bg-primary-500/5' : ''
                 }`}
-                onClick={() => !notification.read_at && handleMarkAsRead(notification.id)}
+                onClick={() => handleNotificationClick(notification)}
               >
                 <div className="flex items-start gap-3">
                   <div className={`w-2 h-2 mt-2 rounded-full flex-shrink-0 ${
@@ -154,6 +165,7 @@ function NotificationDropdown({
                       {formatTime(notification.created_at)}
                     </p>
                   </div>
+                  <ChevronDown className="w-4 h-4 text-neutral-400 -rotate-90 flex-shrink-0 mt-1" />
                 </div>
               </div>
             ))}

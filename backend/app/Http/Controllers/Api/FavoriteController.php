@@ -15,39 +15,15 @@ class FavoriteController extends Controller
     {
         $user = $request->user();
 
-        \Log::info("GET /favorites for user: {$user->id} ({$user->nom_complet})");
-
-        // Debug: check raw favorites count
-        $rawCount = \DB::table('favorites')->where('user_id', $user->id)->count();
-        \Log::info("Raw favorites count in DB: {$rawCount}");
-
         $favorites = $user->favorites()
-            ->with(['photos' => function ($query) {
-                $query->orderBy('order')->limit(1);
-            }, 'user:id,nom_complet,telephone,badge'])
+            ->with(['listingPhotos', 'user:id,nom_complet,telephone,badge'])
             ->orderByPivot('created_at', 'desc')
             ->get();
-
-        \Log::info("Favorites via relationship: " . $favorites->count());
 
         return response()->json([
             'success' => true,
             'data' => [
                 'favorites' => $favorites->map(function ($listing) {
-                    // Get first photo URL safely - convert to array first to avoid type issues
-                    $photoUrl = null;
-                    $photos = $listing->photos;
-                    if ($photos) {
-                        // Convert to array if it's a collection
-                        $photosArray = is_array($photos) ? $photos : (method_exists($photos, 'toArray') ? $photos->toArray() : []);
-                        if (!empty($photosArray)) {
-                            $firstPhoto = $photosArray[0] ?? null;
-                            if ($firstPhoto) {
-                                $photoUrl = is_object($firstPhoto) ? ($firstPhoto->url ?? null) : ($firstPhoto['url'] ?? null);
-                            }
-                        }
-                    }
-
                     return [
                         'id' => $listing->id,
                         'titre' => $listing->titre,
@@ -63,7 +39,8 @@ class FavoriteController extends Controller
                         'nombre_salles_bain' => $listing->nombre_salles_bain,
                         'surface' => $listing->surface_m2,
                         'surface_m2' => $listing->surface_m2,
-                        'photo_principale' => $photoUrl,
+                        'photo_principale' => $listing->main_photo_url,
+                        'main_photo_url' => $listing->main_photo_url,
                         'est_premium' => $listing->est_premium ?? false,
                         'est_verifie' => $listing->est_verifie ?? false,
                         'added_at' => $listing->pivot->created_at,

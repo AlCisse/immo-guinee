@@ -454,10 +454,15 @@ class ListingController extends Controller
             // Increment view counter
             $this->listingRepository->incrementViews($id);
 
+            // Ensure relations are loaded (they should already be from cache)
+            if (!$listing->relationLoaded('user')) {
+                $listing->load(['user', 'listingPhotos']);
+            }
+
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'listing' => $listing->load(['user:id,nom_complet,telephone,badge,type_compte,telephone_verified_at,statut_verification', 'listingPhotos']),
+                    'listing' => $listing,
                 ],
             ]);
 
