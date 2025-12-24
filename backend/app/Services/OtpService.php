@@ -71,8 +71,6 @@ class OtpService
             'expires_in' => self::OTP_EXPIRATION,
             'message' => 'Code OTP envoyé sur WhatsApp',
             'channel' => 'whatsapp',
-            // Only include OTP in development mode
-            'otp' => config('app.debug') ? $otp : null,
         ];
     }
 

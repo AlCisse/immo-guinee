@@ -33,11 +33,12 @@ Route::get('/health', function () {
     ]);
 });
 
-// Contact form (public)
-Route::post('/contact', [\App\Http\Controllers\Api\ContactController::class, 'store']);
+// Contact form (public) - rate limited to prevent spam
+Route::post('/contact', [\App\Http\Controllers\Api\ContactController::class, 'store'])
+    ->middleware('throttle:5,1'); // 5 requests per minute
 
-// AI endpoints (no authentication required)
-Route::prefix('ai')->group(function () {
+// AI endpoints (no authentication required) - rate limited to prevent abuse
+Route::prefix('ai')->middleware('throttle:10,1')->group(function () { // 10 requests per minute
     Route::post('/optimize-listing', [AiController::class, 'optimizeListing']);
 });
 
