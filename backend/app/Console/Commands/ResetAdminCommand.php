@@ -9,13 +9,23 @@ use Spatie\Permission\Models\Role;
 
 class ResetAdminCommand extends Command
 {
-    protected $signature = 'admin:reset {--phone= : Phone number for new admin} {--password= : Password for new admin}';
+    protected $signature = 'admin:reset {--phone= : Phone number for new admin} {--password= : Password for new admin (required, min 12 chars)}';
     protected $description = 'Remove all existing admins and create a new one';
 
     public function handle(): int
     {
         $phone = $this->option('phone') ?? '224664043115';
-        $password = $this->option('password') ?? '***REDACTED***';
+        $password = $this->option('password');
+
+        // Require password to be provided explicitly - no default password
+        if (!$password) {
+            $password = $this->secret('Enter a strong password (min 12 characters):');
+        }
+
+        if (!$password || strlen($password) < 12) {
+            $this->error('Password is required and must be at least 12 characters long.');
+            return Command::FAILURE;
+        }
 
         $this->info('Removing existing admin users...');
 
