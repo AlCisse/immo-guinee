@@ -75,10 +75,13 @@ export interface Message {
   conversation_id: string;
   sender_id: string;
   sender?: User;
-  type_message: 'TEXT' | 'IMAGE' | 'DOCUMENT';
-  contenu: string;
+  type_message: 'TEXT' | 'VOCAL' | 'PHOTO' | 'IMAGE' | 'DOCUMENT';
+  contenu?: string;
+  media_url?: string;
+  media_mime_type?: string;
   fichier_url?: string;
-  lu: boolean;
+  is_read: boolean;
+  lu?: boolean; // Legacy field
   created_at: string;
 }
 

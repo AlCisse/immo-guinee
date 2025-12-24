@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import {
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useQueryClient } from '@tanstack/react-query';
+import { Audio } from 'expo-av';
 import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { Message } from '@/types';
@@ -42,6 +43,72 @@ export default function ChatScreen() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+
+  // Audio playback state
+  const [playingMessageId, setPlayingMessageId] = useState<string | null>(null);
+  const [audioPosition, setAudioPosition] = useState<number>(0);
+  const [audioDuration, setAudioDuration] = useState<number>(0);
+  const soundRef = useRef<Audio.Sound | null>(null);
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (soundRef.current) {
+        soundRef.current.unloadAsync();
+      }
+    };
+  }, []);
+
+  // Handle audio playback
+  const handlePlayAudio = useCallback(async (messageId: string, mediaUrl: string) => {
+    try {
+      // If same message is playing, pause it
+      if (playingMessageId === messageId && soundRef.current) {
+        const status = await soundRef.current.getStatusAsync();
+        if (status.isLoaded && status.isPlaying) {
+          await soundRef.current.pauseAsync();
+          setPlayingMessageId(null);
+          return;
+        }
+      }
+
+      // Stop any currently playing audio
+      if (soundRef.current) {
+        await soundRef.current.unloadAsync();
+        soundRef.current = null;
+      }
+
+      // Configure audio mode for playback
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: false,
+        shouldDuckAndroid: true,
+      });
+
+      // Load and play new audio
+      const { sound } = await Audio.Sound.createAsync(
+        { uri: mediaUrl },
+        { shouldPlay: true },
+        (status) => {
+          if (status.isLoaded) {
+            setAudioPosition(status.positionMillis || 0);
+            setAudioDuration(status.durationMillis || 0);
+            if (status.didJustFinish) {
+              setPlayingMessageId(null);
+              setAudioPosition(0);
+            }
+          }
+        }
+      );
+
+      soundRef.current = sound;
+      setPlayingMessageId(messageId);
+    } catch (error) {
+      console.error('Error playing audio:', error);
+      Alert.alert('Erreur', 'Impossible de lire le message vocal');
+    }
+  }, [playingMessageId]);
 
   // Determine if we have a conversation ID or a listing ID
   const listingId = params.listingId || params.id;
@@ -167,8 +234,50 @@ export default function ChatScreen() {
     });
   };
 
+  // Format duration for audio
+  const formatDuration = (millis: number) => {
+    const seconds = Math.floor(millis / 1000);
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Render voice message bubble
+  const renderVoiceMessage = (item: Message, isMe: boolean) => {
+    const isPlaying = playingMessageId === item.id;
+    const progress = audioDuration > 0 && isPlaying ? (audioPosition / audioDuration) * 100 : 0;
+
+    return (
+      <TouchableOpacity
+        style={[
+          styles.voiceMessageContainer,
+          isMe ? styles.voiceMessageMe : styles.voiceMessageOther,
+        ]}
+        onPress={() => item.media_url && handlePlayAudio(item.id, item.media_url)}
+        activeOpacity={0.7}
+      >
+        <View style={styles.voicePlayButton}>
+          <Ionicons
+            name={isPlaying ? 'pause' : 'play'}
+            size={24}
+            color={isMe ? '#fff' : lightTheme.colors.primary}
+          />
+        </View>
+        <View style={styles.voiceWaveContainer}>
+          <View style={styles.voiceWaveBackground}>
+            <View style={[styles.voiceWaveProgress, { width: `${progress}%` }]} />
+          </View>
+          <Text style={[styles.voiceDuration, isMe && styles.voiceDurationMe]}>
+            {isPlaying ? formatDuration(audioPosition) : 'Message vocal'}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
   const renderMessage = ({ item }: { item: Message }) => {
     const isMe = item.sender_id === user?.id;
+    const isVoice = item.type_message === 'VOCAL';
 
     return (
       <View
@@ -192,16 +301,21 @@ export default function ChatScreen() {
           style={[
             styles.messageBubble,
             isMe ? styles.messageBubbleMe : styles.messageBubbleOther,
+            isVoice && styles.messageBubbleVoice,
           ]}
         >
-          <Text
-            style={[
-              styles.messageText,
-              isMe ? styles.messageTextMe : styles.messageTextOther,
-            ]}
-          >
-            {item.contenu}
-          </Text>
+          {isVoice && item.media_url ? (
+            renderVoiceMessage(item, isMe)
+          ) : (
+            <Text
+              style={[
+                styles.messageText,
+                isMe ? styles.messageTextMe : styles.messageTextOther,
+              ]}
+            >
+              {item.contenu}
+            </Text>
+          )}
           <Text
             style={[
               styles.messageTime,
@@ -564,5 +678,48 @@ const styles = StyleSheet.create({
   },
   sendButtonDisabled: {
     backgroundColor: Colors.neutral[300],
+  },
+  // Voice message styles
+  messageBubbleVoice: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  voiceMessageContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minWidth: 180,
+  },
+  voiceMessageMe: {},
+  voiceMessageOther: {},
+  voicePlayButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  voiceWaveContainer: {
+    flex: 1,
+  },
+  voiceWaveBackground: {
+    height: 4,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    borderRadius: 2,
+    overflow: 'hidden',
+    marginBottom: 4,
+  },
+  voiceWaveProgress: {
+    height: '100%',
+    backgroundColor: '#fff',
+    borderRadius: 2,
+  },
+  voiceDuration: {
+    fontSize: 12,
+    color: Colors.neutral[500],
+  },
+  voiceDurationMe: {
+    color: 'rgba(255,255,255,0.8)',
   },
 });
