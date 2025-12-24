@@ -10,6 +10,18 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // In local environment, skip PostGIS if not available
+        if (app()->environment('local')) {
+            // Enable UUID extension for primary keys
+            DB::statement('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');
+
+            // Enable pg_trgm for full-text search optimization
+            DB::statement('CREATE EXTENSION IF NOT EXISTS pg_trgm');
+
+            logger()->info('PostGIS extension skipped in local environment.');
+            return;
+        }
+
         // Enable PostGIS extension for geospatial support (FR-008, FR-017)
         DB::statement('CREATE EXTENSION IF NOT EXISTS postgis');
 

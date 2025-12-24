@@ -93,11 +93,17 @@ return new class extends Migration
             $table->index('created_at');
         });
 
-        // Add PostGIS geometry column
-        DB::statement('ALTER TABLE listings ADD COLUMN location geography(POINT, 4326)');
-
-        // Create spatial index on location
-        DB::statement('CREATE INDEX listings_location_idx ON listings USING GIST (location)');
+        // Add geospatial columns
+        if (app()->environment('local')) {
+            // In local dev without PostGIS, use simple lat/lng columns
+            DB::statement('ALTER TABLE listings ADD COLUMN latitude DOUBLE PRECISION');
+            DB::statement('ALTER TABLE listings ADD COLUMN longitude DOUBLE PRECISION');
+            DB::statement('CREATE INDEX listings_lat_lng_idx ON listings (latitude, longitude)');
+        } else {
+            // In production, use PostGIS geometry column
+            DB::statement('ALTER TABLE listings ADD COLUMN location geography(POINT, 4326)');
+            DB::statement('CREATE INDEX listings_location_idx ON listings USING GIST (location)');
+        }
 
         // Create full-text search index (PostgreSQL)
         DB::statement('CREATE INDEX listings_fulltext_idx ON listings USING GIN (to_tsvector(\'french\', titre || \' \' || description))');

@@ -89,19 +89,46 @@ services:
       - DB_USERNAME=${DB_USERNAME:-immog_user}
       - DB_PASSWORD_FILE=/run/secrets/db_password
 
-  # ClamAV - Lighter config for dev
+  # Migration runner - Development
+  migrate:
+    build:
+      context: ../backend
+      dockerfile: ../docker/php/Dockerfile
+    image: immoguinee/php:dev
+    volumes:
+      - ../backend:/var/www/backend
+    environment:
+      - APP_ENV=local
+      - DB_USERNAME=${DB_USERNAME:-immog_user}
+      - DB_PASSWORD_FILE=/run/secrets/db_password
+
+  # PostgreSQL - Use ARM64 compatible image
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-immog_db}
+      POSTGRES_USER: ${DB_USERNAME:-immog_user}
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "127.0.0.1:5433:5432"
+
+  # Backup service - Use ARM64 compatible image
+  backup-postgres:
+    image: postgres:16-alpine
+
+  # Restore service - Use ARM64 compatible image
+  restore-postgres:
+    image: postgres:16-alpine
+
+  # ClamAV - Disable for ARM64 Mac dev (not compatible)
   clamav:
+    image: alpine:latest
+    command: ["sh", "-c", "echo 'ClamAV disabled for ARM64' && sleep infinity"]
     deploy:
       resources:
         limits:
-          memory: 1G  # Less memory for dev
-
-  # Expose ports for development debugging
-  # SECURITY: Bind to 127.0.0.1 only to prevent external access
-  # NOTE: Port 5433 used because local PostgreSQL is on 5432
-  postgres:
-    ports:
-      - "127.0.0.1:5433:5432"
+          memory: 16M
 
   redis:
     ports:
