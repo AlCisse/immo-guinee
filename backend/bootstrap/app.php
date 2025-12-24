@@ -36,10 +36,18 @@ return Application::configure(basePath: dirname(__DIR__))
             '2fa' => \App\Http\Middleware\TwoFactorAuthentication::class,
             'sanitize' => \App\Http\Middleware\SanitizeInput::class,
             'ensure.role' => \App\Http\Middleware\EnsureUserHasRole::class,
+            'auth.cookie' => \App\Http\Middleware\AuthenticateFromCookie::class,
         ]);
 
         // Apply security headers to all responses
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+
+        // Apply cookie-based authentication to all API requests (before auth:api)
+        // This extracts token from httpOnly cookie and sets Authorization header
+        $middleware->prependToGroup('api', \App\Http\Middleware\AuthenticateFromCookie::class);
+
+        // Apply XSS sanitization to all API requests
+        $middleware->appendToGroup('api', \App\Http\Middleware\SanitizeInput::class);
 
         $middleware->throttleApi();
 

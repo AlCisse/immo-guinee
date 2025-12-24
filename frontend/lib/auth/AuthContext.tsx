@@ -75,22 +75,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  // Load user from localStorage on mount
+  // Load user on mount - token is now in httpOnly cookie (XSS protection)
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const token = localStorage.getItem('access_token');
+        // First, try to load cached user data for faster UX
         const storedUser = localStorage.getItem('user');
-
-        if (token && storedUser) {
+        if (storedUser) {
           setUser(JSON.parse(storedUser));
-          // Verify token is still valid
-          await refreshUser();
         }
+
+        // Then verify with the server (cookie is sent automatically)
+        // This validates the httpOnly cookie token
+        await refreshUser();
       } catch (error) {
         console.error('Failed to load user:', error);
-        localStorage.removeItem('access_token');
+        // Clear cached user data on auth failure
         localStorage.removeItem('user');
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
@@ -150,8 +152,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        // No 2FA required - store token and user normally
-        localStorage.setItem('access_token', token);
+        // No 2FA required - store user data for UX (token is in httpOnly cookie)
+        // Token is NOT stored in localStorage - it's in a secure httpOnly cookie
         localStorage.setItem('user', JSON.stringify(user));
         if (redirect) {
           localStorage.setItem('redirect_data', JSON.stringify(redirect));
@@ -237,8 +239,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const redirect = responseData.redirect || (data as any).redirect;
 
       if (data.success && token) {
-        // Store token and user
-        localStorage.setItem('access_token', token);
+        // Store user data for UX (token is in httpOnly cookie set by server)
+        // Token is NOT stored in localStorage - it's in a secure httpOnly cookie
         localStorage.setItem('user', JSON.stringify(user));
         if (redirect) {
           localStorage.setItem('redirect_data', JSON.stringify(redirect));
@@ -275,16 +277,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      // Only call API if we have a token (backend might not be available in dev)
-      const token = localStorage.getItem('access_token');
-      if (token) {
-        await api.auth.logout().catch(() => {
-          // Silently ignore network errors - we'll clean up locally anyway
-        });
-      }
+      // Call logout API - server will clear the httpOnly cookie
+      await api.auth.logout().catch(() => {
+        // Silently ignore network errors - we'll clean up locally anyway
+      });
     } finally {
-      // Clear local storage
-      localStorage.removeItem('access_token');
+      // Clear local storage (user cache only - token is in httpOnly cookie)
       localStorage.removeItem('user');
       localStorage.removeItem('redirect_data');
 
@@ -307,6 +305,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshUser = async () => {
     try {
+      // Token is sent automatically via httpOnly cookie
       const response = await api.auth.me();
       const data: ApiResponse<{ user: User; redirect: RedirectData }> = response.data;
 
@@ -321,8 +320,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error('Failed to refresh user:', error);
-      // If refresh fails, logout
-      localStorage.removeItem('access_token');
+      // If refresh fails, clear local user cache
       localStorage.removeItem('user');
       localStorage.removeItem('redirect_data');
       setUser(null);

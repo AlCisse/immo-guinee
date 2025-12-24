@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\AuthenticateFromCookie;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -197,10 +198,17 @@ class Admin2FAController extends Controller
             'ip' => $request->ip(),
         ]);
 
-        return response()->json([
+        // Get the token from the Authorization header and set it as httpOnly cookie
+        // This ensures web clients have the token stored securely after 2FA
+        $token = $request->bearerToken();
+        $cookie = $token ? AuthenticateFromCookie::createTokenCookie($token, 1440) : null;
+
+        $response = response()->json([
             'success' => true,
             'message' => 'Verification reussie.',
         ]);
+
+        return $cookie ? $response->withCookie($cookie) : $response;
     }
 
     /**
@@ -245,10 +253,16 @@ class Admin2FAController extends Controller
             'remaining_codes' => count($recoveryCodes),
         ]);
 
-        return response()->json([
+        // Get the token from the Authorization header and set it as httpOnly cookie
+        $token = $request->bearerToken();
+        $cookie = $token ? AuthenticateFromCookie::createTokenCookie($token, 1440) : null;
+
+        $response = response()->json([
             'success' => true,
             'message' => 'Code de recuperation accepte. Il reste ' . count($recoveryCodes) . ' codes.',
         ]);
+
+        return $cookie ? $response->withCookie($cookie) : $response;
     }
 
     /**

@@ -10,20 +10,15 @@ const apiClient: AxiosInstance = axios.create({
     'Accept': 'application/json',
     'X-Requested-With': 'XMLHttpRequest',
   },
-  withCredentials: true, // Important for CORS with cookies
+  withCredentials: true, // CRITICAL: Send httpOnly cookies with requests
   timeout: 30000, // 30 seconds timeout
 });
 
-// Request interceptor - Add auth token
+// Request interceptor - No need to add token manually, httpOnly cookie is sent automatically
 apiClient.interceptors.request.use(
   (config) => {
-    // Get token from localStorage (Laravel Passport OAuth2)
-    const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
-
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
+    // Token is now stored in httpOnly cookie and sent automatically
+    // No localStorage access needed - this protects against XSS attacks
     return config;
   },
   (error) => {
@@ -44,10 +39,10 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
-      // Clear tokens and redirect to login
+      // Clear local user data and redirect to login
+      // Note: httpOnly cookie will be cleared by the server on logout
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('user');
+        localStorage.removeItem('user'); // Keep user cache for UX, but it's not sensitive
         window.location.href = '/auth/login';
       }
     }

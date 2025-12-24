@@ -2,28 +2,38 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { api } from '@/lib/api/client';
 
 export default function DeconnexionPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Clear all auth data from localStorage
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('user');
+    const performLogout = async () => {
+      try {
+        // Call logout API - server will clear the httpOnly cookie
+        await api.auth.logout();
+      } catch (error) {
+        // Ignore errors - we'll clear local data anyway
+        console.error('Logout API error:', error);
+      }
 
-    // Clear any other potential auth data
-    localStorage.removeItem('immog_token');
-    localStorage.removeItem('immog_user');
-    localStorage.removeItem('immog_refresh_token');
+      // Clear local user cache (not sensitive - token is in httpOnly cookie)
+      localStorage.removeItem('user');
+      localStorage.removeItem('redirect_data');
 
-    // Clear session storage too
-    sessionStorage.clear();
+      // Clear any legacy auth data (backward compatibility)
+      localStorage.removeItem('immog_user');
 
-    // Redirect to home after a short delay
-    setTimeout(() => {
-      window.location.href = '/';
-    }, 1500);
+      // Clear session storage
+      sessionStorage.clear();
+
+      // Redirect to home after a short delay
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 1500);
+    };
+
+    performLogout();
   }, []);
 
   return (

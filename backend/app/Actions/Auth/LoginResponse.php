@@ -2,6 +2,7 @@
 
 namespace App\Actions\Auth;
 
+use App\Http\Middleware\AuthenticateFromCookie;
 use App\Models\User;
 use App\Services\RoleRedirectService;
 use Illuminate\Http\JsonResponse;
@@ -35,6 +36,8 @@ class LoginResponse
 
         $responseData = [
             'user' => $this->formatUser($user),
+            // Token still included for mobile apps that use Authorization header
+            // Web clients should use the httpOnly cookie instead
             'token' => $token,
             'token_type' => $tokenType,
             'redirect' => $redirectData,
@@ -47,11 +50,15 @@ class LoginResponse
             $responseData['redirect']['dashboard_path'] = '/auth/verify-2fa';
         }
 
+        // Create response with httpOnly cookie for web clients (XSS protection)
+        // Token expiration: 24 hours (1440 minutes)
+        $cookie = AuthenticateFromCookie::createTokenCookie($token, 1440);
+
         return response()->json([
             'success' => true,
             'message' => 'Login successful',
             'data' => $responseData,
-        ]);
+        ])->withCookie($cookie);
     }
 
     /**
@@ -108,12 +115,15 @@ class LoginResponse
      */
     public function logoutResponse(): JsonResponse
     {
+        // Clear the httpOnly cookie on logout
+        $cookie = AuthenticateFromCookie::forgetTokenCookie();
+
         return response()->json([
             'success' => true,
             'message' => 'Logged out successfully',
             'data' => [
                 'redirect_url' => $this->roleRedirectService->getLogoutRedirectUrl(),
             ],
-        ]);
+        ])->withCookie($cookie);
     }
 }

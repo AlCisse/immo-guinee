@@ -99,12 +99,13 @@ export default function Verify2FAPage() {
       });
 
       if (response.data.success) {
-        // SECURITY: Now that 2FA is verified, move credentials to localStorage
+        // SECURITY: 2FA verified - httpOnly cookie is set by server
+        // Only store user data for UX (not the token!)
         const pendingUser = sessionStorage.getItem('pending_2fa_user');
         const pendingRedirect = sessionStorage.getItem('pending_2fa_redirect');
 
-        // Store token and user in localStorage (permanent storage)
-        localStorage.setItem('access_token', pendingToken);
+        // Store user data (not sensitive - for UX only)
+        // Token is in httpOnly cookie, set by server
         if (pendingUser) {
           localStorage.setItem('user', pendingUser);
         }
@@ -164,11 +165,11 @@ export default function Verify2FAPage() {
       });
 
       if (response.data.success) {
-        // SECURITY: Now that 2FA is verified, move credentials to localStorage
+        // SECURITY: 2FA verified - httpOnly cookie is set by server
         const pendingUser = sessionStorage.getItem('pending_2fa_user');
         const pendingRedirect = sessionStorage.getItem('pending_2fa_redirect');
 
-        localStorage.setItem('access_token', pendingToken);
+        // Store user data for UX (not token - it's in httpOnly cookie)
         if (pendingUser) {
           localStorage.setItem('user', pendingUser);
         }
@@ -197,9 +198,15 @@ export default function Verify2FAPage() {
     }
   };
 
-  const handleLogout = () => {
-    // Clean up localStorage
-    localStorage.removeItem('access_token');
+  const handleLogout = async () => {
+    // Call logout API to clear httpOnly cookie
+    try {
+      await apiClient.post('/auth/logout');
+    } catch (error) {
+      // Ignore errors - clean up locally anyway
+    }
+
+    // Clean up localStorage (user cache only)
     localStorage.removeItem('user');
     localStorage.removeItem('redirect_data');
 
