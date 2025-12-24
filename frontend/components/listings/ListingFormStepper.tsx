@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home,
@@ -41,7 +41,18 @@ import {
 import TypeBienSelector, { type TypeBien } from './TypeBienSelector';
 import LocationSelector from './LocationSelector';
 import PhotoUploader, { type PhotoFile } from './PhotoUploader';
-import { api } from '@/lib/api/client';
+import { api, apiClient } from '@/lib/api/client';
+
+// Commission type from API
+interface Commission {
+  id: string;
+  type_transaction: 'location' | 'location_courte' | 'vente';
+  label: string;
+  taux_pourcentage: number;
+  mois: number;
+  description: string;
+  is_active: boolean;
+}
 import { useAuth } from '@/lib/auth/AuthContext';
 
 export type OperationType = 'LOCATION' | 'LOCATION_COURTE' | 'VENTE';
@@ -144,6 +155,29 @@ export default function ListingFormStepper({
   const submissionInProgress = useRef(false); // Prevent duplicate submissions
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [optimizeError, setOptimizeError] = useState<string | null>(null);
+
+  // Fetch commissions from API
+  const { data: commissions } = useQuery({
+    queryKey: ['commissions'],
+    queryFn: async () => {
+      const response = await apiClient.get('/commissions');
+      return response.data?.data as Record<string, Commission>;
+    },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
+
+  // Get current commission based on operation type
+  const getCurrentCommission = (): Commission | null => {
+    if (!commissions || !formData.operationType) return null;
+    const typeMap: Record<OperationType, string> = {
+      'LOCATION': 'location',
+      'LOCATION_COURTE': 'location_courte',
+      'VENTE': 'vente',
+    };
+    return commissions[typeMap[formData.operationType]] || null;
+  };
+
+  const currentCommission = getCurrentCommission();
 
   // Validation for current step
   const validateCurrentStep = useCallback((): boolean => {
@@ -359,7 +393,9 @@ export default function ListingFormStepper({
       if (formData.operationType === 'LOCATION') {
         submitData.append('caution_mois', formData.cautionMois || '1');
         submitData.append('avance_mois', formData.avanceMois || '1');
-        submitData.append('commission_mois', formData.commissionMois || '1');
+        // Use commission from admin settings (DB)
+        const locationCommission = commissions?.location;
+        submitData.append('commission_mois', locationCommission?.mois?.toString() || '1');
         if (formData.typeLocatairePrefere && formData.typeLocatairePrefere !== 'tous') {
           submitData.append('type_locataire_prefere', formData.typeLocatairePrefere);
         }
@@ -821,6 +857,15 @@ export default function ListingFormStepper({
                   {errors.prix && (
                     <p className="mt-2 text-sm text-red-500">{errors.prix}</p>
                   )}
+                  {/* Commission info for VENTE */}
+                  {formData.operationType === 'VENTE' && currentCommission && currentCommission.taux_pourcentage > 0 && (
+                    <div className="mt-3 p-3 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl border border-emerald-200 dark:border-emerald-500/20">
+                      <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300 text-sm">
+                        <Percent className="w-4 h-4" />
+                        <span>Commission ImmoGuinee: <strong>{currentCommission.taux_pourcentage}%</strong> du prix de vente</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Caution, Avance & Commission (only for LOCATION longue durée) */}
@@ -865,20 +910,19 @@ export default function ListingFormStepper({
                       <div>
                         <label className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
                           <Percent className="w-3.5 h-3.5 text-primary-500" />
-                          Commission
+                          Commission ImmoGuinee
                         </label>
-                        <select
-                          name="commissionMois"
-                          value={formData.commissionMois}
-                          onChange={handleInputChange}
-                          className="w-full px-3 py-2.5 sm:py-3 rounded-xl border-2 border-neutral-200 dark:border-dark-border focus:border-primary-500 bg-neutral-50 dark:bg-dark-bg focus:bg-white dark:focus:bg-dark-card focus:outline-none focus:ring-4 focus:ring-primary-500/10 text-sm text-neutral-900 dark:text-white"
-                        >
-                          {[0, 1].map((month) => (
-                            <option key={month} value={month}>
-                              {month === 0 ? 'Pas de commission' : '1 mois'}
-                            </option>
-                          ))}
-                        </select>
+                        <div className="px-3 py-2.5 sm:py-3 rounded-xl border-2 border-primary-200 dark:border-primary-500/30 bg-primary-50 dark:bg-primary-500/10 text-sm text-primary-700 dark:text-primary-300 font-medium">
+                          {currentCommission ? (
+                            currentCommission.mois > 0
+                              ? `${currentCommission.mois} mois de loyer`
+                              : currentCommission.taux_pourcentage > 0
+                                ? `${currentCommission.taux_pourcentage}%`
+                                : 'Pas de commission'
+                          ) : (
+                            '1 mois de loyer'
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -915,6 +959,12 @@ export default function ListingFormStepper({
                       <p className="text-sm text-purple-600 dark:text-purple-400">
                         Le prix indiqué est par jour. Le bien sera automatiquement marqué comme meublé.
                       </p>
+                      {currentCommission && currentCommission.taux_pourcentage > 0 && (
+                        <div className="mt-2 flex items-center gap-2 text-sm">
+                          <Percent className="w-4 h-4" />
+                          <span>Commission ImmoGuinee: <strong>{currentCommission.taux_pourcentage}%</strong> du montant total</span>
+                        </div>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
