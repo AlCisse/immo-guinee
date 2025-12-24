@@ -1,8 +1,33 @@
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
 import * as SecureStore from 'expo-secure-store';
+import * as Crypto from 'expo-crypto';
 
 // API URL - change this to your production URL
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://immoguinee.com/api';
+
+// Security: Expected SSL certificate public key hash (SHA-256)
+// Update this when renewing SSL certificate
+const EXPECTED_SSL_PINS = [
+  // Primary certificate pin (Let's Encrypt)
+  process.env.EXPO_PUBLIC_SSL_PIN_PRIMARY || '',
+  // Backup certificate pin
+  process.env.EXPO_PUBLIC_SSL_PIN_BACKUP || '',
+];
+
+// Security: Allowed API domains
+const ALLOWED_DOMAINS = ['immoguinee.com', 'api.immoguinee.com'];
+
+// Validate URL is from trusted domain
+const isValidDomain = (url: string): boolean => {
+  try {
+    const urlObj = new URL(url);
+    return ALLOWED_DOMAINS.some(domain =>
+      urlObj.hostname === domain || urlObj.hostname.endsWith('.' + domain)
+    );
+  } catch {
+    return false;
+  }
+};
 
 // Create axios instance with default config
 const apiClient: AxiosInstance = axios.create({
@@ -11,6 +36,7 @@ const apiClient: AxiosInstance = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json',
     'X-Requested-With': 'XMLHttpRequest',
+    'X-App-Version': process.env.EXPO_PUBLIC_APP_VERSION || '1.0.0',
   },
   timeout: 60000, // 60 seconds timeout for mobile networks
 });
@@ -58,13 +84,25 @@ export const tokenManager = {
   },
 };
 
-// Request interceptor - Add auth token
+// Request interceptor - Add auth token and security checks
 apiClient.interceptors.request.use(
   async (config) => {
+    // Security: Validate request URL domain
+    const fullUrl = config.baseURL ? `${config.baseURL}${config.url}` : config.url || '';
+    if (fullUrl && !isValidDomain(fullUrl)) {
+      console.error('Security: Blocked request to untrusted domain:', fullUrl);
+      return Promise.reject(new Error('Untrusted domain'));
+    }
+
+    // Add auth token
     const token = await tokenManager.getToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Security: Add request timestamp for replay protection
+    config.headers['X-Request-Time'] = Date.now().toString();
+
     return config;
   },
   (error) => {

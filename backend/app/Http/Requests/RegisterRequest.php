@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\Password;
 
 class RegisterRequest extends FormRequest
 {
@@ -28,7 +29,15 @@ class RegisterRequest extends FormRequest
             // Format: indicatif pays + numéro local (ex: 224621000000, 33612345678, 1234567890)
             'telephone' => ['required', 'string', 'regex:/^[1-9][0-9]{6,14}$/'],
             'email' => ['nullable', 'email', 'max:255'],
-            'mot_de_passe' => ['required', 'string', 'min:8'],
+            'mot_de_passe' => [
+                'required',
+                'string',
+                Password::min(8)
+                    ->mixedCase()      // Au moins une majuscule et une minuscule
+                    ->numbers()        // Au moins un chiffre
+                    ->symbols()        // Au moins un caractère spécial
+                    ->uncompromised(), // Vérifie que le mot de passe n'est pas dans une base de données de fuites
+            ],
             'mot_de_passe_confirmation' => ['nullable', 'string', 'same:mot_de_passe'],
             'type_compte' => ['required', 'in:PARTICULIER,PROPRIETAIRE,AGENT,AGENCE'],
             'commune' => ['nullable', 'string', 'in:Kaloum,Dixinn,Matam,Ratoma,Matoto'],
@@ -51,6 +60,10 @@ class RegisterRequest extends FormRequest
             'email.unique' => 'Cette adresse email est déjà utilisée',
             'mot_de_passe.required' => 'Le mot de passe est obligatoire',
             'mot_de_passe.min' => 'Le mot de passe doit contenir au moins 8 caractères',
+            'mot_de_passe.mixed' => 'Le mot de passe doit contenir au moins une majuscule et une minuscule',
+            'mot_de_passe.numbers' => 'Le mot de passe doit contenir au moins un chiffre',
+            'mot_de_passe.symbols' => 'Le mot de passe doit contenir au moins un caractère spécial (!@#$%^&*)',
+            'mot_de_passe.uncompromised' => 'Ce mot de passe a été compromis dans une fuite de données. Veuillez en choisir un autre.',
             'mot_de_passe_confirmation.same' => 'Les mots de passe ne correspondent pas',
             'type_compte.required' => 'Le type de compte est obligatoire',
             'type_compte.in' => 'Le type de compte doit être PARTICULIER, PROPRIETAIRE, AGENT ou AGENCE',
