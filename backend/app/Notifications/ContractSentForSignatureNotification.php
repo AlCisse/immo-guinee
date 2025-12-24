@@ -19,6 +19,7 @@ class ContractSentForSignatureNotification extends Notification implements Shoul
     protected Contract $contract;
     protected ?string $customMessage;
     protected array $channels;
+    protected ?string $signatureToken = null;
 
     /**
      * Create a new notification instance.
@@ -28,6 +29,17 @@ class ContractSentForSignatureNotification extends Notification implements Shoul
         $this->contract = $contract;
         $this->customMessage = $customMessage;
         $this->channels = $channels;
+
+        // Generate signature token for the locataire
+        $this->signatureToken = $contract->generateSignatureToken();
+    }
+
+    /**
+     * Get the signing URL with token (no auth required)
+     */
+    protected function getSigningUrl(): string
+    {
+        return config('app.frontend_url') . '/contrat/signer/' . $this->signatureToken;
     }
 
     /**
@@ -102,7 +114,7 @@ class ContractSentForSignatureNotification extends Notification implements Shoul
                 ->line("\"{$this->customMessage}\"");
         }
 
-        $mail->action('Consulter et signer le contrat', url('/contrats/' . $this->contract->id . '/signer'))
+        $mail->action('Consulter et signer le contrat', $this->getSigningUrl())
             ->line('')
             ->line('Vous avez 7 jours pour signer ce contrat avant expiration.')
             ->salutation("L'équipe ImmoGuinée");
@@ -117,7 +129,7 @@ class ContractSentForSignatureNotification extends Notification implements Shoul
     {
         $message = "ImmoGuinée: Vous avez reçu un contrat de location à signer ({$this->contract->reference}). ";
         $message .= "Loyer: " . number_format($this->contract->loyer_mensuel, 0, ',', ' ') . " GNF/mois. ";
-        $message .= "Consultez: " . url('/contrats/' . $this->contract->id);
+        $message .= "Consultez: " . $this->getSigningUrl();
 
         return [
             'to' => $notifiable->telephone,
@@ -152,7 +164,7 @@ class ContractSentForSignatureNotification extends Notification implements Shoul
             $message .= "*Message:* \"{$this->customMessage}\"\n\n";
         }
 
-        $message .= "Consultez et signez: " . url('/contrats/' . $this->contract->id);
+        $message .= "Consultez et signez: " . $this->getSigningUrl();
 
         return [
             'to' => $notifiable->whatsapp_number ?? $notifiable->telephone,
@@ -195,7 +207,7 @@ class ContractSentForSignatureNotification extends Notification implements Shoul
             'date_debut' => $this->contract->date_debut->format('Y-m-d'),
             'date_fin' => $this->contract->date_fin->format('Y-m-d'),
             'custom_message' => $this->customMessage,
-            'action_url' => '/contrats/' . $this->contract->id . '/signer',
+            'action_url' => '/contrat/signer/' . $this->signatureToken,
             'channels_used' => $this->channels,
             'sent_at' => now()->toIso8601String(),
         ];

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -20,6 +20,7 @@ import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { Listing } from '@/types';
 import Colors, { lightTheme } from '@/constants/Colors';
+import Logo from '@/components/Logo';
 
 const PROPERTY_TYPES = [
   { value: '', label: 'Tous', icon: 'grid-outline' },
@@ -57,11 +58,31 @@ export default function HomeScreen() {
     },
   });
 
+  // Fetch user's favorites to show correct heart state
+  const { data: favoritesData } = useQuery({
+    queryKey: ['favorites'],
+    queryFn: async () => {
+      const response = await api.favorites.list();
+      return response.data?.data?.favorites || [];
+    },
+    enabled: isAuthenticated,
+  });
+
+  // Update favorites set when data changes
+  useEffect(() => {
+    if (favoritesData) {
+      const favIds = new Set<string>(favoritesData.map((fav: any) => fav.id));
+      setFavorites(favIds);
+    }
+  }, [favoritesData]);
+
   const listings = data || [];
 
   // Toggle favorite mutation
   const toggleFavoriteMutation = useMutation({
-    mutationFn: (listingId: string) => api.favorites.toggle(listingId),
+    mutationFn: async (listingId: string) => {
+      return await api.favorites.toggle(listingId);
+    },
     onSuccess: (response, listingId) => {
       const isFav = response.data?.data?.is_favorite;
       setFavorites(prev => {
@@ -76,8 +97,7 @@ export default function HomeScreen() {
       queryClient.invalidateQueries({ queryKey: ['favorites'] });
     },
     onError: (error: any) => {
-      console.error('Toggle favorite error:', error?.response?.data || error?.message);
-      Alert.alert('Erreur', 'Impossible de modifier les favoris');
+      Alert.alert('Erreur', error?.response?.data?.message || 'Impossible de modifier les favoris');
     },
   });
 
@@ -94,9 +114,12 @@ export default function HomeScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await refetch();
+    await Promise.all([
+      refetch(),
+      queryClient.invalidateQueries({ queryKey: ['favorites'] }),
+    ]);
     setRefreshing(false);
-  }, [refetch]);
+  }, [refetch, queryClient]);
 
   const formatPrice = (listing: Listing) => {
     const price = listing.loyer_mensuel;
@@ -217,10 +240,7 @@ export default function HomeScreen() {
       <View style={[styles.header, { paddingHorizontal: horizontalPadding }]}>
         <View>
           <Text style={styles.greeting}>Bienvenue sur</Text>
-          <Text style={styles.logo}>
-            <Text style={styles.logoImmo}>Immo</Text>
-            <Text style={styles.logoGuinee}>Guinée</Text>
-          </Text>
+          <Logo size="large" />
         </View>
         <TouchableOpacity style={styles.notificationBtn}>
           <Ionicons name="notifications-outline" size={24} color={Colors.secondary[800]} />
@@ -239,6 +259,27 @@ export default function HomeScreen() {
         <Text style={styles.searchPlaceholder}>Rechercher un bien immobilier...</Text>
         <View style={styles.filterIcon}>
           <Ionicons name="options-outline" size={18} color={Colors.neutral[500]} />
+        </View>
+      </TouchableOpacity>
+
+      {/* Banner */}
+      <TouchableOpacity
+        style={[styles.bannerContainer, { marginHorizontal: horizontalPadding }]}
+        onPress={() => router.push('/search')}
+        activeOpacity={0.9}
+      >
+        <View style={styles.bannerGradient}>
+          <View style={styles.bannerContent}>
+            <Text style={styles.bannerTitle}>Trouvez votre bien ideal</Text>
+            <Text style={styles.bannerSubtitle}>Location & Vente en Guinee</Text>
+            <View style={styles.bannerButton}>
+              <Text style={styles.bannerButtonText}>Explorer</Text>
+              <Ionicons name="arrow-forward" size={16} color="#fff" />
+            </View>
+          </View>
+          <View style={styles.bannerIconContainer}>
+            <Ionicons name="home" size={80} color="rgba(255,255,255,0.2)" />
+          </View>
         </View>
       </TouchableOpacity>
 
@@ -345,17 +386,6 @@ const styles = StyleSheet.create({
     color: Colors.neutral[500],
     marginBottom: 2,
   },
-  logo: {
-    fontSize: 26,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-  },
-  logoImmo: {
-    color: Colors.secondary[800],
-  },
-  logoGuinee: {
-    color: lightTheme.colors.primary,
-  },
   notificationBtn: {
     width: 44,
     height: 44,
@@ -403,6 +433,53 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.neutral[100],
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  bannerContainer: {
+    marginTop: 8,
+    marginBottom: 16,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  bannerGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: lightTheme.colors.primary,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    minHeight: 130,
+  },
+  bannerContent: {
+    flex: 1,
+  },
+  bannerTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#fff',
+    marginBottom: 4,
+  },
+  bannerSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.8)',
+    marginBottom: 12,
+  },
+  bannerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 6,
+  },
+  bannerButtonText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  bannerIconContainer: {
+    marginLeft: 10,
   },
   typesSection: {
     backgroundColor: Colors.background.primary,

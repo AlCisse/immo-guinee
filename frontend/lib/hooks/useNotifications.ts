@@ -7,6 +7,7 @@ export interface Notification {
   title: string;
   message: string;
   data?: Record<string, unknown>;
+  action_url?: string;
   read_at: string | null;
   created_at: string;
 }

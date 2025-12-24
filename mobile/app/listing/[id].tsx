@@ -10,6 +10,8 @@ import {
   Alert,
   Linking,
   useWindowDimensions,
+  Share,
+  Platform,
 } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -92,7 +94,6 @@ export default function ListingDetailScreen() {
       queryClient.invalidateQueries({ queryKey: ['favorites'] });
     },
     onError: (error: any) => {
-      console.error('Toggle favorite error:', error?.response?.data || error?.message);
       Alert.alert('Erreur', error?.response?.data?.message || 'Impossible de modifier les favoris');
     },
   });
@@ -171,6 +172,27 @@ export default function ListingDetailScreen() {
     toggleFavoriteMutation.mutate();
   };
 
+  const handleShare = async () => {
+    if (!listing) return;
+
+    try {
+      const url = `https://immoguinee.com/bien/${listing.id}`;
+      const message = `${listing.titre} - ${listing.formatted_price || `${listing.loyer_mensuel?.toLocaleString()} GNF`}\n${listing.quartier}, ${listing.commune}\n\n${url}`;
+
+      await Share.share({
+        message,
+        url: Platform.OS === 'ios' ? url : undefined,
+        title: listing.titre,
+      });
+    } catch (error) {
+      console.error('Share error:', error);
+    }
+  };
+
+  const handleBack = () => {
+    router.back();
+  };
+
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -221,32 +243,42 @@ export default function ListingDetailScreen() {
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          headerTitle: '',
-          headerTransparent: true,
-          headerLeft: () => (
-            <TouchableOpacity style={styles.headerButton} onPress={() => router.back()}>
-              <Ionicons name="arrow-back" size={24} color="#fff" />
-            </TouchableOpacity>
-          ),
-          headerRight: () => (
-            <View style={styles.headerRightContainer}>
-              <TouchableOpacity style={styles.headerButton}>
-                <Ionicons name="share-outline" size={22} color="#fff" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.headerButton} onPress={handleFavorite}>
-                <Ionicons
-                  name={isFavorite ? 'heart' : 'heart-outline'}
-                  size={22}
-                  color={isFavorite ? '#EF4444' : '#fff'}
-                />
-              </TouchableOpacity>
-            </View>
-          ),
-        }}
-      />
+      <Stack.Screen options={{ headerShown: false }} />
+
+      {/* Custom Header with absolute positioning for better touch handling */}
+      <View style={[styles.customHeader, { paddingTop: insets.top + 10 }]}>
+        <TouchableOpacity
+          style={styles.headerButton}
+          onPress={handleBack}
+          activeOpacity={0.7}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons name="arrow-back" size={24} color="#fff" />
+        </TouchableOpacity>
+
+        <View style={styles.headerRightContainer}>
+          <TouchableOpacity
+            style={styles.headerButton}
+            onPress={handleShare}
+            activeOpacity={0.7}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons name="share-outline" size={22} color="#fff" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.headerButton}
+            onPress={handleFavorite}
+            activeOpacity={0.7}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons
+              name={isFavorite ? 'heart' : 'heart-outline'}
+              size={22}
+              color={isFavorite ? '#EF4444' : '#fff'}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
 
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         {/* Image Gallery */}
@@ -499,11 +531,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  customHeader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+    zIndex: 100,
+  },
   headerButton: {
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },

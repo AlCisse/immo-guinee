@@ -17,6 +17,7 @@ use App\Services\WhatsAppService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Exception;
@@ -89,10 +90,24 @@ class ContractController extends Controller
     public function store(StoreContractRequest $request): JsonResponse
     {
         try {
+            Log::info('Contract store request', [
+                'user_id' => $request->user()->id,
+                'input' => $request->except(['documents']),
+            ]);
+
             $listing = Listing::findOrFail($request->listing_id);
+
+            Log::info('Contract store - listing found', [
+                'listing_id' => $listing->id,
+                'listing_statut' => $listing->statut,
+            ]);
 
             // Check if listing is available (accept both 'publiee' and 'ACTIVE' statuses)
             if (!in_array($listing->statut, ['publiee', 'ACTIVE', 'active'])) {
+                Log::warning('Contract store - listing not available', [
+                    'listing_id' => $listing->id,
+                    'listing_statut' => $listing->statut,
+                ]);
                 return response()->json([
                     'success' => false,
                     'message' => 'Cette annonce n\'est plus disponible',
@@ -105,6 +120,10 @@ class ContractController extends Controller
                 ->first();
 
             if ($signedContract) {
+                Log::warning('Contract store - already signed', [
+                    'listing_id' => $listing->id,
+                    'existing_contract_id' => $signedContract->id,
+                ]);
                 return response()->json([
                     'success' => false,
                     'message' => 'Cette propriété est déjà louée (contrat signé)',
@@ -130,6 +149,11 @@ class ContractController extends Controller
                     ->first();
 
                 if ($duplicateContract) {
+                    Log::warning('Contract store - duplicate contract', [
+                        'listing_id' => $listing->id,
+                        'locataire_id' => $locataireId,
+                        'existing_contract_id' => $duplicateContract->id,
+                    ]);
                     return response()->json([
                         'success' => false,
                         'message' => 'Un contrat existe déjà pour ce locataire sur cette annonce',
@@ -140,6 +164,8 @@ class ContractController extends Controller
                     ], 422);
                 }
             }
+
+            Log::info('Contract store - all checks passed, proceeding with creation');
 
             $data = $request->validated();
             $user = $request->user();
@@ -785,7 +811,10 @@ class ContractController extends Controller
 
             $loyer = number_format($contract->loyer_mensuel ?? 0, 0, ',', ' ');
             $frontendUrl = config('app.frontend_url', 'https://immoguinee.com');
-            $deepLink = "{$frontendUrl}/contrats/{$contract->id}/signer";
+
+            // Generate signature token for the locataire (allows signing without login)
+            $signatureToken = $contract->generateSignatureToken();
+            $deepLink = "{$frontendUrl}/contrat/signer/{$signatureToken}";
 
             $message = "📄 *Nouveau contrat de location - ImmoGuinée*\n\n";
             $message .= "Bonjour {$locataire->nom_complet},\n\n";
@@ -1542,5 +1571,181 @@ class ContractController extends Controller
                 'to' => $otherParty->telephone,
             ]);
         }
+    }
+
+    /**
+     * Show contract by signature token (public, no auth required)
+     */
+    public function showByToken(string $token): JsonResponse
+    {
+        $contract = Contract::where('locataire_signature_token', $token)
+            ->with(['listing', 'bailleur:id,nom_complet,telephone', 'locataire:id,nom_complet,telephone'])
+            ->first();
+
+        if (!$contract) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Contrat introuvable ou lien invalide',
+            ], 404);
+        }
+
+        if (!$contract->verifySignatureToken($token)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Le lien de signature a expiré. Veuillez demander un nouveau lien.',
+            ], 410);
+        }
+
+        // Check if already signed by locataire
+        if ($contract->locataire_signed_at) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ce contrat a déjà été signé.',
+            ], 400);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'contract' => $contract,
+                'can_sign' => true,
+                'expires_at' => $contract->locataire_signature_token_expires_at,
+            ],
+        ]);
+    }
+
+    /**
+     * Request OTP for signing by token (public, no auth required)
+     */
+    public function requestOtpByToken(Request $request, string $token): JsonResponse
+    {
+        $contract = Contract::where('locataire_signature_token', $token)
+            ->with(['locataire'])
+            ->first();
+
+        if (!$contract || !$contract->verifySignatureToken($token)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lien de signature invalide ou expiré',
+            ], 404);
+        }
+
+        if ($contract->locataire_signed_at) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ce contrat a déjà été signé.',
+            ], 400);
+        }
+
+        // Generate and send OTP to locataire
+        $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $contract->update([
+            'locataire_signature_otp' => bcrypt($otp),
+        ]);
+
+        // Send OTP via WhatsApp
+        $locataire = $contract->locataire;
+        try {
+            app(\App\Services\WhatsAppService::class)->sendText(
+                $locataire->telephone,
+                "🔐 *Code de signature ImmoGuinée*\n\nVotre code de vérification pour signer le contrat est:\n\n*{$otp}*\n\nCe code expire dans 10 minutes."
+            );
+        } catch (Exception $e) {
+            Log::error('Failed to send signature OTP', [
+                'error' => $e->getMessage(),
+                'contract_id' => $contract->id,
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Code de vérification envoyé par WhatsApp',
+            'data' => [
+                'phone_masked' => substr($locataire->telephone, 0, 6) . '****' . substr($locataire->telephone, -2),
+            ],
+        ]);
+    }
+
+    /**
+     * Sign contract by token (public, no auth required)
+     */
+    public function signByToken(Request $request, string $token): JsonResponse
+    {
+        $request->validate([
+            'otp' => 'required|string|size:6',
+        ]);
+
+        $contract = Contract::where('locataire_signature_token', $token)
+            ->with(['locataire', 'bailleur', 'listing'])
+            ->first();
+
+        if (!$contract || !$contract->verifySignatureToken($token)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lien de signature invalide ou expiré',
+            ], 404);
+        }
+
+        if ($contract->locataire_signed_at) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ce contrat a déjà été signé.',
+            ], 400);
+        }
+
+        // Verify OTP
+        if (!Hash::check($request->otp, $contract->locataire_signature_otp)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Code de vérification incorrect',
+            ], 422);
+        }
+
+        // Sign the contract
+        $contract->update([
+            'locataire_signed_at' => now(),
+            'locataire_signature_ip' => $request->ip(),
+            'locataire_signature_data' => json_encode([
+                'user_agent' => $request->userAgent(),
+                'signed_via' => 'token_link',
+                'timestamp' => now()->toIso8601String(),
+            ]),
+            'locataire_signature_otp' => null, // Clear OTP after use
+        ]);
+
+        // Check if both parties have signed
+        $bothSigned = $contract->bailleur_signed_at && $contract->locataire_signed_at;
+
+        if ($bothSigned) {
+            $contract->update(['statut' => 'ACTIF']);
+
+            // Lock the contract
+            $this->signatureService->lockContract($contract);
+
+            // Notify both parties
+            $contract->bailleur->notify(new \App\Notifications\ContractSignedNotification($contract));
+            $contract->locataire->notify(new \App\Notifications\ContractSignedNotification($contract));
+        } else {
+            // Update status to pending owner signature
+            $contract->update(['statut' => 'EN_ATTENTE_SIGNATURE_BAILLEUR']);
+        }
+
+        Log::info('Contract signed via token', [
+            'contract_id' => $contract->id,
+            'locataire_id' => $contract->locataire_id,
+            'both_signed' => $bothSigned,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => $bothSigned
+                ? 'Contrat signé avec succès ! Les deux parties ont signé.'
+                : 'Contrat signé avec succès ! En attente de la signature du propriétaire.',
+            'data' => [
+                'contract_id' => $contract->id,
+                'both_signed' => $bothSigned,
+                'new_status' => $contract->statut,
+            ],
+        ]);
     }
 }

@@ -1,7 +1,7 @@
 // i18n configuration for Next.js with next-intl
-// Supports French (default), English, Spanish, German, and Chinese
+// Supports French (default) and English
 
-export const locales = ['fr', 'en', 'es', 'de', 'zh'] as const;
+export const locales = ['fr', 'en'] as const;
 export type Locale = (typeof locales)[number];
 
 export const defaultLocale: Locale = 'fr';
@@ -23,7 +23,7 @@ export const SUPPORTED_LOCALES: LocaleConfig[] = [
     name: 'French',
     nativeName: 'Francais',
     direction: 'ltr',
-    flag: '🇫🇷',
+    flag: '🇬🇳',
     dateFormat: 'dd/MM/yyyy',
     timeFormat: 'HH:mm',
     currencyFormat: '# ### GNF',
@@ -38,52 +38,16 @@ export const SUPPORTED_LOCALES: LocaleConfig[] = [
     timeFormat: 'h:mm a',
     currencyFormat: 'GNF #,###',
   },
-  {
-    code: 'es',
-    name: 'Spanish',
-    nativeName: 'Espanol',
-    direction: 'ltr',
-    flag: '🇪🇸',
-    dateFormat: 'dd/MM/yyyy',
-    timeFormat: 'HH:mm',
-    currencyFormat: '# ### GNF',
-  },
-  {
-    code: 'de',
-    name: 'German',
-    nativeName: 'Deutsch',
-    direction: 'ltr',
-    flag: '🇩🇪',
-    dateFormat: 'dd.MM.yyyy',
-    timeFormat: 'HH:mm',
-    currencyFormat: '#.### GNF',
-  },
-  {
-    code: 'zh',
-    name: 'Chinese',
-    nativeName: '中文',
-    direction: 'ltr',
-    flag: '🇨🇳',
-    dateFormat: 'yyyy/MM/dd',
-    timeFormat: 'HH:mm',
-    currencyFormat: 'GNF #,###',
-  },
 ];
 
 export const localeNames: Record<Locale, string> = {
   fr: 'Francais',
   en: 'English',
-  es: 'Espanol',
-  de: 'Deutsch',
-  zh: '中文',
 };
 
 export const localeFlags: Record<Locale, string> = {
-  fr: '🇫🇷',
+  fr: '🇬🇳',
   en: '🇬🇧',
-  es: '🇪🇸',
-  de: '🇩🇪',
-  zh: '🇨🇳',
 };
 
 export function getLocaleConfig(locale: Locale): LocaleConfig {
@@ -137,40 +101,6 @@ export const countryToLocale: Record<string, Locale> = {
   SG: 'en', // Singapore
   MY: 'en', // Malaysia
   JM: 'en', // Jamaica
-
-  // Spanish-speaking countries
-  ES: 'es',
-  MX: 'es',
-  AR: 'es',
-  CO: 'es',
-  PE: 'es',
-  VE: 'es',
-  CL: 'es',
-  EC: 'es',
-  GT: 'es',
-  CU: 'es',
-  BO: 'es',
-  DO: 'es',
-  HN: 'es',
-  PY: 'es',
-  SV: 'es',
-  NI: 'es',
-  CR: 'es',
-  PA: 'es',
-  UY: 'es',
-  PR: 'es',
-  GQ: 'es', // Equatorial Guinea
-
-  // German-speaking countries
-  DE: 'de',
-  AT: 'de',
-  LI: 'de',
-
-  // Chinese-speaking countries/regions
-  CN: 'zh',
-  TW: 'zh',
-  HK: 'zh',
-  MO: 'zh',
 };
 
 export function getLocaleFromCountry(countryCode: string): Locale {
@@ -189,10 +119,6 @@ export const COMMON_TIMEZONES = [
   { value: 'Europe/London', label: 'London (GMT)', offset: '+00:00' },
   { value: 'Europe/Brussels', label: 'Brussels (CET)', offset: '+01:00' },
   { value: 'America/Montreal', label: 'Montreal (EST)', offset: '-05:00' },
-  { value: 'Europe/Madrid', label: 'Madrid (CET)', offset: '+01:00' },
-  { value: 'Europe/Berlin', label: 'Berlin (CET)', offset: '+01:00' },
-  { value: 'Asia/Shanghai', label: 'Shanghai (CST)', offset: '+08:00' },
-  { value: 'Asia/Hong_Kong', label: 'Hong Kong (HKT)', offset: '+08:00' },
 ];
 
 export function getTimezoneLabel(timezone: string): string {

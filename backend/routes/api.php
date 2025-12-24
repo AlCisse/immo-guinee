@@ -41,6 +41,10 @@ Route::prefix('ai')->group(function () {
     Route::post('/optimize-listing', [AiController::class, 'optimizeListing']);
 });
 
+// Commissions (public - for display in app)
+Route::get('/commissions', [\App\Http\Controllers\Api\CommissionController::class, 'index']);
+Route::get('/commissions/{type}', [\App\Http\Controllers\Api\CommissionController::class, 'show']);
+
 // Authentication endpoints (Laravel Passport)
 Route::prefix('auth')->group(function () {
     // Public routes
@@ -248,6 +252,10 @@ Route::prefix('admin')->middleware(['auth:api', 'ensure.role:admin', '2fa'])->gr
 
     // Analytics
     Route::get('/analytics', [\App\Http\Controllers\Api\AdminController::class, 'analytics']);
+
+    // Commissions management
+    Route::get('/commissions', [\App\Http\Controllers\Api\Admin\CommissionController::class, 'index']);
+    Route::put('/commissions/{commission}', [\App\Http\Controllers\Api\Admin\CommissionController::class, 'update']);
 
     // Listings management
     Route::get('/listings', [\App\Http\Controllers\Api\AdminController::class, 'listings']);

@@ -6,11 +6,8 @@ import { locales, defaultLocale, getLocaleFromCountry, type Locale } from './con
 // Import all translation files
 import fr from '../../messages/fr.json';
 import en from '../../messages/en.json';
-import es from '../../messages/es.json';
-import de from '../../messages/de.json';
-import zh from '../../messages/zh.json';
 
-const messages: Record<Locale, typeof fr> = { fr, en, es, de, zh };
+const messages: Record<Locale, typeof fr> = { fr, en };
 
 interface LocaleContextType {
   locale: Locale;

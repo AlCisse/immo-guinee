@@ -65,6 +65,16 @@ class Listing extends Model
         'photo_principale',
         'main_photo_url',
         'formatted_price',
+        'photos', // Return listingPhotos relation as 'photos' for mobile app compatibility
+    ];
+
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var array<int, string>
+     */
+    protected $hidden = [
+        'searchable_keywords',
     ];
 
     /**
@@ -85,7 +95,7 @@ class Listing extends Model
             'surface_m2' => 'integer',
             'meuble' => 'boolean',
             'commodites' => 'array',
-            'photos' => 'array',
+            // Note: 'photos' is handled by getPhotosAttribute accessor, not a cast
             'searchable_keywords' => 'array',
             'disponible' => 'boolean',
             'date_disponibilite' => 'date',
@@ -440,6 +450,50 @@ class Listing extends Model
         }
 
         return null;
+    }
+
+    /**
+     * Get the photos attribute (accessor).
+     * Returns the listingPhotos relation data as 'photos' for mobile app compatibility.
+     * This overrides the legacy 'photos' database column.
+     */
+    public function getPhotosAttribute(): array
+    {
+        // Use already-loaded relationship if available (eager loading optimization)
+        if ($this->relationLoaded('listingPhotos')) {
+            $photos = $this->listingPhotos;
+            if ($photos->isNotEmpty()) {
+                return $photos->toArray();
+            }
+        } else {
+            // Query relationship if not loaded
+            $photos = $this->listingPhotos()->orderBy('order')->get();
+            if ($photos->isNotEmpty()) {
+                return $photos->toArray();
+            }
+        }
+
+        // Fallback to legacy photos column if exists (for old data)
+        $legacyPhotos = $this->attributes['photos'] ?? null;
+        if ($legacyPhotos) {
+            $decoded = is_string($legacyPhotos) ? json_decode($legacyPhotos, true) : $legacyPhotos;
+            if (is_array($decoded) && !empty($decoded)) {
+                // Convert legacy URL strings to photo-like objects for consistency
+                return array_map(function ($url, $index) {
+                    return [
+                        'id' => null,
+                        'url' => $url,
+                        'thumbnail_url' => $url,
+                        'medium_url' => $url,
+                        'large_url' => $url,
+                        'is_primary' => $index === 0,
+                        'order' => $index,
+                    ];
+                }, $decoded, array_keys($decoded));
+            }
+        }
+
+        return [];
     }
 
     /**

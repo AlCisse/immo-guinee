@@ -23,10 +23,37 @@ import {
   Key,
   Copy,
   X,
+  Percent,
+  Calendar,
+  Home,
+  ShoppingBag,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { apiClient } from '@/lib/api/client';
 import QRCode from 'qrcode';
+
+// Commission type
+interface Commission {
+  id: string;
+  type_transaction: 'location' | 'location_courte' | 'vente';
+  label: string;
+  taux_pourcentage: number;
+  mois: number;
+  description: string;
+  is_active: boolean;
+}
+
+const COMMISSION_ICONS: Record<string, any> = {
+  location: Home,
+  location_courte: Calendar,
+  vente: ShoppingBag,
+};
+
+const COMMISSION_LABELS: Record<string, string> = {
+  location: 'Location longue duree',
+  location_courte: 'Location courte duree',
+  vente: 'Vente immobiliere',
+};
 
 // Settings Section Component
 function SettingsSection({
@@ -347,6 +374,51 @@ export default function AdminSettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [show2FAModal, setShow2FAModal] = useState(false);
   const [setupData, setSetupData] = useState<any>(null);
+  const [editingCommission, setEditingCommission] = useState<string | null>(null);
+  const [commissionEdits, setCommissionEdits] = useState<Record<string, Partial<Commission>>>({});
+
+  // Fetch commissions
+  const { data: commissions, isLoading: isLoadingCommissions } = useQuery({
+    queryKey: ['admin-commissions'],
+    queryFn: async () => {
+      const response = await apiClient.get('/admin/commissions');
+      return response.data?.data as Commission[];
+    },
+  });
+
+  // Update commission mutation
+  const updateCommissionMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<Commission> }) => {
+      const response = await apiClient.put(`/admin/commissions/${id}`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success('Commission mise a jour');
+      queryClient.invalidateQueries({ queryKey: ['admin-commissions'] });
+      setEditingCommission(null);
+      setCommissionEdits({});
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || 'Erreur lors de la mise a jour');
+    },
+  });
+
+  const handleCommissionEdit = (commission: Commission, field: keyof Commission, value: any) => {
+    setCommissionEdits(prev => ({
+      ...prev,
+      [commission.id]: {
+        ...prev[commission.id],
+        [field]: value,
+      },
+    }));
+  };
+
+  const saveCommission = (commission: Commission) => {
+    const edits = commissionEdits[commission.id];
+    if (edits) {
+      updateCommissionMutation.mutate({ id: commission.id, data: edits });
+    }
+  };
 
   // Fetch 2FA status
   const { data: twoFAStatus, refetch: refetch2FAStatus, isLoading: is2FALoading } = useQuery({
@@ -686,20 +758,170 @@ export default function AdminSettingsPage() {
           </div>
         </SettingsSection>
 
+        {/* Commission Settings */}
+        <SettingsSection
+          icon={Percent}
+          title="Commissions par type de transaction"
+          description="Configurez les taux de commission pour chaque type de transaction"
+        >
+          {isLoadingCommissions ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-primary-500" />
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {commissions?.map((commission) => {
+                const Icon = COMMISSION_ICONS[commission.type_transaction] || CreditCard;
+                const isEditing = editingCommission === commission.id;
+                const edits = commissionEdits[commission.id] || {};
+                const currentTaux = edits.taux_pourcentage ?? commission.taux_pourcentage;
+                const currentMois = edits.mois ?? commission.mois;
+                const currentDescription = edits.description ?? commission.description;
+                const currentActive = edits.is_active ?? commission.is_active;
+
+                return (
+                  <div
+                    key={commission.id}
+                    className={`p-4 rounded-xl border transition-all ${
+                      isEditing
+                        ? 'border-primary-300 dark:border-primary-500 bg-primary-50/50 dark:bg-primary-500/5'
+                        : 'border-neutral-200 dark:border-dark-border'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${currentActive ? 'bg-primary-100 dark:bg-primary-500/20' : 'bg-neutral-100 dark:bg-dark-bg'}`}>
+                          <Icon className={`w-5 h-5 ${currentActive ? 'text-primary-600' : 'text-neutral-400'}`} />
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-neutral-900 dark:text-white">
+                            {COMMISSION_LABELS[commission.type_transaction]}
+                          </h4>
+                          <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                            {commission.type_transaction === 'location'
+                              ? `${currentMois} mois de loyer`
+                              : `${currentTaux}% du montant`}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {isEditing ? (
+                          <>
+                            <button
+                              onClick={() => {
+                                setEditingCommission(null);
+                                setCommissionEdits(prev => {
+                                  const newEdits = { ...prev };
+                                  delete newEdits[commission.id];
+                                  return newEdits;
+                                });
+                              }}
+                              className="px-3 py-1.5 text-sm text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-dark-border rounded-lg"
+                            >
+                              Annuler
+                            </button>
+                            <button
+                              onClick={() => saveCommission(commission)}
+                              disabled={updateCommissionMutation.isPending}
+                              className="px-3 py-1.5 text-sm bg-primary-500 text-white rounded-lg hover:bg-primary-600 disabled:opacity-50 flex items-center gap-1"
+                            >
+                              {updateCommissionMutation.isPending ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Save className="w-4 h-4" />
+                              )}
+                              Sauvegarder
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={() => setEditingCommission(commission.id)}
+                            className="px-3 py-1.5 text-sm text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-500/10 rounded-lg"
+                          >
+                            Modifier
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {isEditing && (
+                      <div className="mt-4 pt-4 border-t border-neutral-200 dark:border-dark-border space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {commission.type_transaction === 'location' ? (
+                            <div>
+                              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                                Nombre de mois de loyer
+                              </label>
+                              <input
+                                type="number"
+                                min="0"
+                                max="12"
+                                value={currentMois}
+                                onChange={(e) => handleCommissionEdit(commission, 'mois', parseInt(e.target.value) || 0)}
+                                className="w-full px-3 py-2 bg-white dark:bg-dark-bg border border-neutral-200 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-primary-500"
+                              />
+                            </div>
+                          ) : (
+                            <div>
+                              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                                Taux de commission (%)
+                              </label>
+                              <input
+                                type="number"
+                                min="0"
+                                max="100"
+                                step="0.5"
+                                value={currentTaux}
+                                onChange={(e) => handleCommissionEdit(commission, 'taux_pourcentage', parseFloat(e.target.value) || 0)}
+                                className="w-full px-3 py-2 bg-white dark:bg-dark-bg border border-neutral-200 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-primary-500"
+                              />
+                            </div>
+                          )}
+                          <div className="flex items-center gap-3">
+                            <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                              Actif
+                            </label>
+                            <button
+                              onClick={() => handleCommissionEdit(commission, 'is_active', !currentActive)}
+                              className={`relative w-12 h-6 rounded-full transition-colors ${
+                                currentActive ? 'bg-green-500' : 'bg-neutral-300 dark:bg-neutral-600'
+                              }`}
+                            >
+                              <span
+                                className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                                  currentActive ? 'translate-x-6' : ''
+                                }`}
+                              />
+                            </button>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                            Description
+                          </label>
+                          <textarea
+                            value={currentDescription}
+                            onChange={(e) => handleCommissionEdit(commission, 'description', e.target.value)}
+                            rows={2}
+                            className="w-full px-3 py-2 bg-white dark:bg-dark-bg border border-neutral-200 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-primary-500 resize-none"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </SettingsSection>
+
         {/* Payment Settings */}
         <SettingsSection
           icon={CreditCard}
           title="Paiements"
-          description="Configuration des paiements et commissions"
+          description="Configuration des paiements"
         >
           <div className="space-y-1 divide-y divide-neutral-100 dark:divide-dark-border">
-            <InputField
-              label="Taux de commission (%)"
-              value={settings.commissionRate}
-              onChange={(value) => updateSetting('commissionRate', value)}
-              type="number"
-              description="Pourcentage preleve sur chaque transaction"
-            />
             <InputField
               label="Retrait minimum (GNF)"
               value={settings.minimumWithdrawal}

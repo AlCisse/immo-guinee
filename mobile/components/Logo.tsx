@@ -1,10 +1,10 @@
 import React from 'react';
-import { Text, StyleSheet, TextStyle, ViewStyle } from 'react-native';
+import { Text, StyleSheet, TextStyle } from 'react-native';
 import Colors, { lightTheme } from '@/constants/Colors';
 
 interface LogoProps {
   size?: 'small' | 'medium' | 'large' | 'xlarge';
-  style?: ViewStyle;
+  style?: TextStyle;
 }
 
 const SIZES = {

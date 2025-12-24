@@ -132,8 +132,22 @@ class MessagingController extends Controller
                     $mp3Filename = $baseFilename . '.' . $file->getClientOriginalExtension();
                 }
 
+                // Get file size before cleanup
+                $fileSize = file_exists($mp3TempPath) ? filesize($mp3TempPath) : $file->getSize();
+
                 // Upload converted file
-                $path = Storage::disk($disk)->put($mp3Filename, file_get_contents($mp3TempPath));
+                $fileContent = file_get_contents($mp3TempPath);
+                if ($fileContent === false) {
+                    throw new \Exception('Failed to read converted file: ' . $mp3TempPath);
+                }
+
+                \Log::info('Uploading voice message to storage', [
+                    'disk' => $disk,
+                    'filename' => $mp3Filename,
+                    'size' => strlen($fileContent),
+                ]);
+
+                $path = Storage::disk($disk)->put($mp3Filename, $fileContent);
 
                 // Clean up temp files
                 @unlink($tempPath);
@@ -148,7 +162,7 @@ class MessagingController extends Controller
                     $messageData['media_url'] = env('MINIO_URL') . '/' . env('MINIO_MESSAGES_BUCKET', 'immog-messages') . '/' . $mp3Filename;
                 }
                 $messageData['media_mime_type'] = 'audio/mpeg';
-                $messageData['media_size'] = filesize($mp3TempPath) ?: $file->getSize();
+                $messageData['media_size'] = $fileSize;
 
                 \Log::info('Voice message uploaded', [
                     'disk' => $disk,
@@ -214,6 +228,11 @@ class MessagingController extends Controller
             return new MessageResource($message->load('sender'));
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('Failed to send message', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'conversation_id' => $conversation->id,
+            ]);
             return response()->json(['error' => 'Failed to send message: ' . $e->getMessage()], 500);
         }
     }

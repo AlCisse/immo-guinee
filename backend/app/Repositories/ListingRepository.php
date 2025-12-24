@@ -266,8 +266,8 @@ class ListingRepository
      */
     public function incrementViews(string $id): void
     {
-        $listing = $this->findById($id);
-        $listing->increment('vues_count');
+        // Use direct DB update to avoid cache issues
+        Listing::where('id', $id)->increment('vues_count');
     }
 
     /**
@@ -278,8 +278,8 @@ class ListingRepository
      */
     public function incrementContacts(string $id): void
     {
-        $listing = $this->findById($id);
-        $listing->increment('contacts_count');
+        // Use direct DB update to avoid cache issues
+        Listing::where('id', $id)->increment('contacts_count');
     }
 
     /**

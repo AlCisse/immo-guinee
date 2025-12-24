@@ -25,7 +25,8 @@ class StoreContractRequest extends FormRequest
             'listing_id' => ['required', 'exists:listings,id'],
             'locataire_id' => ['nullable', 'exists:users,id'], // Optional: ID of the tenant
             'type_contrat' => ['required', 'in:location,vente'],
-            'date_debut' => ['required', 'date', 'after_or_equal:today'],
+            // Allow dates from yesterday to handle timezone differences
+            'date_debut' => ['required', 'date', 'after_or_equal:' . now()->subDay()->format('Y-m-d')],
             // Durée: soit date_fin, soit duree_mois, soit duree_indeterminee (validation custom dans withValidator)
             'date_fin' => ['nullable', 'date', 'after:date_debut'],
             'duree_mois' => ['nullable', 'integer', 'min:1', 'max:120'],
