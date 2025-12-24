@@ -4,6 +4,17 @@
 /public/hot
 /public/storage
 /storage/*.key
+/storage/app/public/listings/*
+!/storage/app/public/listings/.gitkeep
+/storage/app/public/messages/*
+!/storage/app/public/messages/.gitkeep
+/storage/app/public/avatars/*
+!/storage/app/public/avatars/.gitkeep
+/storage/app/public/documents/*
+!/storage/app/public/documents/.gitkeep
+/storage/logs/*.log
+!/storage/logs/.gitkeep
+/database/*.sqlite
 /vendor
 .env
 .env.backup
