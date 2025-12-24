@@ -30,15 +30,26 @@ class SecurityHeaders
         // Enforce HTTPS
         $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
 
-        // Content Security Policy
-        $response->headers->set('Content-Security-Policy',
-            "default-src 'self'; " .
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " .
-            "style-src 'self' 'unsafe-inline'; " .
-            "img-src 'self' data: https:; " .
-            "font-src 'self' data:; " .
-            "connect-src 'self' https://api.immoguinee.gn ws://localhost:* wss://*;"
-        );
+        // Content Security Policy - Strict mode for production
+        // Note: If you need inline scripts, use nonce-based CSP instead
+        $cspPolicy = env('APP_ENV') === 'production'
+            ? "default-src 'self'; " .
+              "script-src 'self'; " .
+              "style-src 'self'; " .
+              "img-src 'self' data: https:; " .
+              "font-src 'self' data:; " .
+              "connect-src 'self' https://*.immoguinee.com wss://*.immoguinee.com; " .
+              "frame-ancestors 'none'; " .
+              "base-uri 'self'; " .
+              "form-action 'self';"
+            : "default-src 'self'; " .
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " .
+              "style-src 'self' 'unsafe-inline'; " .
+              "img-src 'self' data: https:; " .
+              "font-src 'self' data:; " .
+              "connect-src 'self' http://localhost:* ws://localhost:*;";
+
+        $response->headers->set('Content-Security-Policy', $cspPolicy);
 
         // Referrer Policy
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');

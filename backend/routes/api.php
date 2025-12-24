@@ -46,15 +46,21 @@ Route::prefix('ai')->middleware('throttle:10,1')->group(function () { // 10 requ
 Route::get('/commissions', [\App\Http\Controllers\Api\CommissionController::class, 'index']);
 Route::get('/commissions/{type}', [\App\Http\Controllers\Api\CommissionController::class, 'show']);
 
-// Authentication endpoints (Laravel Passport)
+// Authentication endpoints (Laravel Passport) - with rate limiting
 Route::prefix('auth')->group(function () {
-    // Public routes
-    Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/otp/verify', [AuthController::class, 'verifyOtp']);
-    Route::post('/otp/resend', [AuthController::class, 'resendOtp']);
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
-    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+    // Public routes with strict rate limiting to prevent brute force
+    Route::middleware('throttle:auth')->group(function () {
+        Route::post('/register', [AuthController::class, 'register']);
+        Route::post('/login', [AuthController::class, 'login']);
+        Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+        Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+    });
+
+    // OTP routes with dedicated rate limiter
+    Route::middleware('throttle:otp')->group(function () {
+        Route::post('/otp/verify', [AuthController::class, 'verifyOtp']);
+        Route::post('/otp/resend', [AuthController::class, 'resendOtp']);
+    });
 
     // Protected routes
     Route::middleware('auth:api')->group(function () {

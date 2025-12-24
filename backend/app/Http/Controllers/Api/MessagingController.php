@@ -113,14 +113,26 @@ class MessagingController extends Controller
 
                 // Convert to MP3 using FFmpeg for iOS/Safari compatibility
                 $ffmpegPath = '/usr/bin/ffmpeg';
-                $convertCommand = sprintf(
-                    '%s -i %s -vn -acodec libmp3lame -ab 128k -ar 44100 -y %s 2>&1',
-                    escapeshellarg($ffmpegPath),
-                    escapeshellarg($tempPath),
-                    escapeshellarg($mp3TempPath)
-                );
 
-                exec($convertCommand, $output, $returnCode);
+                // Security: Verify ffmpeg binary exists and is executable
+                if (!is_executable($ffmpegPath)) {
+                    \Log::error('FFmpeg not found or not executable', ['path' => $ffmpegPath]);
+                    // Fallback to original file without conversion
+                    $mp3TempPath = $tempPath;
+                    $mp3Filename = $baseFilename . '.' . $file->getClientOriginalExtension();
+                    $returnCode = 1;
+                    $output = ['FFmpeg not available'];
+                } else {
+                    // Security: Use timeout to prevent DoS via slow conversion
+                    $convertCommand = sprintf(
+                        'timeout 30 %s -i %s -vn -acodec libmp3lame -ab 128k -ar 44100 -y %s 2>&1',
+                        escapeshellarg($ffmpegPath),
+                        escapeshellarg($tempPath),
+                        escapeshellarg($mp3TempPath)
+                    );
+
+                    exec($convertCommand, $output, $returnCode);
+                }
 
                 if ($returnCode !== 0 || !file_exists($mp3TempPath)) {
                     \Log::warning('FFmpeg conversion failed, using original file', [
