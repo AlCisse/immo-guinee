@@ -19,13 +19,12 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [
-        env('FRONTEND_URL', 'http://localhost:3000'),
-        env('APP_URL', 'http://localhost'),
-        'http://localhost:8888',
-        'http://localhost:3005',
-        'http://localhost:3006',
-    ],
+    'allowed_origins' => array_filter([
+        env('FRONTEND_URL'),
+        env('APP_URL'),
+        // Additional origins from environment (comma-separated)
+        ...array_filter(explode(',', env('CORS_ALLOWED_ORIGINS', ''))),
+    ]),
 
     'allowed_origins_patterns' => [],
 

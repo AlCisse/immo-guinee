@@ -190,10 +190,6 @@ class AuthController extends Controller
                         'expires_in' => 300,
                     ];
 
-                    if (config('app.debug') && isset($otpResult['otp'])) {
-                        $responseData['dev_otp'] = $otpResult['otp'];
-                    }
-
                     return response()->json([
                         'success' => true,
                         'message' => 'Compte restauré. Un code OTP a été envoyé à votre téléphone.',
@@ -232,11 +228,6 @@ class AuthController extends Controller
                         'otp_sent' => $otpResult['success'],
                         'expires_in' => 300,
                     ];
-
-                    // Include OTP in response for development mode
-                    if (config('app.debug') && isset($otpResult['otp'])) {
-                        $unverifiedData['dev_otp'] = $otpResult['otp'];
-                    }
 
                     return response()->json([
                         'success' => true,
@@ -281,11 +272,6 @@ class AuthController extends Controller
                 'otp_sent' => $otpResult['success'],
                 'expires_in' => 300, // 5 minutes
             ];
-
-            // Include OTP in response for development mode
-            if (config('app.debug') && isset($otpResult['otp'])) {
-                $responseData['dev_otp'] = $otpResult['otp'];
-            }
 
             return response()->json([
                 'success' => true,
@@ -536,11 +522,6 @@ class AuthController extends Controller
                     'expires_in' => 300,
                 ];
 
-                // Include OTP in response for development mode
-                if (config('app.debug') && isset($otpResult['otp'])) {
-                    $responseData['dev_otp'] = $otpResult['otp'];
-                }
-
                 return response()->json([
                     'success' => true,
                     'message' => 'Votre numéro n\'est pas vérifié. Un code OTP a été envoyé sur WhatsApp.',
@@ -741,11 +722,6 @@ class AuthController extends Controller
                 'otp_sent' => $otpResult['success'],
                 'expires_in' => 300,
             ];
-
-            // Include OTP in response for development mode
-            if (config('app.debug') && isset($otpResult['otp'])) {
-                $responseData['dev_otp'] = $otpResult['otp'];
-            }
 
             return response()->json([
                 'success' => true,

@@ -58,10 +58,9 @@ class OtpService
         // Send OTP via WhatsApp using n8n webhook
         $sent = $this->sendViaWhatsApp($phoneNumber, $otp, $type);
 
-        if (!$sent && config('app.debug')) {
-            Log::info('OTP for development (WhatsApp failed)', [
+        if (!$sent) {
+            Log::warning('OTP delivery failed via WhatsApp', [
                 'phone' => $phoneNumber,
-                'otp' => $otp,
                 'type' => $type
             ]);
         }
