@@ -33,6 +33,11 @@ Route::get('/health', function () {
     ]);
 });
 
+// Broadcasting authentication for WebSocket (mobile uses /api/broadcasting/auth)
+Route::post('/broadcasting/auth', function (Request $request) {
+    return \Illuminate\Support\Facades\Broadcast::auth($request);
+})->middleware('auth:api');
+
 // Contact form (public) - rate limited to prevent spam
 Route::post('/contact', [\App\Http\Controllers\Api\ContactController::class, 'store'])
     ->middleware('throttle:5,1'); // 5 requests per minute
