@@ -111,7 +111,8 @@ export function useConversationRealtime(conversationId: string | null) {
   } = useMessagingStore();
 
   const channelRef = useRef<any>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const subscriptionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!conversationId) return;
@@ -119,48 +120,89 @@ export function useConversationRealtime(conversationId: string | null) {
     // Set active conversation
     setActiveConversation(conversationId);
 
-    // Subscribe to conversation channel
-    channelRef.current = subscribeToConversation(conversationId, {
-      onMessage: async (message) => {
-        addMessage(conversationId, {
-          ...message,
-          status: 'read',
-        });
+    if (__DEV__) {
+      console.log('[Realtime] Setting up subscription for conversation:', conversationId);
+      console.log('[Realtime] Current connection state:', getConnectionState());
+    }
 
-        // Handle E2E encrypted media
-        if (message.is_e2e_encrypted && message.encrypted_media && message.encryption_key) {
-          try {
-            await receiveEncryptedMedia({
-              mediaId: message.encrypted_media.id,
-              encryptionKey: message.encryption_key,
-              conversationId,
-              senderId: message.sender_id,
+    // Retry subscription with delay if not connected
+    const attemptSubscription = (attempt: number = 0) => {
+      const state = getConnectionState();
+      if (state !== 'connected' && attempt < 5) {
+        if (__DEV__) {
+          console.log(`[Realtime] Not connected (${state}), retrying in 1s... (attempt ${attempt + 1})`);
+        }
+        subscriptionTimeoutRef.current = setTimeout(() => attemptSubscription(attempt + 1), 1000);
+        return;
+      }
+
+      if (__DEV__) {
+        console.log('[Realtime] Subscribing now, state:', state);
+      }
+
+      // Subscribe to conversation channel
+      channelRef.current = subscribeToConversation(conversationId, {
+        onMessage: async (message) => {
+          if (__DEV__) {
+            console.log('[Realtime] Received message:', {
+              id: message.id,
+              type: message.type_message,
+              is_e2e: message.is_e2e_encrypted,
+              has_encrypted_media: !!message.encrypted_media,
+              has_encryption_key: !!message.encryption_key,
+              encrypted_media_id: message.encrypted_media?.id,
             });
-            if (__DEV__) {
-              console.log('[Realtime] E2E media downloaded:', message.encrypted_media.id);
-            }
-          } catch (error) {
-            if (__DEV__) {
-              console.error('[Realtime] Failed to download E2E media:', error);
+          }
+
+          addMessage(conversationId, {
+            ...message,
+            status: 'read',
+          });
+
+          // Handle E2E encrypted media
+          if (message.is_e2e_encrypted && message.encrypted_media && message.encryption_key) {
+            try {
+              await receiveEncryptedMedia({
+                mediaId: message.encrypted_media.id,
+                encryptionKey: message.encryption_key,
+                conversationId,
+                senderId: message.sender_id,
+              });
+              if (__DEV__) {
+                console.log('[Realtime] E2E media downloaded:', message.encrypted_media.id);
+              }
+            } catch (error) {
+              if (__DEV__) {
+                console.error('[Realtime] Failed to download E2E media:', error);
+              }
             }
           }
-        }
 
-        // Mark message as delivered on server
-        markAsDelivered(message.id);
-      },
-      onTyping: (data) => {
-        setTyping(conversationId, data.userId, data.isTyping);
-      },
-      onRead: (data) => {
-        updateMessageStatus(data.messageId, 'read');
-      },
-      onDelivered: (data) => {
-        updateMessageStatus(data.messageId, 'delivered');
-      },
-    });
+          // Mark message as delivered on server
+          markAsDelivered(message.id);
+        },
+        onTyping: (data) => {
+          setTyping(conversationId, data.userId, data.isTyping);
+        },
+        onRead: (data) => {
+          updateMessageStatus(data.messageId, 'read');
+        },
+        onDelivered: (data) => {
+          updateMessageStatus(data.messageId, 'delivered');
+        },
+      });
+
+      if (!channelRef.current && __DEV__) {
+        console.warn('[Realtime] Failed to subscribe - channel is null');
+      }
+    };
+
+    attemptSubscription();
 
     return () => {
+      if (subscriptionTimeoutRef.current) {
+        clearTimeout(subscriptionTimeoutRef.current);
+      }
       if (conversationId) {
         unsubscribeFromConversation(conversationId);
       }
@@ -204,6 +246,7 @@ export function useConversationRealtime(conversationId: string | null) {
  * Send message with optimistic update
  */
 export function useSendMessage(conversationId: string) {
+  const { user } = useAuth();
   const { addMessage, updateMessage, queueMessage, removeFromQueue } = useMessagingStore();
 
   const sendMessage = useCallback(
@@ -215,6 +258,7 @@ export function useSendMessage(conversationId: string) {
         id: localId,
         localId,
         conversation_id: conversationId,
+        sender_id: user?.id || '',
         type_message: type,
         contenu: content,
         status: 'sending' as const,
@@ -249,7 +293,7 @@ export function useSendMessage(conversationId: string) {
         throw error;
       }
     },
-    [conversationId, addMessage, updateMessage, queueMessage]
+    [conversationId, user?.id, addMessage, updateMessage, queueMessage]
   );
 
   return { sendMessage };

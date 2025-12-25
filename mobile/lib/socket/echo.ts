@@ -80,12 +80,24 @@ function setupConnectionHandlers(): void {
   if (!echoInstance) return;
 
   const pusher = (echoInstance as any).connector?.pusher;
-  if (!pusher) return;
+  if (!pusher) {
+    if (__DEV__) console.warn('[Echo] No pusher instance found on connector');
+    return;
+  }
+
+  if (__DEV__) {
+    console.log('[Echo] Setting up connection handlers, pusher state:', pusher.connection?.state);
+  }
 
   pusher.connection.bind('connected', () => {
     connectionState = 'connected';
     reconnectAttempts = 0;
-    if (__DEV__) console.log('[Echo] Connected');
+    if (__DEV__) console.log('[Echo] Connected to WebSocket');
+  });
+
+  pusher.connection.bind('connecting', () => {
+    connectionState = 'connecting';
+    if (__DEV__) console.log('[Echo] Connecting to WebSocket...');
   });
 
   pusher.connection.bind('disconnected', () => {
@@ -221,13 +233,47 @@ export function subscribeToConversation(
     return null;
   }
 
-  const channel = echo.private(`conversation.${conversationId}`);
+  const channelName = `conversation.${conversationId}`;
+  if (__DEV__) {
+    console.log('[Echo] Subscribing to channel:', channelName);
+  }
+
+  const channel = echo.private(channelName);
+
+  // Debug: log channel subscription success/failure
+  if (__DEV__) {
+    const pusherChannel = (channel as any).subscription;
+    if (pusherChannel) {
+      pusherChannel.bind('pusher:subscription_succeeded', () => {
+        console.log('[Echo] Channel subscription succeeded:', channelName);
+      });
+      pusherChannel.bind('pusher:subscription_error', (error: any) => {
+        console.error('[Echo] Channel subscription error:', channelName, error);
+      });
+    }
+  }
 
   // Listen for new messages
   if (callbacks.onMessage) {
+    // Try with the event name as returned by broadcastAs()
     channel.listen('NewMessageEvent', (event: any) => {
+      if (__DEV__) {
+        console.log('[Echo] NewMessageEvent received:', JSON.stringify(event, null, 2));
+      }
       callbacks.onMessage!(event.message || event);
     });
+
+    // Also try with .NewMessageEvent (dot prefix for custom events)
+    channel.listen('.NewMessageEvent', (event: any) => {
+      if (__DEV__) {
+        console.log('[Echo] .NewMessageEvent received:', JSON.stringify(event, null, 2));
+      }
+      callbacks.onMessage!(event.message || event);
+    });
+
+    if (__DEV__) {
+      console.log('[Echo] Event listeners bound for NewMessageEvent');
+    }
   }
 
   // Listen for typing indicators

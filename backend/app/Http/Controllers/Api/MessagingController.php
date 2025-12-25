@@ -235,7 +235,26 @@ class MessagingController extends Controller
             $encryptionKey = $validated['encryption_key'] ?? null;
             // Eager load relations needed for broadcast
             $message->load(['sender', 'encryptedMedia']);
-            broadcast(new NewMessageEvent($message, $encryptionKey))->toOthers();
+
+            \Log::info('[WebSocket] Broadcasting NewMessageEvent', [
+                'conversation_id' => $message->conversation_id,
+                'message_id' => $message->id,
+                'type' => $message->type_message,
+                'is_e2e' => $message->is_e2e_encrypted,
+                'has_encrypted_media' => $message->encryptedMedia !== null,
+                'has_encryption_key' => $encryptionKey !== null,
+                'channel' => 'private-conversation.' . $message->conversation_id,
+            ]);
+
+            try {
+                broadcast(new NewMessageEvent($message, $encryptionKey))->toOthers();
+                \Log::info('[WebSocket] Broadcast successful');
+            } catch (\Exception $broadcastError) {
+                \Log::error('[WebSocket] Broadcast failed', [
+                    'error' => $broadcastError->getMessage(),
+                    'trace' => $broadcastError->getTraceAsString(),
+                ]);
+            }
 
             DB::commit();
 
