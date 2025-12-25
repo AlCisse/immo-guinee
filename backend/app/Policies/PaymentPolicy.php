@@ -35,7 +35,7 @@ class PaymentPolicy
     public function initiate(User $user): bool
     {
         // User must be active and verified
-        return $user->statut_compte === 'ACTIF';
+        return $user->is_active && !$user->is_suspended;
     }
 
     /**

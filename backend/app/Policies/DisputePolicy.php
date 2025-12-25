@@ -37,8 +37,8 @@ class DisputePolicy
     public function create(User $user): bool
     {
         // User must be active and have completed at least one transaction
-        return $user->statut_compte === 'ACTIF'
-            && $user->nombre_transactions > 0;
+        return $user->is_active && !$user->is_suspended
+            && $user->total_transactions > 0;
     }
 
     /**

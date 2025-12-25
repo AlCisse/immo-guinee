@@ -34,7 +34,7 @@ class CertificationPolicy
     public function upload(User $user): bool
     {
         // User must be active
-        return $user->statut_compte === 'ACTIF';
+        return $user->is_active && !$user->is_suspended;
     }
 
     /**

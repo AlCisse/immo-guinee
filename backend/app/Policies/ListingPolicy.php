@@ -48,7 +48,7 @@ class ListingPolicy
     public function create(User $user): bool
     {
         // User must be active and not banned
-        return $user->statut_compte === 'ACTIF';
+        return $user->is_active && !$user->is_suspended;
     }
 
     /**

@@ -34,7 +34,7 @@ class InsurancePolicy
     public function subscribe(User $user): bool
     {
         // User must be active and verified (at least CNI)
-        return $user->statut_compte === 'ACTIF'
+        return $user->is_active && !$user->is_suspended
             && in_array($user->statut_verification, ['CNI_VERIFIEE', 'TITRE_FONCIER_VERIFIE']);
     }
 

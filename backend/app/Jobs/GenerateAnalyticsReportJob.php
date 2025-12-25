@@ -39,14 +39,14 @@ class GenerateAnalyticsReportJob implements ShouldQueue
                 'type' => $this->reportType,
                 'users' => [
                     'total' => User::count(),
-                    'active' => User::where('statut_compte', 'ACTIF')->count(),
+                    'active' => User::where('is_active', true)->count(),
                     'verified' => User::whereIn('statut_verification', ['CNI_VERIFIEE', 'TITRE_FONCIER_VERIFIE'])->count(),
                     'new_this_month' => User::whereMonth('created_at', now()->month)->count(),
                     'by_badge' => [
-                        'bronze' => User::where('badge_certification', 'BRONZE')->count(),
-                        'argent' => User::where('badge_certification', 'ARGENT')->count(),
-                        'or' => User::where('badge_certification', 'OR')->count(),
-                        'diamant' => User::where('badge_certification', 'DIAMANT')->count(),
+                        'bronze' => User::where('badge', 'BRONZE')->count(),
+                        'argent' => User::where('badge', 'ARGENT')->count(),
+                        'or' => User::where('badge', 'OR')->count(),
+                        'diamant' => User::where('badge', 'DIAMANT')->count(),
                     ],
                 ],
                 'listings' => [
