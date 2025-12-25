@@ -9,7 +9,7 @@
  * The server never has access to decryption keys.
  */
 
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as SecureStore from 'expo-secure-store';
 import {
   decryptMedia,
@@ -239,8 +239,8 @@ export async function getStorageStats(): Promise<{
 
     for (const file of files) {
       if (file.endsWith('.enc')) {
-        const info = await FileSystem.getInfoAsync(`${MEDIA_DIR}${file}`, { size: true });
-        if (info.exists && info.size) {
+        const info = await FileSystem.getInfoAsync(`${MEDIA_DIR}${file}`);
+        if (info.exists && 'size' in info && info.size) {
           totalSize += info.size;
           count++;
         }
@@ -329,13 +329,12 @@ export async function getDecryptedMediaUri(
  */
 export async function cleanupDecryptedCache(): Promise<void> {
   try {
-    const cacheDir = FileSystem.cacheDirectory;
-    if (!cacheDir) return;
+    if (!FileSystem.cacheDirectory) return;
 
-    const files = await FileSystem.readDirectoryAsync(cacheDir);
+    const files = await FileSystem.readDirectoryAsync(FileSystem.cacheDirectory);
     for (const file of files) {
       if (file.startsWith('decrypted_')) {
-        await FileSystem.deleteAsync(`${cacheDir}${file}`, { idempotent: true });
+        await FileSystem.deleteAsync(`${FileSystem.cacheDirectory}${file}`, { idempotent: true });
       }
     }
   } catch (error) {

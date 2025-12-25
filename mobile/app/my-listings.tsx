@@ -42,7 +42,7 @@ export default function MyListingsScreen() {
   }, [refetch]);
 
   const formatPrice = (listing: Listing) => {
-    const price = listing.loyer_mensuel || listing.prix;
+    const price = listing.loyer_mensuel || 0;
     if (price >= 1000000) {
       return `${(price / 1000000).toFixed(1)}M GNF`;
     }

@@ -124,37 +124,138 @@ update_frontend() {
 }
 
 # Update backend (PHP)
+# Usage: update_backend [--quick] [--no-migrate]
 update_backend() {
+    local QUICK_MODE=false
+    local RUN_MIGRATE=true
+    local REMOTE_HOST="${REMOTE_HOST:-immoguinee}"
+    local REMOTE_DIR="${REMOTE_DIR:-/home/ubuntu/immoguinee}"
+
+    # Parse arguments
+    for arg in "$@"; do
+        case $arg in
+            --quick) QUICK_MODE=true ;;
+            --no-migrate) RUN_MIGRATE=false ;;
+        esac
+    done
+
     echo -e "${YELLOW}Updating backend...${NC}"
 
-    # Pull latest code
-    cd "$PROJECT_DIR"
-    git pull
+    # Detect if running locally or on server
+    if [ -n "$SSH_CONNECTION" ] || [ "$(hostname)" = "immoguinee" ]; then
+        # Running on server
+        echo -e "${BLUE}Running on server${NC}"
+        cd "$PROJECT_DIR"
 
-    # Build new image (--no-cache to force rebuild)
-    docker build --no-cache -t immoguinee/php:latest \
-        -f docker/php/Dockerfile backend/
+        if [ "$QUICK_MODE" = false ]; then
+            git pull
+            # Build new image
+            docker build --no-cache -t immoguinee/php:latest \
+                -f docker/php/Dockerfile backend/
 
-    # Update PHP service
-    docker service update \
-        --image immoguinee/php:latest \
-        --force \
-        --update-parallelism 1 \
-        --update-delay 10s \
-        --update-failure-action rollback \
-        "${STACK_NAME}_php"
+            # Update all PHP services with new image
+            docker service update \
+                --image immoguinee/php:latest \
+                --force \
+                --update-parallelism 1 \
+                --update-delay 10s \
+                --update-failure-action rollback \
+                "${STACK_NAME}_php"
 
-    # Update queue worker
-    docker service update \
-        --image immoguinee/php:latest \
-        --force \
-        "${STACK_NAME}_queue-worker"
+            docker service update \
+                --image immoguinee/php:latest \
+                --force \
+                "${STACK_NAME}_queue-worker"
 
-    # Update scheduler
-    docker service update \
-        --image immoguinee/php:latest \
-        --force \
-        "${STACK_NAME}_scheduler"
+            docker service update \
+                --image immoguinee/php:latest \
+                --force \
+                "${STACK_NAME}_scheduler"
+
+            docker service update \
+                --image immoguinee/php:latest \
+                --force \
+                "${STACK_NAME}_reverb"
+        fi
+    else
+        # Running locally - sync files to server
+        echo -e "${BLUE}Running locally - syncing to ${REMOTE_HOST}${NC}"
+
+        # Sync backend files to server
+        echo -e "${YELLOW}Syncing backend files...${NC}"
+        rsync -avz --delete \
+            --exclude 'vendor' \
+            --exclude 'node_modules' \
+            --exclude '.env' \
+            --exclude 'storage/logs/*' \
+            --exclude 'storage/framework/cache/*' \
+            --exclude 'storage/framework/sessions/*' \
+            --exclude 'storage/framework/views/*' \
+            --exclude 'bootstrap/cache/*' \
+            "$PROJECT_DIR/backend/" \
+            "${REMOTE_HOST}:${REMOTE_DIR}/backend/"
+
+        if [ "$QUICK_MODE" = true ]; then
+            echo -e "${YELLOW}Quick mode: Copying files to containers...${NC}"
+
+            # Get container IDs
+            PHP_CONTAINERS=$(ssh "$REMOTE_HOST" "docker ps --format '{{.Names}}' | grep -E '${STACK_NAME}_(php|reverb)\.[0-9]' | tr '\n' ' '")
+
+            for CONTAINER in $PHP_CONTAINERS; do
+                echo -e "${YELLOW}Updating container: ${CONTAINER}${NC}"
+
+                # Copy updated files to container
+                ssh "$REMOTE_HOST" "
+                    docker cp ${REMOTE_DIR}/backend/app/. ${CONTAINER}:/var/www/backend/app/ && \
+                    docker cp ${REMOTE_DIR}/backend/config/. ${CONTAINER}:/var/www/backend/config/ && \
+                    docker cp ${REMOTE_DIR}/backend/routes/. ${CONTAINER}:/var/www/backend/routes/ && \
+                    docker cp ${REMOTE_DIR}/backend/database/migrations/. ${CONTAINER}:/var/www/backend/database/migrations/
+                "
+            done
+
+            # Clear caches
+            echo -e "${YELLOW}Clearing caches...${NC}"
+            FIRST_PHP=$(ssh "$REMOTE_HOST" "docker ps --format '{{.Names}}' | grep '${STACK_NAME}_php\.[0-9]' | head -1")
+            ssh "$REMOTE_HOST" "
+                docker exec ${FIRST_PHP} php artisan config:clear && \
+                docker exec ${FIRST_PHP} php artisan cache:clear && \
+                docker exec ${FIRST_PHP} php artisan route:clear
+            "
+        else
+            echo -e "${YELLOW}Full rebuild mode: Building new image on server...${NC}"
+            ssh "$REMOTE_HOST" "
+                cd ${REMOTE_DIR} && \
+                docker build --no-cache -t immoguinee/php:latest -f docker/php/Dockerfile backend/
+            "
+
+            # Update services with new image
+            echo -e "${YELLOW}Updating services...${NC}"
+            ssh "$REMOTE_HOST" "
+                docker service update --image immoguinee/php:latest --force \
+                    --update-parallelism 1 --update-delay 10s --update-failure-action rollback \
+                    ${STACK_NAME}_php && \
+                docker service update --image immoguinee/php:latest --force ${STACK_NAME}_queue-worker && \
+                docker service update --image immoguinee/php:latest --force ${STACK_NAME}_scheduler && \
+                docker service update --image immoguinee/php:latest --force ${STACK_NAME}_reverb
+            "
+        fi
+
+        # Run migrations if requested
+        if [ "$RUN_MIGRATE" = true ]; then
+            echo -e "${YELLOW}Running migrations...${NC}"
+            FIRST_PHP=$(ssh "$REMOTE_HOST" "docker ps --format '{{.Names}}' | grep '${STACK_NAME}_php\.[0-9]' | head -1")
+            ssh "$REMOTE_HOST" "docker exec ${FIRST_PHP} php artisan migrate --force" || true
+        fi
+
+        # Clear and rebuild caches
+        echo -e "${YELLOW}Rebuilding caches...${NC}"
+        FIRST_PHP=$(ssh "$REMOTE_HOST" "docker ps --format '{{.Names}}' | grep '${STACK_NAME}_php\.[0-9]' | head -1")
+        ssh "$REMOTE_HOST" "
+            docker exec ${FIRST_PHP} php artisan config:clear && \
+            docker exec ${FIRST_PHP} php artisan cache:clear && \
+            docker exec ${FIRST_PHP} php artisan route:clear
+        " || true
+    fi
 
     echo -e "${GREEN}Backend updated${NC}"
 }

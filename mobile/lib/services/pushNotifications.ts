@@ -10,6 +10,8 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
@@ -145,12 +147,13 @@ class PushNotificationService {
    * Handle notification received while app is in foreground
    */
   private handleForegroundNotification(notification: Notifications.Notification): void {
-    const data = notification.request.content.data as PushNotificationData;
+    const rawData = notification.request.content.data;
+    const data = rawData as unknown as PushNotificationData;
 
     // You can add custom logic here, e.g., update badge count,
     // show in-app notification banner, etc.
 
-    if (data.type === 'new_message') {
+    if (data?.type === 'new_message') {
       // Update unread count in messaging store
       // This would be handled by the real-time WebSocket connection
     }
@@ -160,24 +163,25 @@ class PushNotificationService {
    * Handle notification tap - navigate to appropriate screen
    */
   private handleNotificationResponse(response: Notifications.NotificationResponse): void {
-    const data = response.notification.request.content.data as PushNotificationData;
+    const rawData = response.notification.request.content.data;
+    const data = rawData as unknown as PushNotificationData;
 
-    switch (data.type) {
+    switch (data?.type) {
       case 'new_message':
         if (data.conversation_id) {
-          router.push(`/chat/${data.conversation_id}`);
+          router.push(`/chat/${data.conversation_id}` as any);
         } else {
           router.push('/(tabs)/messages');
         }
         break;
 
       case 'visit_reminder':
-        router.push('/(tabs)/visits');
+        router.push('/(tabs)' as any);
         break;
 
       case 'listing_update':
         if (data.listing_id) {
-          router.push(`/listing/${data.listing_id}`);
+          router.push(`/listing/${data.listing_id}` as any);
         }
         break;
 
@@ -267,10 +271,11 @@ class PushNotificationService {
       content: {
         title,
         body,
-        data,
+        data: data as unknown as Record<string, unknown>,
         sound: 'default',
       },
       trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
         seconds: triggerSeconds,
       },
     });
@@ -290,12 +295,12 @@ class PushNotificationService {
    */
   cleanup(): void {
     if (this.notificationListener) {
-      Notifications.removeNotificationSubscription(this.notificationListener);
+      this.notificationListener.remove();
       this.notificationListener = null;
     }
 
     if (this.responseListener) {
-      Notifications.removeNotificationSubscription(this.responseListener);
+      this.responseListener.remove();
       this.responseListener = null;
     }
 

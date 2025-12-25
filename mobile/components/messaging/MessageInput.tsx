@@ -36,7 +36,7 @@ export function MessageInput({
   const [isSending, setIsSending] = useState(false);
 
   const inputRef = useRef<TextInput>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const micButtonScale = useRef(new Animated.Value(1)).current;
 
   // Handle text change with typing indicator

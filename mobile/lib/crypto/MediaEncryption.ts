@@ -2,19 +2,20 @@
  * MediaEncryption.ts
  *
  * AES-256-GCM encryption/decryption for E2E encrypted media.
- * Uses Web Crypto API available in React Native's JavaScript runtime.
+ * Uses @noble/ciphers - a pure JavaScript implementation that works in Expo Go.
  *
  * The encryption key is generated per-message and NEVER sent to the server.
  * Only the encrypted blob, IV, and auth tag are stored server-side.
  */
 
-import * as Crypto from 'expo-crypto';
+import * as ExpoCrypto from 'expo-crypto';
+import { gcm } from '@noble/ciphers/aes';
 
 /**
  * Result of encrypting media
  */
 export interface EncryptedMediaResult {
-  /** Encrypted data (ciphertext without auth tag) */
+  /** Encrypted data (ciphertext with auth tag appended) */
   encryptedData: Uint8Array;
   /** Initialization vector (12 bytes for AES-GCM) */
   iv: Uint8Array;
@@ -44,7 +45,7 @@ export interface EncryptionMetadata {
  * Generate a random AES-256 encryption key (32 bytes)
  */
 export async function generateMediaKey(): Promise<Uint8Array> {
-  const keyBytes = await Crypto.getRandomBytesAsync(32);
+  const keyBytes = await ExpoCrypto.getRandomBytesAsync(32);
   return new Uint8Array(keyBytes);
 }
 
@@ -52,7 +53,7 @@ export async function generateMediaKey(): Promise<Uint8Array> {
  * Generate a random initialization vector (12 bytes for AES-GCM)
  */
 export async function generateIV(): Promise<Uint8Array> {
-  const ivBytes = await Crypto.getRandomBytesAsync(12);
+  const ivBytes = await ExpoCrypto.getRandomBytesAsync(12);
   return new Uint8Array(ivBytes);
 }
 
@@ -71,31 +72,16 @@ export async function encryptMedia(
   const encryptionKey = key || (await generateMediaKey());
   const iv = await generateIV();
 
-  // Import key for Web Crypto API
-  const cryptoKey = await crypto.subtle.importKey(
-    'raw',
-    encryptionKey.buffer as ArrayBuffer,
-    { name: 'AES-GCM', length: 256 },
-    false,
-    ['encrypt']
-  );
+  // Create AES-GCM cipher
+  const aes = gcm(encryptionKey, iv);
 
-  // Encrypt using AES-256-GCM
-  // AES-GCM appends the auth tag (16 bytes) to the ciphertext
-  const encryptedBuffer = await crypto.subtle.encrypt(
-    {
-      name: 'AES-GCM',
-      iv: iv.buffer as ArrayBuffer,
-      tagLength: 128, // 128 bits = 16 bytes
-    },
-    cryptoKey,
-    plainData
-  );
+  // Encrypt - @noble/ciphers appends auth tag to ciphertext
+  const plainArray = new Uint8Array(plainData);
+  const encryptedWithTag = aes.encrypt(plainArray);
 
-  // Split ciphertext and auth tag
-  const encryptedArray = new Uint8Array(encryptedBuffer);
-  const ciphertext = encryptedArray.slice(0, -16);
-  const authTag = encryptedArray.slice(-16);
+  // Split ciphertext and auth tag (last 16 bytes)
+  const ciphertext = encryptedWithTag.slice(0, -16);
+  const authTag = encryptedWithTag.slice(-16);
 
   return {
     encryptedData: ciphertext,
@@ -126,29 +112,13 @@ export async function decryptMedia(
   combined.set(encryptedData);
   combined.set(authTag, encryptedData.length);
 
-  // Import key for Web Crypto API
-  const cryptoKey = await crypto.subtle.importKey(
-    'raw',
-    key.buffer as ArrayBuffer,
-    { name: 'AES-GCM', length: 256 },
-    false,
-    ['decrypt']
-  );
+  // Create AES-GCM cipher
+  const aes = gcm(key, iv);
 
-  // Decrypt using AES-256-GCM
-  // This will throw if auth tag doesn't match (tampered or wrong key)
+  // Decrypt - this will throw if auth tag doesn't match
   try {
-    const decryptedBuffer = await crypto.subtle.decrypt(
-      {
-        name: 'AES-GCM',
-        iv: iv.buffer as ArrayBuffer,
-        tagLength: 128,
-      },
-      cryptoKey,
-      combined.buffer as ArrayBuffer
-    );
-
-    return decryptedBuffer;
+    const decrypted = aes.decrypt(combined);
+    return decrypted.buffer as ArrayBuffer;
   } catch (error) {
     throw new Error('Decryption failed: Invalid key or data has been tampered');
   }

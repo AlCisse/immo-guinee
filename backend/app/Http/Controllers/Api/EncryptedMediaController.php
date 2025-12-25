@@ -199,12 +199,13 @@ class EncryptedMediaController extends Controller
     }
 
     /**
-     * Confirm download completed
+     * Confirm download completed and delete from server
      *
      * POST /messaging/encrypted-media/{encryptedMedia}/confirm-download
      *
      * Called by client after successfully downloading and storing locally.
-     * This triggers cleanup eligibility.
+     * This deletes the encrypted file from server storage immediately.
+     * Both sender and receiver keep their local copies.
      */
     public function confirmDownload(Request $request, EncryptedMedia $encryptedMedia): JsonResponse
     {
@@ -221,6 +222,28 @@ class EncryptedMediaController extends Controller
         if ($encryptedMedia->uploader_id !== $user->id) {
             $encryptedMedia->markAsDownloaded($user->id);
 
+            // Delete the encrypted file from storage immediately
+            try {
+                $disk = Storage::disk($encryptedMedia->storage_disk);
+                if ($disk->exists($encryptedMedia->storage_path)) {
+                    $disk->delete($encryptedMedia->storage_path);
+
+                    // Mark as deleted in database
+                    $encryptedMedia->markAsDeleted(EncryptedMedia::DELETION_REASON_DOWNLOADED);
+
+                    Log::info('[ENCRYPTED_MEDIA] Deleted after download confirmation', [
+                        'media_id' => $encryptedMedia->id,
+                        'confirmed_by' => $user->id,
+                        'storage_path' => $encryptedMedia->storage_path,
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Log::error('[ENCRYPTED_MEDIA] Failed to delete after confirmation', [
+                    'media_id' => $encryptedMedia->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
             Log::info('[ENCRYPTED_MEDIA] Download confirmed', [
                 'media_id' => $encryptedMedia->id,
                 'confirmed_by' => $user->id,
@@ -232,6 +255,7 @@ class EncryptedMediaController extends Controller
             'data' => [
                 'id' => $encryptedMedia->id,
                 'is_downloaded_by_recipient' => $encryptedMedia->is_downloaded_by_recipient,
+                'is_deleted' => $encryptedMedia->is_deleted,
             ],
         ]);
     }

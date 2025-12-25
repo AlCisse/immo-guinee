@@ -83,6 +83,10 @@ export interface Message {
   is_read: boolean;
   lu?: boolean; // Legacy field
   created_at: string;
+  // E2E Encrypted media fields
+  encrypted_media_id?: string;
+  encryption_key?: string;
+  is_e2e_encrypted?: boolean;
 }
 
 export interface Visit {

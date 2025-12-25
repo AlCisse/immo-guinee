@@ -10,7 +10,7 @@
  * The server NEVER has access to decryption keys.
  */
 
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { apiClient } from '@/lib/api/client';
 import {
   encryptMedia,
@@ -130,12 +130,21 @@ export async function sendEncryptedMedia(
   const { encryptedData, iv, authTag } = encryptResult;
 
   // 4. Upload encrypted blob to server
+  // Write encrypted data to temp file (React Native requires file URI for FormData)
+  const tempDir = FileSystem.cacheDirectory + 'encrypted_uploads/';
+  await FileSystem.makeDirectoryAsync(tempDir, { intermediates: true }).catch(() => {});
+
+  const tempFilePath = tempDir + `encrypted_${Date.now()}.bin`;
+  const encryptedBase64 = uint8ArrayToBase64(encryptedData);
+  await FileSystem.writeAsStringAsync(tempFilePath, encryptedBase64, {
+    encoding: 'base64',
+  });
+
   const formData = new FormData();
 
-  // Convert encrypted data to blob
-  const encryptedBase64 = uint8ArrayToBase64(encryptedData);
-  formData.append('encrypted_data', {
-    uri: `data:application/octet-stream;base64,${encryptedBase64}`,
+  // Use file URI for proper multipart upload
+  formData.append('blob', {
+    uri: tempFilePath,
     name: `encrypted_${Date.now()}.bin`,
     type: 'application/octet-stream',
   } as any);
@@ -143,24 +152,33 @@ export async function sendEncryptedMedia(
   formData.append('media_type', mediaType);
   formData.append('iv', uint8ArrayToBase64(iv));
   formData.append('auth_tag', uint8ArrayToBase64(authTag));
-  formData.append('encrypted_size', encryptedData.length.toString());
   formData.append('original_size', originalSize.toString());
   formData.append('mime_type', mimeType);
 
-  if (duration !== undefined) {
+  // duration_seconds must be >= 1 for backend validation
+  if (duration !== undefined && duration >= 1) {
     formData.append('duration_seconds', Math.round(duration).toString());
+  } else if (duration !== undefined && duration > 0) {
+    // Round up to 1 for very short recordings
+    formData.append('duration_seconds', '1');
   }
 
-  const response = await apiClient.post(
-    `/messaging/${conversationId}/encrypted-media`,
-    formData,
-    {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-      timeout: 180000, // 3 minutes for upload
-    }
-  );
+  let response;
+  try {
+    response = await apiClient.post(
+      `/messaging/${conversationId}/encrypted-media`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        timeout: 180000, // 3 minutes for upload
+      }
+    );
+  } finally {
+    // Clean up temp file
+    await FileSystem.deleteAsync(tempFilePath, { idempotent: true }).catch(() => {});
+  }
 
   const mediaId = response.data.data.id;
 
@@ -224,10 +242,10 @@ export async function receiveEncryptedMedia(
     timeout: 180000, // 3 minutes for download
   });
 
-  // 2. Extract metadata from headers
-  const ivBase64 = response.headers['x-encryption-iv'];
-  const authTagBase64 = response.headers['x-encryption-auth-tag'];
-  const mimeType = response.headers['x-original-mime-type'] || 'application/octet-stream';
+  // 2. Extract metadata from headers (lowercase for axios compatibility)
+  const ivBase64 = response.headers['x-media-iv'];
+  const authTagBase64 = response.headers['x-media-authtag'];
+  const mimeType = response.headers['x-original-mimetype'] || 'application/octet-stream';
   const originalSize = parseInt(response.headers['x-original-size'] || '0', 10);
   const durationStr = response.headers['x-duration-seconds'];
   const duration = durationStr ? parseInt(durationStr, 10) : undefined;

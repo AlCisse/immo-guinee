@@ -119,7 +119,7 @@ export default function ChatScreen() {
   const { isTyping: otherUserTyping, typingText } = useTypingIndicator(conversationId || '');
 
   // Typing timeout ref
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Cleanup audio, recording, and typing timeout on unmount
   useEffect(() => {
@@ -196,8 +196,13 @@ export default function ChatScreen() {
       const msgResponse = await api.messaging.getMessages(conversationId);
       setMessages(msgResponse.data?.data || []);
     } catch (error: any) {
-      if (__DEV__) console.error('Error sending voice:', error);
-      Alert.alert('Erreur', error.message || 'Impossible d\'envoyer le message vocal');
+      if (__DEV__) {
+        console.error('Error sending voice:', error);
+        if (error.response?.data) {
+          console.error('Server response:', JSON.stringify(error.response.data, null, 2));
+        }
+      }
+      Alert.alert('Erreur', error.response?.data?.error || error.message || 'Impossible d\'envoyer le message vocal');
     } finally {
       setIsSendingMedia(false);
     }
@@ -287,8 +292,19 @@ export default function ChatScreen() {
     }
   }, [mediaUris]);
 
-  // Handle audio playback
-  const handlePlayAudio = useCallback(async (messageId: string, mediaUrl: string) => {
+  // Handle audio playback (supports both regular and encrypted media)
+  const handlePlayAudio = useCallback(async (message: Message) => {
+    const messageId = message.id;
+
+    if (__DEV__) {
+      console.log('[Audio] handlePlayAudio called:', {
+        messageId,
+        encrypted_media_id: message.encrypted_media_id,
+        media_url: message.media_url,
+        type_message: message.type_message,
+      });
+    }
+
     try {
       // If same message is playing, pause it
       if (playingMessageId === messageId && soundRef.current) {
@@ -306,6 +322,48 @@ export default function ChatScreen() {
         soundRef.current = null;
       }
 
+      // Get the audio URI (encrypted or regular)
+      let audioUri: string | null = null;
+
+      if (message.encrypted_media_id) {
+        // E2E encrypted media - need to decrypt first
+        if (__DEV__) console.log('[Audio] Getting decrypted media for:', message.encrypted_media_id);
+
+        // Check if we have the media locally, if not download it
+        const hasLocal = await isMediaAvailable(message.encrypted_media_id);
+        if (__DEV__) console.log('[Audio] Has local media:', hasLocal, 'Has encryption_key:', !!message.encryption_key);
+
+        if (!hasLocal && message.encryption_key) {
+          if (__DEV__) console.log('[Audio] Downloading encrypted media...');
+          try {
+            await receiveEncryptedMedia({
+              mediaId: message.encrypted_media_id,
+              encryptionKey: message.encryption_key,
+              conversationId: message.conversation_id,
+              senderId: message.sender_id,
+            });
+            if (__DEV__) console.log('[Audio] Download complete');
+          } catch (downloadError) {
+            if (__DEV__) console.error('[Audio] Download failed:', downloadError);
+          }
+        } else if (!hasLocal && !message.encryption_key) {
+          if (__DEV__) console.log('[Audio] No local media and no encryption_key - cannot download');
+        }
+
+        // Get decrypted URI
+        audioUri = await getMediaForDisplay(message.encrypted_media_id);
+        if (__DEV__) console.log('[Audio] Decrypted URI:', audioUri);
+      } else if (message.media_url) {
+        // Regular media URL
+        audioUri = message.media_url;
+      }
+
+      if (!audioUri) {
+        if (__DEV__) console.log('[Audio] No audio URI available');
+        Alert.alert('Erreur', 'Média non disponible');
+        return;
+      }
+
       // Configure audio mode for playback
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: false,
@@ -316,7 +374,7 @@ export default function ChatScreen() {
 
       // Load and play new audio
       const { sound } = await Audio.Sound.createAsync(
-        { uri: mediaUrl },
+        { uri: audioUri },
         { shouldPlay: true },
         (status) => {
           if (status.isLoaded) {
@@ -358,6 +416,15 @@ export default function ChatScreen() {
             // Load messages (this marks them as read on the backend)
             const msgResponse = await api.messaging.getMessages(existing.id);
             const fetchedMessages = msgResponse.data?.data || [];
+            if (__DEV__) {
+              const vocalMessages = fetchedMessages.filter((m: any) => m.type_message === 'VOCAL');
+              console.log('[Chat] Loaded messages, VOCAL:', vocalMessages.map((m: any) => ({
+                id: m.id,
+                encrypted_media_id: m.encrypted_media_id,
+                media_url: m.media_url,
+                is_e2e: m.is_e2e_encrypted,
+              })));
+            }
             setMessages(fetchedMessages);
             setMessagesInStore(existing.id, fetchedMessages);
             // Refresh unread count since messages were marked as read
@@ -370,6 +437,15 @@ export default function ChatScreen() {
           // Load messages (this marks them as read on the backend)
           const msgResponse = await api.messaging.getMessages(params.id);
           const fetchedMessages = msgResponse.data?.data || [];
+          if (__DEV__) {
+            const vocalMessages = fetchedMessages.filter((m: any) => m.type_message === 'VOCAL');
+            console.log('[Chat] Loaded messages from list, VOCAL:', vocalMessages.map((m: any) => ({
+              id: m.id,
+              encrypted_media_id: m.encrypted_media_id,
+              media_url: m.media_url,
+              is_e2e: m.is_e2e_encrypted,
+            })));
+          }
           setMessages(fetchedMessages);
           setMessagesInStore(params.id, fetchedMessages);
           // Refresh unread count since messages were marked as read
@@ -487,6 +563,7 @@ export default function ChatScreen() {
   const renderVoiceMessage = (item: Message, isMe: boolean) => {
     const isPlaying = playingMessageId === item.id;
     const progress = audioDuration > 0 && isPlaying ? (audioPosition / audioDuration) * 100 : 0;
+    const hasAudio = item.media_url || item.encrypted_media_id;
 
     return (
       <TouchableOpacity
@@ -494,8 +571,9 @@ export default function ChatScreen() {
           styles.voiceMessageContainer,
           isMe ? styles.voiceMessageMe : styles.voiceMessageOther,
         ]}
-        onPress={() => item.media_url && handlePlayAudio(item.id, item.media_url)}
+        onPress={() => hasAudio && handlePlayAudio(item)}
         activeOpacity={0.7}
+        disabled={!hasAudio}
       >
         <View style={styles.voicePlayButton}>
           <Ionicons
@@ -519,6 +597,18 @@ export default function ChatScreen() {
   const renderMessage = ({ item }: { item: Message }) => {
     const isMe = item.sender_id === user?.id;
     const isVoice = item.type_message === 'VOCAL';
+
+    // Debug: log voice message details
+    if (__DEV__ && isVoice) {
+      console.log('[Render] Voice message:', {
+        id: item.id,
+        type_message: item.type_message,
+        encrypted_media_id: item.encrypted_media_id,
+        media_url: item.media_url,
+        is_e2e_encrypted: item.is_e2e_encrypted,
+        contenu: item.contenu?.substring(0, 50),
+      });
+    }
 
     return (
       <View
@@ -545,7 +635,7 @@ export default function ChatScreen() {
             isVoice && styles.messageBubbleVoice,
           ]}
         >
-          {isVoice && item.media_url ? (
+          {isVoice && (item.media_url || item.encrypted_media_id) ? (
             renderVoiceMessage(item, isMe)
           ) : (
             <Text
