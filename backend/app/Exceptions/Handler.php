@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -114,6 +115,11 @@ class Handler extends ExceptionHandler
         elseif ($e instanceof MethodNotAllowedHttpException) {
             $statusCode = 405;
             $message = 'Méthode HTTP non autorisée';
+        }
+        // Too Many Requests (Rate Limiting)
+        elseif ($e instanceof TooManyRequestsHttpException) {
+            $statusCode = 429;
+            $message = 'Trop de tentatives. Veuillez réessayer dans une minute.';
         }
         // HTTP Exception
         elseif ($e instanceof HttpException) {
