@@ -32,8 +32,9 @@ return [
 
         'reverb' => [
             'driver' => 'reverb',
-            'key' => $readSecret('REVERB_APP_KEY'),
-            'secret' => $readSecret('REVERB_APP_SECRET'),
+            // Use placeholder values for CI/CD environments where secrets aren't available
+            'key' => $readSecret('REVERB_APP_KEY') ?: 'placeholder-key',
+            'secret' => $readSecret('REVERB_APP_SECRET') ?: 'placeholder-secret',
             'app_id' => env('REVERB_APP_ID', 'immoguinee'),
             'options' => [
                 'host' => env('REVERB_HOST', 'reverb'),
