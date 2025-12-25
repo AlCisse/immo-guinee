@@ -112,6 +112,10 @@ class MessagingController extends Controller
                 // E2E encrypted media
                 'encrypted_media_id' => $validated['encrypted_media_id'] ?? null,
                 'is_e2e_encrypted' => $isE2EEncrypted,
+                // Store encryption_key temporarily so recipient can get it via API
+                // (in case they missed the WebSocket broadcast)
+                // This key is cleared after recipient confirms download
+                'encryption_key' => $validated['encryption_key'] ?? null,
             ];
 
             // Handle file upload - store with security validation

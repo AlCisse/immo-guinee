@@ -43,7 +43,12 @@ class MessageResource extends JsonResource
             // E2E Encrypted media fields
             'encrypted_media_id' => $isDeleted ? null : $this->encrypted_media_id,
             'is_e2e_encrypted' => $this->is_e2e_encrypted ?? false,
-            // Note: encryption_key is NEVER returned via API - only sent via WebSocket
+            // encryption_key is returned to recipient only (so they can decrypt if they missed WebSocket)
+            // It's cleared after recipient downloads the media
+            'encryption_key' => $this->when(
+                !$isSender && $this->is_e2e_encrypted && $this->encryption_key,
+                $this->encryption_key
+            ),
 
             // Status indicators
             'status' => $status,

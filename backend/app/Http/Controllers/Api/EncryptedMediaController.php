@@ -244,6 +244,23 @@ class EncryptedMediaController extends Controller
                 ]);
             }
 
+            // Clear encryption_key from the associated message now that recipient has downloaded
+            // This ensures the key is no longer available via API after successful download
+            if ($encryptedMedia->message_id) {
+                try {
+                    $encryptedMedia->message()->update(['encryption_key' => null]);
+                    Log::info('[ENCRYPTED_MEDIA] Cleared encryption_key from message', [
+                        'media_id' => $encryptedMedia->id,
+                        'message_id' => $encryptedMedia->message_id,
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('[ENCRYPTED_MEDIA] Failed to clear encryption_key', [
+                        'media_id' => $encryptedMedia->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+
             Log::info('[ENCRYPTED_MEDIA] Download confirmed', [
                 'media_id' => $encryptedMedia->id,
                 'confirmed_by' => $user->id,

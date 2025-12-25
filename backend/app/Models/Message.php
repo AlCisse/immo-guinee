@@ -34,6 +34,7 @@ class Message extends Model
         // E2E encrypted media
         'encrypted_media_id',
         'is_e2e_encrypted',
+        'encryption_key',
     ];
 
     protected function casts(): array
