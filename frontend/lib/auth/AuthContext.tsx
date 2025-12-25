@@ -88,8 +88,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Then verify with the server (cookie is sent automatically)
         // This validates the httpOnly cookie token
         await refreshUser();
-      } catch (error) {
-        console.error('Failed to load user:', error);
+      } catch (error: any) {
+        // 401 is expected for unauthenticated users - don't log as error
+        if (error?.response?.status !== 401) {
+          console.error('Failed to load user:', error);
+        }
         // Clear cached user data on auth failure
         localStorage.removeItem('user');
         setUser(null);
@@ -318,8 +321,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           localStorage.setItem('redirect_data', JSON.stringify(data.data.redirect));
         }
       }
-    } catch (error) {
-      console.error('Failed to refresh user:', error);
+    } catch (error: any) {
+      // 401 is expected for unauthenticated users - don't log as error
+      if (error?.response?.status !== 401) {
+        console.error('Failed to refresh user:', error);
+      }
       // If refresh fails, clear local user cache
       localStorage.removeItem('user');
       localStorage.removeItem('redirect_data');
