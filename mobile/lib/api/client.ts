@@ -251,11 +251,39 @@ export const api = {
     startConversation: (data: { listing_id: string; message?: string }) =>
       apiClient.post('/messaging/conversations/start', data),
 
-    getMessages: (conversationId: string) =>
-      apiClient.get(`/messaging/${conversationId}/messages`),
+    getMessages: (conversationId: string, params?: { page?: number }) =>
+      apiClient.get(`/messaging/${conversationId}/messages`, { params }),
 
-    sendMessage: (conversationId: string, data: { type_message: string; contenu?: string }) =>
-      apiClient.post(`/messaging/${conversationId}/messages`, data),
+    sendMessage: (conversationId: string, data: FormData | { type_message: string; contenu?: string }) =>
+      data instanceof FormData
+        ? apiClient.post(`/messaging/${conversationId}/messages`, data, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+            timeout: 120000, // 2 minutes for voice/media uploads
+          })
+        : apiClient.post(`/messaging/${conversationId}/messages`, data),
+
+    // Real-time messaging endpoints
+    sendTyping: (conversationId: string, isTyping: boolean) =>
+      apiClient.post(`/messaging/${conversationId}/typing`, { is_typing: isTyping }),
+
+    markDelivered: (messageId: string) =>
+      apiClient.patch(`/messaging/messages/${messageId}/delivered`),
+
+    markRead: (messageId: string) =>
+      apiClient.patch(`/messaging/messages/${messageId}/read`),
+
+    deleteMessage: (messageId: string, forEveryone: boolean = false) =>
+      apiClient.delete(`/messaging/messages/${messageId}`, {
+        params: { for_everyone: forEveryone },
+      }),
+
+    search: (conversationId: string, query: string) =>
+      apiClient.get(`/messaging/${conversationId}/search`, {
+        params: { q: query },
+      }),
+
+    archive: (conversationId: string) =>
+      apiClient.post(`/messaging/${conversationId}/archive`),
   },
 
   // Contracts endpoints
