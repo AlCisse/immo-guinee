@@ -233,6 +233,8 @@ class MessagingController extends Controller
 
             // Broadcast to other participant (include encryption_key for E2E media)
             $encryptionKey = $validated['encryption_key'] ?? null;
+            // Eager load relations needed for broadcast
+            $message->load(['sender', 'encryptedMedia']);
             broadcast(new NewMessageEvent($message, $encryptionKey))->toOthers();
 
             DB::commit();
