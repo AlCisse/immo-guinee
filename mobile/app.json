@@ -14,9 +14,26 @@
       "backgroundColor": "#000000"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.immoguinee.app",
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": false,
+          "NSPinnedDomains": {
+            "immoguinee.com": {
+              "NSIncludesSubdomains": true,
+              "NSPinnedLeafIdentities": [
+                {
+                  "SPKI-SHA256-BASE64": "LOv+QdFaqnOuyIXGtn5hPngBXKLwCylu5Py+5oBPRVo="
+                }
+              ]
+            }
+          }
+        }
+      }
     },
     "android": {
+      "package": "com.immoguinee.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#000000"
@@ -30,7 +47,19 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": false
+          },
+          "ios": {
+            "deploymentTarget": "15.1"
+          }
+        }
+      ],
+      "./plugins/withNetworkSecurity.js"
     ],
     "experiments": {
       "typedRoutes": true
