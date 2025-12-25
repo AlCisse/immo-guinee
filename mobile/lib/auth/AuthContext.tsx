@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
       } catch (error) {
-        console.error('Error initializing auth:', error);
+        if (__DEV__) console.error('Error initializing auth:', error);
       } finally {
         setIsLoading(false);
       }
@@ -203,7 +203,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await tokenManager.setUser(userData);
       }
     } catch (error) {
-      console.error('Error refreshing user:', error);
+      if (__DEV__) console.error('Error refreshing user:', error);
     }
   }, []);
 

@@ -185,7 +185,7 @@ export default function ListingDetailScreen() {
         title: listing.titre,
       });
     } catch (error) {
-      console.error('Share error:', error);
+      // Share cancelled or failed - no action needed
     }
   };
 

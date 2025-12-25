@@ -26,7 +26,7 @@ export function useUnreadMessages() {
 
         return totalUnread;
       } catch (error) {
-        console.error('Failed to fetch unread messages count:', error);
+        if (__DEV__) console.error('Failed to fetch unread messages count:', error);
         return 0;
       }
     },

@@ -105,7 +105,7 @@ export default function ChatScreen() {
       soundRef.current = sound;
       setPlayingMessageId(messageId);
     } catch (error) {
-      console.error('Error playing audio:', error);
+      if (__DEV__) console.error('Error playing audio:', error);
       Alert.alert('Erreur', 'Impossible de lire le message vocal');
     }
   }, [playingMessageId]);
@@ -144,7 +144,7 @@ export default function ChatScreen() {
           queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
         }
       } catch (error) {
-        console.error('Error loading conversation:', error);
+        if (__DEV__) console.error('Error loading conversation:', error);
       } finally {
         setIsLoading(false);
       }
@@ -219,7 +219,7 @@ export default function ChatScreen() {
       setMessages(msgResponse.data?.data || []);
 
     } catch (error: any) {
-      console.error('Error sending message:', error);
+      if (__DEV__) console.error('Error sending message:', error);
       Alert.alert('Erreur', error.response?.data?.message || "Impossible d'envoyer le message");
     } finally {
       setIsSending(false);

@@ -187,7 +187,7 @@ export default function PublishScreen() {
         } as any);
       });
 
-      console.log('Submitting form data...');
+      if (__DEV__) console.log('Submitting form data...');
       return api.listings.create(formDataToSend);
     },
     onSuccess: () => {
@@ -200,7 +200,7 @@ export default function PublishScreen() {
       );
     },
     onError: (error: any) => {
-      console.log('Publish error:', error.response?.data);
+      if (__DEV__) console.log('Publish error:', error.response?.data);
       let message = error.response?.data?.message || 'Une erreur est survenue';
 
       // Show validation errors if any
@@ -304,7 +304,7 @@ export default function PublishScreen() {
 
       setNearbyLandmarks(landmarks.slice(0, 5));
     } catch (error) {
-      console.log('Could not fetch landmarks');
+      // Silently fail - landmarks are optional
     }
   };
 

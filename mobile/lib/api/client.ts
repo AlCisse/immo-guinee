@@ -90,7 +90,7 @@ apiClient.interceptors.request.use(
     // Security: Validate request URL domain
     const fullUrl = config.baseURL ? `${config.baseURL}${config.url}` : config.url || '';
     if (fullUrl && !isValidDomain(fullUrl)) {
-      console.error('Security: Blocked request to untrusted domain:', fullUrl);
+      if (__DEV__) console.error('Security: Blocked request to untrusted domain:', fullUrl);
       return Promise.reject(new Error('Untrusted domain'));
     }
 

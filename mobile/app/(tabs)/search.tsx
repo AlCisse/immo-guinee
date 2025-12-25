@@ -67,7 +67,7 @@ export default function SearchScreen() {
         const response = await api.listings.list(params);
         return response.data?.data?.listings || [];
       } catch (err: any) {
-        console.error('Search API error:', err?.response?.data || err?.message || err);
+        if (__DEV__) console.error('Search API error:', err?.response?.data || err?.message || err);
         throw err;
       }
     },
