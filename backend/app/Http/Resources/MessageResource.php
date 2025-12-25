@@ -40,6 +40,11 @@ class MessageResource extends JsonResource
             'media_mime_type' => $this->media_mime_type,
             'media_size' => $this->media_size,
 
+            // E2E Encrypted media fields
+            'encrypted_media_id' => $isDeleted ? null : $this->encrypted_media_id,
+            'is_e2e_encrypted' => $this->is_e2e_encrypted ?? false,
+            // Note: encryption_key is NEVER returned via API - only sent via WebSocket
+
             // Status indicators
             'status' => $status,
             'is_read' => $this->is_read,
