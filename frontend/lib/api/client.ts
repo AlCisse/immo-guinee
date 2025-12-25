@@ -35,8 +35,9 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
     const responseData = error.response?.data as { requires_2fa?: boolean; message?: string } | undefined;
 
-    // Handle 401 Unauthorized
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Handle 401 Unauthorized or 404 Not Found on auth endpoints
+    const status = error.response?.status;
+    if ((status === 401 || status === 404) && !originalRequest._retry) {
       originalRequest._retry = true;
 
       // Clear local user data
@@ -45,11 +46,11 @@ apiClient.interceptors.response.use(
         localStorage.removeItem('user');
 
         // Only redirect to login if NOT on auth endpoints (to avoid loops)
-        // /auth/me returns 401 for unauthenticated users - this is expected
+        // /auth/me returns 401/404 for unauthenticated users - this is expected
         const url = originalRequest.url || '';
         const isAuthEndpoint = url.includes('/auth/');
 
-        if (!isAuthEndpoint) {
+        if (!isAuthEndpoint && status === 401) {
           window.location.href = '/auth/login';
         }
       }

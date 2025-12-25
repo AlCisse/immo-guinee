@@ -89,8 +89,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // This validates the httpOnly cookie token
         await refreshUser();
       } catch (error: any) {
-        // 401 is expected for unauthenticated users - don't log as error
-        if (error?.response?.status !== 401) {
+        // 401/404 are expected for unauthenticated users - don't log as error
+        const status = error?.response?.status;
+        if (status !== 401 && status !== 404) {
           console.error('Failed to load user:', error);
         }
         // Clear cached user data on auth failure
@@ -322,8 +323,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     } catch (error: any) {
-      // 401 is expected for unauthenticated users - don't log as error
-      if (error?.response?.status !== 401) {
+      // 401/404 are expected for unauthenticated users - don't log as error
+      const status = error?.response?.status;
+      if (status !== 401 && status !== 404) {
         console.error('Failed to refresh user:', error);
       }
       // If refresh fails, clear local user cache
