@@ -295,6 +295,25 @@ export const api = {
 
     archive: (conversationId: string) =>
       apiClient.post(`/messaging/${conversationId}/archive`),
+
+    // E2E Encrypted Media endpoints
+    uploadEncryptedMedia: (conversationId: string, formData: FormData) =>
+      apiClient.post(`/messaging/${conversationId}/encrypted-media`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 180000, // 3 minutes for large files
+      }),
+
+    downloadEncryptedMedia: (mediaId: string) =>
+      apiClient.get(`/messaging/encrypted-media/${mediaId}/download`, {
+        responseType: 'arraybuffer',
+        timeout: 180000,
+      }),
+
+    confirmMediaDownload: (mediaId: string) =>
+      apiClient.post(`/messaging/encrypted-media/${mediaId}/confirm-download`),
+
+    getEncryptedMediaInfo: (mediaId: string) =>
+      apiClient.get(`/messaging/encrypted-media/${mediaId}`),
   },
 
   // Contracts endpoints

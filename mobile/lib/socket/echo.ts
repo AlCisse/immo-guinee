@@ -30,7 +30,6 @@ export async function initializeEcho(): Promise<Echo<'reverb'> | null> {
 
   const token = await tokenManager.getToken();
   if (!token) {
-    if (__DEV__) console.log('[Echo] No auth token, skipping initialization');
     return null;
   }
 
@@ -63,7 +62,7 @@ export async function initializeEcho(): Promise<Echo<'reverb'> | null> {
     connectionState = 'connected';
     reconnectAttempts = 0;
 
-    if (__DEV__) console.log('[Echo] WebSocket connection established');
+    if (__DEV__) console.log('✅ [Echo] WebSocket initialized');
 
     return echoInstance;
   } catch (error) {
@@ -80,35 +79,25 @@ function setupConnectionHandlers(): void {
   if (!echoInstance) return;
 
   const pusher = (echoInstance as any).connector?.pusher;
-  if (!pusher) {
-    if (__DEV__) console.warn('[Echo] No pusher instance found on connector');
-    return;
-  }
-
-  if (__DEV__) {
-    console.log('[Echo] Setting up connection handlers, pusher state:', pusher.connection?.state);
-  }
+  if (!pusher) return;
 
   pusher.connection.bind('connected', () => {
     connectionState = 'connected';
     reconnectAttempts = 0;
-    if (__DEV__) console.log('[Echo] Connected to WebSocket');
   });
 
   pusher.connection.bind('connecting', () => {
     connectionState = 'connecting';
-    if (__DEV__) console.log('[Echo] Connecting to WebSocket...');
   });
 
   pusher.connection.bind('disconnected', () => {
     connectionState = 'disconnected';
-    if (__DEV__) console.log('[Echo] Disconnected');
     scheduleReconnect();
   });
 
   pusher.connection.bind('error', (error: any) => {
     connectionState = 'error';
-    if (__DEV__) console.error('[Echo] Connection error:', error);
+    if (__DEV__) console.error('[Echo] Error:', error?.message || error);
     scheduleReconnect();
   });
 
@@ -129,9 +118,8 @@ function handleAppStateChange(nextAppState: AppStateStatus): void {
       }
     }
   } else if (nextAppState === 'background') {
-    // App went to background - disconnect to save battery
+    // App went to background
     // The connection will be restored when app comes back
-    if (__DEV__) console.log('[Echo] App backgrounded');
   }
 }
 
@@ -140,14 +128,11 @@ function handleAppStateChange(nextAppState: AppStateStatus): void {
  */
 function scheduleReconnect(): void {
   if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-    if (__DEV__) console.log('[Echo] Max reconnect attempts reached');
     return;
   }
 
   const delay = RECONNECT_DELAY * Math.pow(2, reconnectAttempts);
   reconnectAttempts++;
-
-  if (__DEV__) console.log(`[Echo] Scheduling reconnect in ${delay}ms (attempt ${reconnectAttempts})`);
 
   setTimeout(async () => {
     if (connectionState !== 'connected') {
@@ -164,10 +149,7 @@ async function reconnect(): Promise<void> {
 
   // Get fresh token
   const token = await tokenManager.getToken();
-  if (!token) {
-    if (__DEV__) console.log('[Echo] No token for reconnect');
-    return;
-  }
+  if (!token) return;
 
   // Update auth headers with fresh token
   if (echoInstance) {
@@ -211,8 +193,6 @@ export function disconnectEcho(): void {
   }
   connectionState = 'disconnected';
   reconnectAttempts = 0;
-
-  if (__DEV__) console.log('[Echo] Disconnected and cleaned up');
 }
 
 /**
@@ -229,15 +209,10 @@ export function subscribeToConversation(
 ) {
   const echo = getEcho();
   if (!echo) {
-    if (__DEV__) console.warn('[Echo] Cannot subscribe - not connected');
     return null;
   }
 
   const channelName = `conversation.${conversationId}`;
-  if (__DEV__) {
-    console.log('[Echo] Subscribing to channel:', channelName);
-  }
-
   const channel = echo.private(channelName);
 
   // Debug: log channel subscription success/failure
@@ -245,35 +220,21 @@ export function subscribeToConversation(
     const pusherChannel = (channel as any).subscription;
     if (pusherChannel) {
       pusherChannel.bind('pusher:subscription_succeeded', () => {
-        console.log('[Echo] Channel subscription succeeded:', channelName);
+        console.log('✅ [Echo] Subscribed to:', channelName);
       });
       pusherChannel.bind('pusher:subscription_error', (error: any) => {
-        console.error('[Echo] Channel subscription error:', channelName, error);
+        console.error('❌ [Echo] Subscription error:', channelName, error);
       });
     }
   }
 
   // Listen for new messages
   if (callbacks.onMessage) {
-    // Try with the event name as returned by broadcastAs()
-    channel.listen('NewMessageEvent', (event: any) => {
-      if (__DEV__) {
-        console.log('[Echo] NewMessageEvent received:', JSON.stringify(event, null, 2));
-      }
-      callbacks.onMessage!(event.message || event);
-    });
-
-    // Also try with .NewMessageEvent (dot prefix for custom events)
+    // Laravel Reverb uses dot-prefixed event names for custom broadcastAs()
     channel.listen('.NewMessageEvent', (event: any) => {
-      if (__DEV__) {
-        console.log('[Echo] .NewMessageEvent received:', JSON.stringify(event, null, 2));
-      }
+      if (__DEV__) console.log('📩 [Echo] Message received');
       callbacks.onMessage!(event.message || event);
     });
-
-    if (__DEV__) {
-      console.log('[Echo] Event listeners bound for NewMessageEvent');
-    }
   }
 
   // Listen for typing indicators

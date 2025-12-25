@@ -16,6 +16,9 @@ export {
   clearAllMedia,
   getDecryptedMediaUri,
   cleanupDecryptedCache,
+  storePendingKey,
+  getPendingKey,
+  deletePendingKey,
 } from './LocalMediaStorage';
 
 export type { StoredMediaMeta } from './LocalMediaStorage';

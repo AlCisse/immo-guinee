@@ -9,7 +9,8 @@
  */
 
 import * as ExpoCrypto from 'expo-crypto';
-import { gcm } from '@noble/ciphers/aes';
+// @ts-ignore - package exports ./aes.js but TS looks for ./aes
+import { gcm } from '@noble/ciphers/aes.js';
 
 /**
  * Result of encrypting media

@@ -273,17 +273,22 @@ export async function receiveEncryptedMedia(
     senderId,
   });
 
-  // 5. Confirm download to server
+  // 5. Confirm download to server (triggers deletion from server)
   try {
-    await apiClient.post(`/messaging/encrypted-media/${mediaId}/confirm-download`);
+    const confirmResponse = await apiClient.post(`/messaging/encrypted-media/${mediaId}/confirm-download`);
     if (__DEV__) {
-      console.log('[EncryptedMediaService] Download confirmed:', mediaId);
+      const isDeleted = confirmResponse.data?.data?.is_deleted;
+      console.log('[EncryptedMediaService] Download confirmed, deleted from server:', mediaId, isDeleted ? '✓' : '(pending)');
     }
   } catch (error) {
     // Non-critical - server will clean up based on TTL anyway
     if (__DEV__) {
       console.warn('[EncryptedMediaService] Failed to confirm download:', error);
     }
+  }
+
+  if (__DEV__) {
+    console.log('[EncryptedMediaService] Media stored locally:', mediaId);
   }
 }
 

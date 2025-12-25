@@ -6,6 +6,7 @@ export type MessageStatus = 'sending' | 'sent' | 'delivered' | 'read' | 'failed'
 export interface LocalMessage extends Message {
   localId?: string;
   status?: MessageStatus;
+  localMediaReady?: boolean;
 }
 
 interface TypingUser {

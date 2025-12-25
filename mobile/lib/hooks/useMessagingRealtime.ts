@@ -17,6 +17,7 @@ import {
 } from '@/lib/socket/echo';
 import { api } from '@/lib/api/client';
 import { receiveEncryptedMedia } from '@/lib/services';
+import { storePendingKey, deletePendingKey } from '@/lib/storage';
 
 /**
  * Hook to manage real-time messaging connection and subscriptions
@@ -64,7 +65,6 @@ export function useMessagingConnection() {
         // Subscribe to user's personal channel
         subscribeToUserChannel(user.id, {
           onNotification: (notification) => {
-            if (__DEV__) console.log('[Realtime] Notification:', notification);
             // Handle push notification display
           },
         });
@@ -102,17 +102,21 @@ export function useMessagingConnection() {
  * Hook to subscribe to a specific conversation's real-time events
  */
 export function useConversationRealtime(conversationId: string | null) {
+  const { user } = useAuth();
   const {
     addMessage,
+    updateMessage,
     updateMessageStatus,
     setTyping,
     markMessageAsDeleted,
     setActiveConversation,
+    isConnected: storeIsConnected,
   } = useMessagingStore();
 
   const channelRef = useRef<any>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const subscriptionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasSubscribedRef = useRef(false);
 
   useEffect(() => {
     if (!conversationId) return;
@@ -120,66 +124,73 @@ export function useConversationRealtime(conversationId: string | null) {
     // Set active conversation
     setActiveConversation(conversationId);
 
-    if (__DEV__) {
-      console.log('[Realtime] Setting up subscription for conversation:', conversationId);
-      console.log('[Realtime] Current connection state:', getConnectionState());
-    }
+    // Reset subscription flag when conversation changes
+    hasSubscribedRef.current = false;
 
     // Retry subscription with delay if not connected
     const attemptSubscription = (attempt: number = 0) => {
+      // Don't subscribe twice
+      if (hasSubscribedRef.current) return;
+
       const state = getConnectionState();
       if (state !== 'connected' && attempt < 5) {
-        if (__DEV__) {
-          console.log(`[Realtime] Not connected (${state}), retrying in 1s... (attempt ${attempt + 1})`);
-        }
         subscriptionTimeoutRef.current = setTimeout(() => attemptSubscription(attempt + 1), 1000);
         return;
       }
 
-      if (__DEV__) {
-        console.log('[Realtime] Subscribing now, state:', state);
-      }
+      hasSubscribedRef.current = true;
 
       // Subscribe to conversation channel
       channelRef.current = subscribeToConversation(conversationId, {
         onMessage: async (message) => {
-          if (__DEV__) {
-            console.log('[Realtime] Received message:', {
-              id: message.id,
-              type: message.type_message,
-              is_e2e: message.is_e2e_encrypted,
-              has_encrypted_media: !!message.encrypted_media,
-              has_encryption_key: !!message.encryption_key,
-              encrypted_media_id: message.encrypted_media?.id,
-            });
-          }
+          // Handle E2E encrypted media (only for messages from others)
+          const mediaId = message.encrypted_media?.id || message.encrypted_media_id;
+          const needsDownload = message.sender_id !== user?.id && message.is_e2e_encrypted && mediaId && message.encryption_key;
 
-          addMessage(conversationId, {
+          // Normalize encrypted_media_id from WebSocket structure
+          const normalizedMessage = {
             ...message,
-            status: 'read',
-          });
+            status: 'read' as const,
+            // WebSocket sends encrypted_media.id, but store/render expects encrypted_media_id
+            encrypted_media_id: message.encrypted_media_id || message.encrypted_media?.id,
+            // Set localMediaReady: false for messages that need download (shows loading)
+            // Set localMediaReady: true for sender's own messages
+            // Leave undefined for messages from others without encryption_key
+            localMediaReady: message.sender_id === user?.id ? true : (needsDownload ? false : undefined),
+          };
 
-          // Handle E2E encrypted media
-          if (message.is_e2e_encrypted && message.encrypted_media && message.encryption_key) {
+          addMessage(conversationId, normalizedMessage);
+
+          // Download E2E encrypted media
+          if (needsDownload) {
+            if (__DEV__) console.log('[Realtime] Downloading E2E media:', mediaId);
+
+            // Store the pending key first (in case download fails, we can retry later)
+            await storePendingKey(mediaId, message.encryption_key, conversationId, message.sender_id);
+
             try {
               await receiveEncryptedMedia({
-                mediaId: message.encrypted_media.id,
+                mediaId,
                 encryptionKey: message.encryption_key,
                 conversationId,
                 senderId: message.sender_id,
               });
-              if (__DEV__) {
-                console.log('[Realtime] E2E media downloaded:', message.encrypted_media.id);
-              }
+              // Update message to indicate local media is ready - triggers UI refresh
+              if (__DEV__) console.log('[Realtime] E2E download complete, setting localMediaReady');
+              updateMessage(conversationId, message.id, { localMediaReady: true });
+              // Delete pending key after successful download
+              await deletePendingKey(mediaId);
             } catch (error) {
-              if (__DEV__) {
-                console.error('[Realtime] Failed to download E2E media:', error);
-              }
+              if (__DEV__) console.error('[Realtime] E2E download failed:', error);
+              // Keep pending key for retry, but mark as ready so user can try to play
+              updateMessage(conversationId, message.id, { localMediaReady: true });
             }
           }
 
-          // Mark message as delivered on server
-          markAsDelivered(message.id);
+          // Mark message as delivered on server (only for messages from others)
+          if (message.sender_id !== user?.id) {
+            markAsDelivered(message.id);
+          }
         },
         onTyping: (data) => {
           setTyping(conversationId, data.userId, data.isTyping);
@@ -208,6 +219,7 @@ export function useConversationRealtime(conversationId: string | null) {
       }
       setActiveConversation(null);
       channelRef.current = null;
+      hasSubscribedRef.current = false;
 
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);

@@ -55,9 +55,30 @@ import {
   getMediaForDisplay,
   isMediaAvailable,
 } from '@/lib/services';
+import { getPendingKey, deletePendingKey } from '@/lib/storage';
 
 // Stable empty array to avoid creating new references in selectors
 const EMPTY_MESSAGES: LocalMessage[] = [];
+
+/**
+ * Mark sender's own E2E messages as ready (they always have local media)
+ * For messages from others, don't set localMediaReady - download on-demand when played
+ */
+async function enrichMessagesWithLocalMediaStatus(
+  messages: Message[],
+  currentUserId: string | undefined
+): Promise<Message[]> {
+  // Only mark sender's own messages as ready
+  // Don't check isMediaAvailable - it's unreliable and causes loading state issues
+  return messages.map((msg) => {
+    if (msg.encrypted_media_id && msg.sender_id === currentUserId) {
+      return { ...msg, localMediaReady: true };
+    }
+    // For messages from others, leave localMediaReady undefined (not false)
+    // This way the UI shows play button, and download happens on-demand
+    return msg;
+  });
+}
 
 export default function ChatScreen() {
   const params = useLocalSearchParams<{
@@ -117,6 +138,12 @@ export default function ChatScreen() {
 
   // Typing indicator
   const { isTyping: otherUserTyping, typingText } = useTypingIndicator(conversationId || '');
+
+  // Force re-render key based on localMediaReady changes
+  const messagesRenderKey = messages
+    .filter((m: any) => m.encrypted_media_id)
+    .map((m: any) => `${m.id}:${m.localMediaReady ? 1 : 0}`)
+    .join(',');
 
   // Typing timeout ref
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -192,9 +219,10 @@ export default function ChatScreen() {
         encryption_key: result.encryptionKey,
       } as any);
 
-      // Reload messages
+      // Reload messages with local media status
       const msgResponse = await api.messaging.getMessages(conversationId);
-      setMessages(msgResponse.data?.data || []);
+      const enriched = await enrichMessagesWithLocalMediaStatus(msgResponse.data?.data || [], user?.id);
+      setMessages(enriched);
     } catch (error: any) {
       if (__DEV__) {
         console.error('Error sending voice:', error);
@@ -271,9 +299,10 @@ export default function ChatScreen() {
 
       setSelectedMedia(null);
 
-      // Reload messages
+      // Reload messages with local media status
       const msgResponse = await api.messaging.getMessages(conversationId);
-      setMessages(msgResponse.data?.data || []);
+      const enriched = await enrichMessagesWithLocalMediaStatus(msgResponse.data?.data || [], user?.id);
+      setMessages(enriched);
     } catch (error: any) {
       if (__DEV__) console.error('Error sending media:', error);
       Alert.alert('Erreur', error.message || 'Impossible d\'envoyer le media');
@@ -333,21 +362,37 @@ export default function ChatScreen() {
         const hasLocal = await isMediaAvailable(message.encrypted_media_id);
         if (__DEV__) console.log('[Audio] Has local media:', hasLocal, 'Has encryption_key:', !!message.encryption_key);
 
-        if (!hasLocal && message.encryption_key) {
-          if (__DEV__) console.log('[Audio] Downloading encrypted media...');
-          try {
-            await receiveEncryptedMedia({
-              mediaId: message.encrypted_media_id,
-              encryptionKey: message.encryption_key,
-              conversationId: message.conversation_id,
-              senderId: message.sender_id,
-            });
-            if (__DEV__) console.log('[Audio] Download complete');
-          } catch (downloadError) {
-            if (__DEV__) console.error('[Audio] Download failed:', downloadError);
+        if (!hasLocal) {
+          // Get encryption key from message or from pending keys storage
+          let encryptionKey = message.encryption_key;
+
+          if (!encryptionKey) {
+            // Check for pending key (stored when message was received via WebSocket)
+            const pendingKeyData = await getPendingKey(message.encrypted_media_id);
+            if (pendingKeyData) {
+              encryptionKey = pendingKeyData.encryptionKey;
+              if (__DEV__) console.log('[Audio] Found pending key for:', message.encrypted_media_id);
+            }
           }
-        } else if (!hasLocal && !message.encryption_key) {
-          if (__DEV__) console.log('[Audio] No local media and no encryption_key - cannot download');
+
+          if (encryptionKey) {
+            if (__DEV__) console.log('[Audio] Downloading encrypted media...');
+            try {
+              await receiveEncryptedMedia({
+                mediaId: message.encrypted_media_id,
+                encryptionKey,
+                conversationId: message.conversation_id,
+                senderId: message.sender_id,
+              });
+              if (__DEV__) console.log('[Audio] Download complete');
+              // Delete pending key after successful download
+              await deletePendingKey(message.encrypted_media_id);
+            } catch (downloadError) {
+              if (__DEV__) console.error('[Audio] Download failed:', downloadError);
+            }
+          } else {
+            if (__DEV__) console.log('[Audio] No local media and no encryption_key - cannot download');
+          }
         }
 
         // Get decrypted URI
@@ -416,17 +461,20 @@ export default function ChatScreen() {
             // Load messages (this marks them as read on the backend)
             const msgResponse = await api.messaging.getMessages(existing.id);
             const fetchedMessages = msgResponse.data?.data || [];
+
+            // Check local media availability for E2E messages
+            const enrichedMessages = await enrichMessagesWithLocalMediaStatus(fetchedMessages, user?.id);
+
             if (__DEV__) {
-              const vocalMessages = fetchedMessages.filter((m: any) => m.type_message === 'VOCAL');
+              const vocalMessages = enrichedMessages.filter((m: any) => m.type_message === 'VOCAL');
               console.log('[Chat] Loaded messages, VOCAL:', vocalMessages.map((m: any) => ({
                 id: m.id,
                 encrypted_media_id: m.encrypted_media_id,
-                media_url: m.media_url,
-                is_e2e: m.is_e2e_encrypted,
+                localMediaReady: m.localMediaReady,
               })));
             }
-            setMessages(fetchedMessages);
-            setMessagesInStore(existing.id, fetchedMessages);
+            setMessages(enrichedMessages);
+            setMessagesInStore(existing.id, enrichedMessages);
             // Refresh unread count since messages were marked as read
             queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
           }
@@ -437,17 +485,20 @@ export default function ChatScreen() {
           // Load messages (this marks them as read on the backend)
           const msgResponse = await api.messaging.getMessages(params.id);
           const fetchedMessages = msgResponse.data?.data || [];
+
+          // Check local media availability for E2E messages
+          const enrichedMessages = await enrichMessagesWithLocalMediaStatus(fetchedMessages, user?.id);
+
           if (__DEV__) {
-            const vocalMessages = fetchedMessages.filter((m: any) => m.type_message === 'VOCAL');
+            const vocalMessages = enrichedMessages.filter((m: any) => m.type_message === 'VOCAL');
             console.log('[Chat] Loaded messages from list, VOCAL:', vocalMessages.map((m: any) => ({
               id: m.id,
               encrypted_media_id: m.encrypted_media_id,
-              media_url: m.media_url,
-              is_e2e: m.is_e2e_encrypted,
+              localMediaReady: m.localMediaReady,
             })));
           }
-          setMessages(fetchedMessages);
-          setMessagesInStore(params.id, fetchedMessages);
+          setMessages(enrichedMessages);
+          setMessagesInStore(params.id, enrichedMessages);
           // Refresh unread count since messages were marked as read
           queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
         }
@@ -463,7 +514,18 @@ export default function ChatScreen() {
 
   // Sync store messages with local state (for real-time updates)
   useEffect(() => {
-    if (storeMessages.length > 0) {
+    if (storeMessages.length > 0 || messages.length > 0) {
+      // Always sync to capture both new messages and updates (like localMediaReady)
+      if (__DEV__) {
+        // Log when localMediaReady changes
+        const e2eMessages = storeMessages.filter((m: any) => m.encrypted_media_id);
+        if (e2eMessages.length > 0) {
+          console.log('[Chat] Store sync - E2E messages:', e2eMessages.map((m: any) => ({
+            id: m.id?.substring(0, 8),
+            localMediaReady: m.localMediaReady,
+          })));
+        }
+      }
       setMessages(storeMessages);
     }
   }, [storeMessages]);
@@ -477,8 +539,10 @@ export default function ChatScreen() {
       try {
         const response = await api.messaging.getMessages(conversationId);
         const fetchedMessages = response.data?.data || [];
-        setMessages(fetchedMessages);
-        setMessagesInStore(conversationId, fetchedMessages);
+        // Enrich with local media status
+        const enriched = await enrichMessagesWithLocalMediaStatus(fetchedMessages, user?.id);
+        setMessages(enriched);
+        setMessagesInStore(conversationId, enriched);
         queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
       } catch (error) {
         // Silent fail for polling
@@ -514,7 +578,8 @@ export default function ChatScreen() {
 
         // Reload messages after creating conversation with first message
         const msgResponse = await api.messaging.getMessages(convId);
-        setMessages(msgResponse.data?.data || []);
+        const enriched = await enrichMessagesWithLocalMediaStatus(msgResponse.data?.data || [], user?.id);
+        setMessages(enriched);
         return; // Don't send message again - it was included in startConversation
       }
 
@@ -533,7 +598,8 @@ export default function ChatScreen() {
 
       // Reload messages
       const msgResponse = await api.messaging.getMessages(convId);
-      setMessages(msgResponse.data?.data || []);
+      const enriched = await enrichMessagesWithLocalMediaStatus(msgResponse.data?.data || [], user?.id);
+      setMessages(enriched);
 
     } catch (error: any) {
       if (__DEV__) console.error('Error sending message:', error);
@@ -560,10 +626,18 @@ export default function ChatScreen() {
   };
 
   // Render voice message bubble
-  const renderVoiceMessage = (item: Message, isMe: boolean) => {
+  const renderVoiceMessage = (item: Message & { localMediaReady?: boolean }, isMe: boolean) => {
     const isPlaying = playingMessageId === item.id;
     const progress = audioDuration > 0 && isPlaying ? (audioPosition / audioDuration) * 100 : 0;
-    const hasAudio = item.media_url || item.encrypted_media_id;
+    const hasAudio = !!(item.media_url || item.encrypted_media_id);
+
+    // For E2E encrypted messages from others that were just received via WebSocket
+    // and are still downloading, show loading. Otherwise, show play button.
+    // The download happens on-demand when user clicks play if not already downloaded.
+    const isE2EFromOther = !isMe && !!item.encrypted_media_id && !item.media_url;
+    // Only show downloading for messages explicitly marked as not ready (new WebSocket messages)
+    // For messages loaded from API, assume they're ready and download on-demand if needed
+    const isDownloading = isE2EFromOther && item.localMediaReady === false;
 
     return (
       <TouchableOpacity
@@ -571,23 +645,27 @@ export default function ChatScreen() {
           styles.voiceMessageContainer,
           isMe ? styles.voiceMessageMe : styles.voiceMessageOther,
         ]}
-        onPress={() => hasAudio && handlePlayAudio(item)}
+        onPress={() => hasAudio && !isDownloading && handlePlayAudio(item)}
         activeOpacity={0.7}
-        disabled={!hasAudio}
+        disabled={!hasAudio || isDownloading}
       >
         <View style={styles.voicePlayButton}>
-          <Ionicons
-            name={isPlaying ? 'pause' : 'play'}
-            size={24}
-            color={isMe ? '#fff' : lightTheme.colors.primary}
-          />
+          {isDownloading ? (
+            <ActivityIndicator size="small" color={lightTheme.colors.primary} />
+          ) : (
+            <Ionicons
+              name={isPlaying ? 'pause' : 'play'}
+              size={24}
+              color={isMe ? '#fff' : lightTheme.colors.primary}
+            />
+          )}
         </View>
         <View style={styles.voiceWaveContainer}>
           <View style={styles.voiceWaveBackground}>
             <View style={[styles.voiceWaveProgress, { width: `${progress}%` }]} />
           </View>
           <Text style={[styles.voiceDuration, isMe && styles.voiceDurationMe]}>
-            {isPlaying ? formatDuration(audioPosition) : 'Message vocal'}
+            {isDownloading ? 'Téléchargement...' : isPlaying ? formatDuration(audioPosition) : 'Message vocal'}
           </Text>
         </View>
       </TouchableOpacity>
@@ -598,17 +676,6 @@ export default function ChatScreen() {
     const isMe = item.sender_id === user?.id;
     const isVoice = item.type_message === 'VOCAL';
 
-    // Debug: log voice message details
-    if (__DEV__ && isVoice) {
-      console.log('[Render] Voice message:', {
-        id: item.id,
-        type_message: item.type_message,
-        encrypted_media_id: item.encrypted_media_id,
-        media_url: item.media_url,
-        is_e2e_encrypted: item.is_e2e_encrypted,
-        contenu: item.contenu?.substring(0, 50),
-      });
-    }
 
     return (
       <View
@@ -719,6 +786,7 @@ export default function ChatScreen() {
           <FlatList
             ref={flatListRef}
             data={messages}
+            extraData={messagesRenderKey}
             keyExtractor={(item) => item.id}
             renderItem={renderMessage}
             contentContainerStyle={styles.messagesList}

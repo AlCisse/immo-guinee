@@ -26,6 +26,9 @@ const KEY_PREFIX = 'media_key_';
 /** Prefix for metadata in SecureStore */
 const META_PREFIX = 'media_meta_';
 
+/** Prefix for pending encryption keys (received via WebSocket but not yet downloaded) */
+const PENDING_KEY_PREFIX = 'pending_key_';
+
 /**
  * Metadata stored for each encrypted media
  */
@@ -180,6 +183,66 @@ export async function hasLocalMedia(mediaId: string): Promise<boolean> {
   const filePath = `${MEDIA_DIR}${mediaId}.enc`;
   const fileInfo = await FileSystem.getInfoAsync(filePath);
   return fileInfo.exists;
+}
+
+/**
+ * Store a pending encryption key (received via WebSocket but media not yet downloaded)
+ * This allows us to download the media later if the initial download failed
+ *
+ * @param mediaId - The media ID
+ * @param encryptionKey - Base64 encoded encryption key
+ * @param conversationId - The conversation ID
+ * @param senderId - The sender user ID
+ */
+export async function storePendingKey(
+  mediaId: string,
+  encryptionKey: string,
+  conversationId: string,
+  senderId: string
+): Promise<void> {
+  try {
+    const data = JSON.stringify({ encryptionKey, conversationId, senderId, storedAt: new Date().toISOString() });
+    await SecureStore.setItemAsync(`${PENDING_KEY_PREFIX}${mediaId}`, data);
+    if (__DEV__) {
+      console.log('[LocalMediaStorage] Stored pending key for:', mediaId);
+    }
+  } catch (error) {
+    console.error('[LocalMediaStorage] Failed to store pending key:', mediaId, error);
+  }
+}
+
+/**
+ * Get a pending encryption key
+ *
+ * @param mediaId - The media ID
+ * @returns Pending key data or null
+ */
+export async function getPendingKey(mediaId: string): Promise<{
+  encryptionKey: string;
+  conversationId: string;
+  senderId: string;
+} | null> {
+  try {
+    const data = await SecureStore.getItemAsync(`${PENDING_KEY_PREFIX}${mediaId}`);
+    if (!data) return null;
+    return JSON.parse(data);
+  } catch (error) {
+    console.error('[LocalMediaStorage] Failed to get pending key:', mediaId, error);
+    return null;
+  }
+}
+
+/**
+ * Delete a pending encryption key (after successful download)
+ *
+ * @param mediaId - The media ID
+ */
+export async function deletePendingKey(mediaId: string): Promise<void> {
+  try {
+    await SecureStore.deleteItemAsync(`${PENDING_KEY_PREFIX}${mediaId}`);
+  } catch (error) {
+    // Ignore errors when deleting
+  }
 }
 
 /**
