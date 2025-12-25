@@ -68,6 +68,22 @@ services:
     deploy:
       replicas: 1
 
+  # Reverb WebSocket - Production with Traefik labels
+  reverb:
+    image: immoguinee/php:latest
+    environment:
+      - APP_ENV=production
+    deploy:
+      replicas: 1
+      labels:
+        - "traefik.enable=true"
+        # WebSocket route for Reverb (/app, /apps)
+        - "traefik.http.routers.reverb.rule=(Host(`immoguinee.com`) || Host(`www.immoguinee.com`)) && PathPrefix(`/app`)"
+        - "traefik.http.routers.reverb.entrypoints=websecure"
+        - "traefik.http.routers.reverb.tls=true"
+        - "traefik.http.routers.reverb.priority=200"
+        - "traefik.http.services.reverb.loadbalancer.server.port=8080"
+
   # n8n - Production URLs
   n8n:
     environment:
