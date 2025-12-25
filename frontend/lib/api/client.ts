@@ -39,11 +39,19 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
-      // Clear local user data and redirect to login
+      // Clear local user data
       // Note: httpOnly cookie will be cleared by the server on logout
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('user'); // Keep user cache for UX, but it's not sensitive
-        window.location.href = '/auth/login';
+        localStorage.removeItem('user');
+
+        // Only redirect to login if NOT on auth endpoints (to avoid loops)
+        // /auth/me returns 401 for unauthenticated users - this is expected
+        const url = originalRequest.url || '';
+        const isAuthEndpoint = url.includes('/auth/');
+
+        if (!isAuthEndpoint) {
+          window.location.href = '/auth/login';
+        }
       }
     }
 
