@@ -101,11 +101,13 @@ http:
           - "172.16.0.0/12"
           - "192.168.0.0/16"
 
-    # Basic Auth for Admin Services (admin / REDACTED_ADMIN_PASSWORD)
+    # Basic Auth for Admin Services
+    # SECURITY: Password hash should be generated and stored securely
+    # Generate with: htpasswd -nbB admin <your-secure-password>
+    # DO NOT commit actual passwords to git - use environment variables
     admin-auth:
       basicAuth:
-        users:
-          - "admin:REDACTED_HASH"
+        usersFile: "/run/secrets/admin_htpasswd"
         realm: "ImmoGuinee Admin"
         removeHeader: true
 

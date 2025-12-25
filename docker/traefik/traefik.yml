@@ -8,10 +8,10 @@ global:
   checkNewVersion: true
   sendAnonymousUsage: false
 
-# API and Dashboard
+# API and Dashboard - SECURITY: Only accessible via authenticated route
 api:
   dashboard: true
-  insecure: true  # Allow insecure API (development only)
+  insecure: false  # SECURITY: Disabled for production
   debug: false
 
 # Entry Points

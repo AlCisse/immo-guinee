@@ -3,7 +3,9 @@ global:
   smtp_smarthost: 'smtp.gmail.com:587'
   smtp_from: 'alerts@immoguinee.com'
   smtp_auth_username: 'alerts@immoguinee.com'
-  smtp_auth_password: 'your-app-password'
+  # SECURITY: Use environment variable for SMTP password
+  # Set SMTP_AUTH_PASSWORD in your .env file or Docker secrets
+  smtp_auth_password: '${SMTP_AUTH_PASSWORD}'
   smtp_require_tls: true
 
 # Templates for alerts

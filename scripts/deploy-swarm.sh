@@ -341,9 +341,11 @@ setup_waha() {
         WAHA_API_KEY=$(grep WAHA_API_KEY .env | cut -d= -f2)
     fi
 
-    # Use default if not set
+    # Require WAHA_API_KEY from environment - DO NOT use hardcoded defaults for security
     if [ -z "$WAHA_API_KEY" ]; then
-        WAHA_API_KEY="REDACTED_WAHA_API_KEY"
+        echo -e "${RED}ERROR: WAHA_API_KEY not found in .env file or environment${NC}"
+        echo -e "${YELLOW}Please set WAHA_API_KEY in your .env file${NC}"
+        return 1
     fi
 
     # Update WAHA service with correct environment variables
@@ -388,30 +390,42 @@ setup_waha() {
 }
 
 # Fix database credentials mismatch
+# SECURITY: Credentials are read from Docker Secrets, not hardcoded
 fix_db_credentials() {
     echo -e "${YELLOW}Fixing database credentials...${NC}"
 
-    # Update PHP services with correct database credentials
-    # These match the PostgreSQL container defaults
+    # Read credentials from .env or environment - DO NOT hardcode
+    if [ -f .env ]; then
+        DB_USERNAME=$(grep DB_USERNAME .env | cut -d= -f2)
+        DB_DATABASE=$(grep DB_DATABASE .env | cut -d= -f2)
+    fi
+
+    DB_USERNAME="${DB_USERNAME:-immog_user}"
+    DB_DATABASE="${DB_DATABASE:-immog_db}"
+
+    echo -e "${YELLOW}Note: DB_PASSWORD should be managed via Docker Secrets${NC}"
+    echo -e "${YELLOW}Services will use /run/secrets/db_password${NC}"
+
+    # Only update username and database - password comes from secrets
     docker service update \
-        --env-add DB_USERNAME="immog_user" \
-        --env-add DB_PASSWORD="REDACTED_DB_PASSWORD" \
-        --env-add DB_DATABASE="immog_db" \
+        --env-add DB_USERNAME="$DB_USERNAME" \
+        --env-add DB_DATABASE="$DB_DATABASE" \
+        --env-add DB_PASSWORD_FILE="/run/secrets/db_password" \
         --force "${STACK_NAME}_php"
 
     docker service update \
-        --env-add DB_USERNAME="immog_user" \
-        --env-add DB_PASSWORD="REDACTED_DB_PASSWORD" \
-        --env-add DB_DATABASE="immog_db" \
+        --env-add DB_USERNAME="$DB_USERNAME" \
+        --env-add DB_DATABASE="$DB_DATABASE" \
+        --env-add DB_PASSWORD_FILE="/run/secrets/db_password" \
         --force "${STACK_NAME}_queue-worker"
 
     docker service update \
-        --env-add DB_USERNAME="immog_user" \
-        --env-add DB_PASSWORD="REDACTED_DB_PASSWORD" \
-        --env-add DB_DATABASE="immog_db" \
+        --env-add DB_USERNAME="$DB_USERNAME" \
+        --env-add DB_DATABASE="$DB_DATABASE" \
+        --env-add DB_PASSWORD_FILE="/run/secrets/db_password" \
         --force "${STACK_NAME}_scheduler"
 
-    echo -e "${GREEN}Database credentials fixed${NC}"
+    echo -e "${GREEN}Database credentials fixed (using Docker Secrets)${NC}"
 }
 
 # Main menu
