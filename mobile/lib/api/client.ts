@@ -153,6 +153,17 @@ export const api = {
 
     updateProfile: (data: any) =>
       apiClient.patch('/auth/me', data),
+
+    // Push notification token management
+    registerPushToken: (data: { token: string; platform: 'ios' | 'android' }) =>
+      apiClient.post('/auth/push-token', data),
+
+    removePushToken: (token: string) =>
+      apiClient.delete(`/auth/push-token/${encodeURIComponent(token)}`),
+
+    // Online status
+    setOnlineStatus: (isOnline: boolean) =>
+      apiClient.post('/users/online-status', { is_online: isOnline }),
   },
 
   // Listings endpoints

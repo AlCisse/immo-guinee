@@ -857,4 +857,128 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Register a push notification token for the authenticated user
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function registerPushToken(Request $request): JsonResponse
+    {
+        $request->validate([
+            'token' => 'required|string',
+            'platform' => 'required|in:ios,android',
+        ]);
+
+        try {
+            $user = $request->user();
+            $user->registerPushToken($request->token, $request->platform);
+
+            Log::info('Push token registered', [
+                'user_id' => $user->id,
+                'platform' => $request->platform,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Token enregistré avec succès',
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Push token registration failed', [
+                'error' => $e->getMessage(),
+                'user_id' => $request->user()->id ?? 'unknown',
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Une erreur est survenue',
+            ], 500);
+        }
+    }
+
+    /**
+     * Remove a push notification token
+     *
+     * @param Request $request
+     * @param string $token
+     * @return JsonResponse
+     */
+    public function removePushToken(Request $request, string $token): JsonResponse
+    {
+        try {
+            $user = $request->user();
+            $tokens = $user->push_tokens ?? [];
+
+            // Remove token from all platforms
+            foreach ($tokens as $platform => $storedToken) {
+                if ($storedToken === $token) {
+                    $user->removePushToken($platform);
+                }
+            }
+
+            Log::info('Push token removed', [
+                'user_id' => $user->id,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Token supprimé avec succès',
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Push token removal failed', [
+                'error' => $e->getMessage(),
+                'user_id' => $request->user()->id ?? 'unknown',
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Une erreur est survenue',
+            ], 500);
+        }
+    }
+
+    /**
+     * Update user online status
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function updateOnlineStatus(Request $request): JsonResponse
+    {
+        $request->validate([
+            'is_online' => 'required|boolean',
+        ]);
+
+        try {
+            $user = $request->user();
+
+            if ($request->is_online) {
+                $user->setOnline();
+            } else {
+                $user->setOffline();
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'is_online' => $user->is_online,
+                    'last_seen_at' => $user->last_seen_at?->toIso8601String(),
+                ],
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Online status update failed', [
+                'error' => $e->getMessage(),
+                'user_id' => $request->user()->id ?? 'unknown',
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Une erreur est survenue',
+            ], 500);
+        }
+    }
 }

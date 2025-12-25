@@ -71,3 +71,28 @@ Schedule::command('contracts:verify-integrity --all')
         // Only run if there are contracts archived in the last 7 days
         return \App\Models\IntegrityAudit::where('archived_at', '>=', now()->subDays(7))->exists();
     });
+
+/*
+|--------------------------------------------------------------------------
+| Encrypted Media Management
+|--------------------------------------------------------------------------
+|
+| - Reminders: WAHA notification after 3 days if media not downloaded
+| - Cleanup: Delete media after 5 days if not downloaded, or if listing unavailable
+|
+*/
+
+// Send WAHA reminders for undownloaded media (3+ days old) - daily at 10:00 AM Conakry time
+Schedule::command('media:send-reminders')
+    ->dailyAt('10:00')
+    ->timezone('Africa/Conakry')
+    ->withoutOverlapping()
+    ->onSuccess(fn () => \Log::info('[MEDIA] Download reminders sent successfully'))
+    ->onFailure(fn () => \Log::error('[MEDIA] Failed to send download reminders'));
+
+// Cleanup expired/unavailable encrypted media - hourly
+Schedule::command('media:cleanup-encrypted --include-downloaded')
+    ->hourly()
+    ->withoutOverlapping()
+    ->onSuccess(fn () => \Log::info('[MEDIA] Encrypted media cleanup completed'))
+    ->onFailure(fn () => \Log::error('[MEDIA] Encrypted media cleanup failed'));

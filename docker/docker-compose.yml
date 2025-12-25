@@ -180,6 +180,8 @@ services:
       - do_spaces_access_key
       - do_spaces_secret_key
       - waha_api_key
+      - reverb_app_key
+      - reverb_app_secret
     environment:
       - APP_ENV=${APP_ENV:-production}
       - APP_DEBUG=${APP_DEBUG:-false}
@@ -211,6 +213,14 @@ services:
       - WAHA_URL=http://waha:3000
       - WAHA_API_KEY_FILE=/run/secrets/waha_api_key
       - WAHA_SESSION_NAME=default
+      # Reverb WebSocket
+      - BROADCAST_CONNECTION=reverb
+      - REVERB_APP_ID=immoguinee
+      - REVERB_APP_KEY_FILE=/run/secrets/reverb_app_key
+      - REVERB_APP_SECRET_FILE=/run/secrets/reverb_app_secret
+      - REVERB_HOST=reverb
+      - REVERB_PORT=8080
+      - REVERB_SCHEME=http
     networks:
       - backend-network
       - public-network  # Needs to be reachable by nginx
@@ -256,6 +266,8 @@ services:
       - db_app_password
       - redis_password
       - waha_api_key
+      - reverb_app_key
+      - reverb_app_secret
     environment:
       - APP_ENV=${APP_ENV:-production}
       - APP_KEY_FILE=/run/secrets/app_key
@@ -272,6 +284,14 @@ services:
       - WAHA_URL=http://waha:3000
       - WAHA_API_KEY_FILE=/run/secrets/waha_api_key
       - WAHA_SESSION_NAME=default
+      # Reverb WebSocket
+      - BROADCAST_CONNECTION=reverb
+      - REVERB_APP_ID=immoguinee
+      - REVERB_APP_KEY_FILE=/run/secrets/reverb_app_key
+      - REVERB_APP_SECRET_FILE=/run/secrets/reverb_app_secret
+      - REVERB_HOST=reverb
+      - REVERB_PORT=8080
+      - REVERB_SCHEME=http
     networks:
       - backend-network
     deploy:
@@ -300,6 +320,8 @@ services:
       - db_app_password
       - redis_password
       - waha_api_key
+      - reverb_app_key
+      - reverb_app_secret
     environment:
       - APP_ENV=${APP_ENV:-production}
       - APP_KEY_FILE=/run/secrets/app_key
@@ -314,6 +336,14 @@ services:
       - WAHA_URL=http://waha:3000
       - WAHA_API_KEY_FILE=/run/secrets/waha_api_key
       - WAHA_SESSION_NAME=default
+      # Reverb WebSocket
+      - BROADCAST_CONNECTION=reverb
+      - REVERB_APP_ID=immoguinee
+      - REVERB_APP_KEY_FILE=/run/secrets/reverb_app_key
+      - REVERB_APP_SECRET_FILE=/run/secrets/reverb_app_secret
+      - REVERB_HOST=reverb
+      - REVERB_PORT=8080
+      - REVERB_SCHEME=http
     networks:
       - backend-network
     deploy:
@@ -337,6 +367,8 @@ services:
       - app_key
       - db_password  # Uses main user for migrations (DDL)
       - redis_password
+      - reverb_app_key
+      - reverb_app_secret
     environment:
       - APP_ENV=${APP_ENV:-production}
       - APP_KEY_FILE=/run/secrets/app_key
@@ -347,6 +379,14 @@ services:
       - DB_PASSWORD_FILE=/run/secrets/db_password
       - REDIS_HOST=redis
       - REDIS_PASSWORD_FILE=/run/secrets/redis_password
+      # Reverb WebSocket
+      - BROADCAST_CONNECTION=reverb
+      - REVERB_APP_ID=immoguinee
+      - REVERB_APP_KEY_FILE=/run/secrets/reverb_app_key
+      - REVERB_APP_SECRET_FILE=/run/secrets/reverb_app_secret
+      - REVERB_HOST=reverb
+      - REVERB_PORT=8080
+      - REVERB_SCHEME=http
     networks:
       - backend-network
     deploy:
@@ -496,6 +536,8 @@ services:
       - app_key
       - db_app_password
       - redis_password
+      - reverb_app_key
+      - reverb_app_secret
     environment:
       - APP_ENV=${APP_ENV:-production}
       - APP_KEY_FILE=/run/secrets/app_key
@@ -506,12 +548,12 @@ services:
       - DB_PASSWORD_FILE=/run/secrets/db_app_password
       - REDIS_HOST=redis
       - REDIS_PASSWORD_FILE=/run/secrets/redis_password
-      # Reverb configuration
+      # Reverb configuration (secrets)
       - BROADCAST_CONNECTION=reverb
-      - REVERB_APP_ID=${REVERB_APP_ID:-immoguinee}
-      - REVERB_APP_KEY=${REVERB_APP_KEY:-immoguinee-reverb-key}
-      - REVERB_APP_SECRET=${REVERB_APP_SECRET:-immoguinee-reverb-secret}
-      - REVERB_HOST=reverb
+      - REVERB_APP_ID=immoguinee
+      - REVERB_APP_KEY_FILE=/run/secrets/reverb_app_key
+      - REVERB_APP_SECRET_FILE=/run/secrets/reverb_app_secret
+      - REVERB_HOST=0.0.0.0
       - REVERB_PORT=8080
       - REVERB_SCHEME=http
     networks:

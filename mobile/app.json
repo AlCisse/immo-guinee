@@ -29,7 +29,9 @@
               ]
             }
           }
-        }
+        },
+        "UIBackgroundModes": ["remote-notification"],
+        "NSMicrophoneUsageDescription": "Cette application utilise le microphone pour enregistrer des messages vocaux."
       }
     },
     "android": {
@@ -57,6 +59,15 @@
           "ios": {
             "deploymentTarget": "15.1"
           }
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#10B981",
+          "defaultChannel": "messages",
+          "sounds": []
         }
       ],
       "./plugins/withNetworkSecurity.js"

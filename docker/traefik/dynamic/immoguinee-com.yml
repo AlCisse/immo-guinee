@@ -74,6 +74,15 @@ http:
       loadBalancer:
         servers:
           - url: "http://immog_reverb:8080"
+        passHostHeader: true
+        serversTransport: websocket-transport
+
+  serversTransports:
+    websocket-transport:
+      forwardingTimeouts:
+        dialTimeout: 30s
+        responseHeaderTimeout: 0s
+        idleConnTimeout: 90s
 
   middlewares:
     compress:

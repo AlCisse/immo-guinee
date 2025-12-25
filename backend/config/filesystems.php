@@ -312,6 +312,28 @@ return [
             ],
         ],
 
+        // =========================================================================
+        // E2E ENCRYPTED MEDIA - TEMPORARY STORAGE
+        // =========================================================================
+        // Encrypted media blobs are stored here temporarily (7 days max)
+        // The server cannot decrypt these files - keys are never stored
+        // Files are auto-deleted after recipient downloads or TTL expires
+
+        'encrypted-temp' => [
+            'driver' => 's3',
+            'key' => SecretHelper::get('DO_SPACES_ACCESS_KEY'),
+            'secret' => SecretHelper::get('DO_SPACES_SECRET_KEY'),
+            'region' => env('DO_SPACES_REGION', 'fra1'),
+            'bucket' => env('DO_SPACES_BUCKET', 'immoguinee'),
+            'endpoint' => env('DO_SPACES_ENDPOINT', 'https://fra1.digitaloceanspaces.com'),
+            'root' => 'encrypted-temp',
+            'throw' => true,
+            'visibility' => 'private',
+            'options' => [
+                'ACL' => '', // Private - no public access
+            ],
+        ],
+
     ],
 
     /*

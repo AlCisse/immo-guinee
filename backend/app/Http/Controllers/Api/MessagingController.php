@@ -8,8 +8,10 @@ use App\Http\Resources\MessageResource;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\Notification;
+use App\Models\User;
 use App\Events\NewMessageEvent;
 use App\Helpers\FileSecurityHelper;
+use App\Services\ExpoPushService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -17,6 +19,12 @@ use Illuminate\Support\Str;
 
 class MessagingController extends Controller
 {
+    protected ExpoPushService $pushService;
+
+    public function __construct(ExpoPushService $pushService)
+    {
+        $this->pushService = $pushService;
+    }
     /**
      * Get user's conversations
      * FR-063
@@ -69,20 +77,41 @@ class MessagingController extends Controller
         $this->authorize('send', $conversation);
 
         $validated = $request->validate([
-            'type_message' => 'required|in:TEXT,VOCAL,PHOTO,SYSTEM',
+            'type_message' => 'required|in:TEXT,VOCAL,PHOTO,VIDEO,SYSTEM',
             'contenu' => 'required_if:type_message,TEXT|nullable|string|max:2000',
-            'fichier' => 'required_if:type_message,VOCAL,PHOTO|nullable|file|mimes:jpeg,jpg,png,webp,mp3,mp4,m4a,ogg,wav,webm,aac|max:10240', // 10MB
+            'fichier' => 'nullable|file|mimes:jpeg,jpg,png,webp,mp3,mp4,m4a,ogg,wav,webm,aac|max:10240', // 10MB
+            'reply_to_message_id' => 'nullable|uuid|exists:messages,id',
+            // E2E encrypted media fields
+            'encrypted_media_id' => 'nullable|uuid|exists:encrypted_media,id',
+            'encryption_key' => 'nullable|string|max:100', // Base64 encoded AES-256 key
         ]);
 
         DB::beginTransaction();
         try {
+            // Handle E2E encrypted media
+            $isE2EEncrypted = !empty($validated['encrypted_media_id']);
+            $encryptedMedia = null;
+
+            if ($isE2EEncrypted) {
+                $encryptedMedia = \App\Models\EncryptedMedia::find($validated['encrypted_media_id']);
+                if (!$encryptedMedia || $encryptedMedia->uploader_id !== auth()->id()) {
+                    DB::rollBack();
+                    return response()->json(['error' => 'Invalid encrypted media'], 422);
+                }
+            }
+
             $messageData = [
                 'conversation_id' => $conversation->id,
                 'sender_id' => auth()->id(),
                 'type_message' => $validated['type_message'],
                 'contenu' => $validated['contenu'] ?? null,
+                'reply_to_message_id' => $validated['reply_to_message_id'] ?? null,
                 'is_read' => false,
                 'is_delivered' => false,
+                'status' => 'sent',
+                // E2E encrypted media
+                'encrypted_media_id' => $validated['encrypted_media_id'] ?? null,
+                'is_e2e_encrypted' => $isE2EEncrypted,
             ];
 
             // Handle file upload - store with security validation
@@ -197,8 +226,14 @@ class MessagingController extends Controller
             // Update conversation last message timestamp
             $conversation->update(['last_message_at' => now()]);
 
-            // Broadcast to other participant
-            broadcast(new NewMessageEvent($message))->toOthers();
+            // Link encrypted media to message
+            if ($encryptedMedia) {
+                $encryptedMedia->update(['message_id' => $message->id]);
+            }
+
+            // Broadcast to other participant (include encryption_key for E2E media)
+            $encryptionKey = $validated['encryption_key'] ?? null;
+            broadcast(new NewMessageEvent($message, $encryptionKey))->toOthers();
 
             DB::commit();
 
@@ -215,6 +250,7 @@ class MessagingController extends Controller
                         ? 'Message vocal'
                         : Str::limit($validated['contenu'] ?? '', 50);
 
+                    // Create in-app notification
                     Notification::create([
                         'user_id' => $recipientId,
                         'type' => Notification::TYPE_MESSAGE_RECEIVED,
@@ -229,6 +265,18 @@ class MessagingController extends Controller
                         'action_url' => '/messages',
                         'priority' => Notification::PRIORITY_NORMAL,
                     ]);
+
+                    // Send push notification
+                    $recipient = User::find($recipientId);
+                    if ($recipient) {
+                        $this->pushService->sendNewMessageNotification(
+                            $recipient,
+                            $sender->nom_complet,
+                            $messagePreview,
+                            (string) $conversation->id,
+                            (string) $message->id
+                        );
+                    }
                 }
             } catch (\Exception $notifError) {
                 \Log::warning('Failed to create message notification', [
@@ -372,5 +420,184 @@ class MessagingController extends Controller
         }
 
         return response()->json(['message' => 'Conversation archived']);
+    }
+
+    /**
+     * Send typing indicator
+     */
+    public function sendTyping(Request $request, Conversation $conversation)
+    {
+        $this->authorize('viewConversation', $conversation);
+
+        $validated = $request->validate([
+            'is_typing' => 'required|boolean',
+        ]);
+
+        // Broadcast typing event to other participants
+        broadcast(new \App\Events\TypingEvent(
+            $conversation->id,
+            auth()->id(),
+            auth()->user()->nom_complet,
+            $validated['is_typing']
+        ))->toOthers();
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Mark message as delivered
+     */
+    public function markDelivered(Message $message)
+    {
+        // Verify user is the recipient
+        $userId = auth()->id();
+        $conversation = $message->conversation;
+
+        if (!$conversation || ($conversation->initiator_id !== $userId && $conversation->participant_id !== $userId)) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        // Only recipient can mark as delivered (not the sender)
+        if ($message->sender_id === $userId) {
+            return response()->json(['error' => 'Cannot mark own message as delivered'], 400);
+        }
+
+        if (!$message->is_delivered) {
+            $message->update([
+                'is_delivered' => true,
+                'delivered_at' => now(),
+            ]);
+
+            // Broadcast delivery status to sender
+            broadcast(new \App\Events\MessageStatusEvent(
+                $message->id,
+                $conversation->id,
+                'delivered'
+            ))->toOthers();
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Mark message as read
+     */
+    public function markRead(Message $message)
+    {
+        $userId = auth()->id();
+        $conversation = $message->conversation;
+
+        if (!$conversation || ($conversation->initiator_id !== $userId && $conversation->participant_id !== $userId)) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        // Only recipient can mark as read
+        if ($message->sender_id === $userId) {
+            return response()->json(['error' => 'Cannot mark own message as read'], 400);
+        }
+
+        if (!$message->is_read) {
+            $message->update([
+                'is_read' => true,
+                'read_at' => now(),
+                'is_delivered' => true,
+                'delivered_at' => $message->delivered_at ?? now(),
+            ]);
+
+            // Broadcast read status to sender
+            broadcast(new \App\Events\MessageStatusEvent(
+                $message->id,
+                $conversation->id,
+                'read'
+            ))->toOthers();
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Delete a message
+     */
+    public function deleteMessage(Request $request, Message $message)
+    {
+        $userId = auth()->id();
+        $conversation = $message->conversation;
+
+        if (!$conversation || ($conversation->initiator_id !== $userId && $conversation->participant_id !== $userId)) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $forEveryone = $request->boolean('for_everyone', false);
+
+        // Only sender can delete for everyone (within 1 hour)
+        if ($forEveryone) {
+            if ($message->sender_id !== $userId) {
+                return response()->json(['error' => 'Only sender can delete for everyone'], 403);
+            }
+
+            // Check if within 1 hour window
+            if ($message->created_at->diffInMinutes(now()) > 60) {
+                return response()->json(['error' => 'Cannot delete for everyone after 1 hour'], 400);
+            }
+
+            $message->update([
+                'deleted_for_everyone' => true,
+                'deleted_at' => now(),
+                'contenu' => null,
+                'media_url' => null,
+            ]);
+
+            // Broadcast deletion to all participants
+            broadcast(new \App\Events\MessageDeletedEvent(
+                $message->id,
+                $conversation->id,
+                true
+            ))->toOthers();
+        } else {
+            // Delete for self only
+            if ($message->sender_id === $userId) {
+                $message->update(['deleted_for_sender' => true]);
+            } else {
+                $message->update(['deleted_for_recipient' => true]);
+            }
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Search messages in a conversation
+     */
+    public function searchMessages(Request $request, Conversation $conversation)
+    {
+        $this->authorize('viewConversation', $conversation);
+
+        $validated = $request->validate([
+            'q' => 'required|string|min:2|max:100',
+        ]);
+
+        $userId = auth()->id();
+        $query = $validated['q'];
+
+        $messages = $conversation->messages()
+            ->where('type_message', 'TEXT')
+            ->where('contenu', 'ILIKE', '%' . $query . '%')
+            ->where(function ($q) use ($userId) {
+                // Exclude deleted messages for this user
+                $q->where(function ($subq) use ($userId) {
+                    $subq->where('sender_id', $userId)
+                        ->where('deleted_for_sender', false);
+                })->orWhere(function ($subq) use ($userId) {
+                    $subq->where('sender_id', '!=', $userId)
+                        ->where('deleted_for_recipient', false);
+                });
+            })
+            ->where('deleted_for_everyone', false)
+            ->with('sender')
+            ->orderBy('created_at', 'desc')
+            ->limit(50)
+            ->get();
+
+        return MessageResource::collection($messages);
     }
 }

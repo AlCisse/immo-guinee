@@ -165,3 +165,7 @@ secrets:
     external: true
   traefik_basicauth_users_v7:
     external: true
+  reverb_app_key:
+    external: true
+  reverb_app_secret:
+    external: true

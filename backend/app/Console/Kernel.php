@@ -193,6 +193,35 @@ class Kernel extends ConsoleKernel
             ->onFailure(function () {
                 \Log::error('[WAHA] Session health check failed - OTP messages may not work!');
             });
+
+        // ============================================
+        // Encrypted Media Management
+        // ============================================
+
+        // Send WAHA reminders for undownloaded media (3+ days old) - daily at 10:00 AM
+        $schedule->command('media:send-reminders')
+            ->dailyAt('10:00')
+            ->timezone('Africa/Conakry')
+            ->name('media:send-reminders')
+            ->withoutOverlapping()
+            ->onSuccess(function () {
+                \Log::info('[MEDIA] Download reminders sent successfully');
+            })
+            ->onFailure(function () {
+                \Log::error('[MEDIA] Failed to send download reminders');
+            });
+
+        // Cleanup expired/unavailable encrypted media - hourly
+        $schedule->command('media:cleanup-encrypted --include-downloaded')
+            ->hourly()
+            ->name('media:cleanup-encrypted')
+            ->withoutOverlapping()
+            ->onSuccess(function () {
+                \Log::info('[MEDIA] Encrypted media cleanup completed');
+            })
+            ->onFailure(function () {
+                \Log::error('[MEDIA] Encrypted media cleanup failed');
+            });
     }
 
     /**

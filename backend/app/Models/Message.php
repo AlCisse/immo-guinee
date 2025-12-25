@@ -18,10 +18,22 @@ class Message extends Model
         'type_message',
         'contenu',
         'media_url',
+        'media_mime_type',
+        'media_size',
         'reply_to_message_id',
         'is_read',
         'is_delivered',
         'is_admin_message',
+        'read_at',
+        'delivered_at',
+        'status',
+        'deleted_for_sender',
+        'deleted_for_recipient',
+        'deleted_for_everyone',
+        'deleted_at',
+        // E2E encrypted media
+        'encrypted_media_id',
+        'is_e2e_encrypted',
     ];
 
     protected function casts(): array
@@ -33,9 +45,14 @@ class Message extends Model
             'is_flagged' => 'boolean',
             'is_blocked' => 'boolean',
             'is_admin_message' => 'boolean',
+            'is_e2e_encrypted' => 'boolean',
+            'deleted_for_sender' => 'boolean',
+            'deleted_for_recipient' => 'boolean',
+            'deleted_for_everyone' => 'boolean',
             'read_at' => 'datetime',
             'delivered_at' => 'datetime',
             'reported_at' => 'datetime',
+            'deleted_at' => 'datetime',
             'fraud_score_data' => 'array',
             'media_size' => 'integer',
             'vocal_duration_seconds' => 'integer',
@@ -62,6 +79,14 @@ class Message extends Model
         return $this->belongsTo(Message::class, 'reply_to_message_id');
     }
 
+    /**
+     * Encrypted media relationship (E2E encrypted media)
+     */
+    public function encryptedMedia()
+    {
+        return $this->belongsTo(EncryptedMedia::class, 'encrypted_media_id');
+    }
+
     public function scopeUnread($query)
     {
         return $query->where('is_read', false);
@@ -81,17 +106,17 @@ class Message extends Model
     }
 
     /**
-     * Boot method to broadcast new message event.
+     * Boot method for model events.
+     * Note: Broadcasting is handled in MessagingController to include encryption key for E2E media.
      */
     protected static function boot()
     {
         parent::boot();
 
         static::created(function ($message) {
-            // Broadcast NewMessageEvent to conversation channel
-            broadcast(new NewMessageEvent($message))->toOthers();
-
             // Update conversation last_message_at
+            // Note: NewMessageEvent broadcast is handled in MessagingController
+            // to support encryption key for E2E encrypted media
             $message->conversation->update([
                 'last_message_at' => now(),
             ]);

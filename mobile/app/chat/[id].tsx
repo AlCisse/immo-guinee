@@ -11,6 +11,9 @@ import {
   ActivityIndicator,
   Image,
   Alert,
+  Modal,
+  Pressable,
+  Animated,
 } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +23,41 @@ import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { Message } from '@/types';
 import Colors, { lightTheme } from '@/constants/Colors';
+import {
+  useMessagingConnection,
+  useConversationRealtime,
+  useTypingIndicator,
+} from '@/lib/hooks/useMessagingRealtime';
+import { useMessagingStore, LocalMessage } from '@/lib/stores/messagingStore';
+
+// Media imports
+import {
+  pickImage,
+  pickVideo,
+  takePhoto,
+  recordVideo as recordVideoFromCamera,
+  formatFileSize,
+  PickedMedia,
+} from '@/lib/media';
+import {
+  startRecording,
+  stopRecording,
+  cancelRecording,
+  isRecording as checkIsRecording,
+  formatVoiceDuration,
+  meteringToAmplitude,
+  RecordingState,
+} from '@/lib/media';
+import {
+  sendPickedMedia,
+  sendVoiceRecording,
+  receiveEncryptedMedia,
+  getMediaForDisplay,
+  isMediaAvailable,
+} from '@/lib/services';
+
+// Stable empty array to avoid creating new references in selectors
+const EMPTY_MESSAGES: LocalMessage[] = [];
 
 export default function ChatScreen() {
   const params = useLocalSearchParams<{
@@ -50,14 +88,204 @@ export default function ChatScreen() {
   const [audioDuration, setAudioDuration] = useState<number>(0);
   const soundRef = useRef<Audio.Sound | null>(null);
 
-  // Cleanup audio on unmount
+  // Voice recording state
+  const [isRecordingVoice, setIsRecordingVoice] = useState(false);
+  const [recordingState, setRecordingState] = useState<RecordingState | null>(null);
+  const recordingAnimValue = useRef(new Animated.Value(1)).current;
+
+  // Media picker state
+  const [showMediaPicker, setShowMediaPicker] = useState(false);
+  const [selectedMedia, setSelectedMedia] = useState<PickedMedia | null>(null);
+  const [isSendingMedia, setIsSendingMedia] = useState(false);
+
+  // E2E media display state
+  const [mediaUris, setMediaUris] = useState<Record<string, string>>({});
+
+  // Real-time WebSocket connection
+  const { isConnected: wsConnected } = useMessagingConnection();
+
+  // Real-time conversation subscription
+  const { sendTypingIndicator } = useConversationRealtime(conversationId);
+
+  // Get messages from store (updated in real-time)
+  // Use stable empty array reference to avoid infinite loop
+  const storeMessages = useMessagingStore((state) =>
+    conversationId ? (state.messages[conversationId] ?? EMPTY_MESSAGES) : EMPTY_MESSAGES
+  );
+  const addMessageToStore = useMessagingStore((state) => state.addMessage);
+  const setMessagesInStore = useMessagingStore((state) => state.setMessages);
+
+  // Typing indicator
+  const { isTyping: otherUserTyping, typingText } = useTypingIndicator(conversationId || '');
+
+  // Typing timeout ref
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup audio, recording, and typing timeout on unmount
   useEffect(() => {
     return () => {
       if (soundRef.current) {
         soundRef.current.unloadAsync();
       }
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      // Cancel any ongoing recording
+      if (checkIsRecording()) {
+        cancelRecording();
+      }
     };
   }, []);
+
+  // Animate recording indicator
+  useEffect(() => {
+    if (isRecordingVoice) {
+      const pulse = Animated.loop(
+        Animated.sequence([
+          Animated.timing(recordingAnimValue, {
+            toValue: 1.3,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(recordingAnimValue, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+      pulse.start();
+      return () => pulse.stop();
+    }
+  }, [isRecordingVoice, recordingAnimValue]);
+
+  // Handle voice recording
+  const handleStartRecording = useCallback(async () => {
+    try {
+      await startRecording((state) => {
+        setRecordingState(state);
+      });
+      setIsRecordingVoice(true);
+    } catch (error: any) {
+      Alert.alert('Erreur', error.message || 'Impossible de demarrer l\'enregistrement');
+    }
+  }, []);
+
+  const handleStopRecording = useCallback(async () => {
+    if (!isRecordingVoice || !conversationId || !user) return;
+
+    try {
+      setIsRecordingVoice(false);
+      setRecordingState(null);
+      setIsSendingMedia(true);
+
+      const recording = await stopRecording();
+
+      // Send encrypted voice message
+      const result = await sendVoiceRecording(recording, conversationId, user.id);
+
+      // Send message with encryption key via API
+      await api.messaging.sendMessage(conversationId, {
+        type_message: 'VOCAL',
+        contenu: `[Message vocal - ${formatVoiceDuration(recording.duration)}]`,
+        encrypted_media_id: result.mediaId,
+        encryption_key: result.encryptionKey,
+      } as any);
+
+      // Reload messages
+      const msgResponse = await api.messaging.getMessages(conversationId);
+      setMessages(msgResponse.data?.data || []);
+    } catch (error: any) {
+      if (__DEV__) console.error('Error sending voice:', error);
+      Alert.alert('Erreur', error.message || 'Impossible d\'envoyer le message vocal');
+    } finally {
+      setIsSendingMedia(false);
+    }
+  }, [isRecordingVoice, conversationId, user]);
+
+  const handleCancelRecording = useCallback(() => {
+    cancelRecording();
+    setIsRecordingVoice(false);
+    setRecordingState(null);
+  }, []);
+
+  // Handle media picking
+  const handlePickImage = useCallback(async () => {
+    setShowMediaPicker(false);
+    try {
+      const media = await pickImage();
+      if (media) {
+        setSelectedMedia(media);
+      }
+    } catch (error: any) {
+      Alert.alert('Erreur', error.message || 'Impossible de selectionner l\'image');
+    }
+  }, []);
+
+  const handlePickVideo = useCallback(async () => {
+    setShowMediaPicker(false);
+    try {
+      const media = await pickVideo();
+      if (media) {
+        setSelectedMedia(media);
+      }
+    } catch (error: any) {
+      Alert.alert('Erreur', error.message || 'Impossible de selectionner la video');
+    }
+  }, []);
+
+  const handleTakePhoto = useCallback(async () => {
+    setShowMediaPicker(false);
+    try {
+      const media = await takePhoto();
+      if (media) {
+        setSelectedMedia(media);
+      }
+    } catch (error: any) {
+      Alert.alert('Erreur', error.message || 'Impossible de prendre la photo');
+    }
+  }, []);
+
+  const handleSendMedia = useCallback(async () => {
+    if (!selectedMedia || !conversationId || !user) return;
+
+    try {
+      setIsSendingMedia(true);
+
+      // Send encrypted media
+      const result = await sendPickedMedia(selectedMedia, conversationId, user.id);
+
+      // Send message with encryption key via API
+      const messageType = result.mediaType === 'VIDEO' ? 'VIDEO' : 'PHOTO';
+      await api.messaging.sendMessage(conversationId, {
+        type_message: messageType,
+        contenu: `[${messageType === 'VIDEO' ? 'Video' : 'Image'} - ${formatFileSize(result.originalSize)}]`,
+        encrypted_media_id: result.mediaId,
+        encryption_key: result.encryptionKey,
+      } as any);
+
+      setSelectedMedia(null);
+
+      // Reload messages
+      const msgResponse = await api.messaging.getMessages(conversationId);
+      setMessages(msgResponse.data?.data || []);
+    } catch (error: any) {
+      if (__DEV__) console.error('Error sending media:', error);
+      Alert.alert('Erreur', error.message || 'Impossible d\'envoyer le media');
+    } finally {
+      setIsSendingMedia(false);
+    }
+  }, [selectedMedia, conversationId, user]);
+
+  // Load decrypted media URI for display
+  const loadMediaUri = useCallback(async (mediaId: string) => {
+    if (mediaUris[mediaId]) return; // Already loaded
+
+    const uri = await getMediaForDisplay(mediaId);
+    if (uri) {
+      setMediaUris((prev) => ({ ...prev, [mediaId]: uri }));
+    }
+  }, [mediaUris]);
 
   // Handle audio playback
   const handlePlayAudio = useCallback(async (messageId: string, mediaUrl: string) => {
@@ -129,7 +357,9 @@ export default function ChatScreen() {
             setConversationId(existing.id);
             // Load messages (this marks them as read on the backend)
             const msgResponse = await api.messaging.getMessages(existing.id);
-            setMessages(msgResponse.data?.data || []);
+            const fetchedMessages = msgResponse.data?.data || [];
+            setMessages(fetchedMessages);
+            setMessagesInStore(existing.id, fetchedMessages);
             // Refresh unread count since messages were marked as read
             queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
           }
@@ -139,7 +369,9 @@ export default function ChatScreen() {
           setConversationId(params.id);
           // Load messages (this marks them as read on the backend)
           const msgResponse = await api.messaging.getMessages(params.id);
-          setMessages(msgResponse.data?.data || []);
+          const fetchedMessages = msgResponse.data?.data || [];
+          setMessages(fetchedMessages);
+          setMessagesInStore(params.id, fetchedMessages);
           // Refresh unread count since messages were marked as read
           queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
         }
@@ -153,23 +385,32 @@ export default function ChatScreen() {
     loadConversation();
   }, [params.id, listingId, isNewConversation, queryClient]);
 
-  // Poll for new messages
+  // Sync store messages with local state (for real-time updates)
   useEffect(() => {
-    if (!conversationId) return;
+    if (storeMessages.length > 0) {
+      setMessages(storeMessages);
+    }
+  }, [storeMessages]);
 
+  // Fallback polling only when WebSocket is disconnected
+  useEffect(() => {
+    if (!conversationId || wsConnected) return;
+
+    // Only poll if WebSocket is not connected
     const interval = setInterval(async () => {
       try {
         const response = await api.messaging.getMessages(conversationId);
-        setMessages(response.data?.data || []);
-        // Refresh unread count (marks messages as read on backend)
+        const fetchedMessages = response.data?.data || [];
+        setMessages(fetchedMessages);
+        setMessagesInStore(conversationId, fetchedMessages);
         queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
       } catch (error) {
         // Silent fail for polling
       }
-    }, 5000);
+    }, 10000); // Poll less frequently as fallback
 
     return () => clearInterval(interval);
-  }, [conversationId, queryClient]);
+  }, [conversationId, wsConnected, queryClient, setMessagesInStore]);
 
   const handleSend = async () => {
     const trimmedMessage = message.trim();
@@ -428,29 +669,192 @@ export default function ChatScreen() {
           />
         )}
 
+        {/* Typing indicator */}
+        {otherUserTyping && (
+          <View style={styles.typingContainer}>
+            <View style={styles.typingDots}>
+              <View style={[styles.typingDot, styles.typingDot1]} />
+              <View style={[styles.typingDot, styles.typingDot2]} />
+              <View style={[styles.typingDot, styles.typingDot3]} />
+            </View>
+            <Text style={styles.typingText}>{typingText}</Text>
+          </View>
+        )}
+
+        {/* Recording UI overlay */}
+        {isRecordingVoice && (
+          <View style={styles.recordingOverlay}>
+            <View style={styles.recordingContent}>
+              <Animated.View
+                style={[
+                  styles.recordingPulse,
+                  { transform: [{ scale: recordingAnimValue }] },
+                ]}
+              >
+                <View style={styles.recordingDot} />
+              </Animated.View>
+              <Text style={styles.recordingDuration}>
+                {recordingState ? formatVoiceDuration(Math.floor(recordingState.durationMs / 1000)) : '0:00'}
+              </Text>
+              <Text style={styles.recordingText}>Enregistrement en cours...</Text>
+            </View>
+            <View style={styles.recordingActions}>
+              <TouchableOpacity style={styles.recordingCancelButton} onPress={handleCancelRecording}>
+                <Ionicons name="close" size={24} color={Colors.error[500]} />
+                <Text style={styles.recordingCancelText}>Annuler</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.recordingStopButton} onPress={handleStopRecording}>
+                <Ionicons name="send" size={24} color="#fff" />
+                <Text style={styles.recordingStopText}>Envoyer</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {/* Media preview modal */}
+        {selectedMedia && (
+          <View style={styles.mediaPreviewOverlay}>
+            <View style={styles.mediaPreviewContent}>
+              <TouchableOpacity
+                style={styles.mediaPreviewClose}
+                onPress={() => setSelectedMedia(null)}
+              >
+                <Ionicons name="close" size={28} color="#fff" />
+              </TouchableOpacity>
+              {selectedMedia.type === 'image' ? (
+                <Image source={{ uri: selectedMedia.uri }} style={styles.mediaPreviewImage} />
+              ) : (
+                <View style={styles.mediaPreviewVideo}>
+                  <Ionicons name="videocam" size={48} color="#fff" />
+                  <Text style={styles.mediaPreviewVideoText}>Video</Text>
+                </View>
+              )}
+              <View style={styles.mediaPreviewInfo}>
+                <Text style={styles.mediaPreviewSize}>
+                  {formatFileSize(selectedMedia.fileSize)}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.mediaPreviewSend, isSendingMedia && styles.mediaPreviewSendDisabled]}
+                onPress={handleSendMedia}
+                disabled={isSendingMedia}
+              >
+                {isSendingMedia ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <>
+                    <Ionicons name="send" size={20} color="#fff" />
+                    <Text style={styles.mediaPreviewSendText}>Envoyer</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {/* Media picker modal */}
+        <Modal
+          visible={showMediaPicker}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setShowMediaPicker(false)}
+        >
+          <Pressable style={styles.mediaPickerOverlay} onPress={() => setShowMediaPicker(false)}>
+            <View style={styles.mediaPickerContent}>
+              <View style={styles.mediaPickerHeader}>
+                <Text style={styles.mediaPickerTitle}>Partager un media</Text>
+                <TouchableOpacity onPress={() => setShowMediaPicker(false)}>
+                  <Ionicons name="close" size={24} color={Colors.neutral[500]} />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.mediaPickerOptions}>
+                <TouchableOpacity style={styles.mediaPickerOption} onPress={handleTakePhoto}>
+                  <View style={[styles.mediaPickerIcon, { backgroundColor: Colors.primary[100] }]}>
+                    <Ionicons name="camera" size={28} color={lightTheme.colors.primary} />
+                  </View>
+                  <Text style={styles.mediaPickerOptionText}>Prendre une photo</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.mediaPickerOption} onPress={handlePickImage}>
+                  <View style={[styles.mediaPickerIcon, { backgroundColor: Colors.success[100] }]}>
+                    <Ionicons name="image" size={28} color={Colors.success[600]} />
+                  </View>
+                  <Text style={styles.mediaPickerOptionText}>Galerie d'images</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.mediaPickerOption} onPress={handlePickVideo}>
+                  <View style={[styles.mediaPickerIcon, { backgroundColor: Colors.warning[100] }]}>
+                    <Ionicons name="videocam" size={28} color={Colors.warning[600]} />
+                  </View>
+                  <Text style={styles.mediaPickerOptionText}>Galerie de videos</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Pressable>
+        </Modal>
+
         {/* Input area */}
         <View style={styles.inputContainer}>
           <View style={styles.inputWrapper}>
+            {/* Attachment button */}
+            <TouchableOpacity
+              style={styles.attachmentButton}
+              onPress={() => setShowMediaPicker(true)}
+              disabled={isRecordingVoice || isSendingMedia}
+            >
+              <Ionicons name="attach" size={24} color={lightTheme.colors.primary} />
+            </TouchableOpacity>
+
             <TextInput
               style={styles.input}
               placeholder="Votre message..."
               placeholderTextColor={Colors.neutral[400]}
               value={message}
-              onChangeText={setMessage}
+              onChangeText={(text) => {
+                setMessage(text);
+                // Send typing indicator
+                if (text.length > 0 && conversationId) {
+                  sendTypingIndicator(true);
+                  // Clear previous timeout
+                  if (typingTimeoutRef.current) {
+                    clearTimeout(typingTimeoutRef.current);
+                  }
+                  // Stop typing after 2 seconds of no input
+                  typingTimeoutRef.current = setTimeout(() => {
+                    sendTypingIndicator(false);
+                  }, 2000);
+                }
+              }}
+              onBlur={() => {
+                if (conversationId) {
+                  sendTypingIndicator(false);
+                }
+              }}
               multiline
               maxLength={1000}
+              editable={!isRecordingVoice}
             />
-            <TouchableOpacity
-              style={[styles.sendButton, (!message.trim() || isSending) && styles.sendButtonDisabled]}
-              onPress={handleSend}
-              disabled={!message.trim() || isSending}
-            >
-              {isSending ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Ionicons name="send" size={20} color="#fff" />
-              )}
-            </TouchableOpacity>
+
+            {/* Show microphone or send button */}
+            {message.trim() ? (
+              <TouchableOpacity
+                style={[styles.sendButton, isSending && styles.sendButtonDisabled]}
+                onPress={handleSend}
+                disabled={isSending}
+              >
+                {isSending ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Ionicons name="send" size={20} color="#fff" />
+                )}
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[styles.micButton, isRecordingVoice && styles.micButtonRecording]}
+                onPress={handleStartRecording}
+                disabled={isRecordingVoice || isSendingMedia || !conversationId}
+              >
+                <Ionicons name="mic" size={22} color={isRecordingVoice ? '#fff' : lightTheme.colors.primary} />
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -721,5 +1125,303 @@ const styles = StyleSheet.create({
   },
   voiceDurationMe: {
     color: 'rgba(255,255,255,0.8)',
+  },
+  // Typing indicator styles
+  typingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    backgroundColor: Colors.background.primary,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border.light,
+  },
+  typingDots: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  typingDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Colors.neutral[400],
+    marginHorizontal: 2,
+  },
+  typingDot1: {
+    opacity: 0.4,
+  },
+  typingDot2: {
+    opacity: 0.7,
+  },
+  typingDot3: {
+    opacity: 1,
+  },
+  typingText: {
+    fontSize: 13,
+    color: Colors.neutral[500],
+    fontStyle: 'italic',
+  },
+  // Attachment button
+  attachmentButton: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  // Microphone button
+  micButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.primary[100],
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  micButtonRecording: {
+    backgroundColor: Colors.error[500],
+  },
+  // Recording overlay
+  recordingOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: Colors.background.primary,
+    paddingVertical: 24,
+    paddingHorizontal: 20,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border.light,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+  recordingContent: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  recordingPulse: {
+    marginBottom: 12,
+  },
+  recordingDot: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: Colors.error[500],
+  },
+  recordingDuration: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: Colors.secondary[800],
+    marginBottom: 4,
+  },
+  recordingText: {
+    fontSize: 14,
+    color: Colors.neutral[500],
+  },
+  recordingActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+  },
+  recordingCancelButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    gap: 8,
+  },
+  recordingCancelText: {
+    fontSize: 16,
+    color: Colors.error[500],
+    fontWeight: '500',
+  },
+  recordingStopButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: lightTheme.colors.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 24,
+    gap: 8,
+  },
+  recordingStopText: {
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: '600',
+  },
+  // Media picker modal
+  mediaPickerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  mediaPickerContent: {
+    backgroundColor: Colors.background.primary,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: 16,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+  },
+  mediaPickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border.light,
+  },
+  mediaPickerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.secondary[800],
+  },
+  mediaPickerOptions: {
+    paddingTop: 16,
+  },
+  mediaPickerOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+  },
+  mediaPickerIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  mediaPickerOptionText: {
+    fontSize: 16,
+    color: Colors.secondary[800],
+  },
+  // Media preview overlay
+  mediaPreviewOverlay: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0,0,0,0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  mediaPreviewContent: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mediaPreviewClose: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 60 : 20,
+    right: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  mediaPreviewImage: {
+    width: '90%',
+    height: '60%',
+    borderRadius: 12,
+    resizeMode: 'contain',
+  },
+  mediaPreviewVideo: {
+    width: 200,
+    height: 200,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mediaPreviewVideoText: {
+    color: '#fff',
+    marginTop: 8,
+    fontSize: 16,
+  },
+  mediaPreviewInfo: {
+    marginTop: 16,
+  },
+  mediaPreviewSize: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 14,
+  },
+  mediaPreviewSend: {
+    position: 'absolute',
+    bottom: Platform.OS === 'ios' ? 60 : 40,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: lightTheme.colors.primary,
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 28,
+    gap: 8,
+  },
+  mediaPreviewSendDisabled: {
+    opacity: 0.6,
+  },
+  mediaPreviewSendText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  // E2E encrypted media in messages
+  encryptedMediaBubble: {
+    minWidth: 200,
+  },
+  encryptedImageContainer: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 4,
+  },
+  encryptedImage: {
+    width: 200,
+    height: 150,
+    borderRadius: 12,
+  },
+  encryptedVideoContainer: {
+    width: 200,
+    height: 150,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  encryptedVideoIcon: {
+    position: 'absolute',
+  },
+  encryptedMediaLoading: {
+    width: 200,
+    height: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    borderRadius: 12,
+    marginBottom: 4,
+  },
+  encryptedMediaLoadingText: {
+    marginTop: 8,
+    fontSize: 12,
+    color: Colors.neutral[500],
+  },
+  e2eBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+  },
+  e2eBadgeText: {
+    fontSize: 10,
+    color: Colors.neutral[400],
   },
 });

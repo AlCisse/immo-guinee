@@ -831,6 +831,42 @@ class WhatsAppService
     }
 
     /**
+     * Send media download reminder notification
+     *
+     * @param string $to
+     * @param string $senderName
+     * @param string $mediaType Media type: 'image', 'vidéo', 'message vocal'
+     * @param string $conversationUrl URL to the conversation
+     * @return WhatsAppMessage
+     * @throws Exception
+     */
+    public function sendMediaDownloadReminder(
+        string $to,
+        string $senderName,
+        string $mediaType,
+        string $conversationUrl
+    ): WhatsAppMessage {
+        $emoji = match ($mediaType) {
+            'image' => '📷',
+            'vidéo' => '🎬',
+            'message vocal' => '🎤',
+            default => '📎',
+        };
+
+        $message = "{$emoji} *Média en attente sur ImmoGuinée*\n\n";
+        $message .= "Bonjour,\n\n";
+        $message .= "{$senderName} vous a envoyé un(e) *{$mediaType}* il y a 3 jours.\n\n";
+        $message .= "⚠️ Ce média sera automatiquement supprimé dans 2 jours si vous ne le consultez pas.\n\n";
+        $message .= "👉 Consultez-le maintenant:\n{$conversationUrl}\n\n";
+        $message .= "ImmoGuinée - Votre partenaire immobilier 🏠";
+
+        return $this->send($to, $message, 'media_reminder', [
+            'sender_name' => $senderName,
+            'media_type' => $mediaType,
+        ]);
+    }
+
+    /**
      * Update message status from webhook
      *
      * @param string $wahaMessageId

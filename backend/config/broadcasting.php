@@ -1,5 +1,17 @@
 <?php
 
+// Helper function to read secrets from Docker secret files
+$readSecret = function (string $envVar, ?string $default = null): ?string {
+    // First check for _FILE variant (Docker secrets)
+    $fileEnv = $envVar . '_FILE';
+    $filePath = env($fileEnv);
+    if ($filePath && file_exists($filePath)) {
+        return trim(file_get_contents($filePath));
+    }
+    // Fallback to direct environment variable
+    return env($envVar, $default);
+};
+
 return [
 
     /*
@@ -20,14 +32,14 @@ return [
 
         'reverb' => [
             'driver' => 'reverb',
-            'key' => env('REVERB_APP_KEY'),
-            'secret' => env('REVERB_APP_SECRET'),
-            'app_id' => env('REVERB_APP_ID'),
+            'key' => $readSecret('REVERB_APP_KEY'),
+            'secret' => $readSecret('REVERB_APP_SECRET'),
+            'app_id' => env('REVERB_APP_ID', 'immoguinee'),
             'options' => [
-                'host' => env('REVERB_HOST'),
-                'port' => env('REVERB_PORT', 443),
-                'scheme' => env('REVERB_SCHEME', 'https'),
-                'useTLS' => env('REVERB_SCHEME', 'https') === 'https',
+                'host' => env('REVERB_HOST', 'reverb'),
+                'port' => env('REVERB_PORT', 8080),
+                'scheme' => env('REVERB_SCHEME', 'http'),
+                'useTLS' => env('REVERB_SCHEME', 'http') === 'https',
             ],
             'client_options' => [
                 // Guzzle client options

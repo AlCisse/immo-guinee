@@ -1,6 +1,9 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useMemo } from 'react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useMessagingStore } from '@/lib/stores/messagingStore';
+
+// Typing indicator timeout (3 seconds)
+const TYPING_TIMEOUT = 3000;
 import {
   initializeEcho,
   disconnectEcho,
@@ -13,6 +16,7 @@ import {
   getConnectionState,
 } from '@/lib/socket/echo';
 import { api } from '@/lib/api/client';
+import { receiveEncryptedMedia } from '@/lib/services';
 
 /**
  * Hook to manage real-time messaging connection and subscriptions
@@ -85,8 +89,11 @@ export function useMessagingConnection() {
     };
   }, [isAuthenticated, user]);
 
+  // Get connection state from store instead of calling functions directly
+  const connected = useMessagingStore((state) => state.isConnected);
+
   return {
-    isConnected: isConnected(),
+    isConnected: connected,
     connectionState: getConnectionState(),
   };
 }
@@ -114,11 +121,30 @@ export function useConversationRealtime(conversationId: string | null) {
 
     // Subscribe to conversation channel
     channelRef.current = subscribeToConversation(conversationId, {
-      onMessage: (message) => {
+      onMessage: async (message) => {
         addMessage(conversationId, {
           ...message,
           status: 'read',
         });
+
+        // Handle E2E encrypted media
+        if (message.is_e2e_encrypted && message.encrypted_media && message.encryption_key) {
+          try {
+            await receiveEncryptedMedia({
+              mediaId: message.encrypted_media.id,
+              encryptionKey: message.encryption_key,
+              conversationId,
+              senderId: message.sender_id,
+            });
+            if (__DEV__) {
+              console.log('[Realtime] E2E media downloaded:', message.encrypted_media.id);
+            }
+          } catch (error) {
+            if (__DEV__) {
+              console.error('[Realtime] Failed to download E2E media:', error);
+            }
+          }
+        }
 
         // Mark message as delivered on server
         markAsDelivered(message.id);
@@ -245,9 +271,19 @@ async function markAsDelivered(messageId: string): Promise<void> {
  * Hook for typing indicator display
  */
 export function useTypingIndicator(conversationId: string) {
-  const typingUsers = useMessagingStore((state) => state.getTypingUsers(conversationId));
+  // Access typing users directly from state to avoid creating new array references
+  const typingData = useMessagingStore((state) => state.typingUsers[conversationId]);
 
-  const getTypingText = useCallback(() => {
+  // Memoize the filtered typing users to avoid recalculating on every render
+  const typingUsers = useMemo(() => {
+    if (!typingData || typingData.length === 0) return [];
+    const now = Date.now();
+    return typingData
+      .filter((t) => now - t.timestamp < TYPING_TIMEOUT)
+      .map((t) => t.userId);
+  }, [typingData]);
+
+  const typingText = useMemo(() => {
     if (typingUsers.length === 0) return null;
     if (typingUsers.length === 1) return 'est en train d\'écrire...';
     if (typingUsers.length === 2) return 'sont en train d\'écrire...';
@@ -256,7 +292,7 @@ export function useTypingIndicator(conversationId: string) {
 
   return {
     isTyping: typingUsers.length > 0,
-    typingText: getTypingText(),
+    typingText,
     typingUserIds: typingUsers,
   };
 }

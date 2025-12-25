@@ -68,7 +68,16 @@ Route::prefix('auth')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         Route::get('/me/counts', [AuthController::class, 'counts']); // Unread notifications, messages, favorites count
         Route::patch('/me', [AuthController::class, 'updateProfile']);
+
+        // Push notifications
+        Route::post('/push-token', [AuthController::class, 'registerPushToken']);
+        Route::delete('/push-token/{token}', [AuthController::class, 'removePushToken']);
     });
+});
+
+// User status endpoints (online/offline)
+Route::prefix('users')->middleware('auth:api')->group(function () {
+    Route::post('/online-status', [AuthController::class, 'updateOnlineStatus']);
 });
 
 // User notifications endpoints
@@ -164,11 +173,26 @@ Route::prefix('messaging')->middleware('auth:api')->group(function () {
     // Static routes first (before wildcard routes)
     Route::get('/conversations', [\App\Http\Controllers\Api\MessagingController::class, 'conversations']);
     Route::post('/conversations/start', [\App\Http\Controllers\Api\MessagingController::class, 'startConversation']);
+
+    // Message-specific routes (using message ID)
     Route::post('/messages/{message}/report', [\App\Http\Controllers\Api\MessagingController::class, 'report']);
-    // Wildcard routes last
+    Route::patch('/messages/{message}/delivered', [\App\Http\Controllers\Api\MessagingController::class, 'markDelivered']);
+    Route::patch('/messages/{message}/read', [\App\Http\Controllers\Api\MessagingController::class, 'markRead']);
+    Route::delete('/messages/{message}', [\App\Http\Controllers\Api\MessagingController::class, 'deleteMessage']);
+
+    // Conversation-specific routes (using conversation ID)
     Route::get('/{conversation}/messages', [\App\Http\Controllers\Api\MessagingController::class, 'messages']);
     Route::post('/{conversation}/messages', [\App\Http\Controllers\Api\MessagingController::class, 'sendMessage']);
+    Route::post('/{conversation}/typing', [\App\Http\Controllers\Api\MessagingController::class, 'sendTyping']);
+    Route::get('/{conversation}/search', [\App\Http\Controllers\Api\MessagingController::class, 'searchMessages']);
     Route::post('/{conversation}/archive', [\App\Http\Controllers\Api\MessagingController::class, 'archive']);
+
+    // E2E Encrypted Media routes
+    // Media is encrypted client-side, server stores only encrypted blobs (never decryption keys)
+    Route::post('/{conversation}/encrypted-media', [\App\Http\Controllers\Api\EncryptedMediaController::class, 'upload']);
+    Route::get('/encrypted-media/{encryptedMedia}', [\App\Http\Controllers\Api\EncryptedMediaController::class, 'show']);
+    Route::get('/encrypted-media/{encryptedMedia}/download', [\App\Http\Controllers\Api\EncryptedMediaController::class, 'download']);
+    Route::post('/encrypted-media/{encryptedMedia}/confirm-download', [\App\Http\Controllers\Api\EncryptedMediaController::class, 'confirmDownload']);
 });
 
 // Ratings endpoints
