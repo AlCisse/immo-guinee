@@ -121,6 +121,11 @@ export default function ChatScreen() {
 
   // E2E media display state
   const [mediaUris, setMediaUris] = useState<Record<string, string>>({});
+  const [downloadingMedia, setDownloadingMedia] = useState<Set<string>>(new Set());
+  const [fullscreenMedia, setFullscreenMedia] = useState<{
+    uri: string;
+    type: 'image' | 'video';
+  } | null>(null);
 
   // Real-time WebSocket connection
   const { isConnected: wsConnected } = useMessagingConnection();
@@ -313,13 +318,94 @@ export default function ChatScreen() {
 
   // Load decrypted media URI for display
   const loadMediaUri = useCallback(async (mediaId: string) => {
-    if (mediaUris[mediaId]) return; // Already loaded
+    if (mediaUris[mediaId]) return mediaUris[mediaId]; // Already loaded
 
     const uri = await getMediaForDisplay(mediaId);
     if (uri) {
       setMediaUris((prev) => ({ ...prev, [mediaId]: uri }));
+      return uri;
     }
+    return null;
   }, [mediaUris]);
+
+  // Handle photo/video press - download if needed and show fullscreen
+  const handleMediaPress = useCallback(async (message: Message, mediaType: 'image' | 'video') => {
+    const mediaId = message.encrypted_media_id;
+    if (!mediaId) return;
+
+    if (__DEV__) {
+      console.log('[Media] handleMediaPress called:', {
+        messageId: message.id,
+        mediaId,
+        mediaType,
+        type_message: message.type_message,
+      });
+    }
+
+    // Check if already cached
+    if (mediaUris[mediaId]) {
+      setFullscreenMedia({ uri: mediaUris[mediaId], type: mediaType });
+      return;
+    }
+
+    // Check if already downloading
+    if (downloadingMedia.has(mediaId)) return;
+
+    try {
+      setDownloadingMedia((prev) => new Set(prev).add(mediaId));
+
+      // Check if we have the media locally
+      const hasLocal = await isMediaAvailable(mediaId);
+      if (__DEV__) console.log('[Media] Has local media:', hasLocal, 'Has encryption_key:', !!message.encryption_key);
+
+      if (!hasLocal) {
+        // Get encryption key from message or from pending keys storage
+        let encryptionKey = message.encryption_key;
+
+        if (!encryptionKey) {
+          const pendingKeyData = await getPendingKey(mediaId);
+          if (pendingKeyData) {
+            encryptionKey = pendingKeyData.encryptionKey;
+            if (__DEV__) console.log('[Media] Found pending key for:', mediaId);
+          }
+        }
+
+        if (encryptionKey) {
+          if (__DEV__) console.log('[Media] Downloading encrypted media...');
+          await receiveEncryptedMedia({
+            mediaId,
+            encryptionKey,
+            conversationId: message.conversation_id,
+            senderId: message.sender_id,
+          });
+          if (__DEV__) console.log('[Media] Download complete');
+          await deletePendingKey(mediaId);
+        } else {
+          if (__DEV__) console.log('[Media] No local media and no encryption_key - cannot download');
+          Alert.alert('Erreur', 'Média non disponible');
+          return;
+        }
+      }
+
+      // Get decrypted URI and show fullscreen
+      const uri = await getMediaForDisplay(mediaId);
+      if (uri) {
+        setMediaUris((prev) => ({ ...prev, [mediaId]: uri }));
+        setFullscreenMedia({ uri, type: mediaType });
+      } else {
+        Alert.alert('Erreur', 'Impossible de déchiffrer le média');
+      }
+    } catch (error) {
+      if (__DEV__) console.error('[Media] Error loading media:', error);
+      Alert.alert('Erreur', 'Impossible de charger le média');
+    } finally {
+      setDownloadingMedia((prev) => {
+        const next = new Set(prev);
+        next.delete(mediaId);
+        return next;
+      });
+    }
+  }, [mediaUris, downloadingMedia]);
 
   // Handle audio playback (supports both regular and encrypted media)
   const handlePlayAudio = useCallback(async (message: Message) => {
@@ -625,6 +711,85 @@ export default function ChatScreen() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Render photo message bubble
+  const renderPhotoMessage = (item: Message & { localMediaReady?: boolean }, isMe: boolean) => {
+    const mediaId = item.encrypted_media_id;
+    const isDownloading = mediaId ? downloadingMedia.has(mediaId) : false;
+    const cachedUri = mediaId ? mediaUris[mediaId] : null;
+    const isE2EFromOther = !isMe && !!mediaId && !item.media_url;
+
+    return (
+      <TouchableOpacity
+        style={styles.encryptedImageContainer}
+        onPress={() => handleMediaPress(item, 'image')}
+        activeOpacity={0.8}
+        disabled={isDownloading}
+      >
+        {cachedUri ? (
+          <Image source={{ uri: cachedUri }} style={styles.encryptedImage} />
+        ) : isDownloading ? (
+          <View style={styles.encryptedMediaLoading}>
+            <ActivityIndicator size="small" color={lightTheme.colors.primary} />
+            <Text style={styles.encryptedMediaLoadingText}>Téléchargement...</Text>
+          </View>
+        ) : (
+          <View style={styles.encryptedMediaLoading}>
+            <Ionicons name="image-outline" size={32} color={Colors.neutral[400]} />
+            <Text style={styles.encryptedMediaLoadingText}>
+              {isE2EFromOther ? 'Appuyer pour voir' : 'Image chiffrée'}
+            </Text>
+          </View>
+        )}
+        <View style={styles.e2eBadge}>
+          <Ionicons name="lock-closed" size={10} color={Colors.neutral[400]} />
+          <Text style={styles.e2eBadgeText}>Chiffré E2E</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  // Render video message bubble
+  const renderVideoMessage = (item: Message & { localMediaReady?: boolean }, isMe: boolean) => {
+    const mediaId = item.encrypted_media_id;
+    const isDownloading = mediaId ? downloadingMedia.has(mediaId) : false;
+    const cachedUri = mediaId ? mediaUris[mediaId] : null;
+    const isE2EFromOther = !isMe && !!mediaId && !item.media_url;
+
+    return (
+      <TouchableOpacity
+        style={styles.encryptedVideoContainer}
+        onPress={() => handleMediaPress(item, 'video')}
+        activeOpacity={0.8}
+        disabled={isDownloading}
+      >
+        {cachedUri ? (
+          <>
+            <Image source={{ uri: cachedUri }} style={styles.encryptedImage} />
+            <View style={styles.encryptedVideoIcon}>
+              <Ionicons name="play-circle" size={48} color="rgba(255,255,255,0.9)" />
+            </View>
+          </>
+        ) : isDownloading ? (
+          <>
+            <ActivityIndicator size="small" color="#fff" />
+            <Text style={[styles.encryptedMediaLoadingText, { color: '#fff' }]}>Téléchargement...</Text>
+          </>
+        ) : (
+          <>
+            <Ionicons name="videocam-outline" size={32} color="rgba(255,255,255,0.8)" />
+            <Text style={[styles.encryptedMediaLoadingText, { color: 'rgba(255,255,255,0.8)' }]}>
+              {isE2EFromOther ? 'Appuyer pour voir' : 'Vidéo chiffrée'}
+            </Text>
+          </>
+        )}
+        <View style={[styles.e2eBadge, { marginTop: 8 }]}>
+          <Ionicons name="lock-closed" size={10} color="rgba(255,255,255,0.6)" />
+          <Text style={[styles.e2eBadgeText, { color: 'rgba(255,255,255,0.6)' }]}>Chiffré E2E</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
   // Render voice message bubble
   const renderVoiceMessage = (item: Message & { localMediaReady?: boolean }, isMe: boolean) => {
     const isPlaying = playingMessageId === item.id;
@@ -675,7 +840,9 @@ export default function ChatScreen() {
   const renderMessage = ({ item }: { item: Message }) => {
     const isMe = item.sender_id === user?.id;
     const isVoice = item.type_message === 'VOCAL';
-
+    const isPhoto = item.type_message === 'PHOTO';
+    const isVideo = item.type_message === 'VIDEO';
+    const isMediaMessage = isVoice || isPhoto || isVideo;
 
     return (
       <View
@@ -700,10 +867,15 @@ export default function ChatScreen() {
             styles.messageBubble,
             isMe ? styles.messageBubbleMe : styles.messageBubbleOther,
             isVoice && styles.messageBubbleVoice,
+            (isPhoto || isVideo) && styles.encryptedMediaBubble,
           ]}
         >
           {isVoice && (item.media_url || item.encrypted_media_id) ? (
             renderVoiceMessage(item, isMe)
+          ) : isPhoto && item.encrypted_media_id ? (
+            renderPhotoMessage(item, isMe)
+          ) : isVideo && item.encrypted_media_id ? (
+            renderVideoMessage(item, isMe)
           ) : (
             <Text
               style={[
@@ -947,6 +1119,44 @@ export default function ChatScreen() {
               </View>
             </View>
           </Pressable>
+        </Modal>
+
+        {/* Fullscreen media viewer modal */}
+        <Modal
+          visible={!!fullscreenMedia}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setFullscreenMedia(null)}
+        >
+          <View style={styles.fullscreenMediaOverlay}>
+            <TouchableOpacity
+              style={styles.fullscreenMediaClose}
+              onPress={() => setFullscreenMedia(null)}
+            >
+              <Ionicons name="close" size={28} color="#fff" />
+            </TouchableOpacity>
+            {fullscreenMedia?.type === 'image' ? (
+              <Image
+                source={{ uri: fullscreenMedia.uri }}
+                style={styles.fullscreenImage}
+                resizeMode="contain"
+              />
+            ) : fullscreenMedia?.type === 'video' ? (
+              <View style={styles.fullscreenVideoContainer}>
+                <Ionicons name="videocam" size={64} color="rgba(255,255,255,0.5)" />
+                <Text style={styles.fullscreenVideoText}>
+                  Lecture vidéo non disponible
+                </Text>
+                <Text style={styles.fullscreenVideoSubtext}>
+                  Ouvrir avec une app externe
+                </Text>
+              </View>
+            ) : null}
+            <View style={styles.fullscreenMediaBadge}>
+              <Ionicons name="lock-closed" size={12} color="rgba(255,255,255,0.7)" />
+              <Text style={styles.fullscreenMediaBadgeText}>Chiffrement de bout en bout</Text>
+            </View>
+          </View>
         </Modal>
 
         {/* Input area */}
@@ -1581,5 +1791,59 @@ const styles = StyleSheet.create({
   e2eBadgeText: {
     fontSize: 10,
     color: Colors.neutral[400],
+  },
+  // Fullscreen media viewer
+  fullscreenMediaOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullscreenMediaClose: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 60 : 20,
+    right: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  fullscreenImage: {
+    width: '100%',
+    height: '80%',
+  },
+  fullscreenVideoContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  fullscreenVideoText: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 18,
+    marginTop: 16,
+    fontWeight: '500',
+  },
+  fullscreenVideoSubtext: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 14,
+    marginTop: 8,
+  },
+  fullscreenMediaBadge: {
+    position: 'absolute',
+    bottom: Platform.OS === 'ios' ? 60 : 40,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+  },
+  fullscreenMediaBadgeText: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 12,
   },
 });
