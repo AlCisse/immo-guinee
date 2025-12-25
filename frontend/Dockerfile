@@ -44,6 +44,9 @@ FROM node:20-alpine AS runner
 
 WORKDIR /app
 
+# Install dependencies for sharp
+RUN apk add --no-cache libc6-compat
+
 # Set production environment
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -56,6 +59,9 @@ RUN addgroup --system --gid 1001 nodejs && \
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
+
+# Install sharp for image optimization
+RUN npm install --os=linux --libc=musl --cpu=x64 sharp
 
 # Set correct permissions
 RUN chown -R nextjs:nodejs /app
