@@ -477,10 +477,56 @@ services:
       - backend-network
       - public-network  # WebSocket connections from clients
     deploy:
-      replicas: 1
+      replicas: 0  # Deprecated: Use reverb instead
       restart_policy:
         condition: on-failure
     depends_on:
+      - redis
+
+  # Laravel Reverb WebSocket Server (replaces laravel-echo)
+  reverb:
+    image: ${PHP_IMAGE:-immoguinee/php:latest}
+    hostname: reverb
+    working_dir: /var/www/backend
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    volumes:
+      - ./php/php.ini:/usr/local/etc/php/php.ini:ro
+      - ../backend/storage:/var/www/backend/storage
+    secrets:
+      - app_key
+      - db_app_password
+      - redis_password
+    environment:
+      - APP_ENV=${APP_ENV:-production}
+      - APP_KEY_FILE=/run/secrets/app_key
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_DATABASE=${DB_DATABASE:-immog_db}
+      - DB_USERNAME=${DB_APP_USERNAME:-immog_app}
+      - DB_PASSWORD_FILE=/run/secrets/db_app_password
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD_FILE=/run/secrets/redis_password
+      # Reverb configuration
+      - BROADCAST_CONNECTION=reverb
+      - REVERB_APP_ID=${REVERB_APP_ID:-immoguinee}
+      - REVERB_APP_KEY=${REVERB_APP_KEY:-immoguinee-reverb-key}
+      - REVERB_APP_SECRET=${REVERB_APP_SECRET:-immoguinee-reverb-secret}
+      - REVERB_HOST=reverb
+      - REVERB_PORT=8080
+      - REVERB_SCHEME=http
+    networks:
+      - backend-network
+      - public-network  # WebSocket connections from clients via Traefik
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+      resources:
+        limits:
+          memory: 256M
+    depends_on:
+      - postgres
       - redis
 
   # ============================================

@@ -78,6 +78,10 @@ class User extends Authenticatable implements MustVerifyEmail
         'is_active',
         'is_suspended',
         'last_login_at',
+        // Real-time messaging
+        'is_online',
+        'last_seen_at',
+        'push_tokens',
     ];
 
     /**
@@ -107,9 +111,12 @@ class User extends Authenticatable implements MustVerifyEmail
             'suspended_at' => 'datetime',
             'two_factor_confirmed_at' => 'datetime',
             'last_login_at' => 'datetime',
+            'last_seen_at' => 'datetime',
             'notification_preferences' => 'array',
+            'push_tokens' => 'array',
             'is_active' => 'boolean',
             'is_suspended' => 'boolean',
+            'is_online' => 'boolean',
             'total_transactions' => 'integer',
             'total_disputes' => 'integer',
             'disputes_resolved' => 'integer',
@@ -473,5 +480,97 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isModerator(): bool
     {
         return $this->hasRole('moderator') || $this->hasRole('admin');
+    }
+
+    // ==================== REAL-TIME MESSAGING ====================
+
+    /**
+     * Mark user as online.
+     */
+    public function setOnline(): void
+    {
+        $this->update([
+            'is_online' => true,
+            'last_seen_at' => now(),
+        ]);
+    }
+
+    /**
+     * Mark user as offline.
+     */
+    public function setOffline(): void
+    {
+        $this->update([
+            'is_online' => false,
+            'last_seen_at' => now(),
+        ]);
+    }
+
+    /**
+     * Update last seen timestamp.
+     */
+    public function updateLastSeen(): void
+    {
+        $this->update(['last_seen_at' => now()]);
+    }
+
+    /**
+     * Register a push notification token.
+     */
+    public function registerPushToken(string $token, string $platform): void
+    {
+        $tokens = $this->push_tokens ?? [];
+        $tokens[$platform] = $token;
+        $this->update(['push_tokens' => $tokens]);
+    }
+
+    /**
+     * Remove a push notification token.
+     */
+    public function removePushToken(string $platform): void
+    {
+        $tokens = $this->push_tokens ?? [];
+        unset($tokens[$platform]);
+        $this->update(['push_tokens' => $tokens]);
+    }
+
+    /**
+     * Get all push tokens for this user.
+     */
+    public function getPushTokens(): array
+    {
+        return $this->push_tokens ?? [];
+    }
+
+    /**
+     * Check if user has push tokens registered.
+     */
+    public function hasPushTokens(): bool
+    {
+        return !empty($this->push_tokens);
+    }
+
+    /**
+     * Scope: Online users only.
+     */
+    public function scopeOnline($query)
+    {
+        return $query->where('is_online', true);
+    }
+
+    /**
+     * Get formatted last seen text.
+     */
+    public function getLastSeenTextAttribute(): string
+    {
+        if ($this->is_online) {
+            return 'En ligne';
+        }
+
+        if (!$this->last_seen_at) {
+            return 'Hors ligne';
+        }
+
+        return 'Vu ' . $this->last_seen_at->diffForHumans();
     }
 }

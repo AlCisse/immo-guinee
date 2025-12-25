@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Conversation;
 use Illuminate\Support\Facades\Broadcast;
 
 /*
@@ -13,18 +14,43 @@ use Illuminate\Support\Facades\Broadcast;
 |
 */
 
-// Private conversation channel
+// Private conversation channel - verify user is participant
 Broadcast::channel('conversation.{conversationId}', function ($user, $conversationId) {
-    // TODO: T189-T195 - Verify user is participant in conversation
-    return true; // Implement proper authorization
+    $conversation = Conversation::find($conversationId);
+
+    if (!$conversation) {
+        return false;
+    }
+
+    // User must be initiator or participant
+    $isParticipant = $conversation->initiator_id === $user->id ||
+                     $conversation->participant_id === $user->id;
+
+    if ($isParticipant) {
+        return [
+            'id' => $user->id,
+            'name' => $user->nom_complet ?? $user->name,
+        ];
+    }
+
+    return false;
 });
 
 // Private user notification channel
 Broadcast::channel('user.{userId}', function ($user, $userId) {
-    return (int) $user->id === (int) $userId;
+    return $user->id === $userId;
 });
 
-// Listing updates channel (for real-time availability)
+// Presence channel for online users
+Broadcast::channel('presence-users', function ($user) {
+    return [
+        'id' => $user->id,
+        'name' => $user->nom_complet ?? $user->name,
+        'avatar' => $user->avatar_url ?? null,
+    ];
+});
+
+// Listing updates channel (public)
 Broadcast::channel('listing.{listingId}', function ($user, $listingId) {
-    return true; // Public channel
+    return true;
 });

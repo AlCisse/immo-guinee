@@ -28,6 +28,15 @@ http:
         - api-ratelimit
       priority: 100
 
+    # WebSocket (Laravel Reverb) - HTTPS
+    websocket-secure:
+      rule: "(Host(`immoguinee.com`) || Host(`www.immoguinee.com`)) && (PathPrefix(`/app`) || PathPrefix(`/apps`))"
+      entryPoints:
+        - websecure
+      service: reverb
+      tls: {}
+      priority: 150
+
     # Storage - HTTPS
     storage-secure:
       rule: "(Host(`immoguinee.com`) || Host(`www.immoguinee.com`)) && PathPrefix(`/storage`)"
@@ -59,6 +68,12 @@ http:
       loadBalancer:
         servers:
           - url: "http://immog_nginx:80"
+
+    # WebSocket (Laravel Reverb) service
+    reverb:
+      loadBalancer:
+        servers:
+          - url: "http://immog_reverb:8080"
 
   middlewares:
     compress:
