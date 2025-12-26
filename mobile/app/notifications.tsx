@@ -224,6 +224,8 @@ export default function NotificationsScreen() {
   };
 
   const handleNotificationPress = (notification: Notification) => {
+    console.log('[Notification] === handleNotificationPress v2 ===');
+
     // Mark as read
     if (!notification.read_at) {
       markAsReadMutation.mutate(notification.id);
