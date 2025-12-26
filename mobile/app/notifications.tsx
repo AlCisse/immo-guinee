@@ -239,10 +239,9 @@ export default function NotificationsScreen() {
       }
     }
 
-    // Debug - show alert with notification info
+    // Debug log
     if (__DEV__) {
       console.log('[Notification] Type:', notification.type, 'Data:', JSON.stringify(data));
-      Alert.alert('Debug Notif', `Type: ${notification.type}\nConv ID: ${data?.conversation_id || 'NONE'}\nData: ${JSON.stringify(data)}`);
     }
 
     // Navigate based on action_url first (if provided)
