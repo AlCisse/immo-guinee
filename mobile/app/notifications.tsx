@@ -239,9 +239,10 @@ export default function NotificationsScreen() {
       }
     }
 
-    // Debug log
+    // Debug - show alert with notification info
     if (__DEV__) {
-      console.log('[Notification] Type:', notification.type, 'Data:', data);
+      console.log('[Notification] Type:', notification.type, 'Data:', JSON.stringify(data));
+      Alert.alert('Debug Notif', `Type: ${notification.type}\nConv ID: ${data?.conversation_id || 'NONE'}\nData: ${JSON.stringify(data)}`);
     }
 
     // Navigate based on action_url first (if provided)
@@ -253,7 +254,15 @@ export default function NotificationsScreen() {
     // Navigate based on data fields - check conversation_id first
     const conversationId = data?.conversation_id;
     if (conversationId) {
+      console.log('[Notification] Navigating to chat:', conversationId);
       router.push(`/chat/${conversationId}` as any);
+      return;
+    }
+
+    // For message types without conversation_id, go to messages tab
+    if (notification.type === 'new_message' || notification.type === 'message_received') {
+      console.log('[Notification] No conversation_id, going to messages tab');
+      router.push('/(tabs)/messages' as any);
       return;
     }
 
