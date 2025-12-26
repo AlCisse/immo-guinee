@@ -488,11 +488,116 @@ class VisitController extends Controller
 
         $visit->load(['listing', 'proprietaire', 'visiteur']);
 
+        // Send confirmation notifications to the visitor/client
+        $this->sendConfirmationNotifications($visit, $user);
+
         return response()->json([
             'success' => true,
             'message' => 'Visite confirmée avec succès',
             'data' => $visit,
         ]);
+    }
+
+    /**
+     * Send confirmation notifications via WhatsApp and Expo Push.
+     */
+    protected function sendConfirmationNotifications(Visit $visit, User $confirmedBy): void
+    {
+        $listing = $visit->listing;
+        $visitDate = $visit->date_visite->format('d/m/Y');
+        $visitTime = $visit->heure_visite->format('H:i');
+        $ownerName = $confirmedBy->nom_complet;
+
+        // Notify the visitor/client
+        $recipient = $visit->visiteur;
+        $recipientPhone = $visit->client_telephone;
+
+        // Build WhatsApp message
+        $waMessage = "✅ *Visite confirmée - ImmoGuinée*\n\n";
+        $waMessage .= "Votre demande de visite a été confirmée !\n\n";
+        $waMessage .= "🏠 *Bien:* {$listing->titre}\n";
+        $waMessage .= "📍 *Adresse:* {$listing->quartier}, {$listing->commune}\n";
+        $waMessage .= "📆 *Date:* {$visitDate}\n";
+        $waMessage .= "🕐 *Heure:* {$visitTime}\n";
+        $waMessage .= "👤 *Propriétaire:* {$ownerName}\n\n";
+        $waMessage .= "_N'oubliez pas d'être présent à l'heure convenue._";
+
+        // Send WhatsApp notification
+        if ($recipientPhone) {
+            try {
+                $whatsApp = app(WhatsAppService::class);
+                $whatsApp->send($recipientPhone, $waMessage, 'visit_confirmed', [
+                    'visit_id' => $visit->id,
+                    'confirmed_by' => $confirmedBy->id,
+                ]);
+
+                \Log::info('[VISIT] WhatsApp confirmation notification sent', [
+                    'visit_id' => $visit->id,
+                    'recipient_phone' => $recipientPhone,
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('[VISIT] Failed to send WhatsApp confirmation notification', [
+                    'visit_id' => $visit->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // Send Expo Push notification to the visitor
+        if ($recipient) {
+            try {
+                $pushService = app(ExpoPushService::class);
+
+                $pushTitle = 'Visite confirmée';
+                $pushBody = "Votre visite de \"{$listing->titre}\" est confirmée pour le {$visitDate} à {$visitTime}";
+
+                $pushService->send(
+                    $recipient,
+                    $pushTitle,
+                    $pushBody,
+                    [
+                        'type' => 'visit_confirmed',
+                        'visit_id' => $visit->id,
+                        'listing_id' => $listing->id,
+                        'confirmed_by' => $confirmedBy->id,
+                    ],
+                    'visits'
+                );
+
+                \Log::info('[VISIT] Push confirmation notification sent', [
+                    'visit_id' => $visit->id,
+                    'recipient_id' => $recipient->id,
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('[VISIT] Failed to send push confirmation notification', [
+                    'visit_id' => $visit->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // Create in-app notification
+        if ($recipient) {
+            try {
+                AppNotification::notify(
+                    $recipient,
+                    AppNotification::TYPE_VISIT_CONFIRMED,
+                    'Visite confirmée',
+                    "Votre visite de \"{$listing->titre}\" est confirmée pour le {$visitDate} à {$visitTime}",
+                    [
+                        'visit_id' => $visit->id,
+                        'listing_id' => $listing->id,
+                        'confirmed_by' => $confirmedBy->id,
+                    ],
+                    '/my-visits'
+                );
+            } catch (\Exception $e) {
+                \Log::error('[VISIT] Failed to create in-app confirmation notification', [
+                    'visit_id' => $visit->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
     }
 
     /**

@@ -187,6 +187,19 @@ export default function MyVisitsScreen() {
     },
   });
 
+  // Confirm visit mutation
+  const confirmVisitMutation = useMutation({
+    mutationFn: (visitId: string) => api.visits.confirm(visitId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['my-visits'] });
+      await refetch();
+      Alert.alert('Succes', 'Visite confirmee');
+    },
+    onError: (error: any) => {
+      Alert.alert('Erreur', error.response?.data?.message || 'Impossible de confirmer la visite');
+    },
+  });
+
   // Cancel visit mutation
   const cancelVisitMutation = useMutation({
     mutationFn: (visitId: string) => api.visits.cancel(visitId),
@@ -212,6 +225,21 @@ export default function MyVisitsScreen() {
       Alert.alert('Erreur', error.response?.data?.message || 'Impossible de supprimer la visite');
     },
   });
+
+  // Handle confirm visit
+  const handleConfirmVisit = (visitId: string) => {
+    Alert.alert(
+      'Confirmer la visite',
+      'Voulez-vous confirmer cette visite ?',
+      [
+        { text: 'Non', style: 'cancel' },
+        {
+          text: 'Oui, confirmer',
+          onPress: () => confirmVisitMutation.mutate(visitId),
+        },
+      ]
+    );
+  };
 
   // Handle cancel visit
   const handleCancelVisit = (visitId: string) => {
@@ -358,7 +386,8 @@ export default function MyVisitsScreen() {
     const listing = item.listing;
     const imageUrl = listing?.main_photo_url || listing?.photo_principale;
     const status = getStatusBadge(item.statut);
-    const canCancel = item.statut === 'EN_ATTENTE' || item.statut === 'CONFIRMEE';
+    const canConfirm = item.statut === 'EN_ATTENTE' || item.statut === 'PENDING';
+    const canCancel = item.statut === 'EN_ATTENTE' || item.statut === 'PENDING' || item.statut === 'CONFIRMEE';
 
     return (
       <TouchableOpacity
@@ -402,6 +431,19 @@ export default function MyVisitsScreen() {
             <Text style={styles.statusText}>{status.label}</Text>
           </View>
           <View style={styles.actionButtons}>
+            {canConfirm && (
+              <TouchableOpacity
+                style={styles.confirmButton}
+                onPress={() => handleConfirmVisit(item.id)}
+                disabled={confirmVisitMutation.isPending}
+              >
+                {confirmVisitMutation.isPending ? (
+                  <ActivityIndicator size="small" color={Colors.success[600]} />
+                ) : (
+                  <Ionicons name="checkmark-circle-outline" size={20} color={Colors.success[600]} />
+                )}
+              </TouchableOpacity>
+            )}
             {canCancel && (
               <TouchableOpacity
                 style={styles.cancelButton}
@@ -895,6 +937,11 @@ const styles = StyleSheet.create({
   actionButtons: {
     flexDirection: 'row',
     gap: 8,
+  },
+  confirmButton: {
+    padding: 8,
+    backgroundColor: Colors.success[50],
+    borderRadius: 8,
   },
   cancelButton: {
     padding: 8,
