@@ -8,7 +8,8 @@ import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
-import { AuthProvider } from '@/lib/auth/AuthContext';
+import { AuthProvider, useAuth } from '@/lib/auth/AuthContext';
+import { SecurityProvider } from '@/lib/security';
 
 export {
   ErrorBoundary,
@@ -53,9 +54,19 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <RootLayoutNav />
+        <SecureAppWrapper />
       </AuthProvider>
     </QueryClientProvider>
+  );
+}
+
+function SecureAppWrapper() {
+  const { isAuthenticated, logout } = useAuth();
+
+  return (
+    <SecurityProvider enabled={isAuthenticated} onLogout={logout}>
+      <RootLayoutNav />
+    </SecurityProvider>
   );
 }
 

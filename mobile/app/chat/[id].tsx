@@ -56,6 +56,7 @@ import {
   isMediaAvailable,
 } from '@/lib/services';
 import { getPendingKey, deletePendingKey } from '@/lib/storage';
+import { useScreenProtection } from '@/lib/security';
 
 // Stable empty array to avoid creating new references in selectors
 const EMPTY_MESSAGES: LocalMessage[] = [];
@@ -81,6 +82,9 @@ async function enrichMessagesWithLocalMediaStatus(
 }
 
 export default function ChatScreen() {
+  // Prevent screenshots on this sensitive screen
+  useScreenProtection();
+
   const params = useLocalSearchParams<{
     id: string;
     listingId?: string;
