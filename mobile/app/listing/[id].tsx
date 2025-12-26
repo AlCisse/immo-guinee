@@ -146,7 +146,9 @@ export default function ListingDetailScreen() {
     Linking.openURL(`https://wa.me/${formattedPhone}?text=${message}`);
   };
 
-  const handleMessage = () => {
+  const [isStartingChat, setIsStartingChat] = useState(false);
+
+  const handleMessage = async () => {
     if (!isAuthenticated) {
       Alert.alert('Connexion requise', 'Veuillez vous connecter pour envoyer un message', [
         { text: 'Annuler', style: 'cancel' },
@@ -157,8 +159,28 @@ export default function ListingDetailScreen() {
 
     if (!id || !listing) return;
 
-    // Navigate directly to chat with listing info
-    router.push(`/chat/${id}?listingId=${id}&listingTitle=${encodeURIComponent(listing.titre)}&listingPhoto=${encodeURIComponent(listing.photo_principale || listing.main_photo_url || '')}&listingLocation=${encodeURIComponent(`${listing.quartier}, ${listing.commune}`)}&listingPrice=${encodeURIComponent(listing.formatted_price || `${listing.loyer_mensuel?.toLocaleString()} GNF`)}&ownerName=${encodeURIComponent(listing.user?.nom_complet || 'Proprietaire')}&ownerPhoto=${encodeURIComponent(listing.user?.photo_profil || '')}` as any);
+    // Don't allow messaging your own listing
+    if (listing.user?.id === user?.id) {
+      Alert.alert('Action impossible', 'Vous ne pouvez pas vous envoyer un message a vous-meme');
+      return;
+    }
+
+    try {
+      setIsStartingChat(true);
+      // Start or get existing conversation
+      const response = await api.messaging.startConversation({ listing_id: id });
+      const conversation = response.data?.data?.conversation;
+
+      if (conversation?.id) {
+        router.push(`/chat/${conversation.id}` as any);
+      } else {
+        Alert.alert('Erreur', 'Impossible de demarrer la conversation');
+      }
+    } catch (error: any) {
+      Alert.alert('Erreur', error?.response?.data?.message || 'Impossible de demarrer la conversation');
+    } finally {
+      setIsStartingChat(false);
+    }
   };
 
   const handleFavorite = () => {
@@ -472,12 +494,20 @@ export default function ListingDetailScreen() {
           <Ionicons name="call" size={20} color="#fff" />
           <Text style={styles.callButtonText}>Appeler</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.whatsappButton} onPress={handleWhatsApp} activeOpacity={0.8}>
-          <Ionicons name="logo-whatsapp" size={20} color="#fff" />
-          <Text style={styles.whatsappButtonText}>WhatsApp</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.messageButton} onPress={handleMessage} activeOpacity={0.8}>
-          <Ionicons name="chatbubble-outline" size={22} color={lightTheme.colors.primary} />
+        <TouchableOpacity
+          style={styles.messageButton}
+          onPress={handleMessage}
+          activeOpacity={0.8}
+          disabled={isStartingChat}
+        >
+          {isStartingChat ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <>
+              <Ionicons name="chatbubble" size={20} color="#fff" />
+              <Text style={styles.messageButtonText}>Messages</Text>
+            </>
+          )}
         </TouchableOpacity>
       </View>
     </>
@@ -811,29 +841,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
-  whatsappButton: {
+  messageButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#25D366',
+    backgroundColor: Colors.secondary[600],
     paddingVertical: 16,
     borderRadius: 14,
+    shadowColor: Colors.secondary[600],
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  whatsappButtonText: {
+  messageButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '700',
-  },
-  messageButton: {
-    width: 56,
-    height: 56,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.primary[50],
-    borderRadius: 14,
-    borderWidth: 2,
-    borderColor: lightTheme.colors.primary,
   },
 });
