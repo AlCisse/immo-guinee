@@ -45,6 +45,8 @@ interface ListingContact {
 interface Visit {
   id: string;
   listing_id: string;
+  proprietaire_id: string;
+  visiteur_id: string;
   date_visite: string;
   heure_visite: string;
   statut: string;
@@ -62,7 +64,7 @@ interface Visit {
 export default function MyVisitsScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
   const [showNewVisitModal, setShowNewVisitModal] = useState(false);
   const [showContactsList, setShowContactsList] = useState(false);
@@ -386,8 +388,14 @@ export default function MyVisitsScreen() {
     const listing = item.listing;
     const imageUrl = listing?.main_photo_url || listing?.photo_principale;
     const status = getStatusBadge(item.statut);
-    const canConfirm = item.statut === 'EN_ATTENTE' || item.statut === 'PENDING';
-    const canCancel = item.statut === 'EN_ATTENTE' || item.statut === 'PENDING' || item.statut === 'CONFIRMEE';
+    const isOwner = user?.id === item.proprietaire_id;
+    const isPending = item.statut === 'EN_ATTENTE' || item.statut === 'PENDING';
+    const isConfirmed = item.statut === 'CONFIRMEE';
+    // Visiteur peut confirmer (si en attente) et annuler (si en attente ou confirmee)
+    // Proprietaire peut seulement supprimer
+    const canConfirm = isPending; // Les deux peuvent confirmer
+    const canCancel = isPending || isConfirmed; // Les deux peuvent annuler
+    const canDelete = isOwner; // Seul le proprietaire peut supprimer
 
     return (
       <TouchableOpacity
@@ -457,17 +465,19 @@ export default function MyVisitsScreen() {
                 )}
               </TouchableOpacity>
             )}
-            <TouchableOpacity
-              style={styles.deleteButton}
-              onPress={() => handleDeleteVisit(item.id)}
-              disabled={deleteVisitMutation.isPending}
-            >
-              {deleteVisitMutation.isPending ? (
-                <ActivityIndicator size="small" color={Colors.error[500]} />
-              ) : (
-                <Ionicons name="trash-outline" size={20} color={Colors.error[500]} />
-              )}
-            </TouchableOpacity>
+            {canDelete && (
+              <TouchableOpacity
+                style={styles.deleteButton}
+                onPress={() => handleDeleteVisit(item.id)}
+                disabled={deleteVisitMutation.isPending}
+              >
+                {deleteVisitMutation.isPending ? (
+                  <ActivityIndicator size="small" color={Colors.error[500]} />
+                ) : (
+                  <Ionicons name="trash-outline" size={20} color={Colors.error[500]} />
+                )}
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </TouchableOpacity>

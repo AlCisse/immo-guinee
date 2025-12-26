@@ -470,13 +470,16 @@ class VisitController extends Controller
     }
 
     /**
-     * Confirm a visit (only by property owner).
+     * Confirm a visit (by either party).
      */
     public function confirm(Request $request, string $id): JsonResponse
     {
         $user = $request->user();
 
-        $visit = Visit::where('proprietaire_id', $user->id)
+        $visit = Visit::where(function ($q) use ($user) {
+                $q->where('proprietaire_id', $user->id)
+                    ->orWhere('visiteur_id', $user->id);
+            })
             ->findOrFail($id);
 
         if (!$visit->confirm()) {
@@ -784,16 +787,14 @@ class VisitController extends Controller
     }
 
     /**
-     * Delete a visit (owner or visitor can delete their own visits).
+     * Delete a visit (only by property owner).
      */
     public function destroy(Request $request, string $id): JsonResponse
     {
         $user = $request->user();
 
-        $visit = Visit::where(function ($q) use ($user) {
-                $q->where('proprietaire_id', $user->id)
-                    ->orWhere('visiteur_id', $user->id);
-            })
+        // Only the property owner can delete a visit
+        $visit = Visit::where('proprietaire_id', $user->id)
             ->findOrFail($id);
 
         $visit->delete();
