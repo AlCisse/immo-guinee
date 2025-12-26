@@ -252,9 +252,12 @@ export default function NotificationsScreen() {
 
     // Navigate based on data fields - check conversation_id first
     const conversationId = data?.conversation_id;
+    console.log('[Notification] Checking conversation_id:', conversationId, 'exists:', !!conversationId);
     if (conversationId) {
-      console.log('[Notification] Navigating to chat:', conversationId);
-      router.push(`/chat/${conversationId}` as any);
+      const route = `/chat/${conversationId}`;
+      console.log('[Notification] Navigating to:', route);
+      router.push(route as any);
+      console.log('[Notification] Navigation called');
       return;
     }
 
