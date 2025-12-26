@@ -37,7 +37,8 @@ class ContractService
             ->setOption('margin-right', 15);
 
         // Generate filename with .enc extension for encrypted files
-        $filename = 'contracts/' . $contract->id . '_' . time() . '.enc';
+        // Note: spaces-contracts disk already has root='contracts', so no prefix needed
+        $filename = $contract->id . '_' . time() . '.enc';
 
         // Use DigitalOcean Spaces for contract PDFs (MinIO has version compatibility issues)
         $disk = 'spaces-contracts';
