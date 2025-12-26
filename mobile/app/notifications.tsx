@@ -250,34 +250,38 @@ export default function NotificationsScreen() {
       return;
     }
 
-    // Navigate based on data fields - check conversation_id first
-    const conversationId = data?.conversation_id;
-    console.log('[Notification] Checking conversation_id:', conversationId, 'exists:', !!conversationId);
-    if (conversationId) {
-      const route = `/chat/${conversationId}`;
-      console.log('[Notification] Navigating to:', route);
-      router.push(route as any);
-      console.log('[Notification] Navigation called');
+    // For message notifications, always try to open conversation
+    if (notification.type === 'new_message' || notification.type === 'message_received') {
+      const conversationId = data?.conversation_id;
+      if (conversationId) {
+        console.log('[Notification] Opening chat:', conversationId);
+        // Use setTimeout to ensure navigation happens after any UI updates
+        setTimeout(() => {
+          router.push(`/chat/${conversationId}` as any);
+        }, 100);
+        return;
+      }
+      // Fallback to messages tab only if no conversation_id
+      console.log('[Notification] No conversation_id, opening messages tab');
+      router.push('/(tabs)/messages' as any);
       return;
     }
 
-    // For message types without conversation_id, go to messages tab
-    if (notification.type === 'new_message' || notification.type === 'message_received') {
-      console.log('[Notification] No conversation_id, going to messages tab');
-      router.push('/(tabs)/messages' as any);
+    // For other notification types, check conversation_id
+    const conversationId = data?.conversation_id;
+    if (conversationId) {
+      setTimeout(() => {
+        router.push(`/chat/${conversationId}` as any);
+      }, 100);
       return;
     }
 
     // Navigate based on notification type
     switch (notification.type) {
-      // Messages
+      // Messages - already handled above, but keep for safety
       case 'new_message':
       case 'message_received':
-        if (data?.conversation_id) {
-          router.push(`/chat/${data.conversation_id}` as any);
-        } else {
-          router.push('/(tabs)/messages' as any);
-        }
+        router.push('/(tabs)/messages' as any);
         break;
 
       // Listings
