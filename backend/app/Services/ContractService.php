@@ -39,8 +39,8 @@ class ContractService
         // Generate filename with .enc extension for encrypted files
         $filename = 'contracts/' . $contract->id . '_' . time() . '.enc';
 
-        // Use MinIO 'documents' disk for contract PDFs
-        $disk = 'documents';
+        // Use DigitalOcean Spaces for contract PDFs (MinIO has version compatibility issues)
+        $disk = 'spaces-contracts';
 
         // Get raw PDF output
         $pdfOutput = $pdf->output();
@@ -87,7 +87,7 @@ class ContractService
      */
     public function getDecryptedPdf(Contract $contract): string
     {
-        $disk = $contract->pdf_storage_disk ?? 'documents';
+        $disk = $contract->pdf_storage_disk ?? 'spaces-contracts';
         $encryptedContent = Storage::disk($disk)->get($contract->pdf_url);
 
         // Decrypt the PDF

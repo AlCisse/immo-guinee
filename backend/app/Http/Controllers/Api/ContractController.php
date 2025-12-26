@@ -1246,7 +1246,7 @@ class ContractController extends Controller
             }
 
             // Determine which disk was used
-            $disk = $contract->pdf_storage_disk ?? 'documents';
+            $disk = $contract->pdf_storage_disk ?? 'spaces-contracts';
 
             // Get PDF path
             $pdfPath = $contract->pdf_url;
