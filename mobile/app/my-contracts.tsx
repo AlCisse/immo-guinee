@@ -7,11 +7,18 @@ import {
   RefreshControl,
   TouchableOpacity,
   ActivityIndicator,
+  Image,
+  Modal,
+  ScrollView,
+  Alert,
+  Platform,
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api/client';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
+import { api, tokenManager } from '@/lib/api/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import Colors, { lightTheme } from '@/constants/Colors';
 
@@ -23,10 +30,20 @@ interface Contract {
   date_debut: string;
   date_fin?: string;
   montant_loyer?: number;
+  montant_caution?: number;
   listing?: {
+    id: string;
     titre: string;
     quartier: string;
     commune: string;
+    main_photo_url?: string;
+    photo_principale?: string;
+  };
+  locataire?: {
+    nom_complet: string;
+  };
+  proprietaire?: {
+    nom_complet: string;
   };
 }
 
@@ -34,17 +51,98 @@ export default function MyContractsScreen() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  const openDetails = (contract: Contract) => {
+    setSelectedContract(contract);
+    setShowDetailsModal(true);
+  };
+
+  const closeDetails = () => {
+    setShowDetailsModal(false);
+    setSelectedContract(null);
+  };
+
+  // Download contract PDF
+  const downloadContract = async (contract: Contract) => {
+    if (downloadingId) return; // Prevent multiple downloads
+
+    setDownloadingId(contract.id);
+
+    try {
+      // Get auth token for the request
+      const token = await tokenManager.getToken();
+      if (!token) {
+        Alert.alert('Erreur', 'Vous devez etre connecte pour telecharger le contrat.');
+        return;
+      }
+
+      const fileName = `contrat_${contract.numero_contrat || contract.id}.pdf`;
+      const fileUri = `${FileSystem.documentDirectory}${fileName}`;
+      const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://immoguinee.com/api';
+
+      // Download the PDF
+      const downloadResult = await FileSystem.downloadAsync(
+        `${apiUrl}/contracts/${contract.id}/download`,
+        fileUri,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/pdf',
+          },
+        }
+      );
+
+      if (downloadResult.status !== 200) {
+        throw new Error(`Erreur de telechargement: ${downloadResult.status}`);
+      }
+
+      // Check if sharing is available
+      const canShare = await Sharing.isAvailableAsync();
+
+      if (canShare) {
+        // Share/save the file
+        await Sharing.shareAsync(downloadResult.uri, {
+          mimeType: 'application/pdf',
+          dialogTitle: 'Enregistrer le contrat PDF',
+          UTI: 'com.adobe.pdf', // iOS specific
+        });
+      } else {
+        // Fallback for devices that don't support sharing
+        Alert.alert(
+          'Telechargement reussi',
+          `Le contrat a ete telecharge: ${fileName}`,
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error: any) {
+      console.error('Download error:', error);
+      let errorMessage = 'Impossible de telecharger le contrat. Veuillez reessayer.';
+
+      if (error.message?.includes('403')) {
+        errorMessage = 'Acces refuse. Vous n\'avez pas les droits pour telecharger ce contrat.';
+      } else if (error.message?.includes('404')) {
+        errorMessage = 'Contrat introuvable ou PDF non disponible.';
+      }
+
+      Alert.alert('Erreur', errorMessage);
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['my-contracts'],
     queryFn: async () => {
       const response = await api.contracts.my();
-      return response.data?.data?.contracts || response.data?.data || [];
+      return response.data?.data?.data || response.data?.data?.contracts || response.data?.data || [];
     },
     enabled: isAuthenticated,
   });
 
-  const contracts = data || [];
+  const contracts = Array.isArray(data) ? data : [];
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -61,33 +159,35 @@ export default function MyContractsScreen() {
     });
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusConfig = (status: string) => {
     switch (status) {
       case 'ACTIF':
-        return { label: 'Actif', color: Colors.success[500], icon: 'checkmark-circle' };
+        return { label: 'Actif', color: Colors.success[500], bgColor: Colors.success[50], icon: 'checkmark-circle' };
       case 'EN_ATTENTE':
-        return { label: 'En attente', color: Colors.warning[500], icon: 'time' };
+        return { label: 'En attente', color: Colors.warning[500], bgColor: Colors.warning[50], icon: 'time' };
       case 'SIGNE':
-        return { label: 'Signe', color: Colors.success[600], icon: 'document-text' };
+        return { label: 'Signe', color: Colors.success[600], bgColor: Colors.success[50], icon: 'create' };
       case 'RESILIE':
-        return { label: 'Resilie', color: Colors.error[500], icon: 'close-circle' };
+        return { label: 'Resilie', color: Colors.error[500], bgColor: Colors.error[50], icon: 'close-circle' };
       case 'TERMINE':
-        return { label: 'Termine', color: Colors.neutral[500], icon: 'checkmark-done-circle' };
+        return { label: 'Termine', color: Colors.neutral[500], bgColor: Colors.neutral[100], icon: 'checkmark-done-circle' };
+      case 'BROUILLON':
+        return { label: 'Brouillon', color: Colors.neutral[400], bgColor: Colors.neutral[100], icon: 'document-outline' };
       default:
-        return { label: status, color: Colors.neutral[400], icon: 'document' };
+        return { label: status, color: Colors.neutral[400], bgColor: Colors.neutral[100], icon: 'document' };
     }
   };
 
-  const getContractTypeLabel = (type: string) => {
+  const getContractTypeConfig = (type: string) => {
     switch (type) {
       case 'LOCATION':
-        return 'Contrat de location';
+        return { label: 'Location', icon: 'key-outline', color: lightTheme.colors.primary };
       case 'VENTE':
-        return 'Contrat de vente';
+        return { label: 'Vente', icon: 'home-outline', color: Colors.success[500] };
       case 'LOCATION_COURTE':
-        return 'Location courte duree';
+        return { label: 'Courte duree', icon: 'calendar-outline', color: Colors.warning[500] };
       default:
-        return type;
+        return { label: type, icon: 'document-outline', color: Colors.neutral[500] };
     }
   };
 
@@ -99,53 +199,150 @@ export default function MyContractsScreen() {
     return `${price.toLocaleString()} GNF`;
   };
 
+  const calculateProgress = (startDate: string, endDate?: string) => {
+    if (!endDate) return null;
+    const start = new Date(startDate).getTime();
+    const end = new Date(endDate).getTime();
+    const now = Date.now();
+
+    if (now < start) return 0;
+    if (now > end) return 100;
+
+    return Math.round(((now - start) / (end - start)) * 100);
+  };
+
+  const getDaysRemaining = (endDate?: string) => {
+    if (!endDate) return null;
+    const end = new Date(endDate).getTime();
+    const now = Date.now();
+    const days = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
+    return days > 0 ? days : 0;
+  };
+
   const renderContract = ({ item }: { item: Contract }) => {
-    const status = getStatusBadge(item.statut);
+    const status = getStatusConfig(item.statut);
+    const typeConfig = getContractTypeConfig(item.type_contrat);
+    const imageUrl = item.listing?.main_photo_url || item.listing?.photo_principale;
+    const progress = calculateProgress(item.date_debut, item.date_fin);
+    const daysRemaining = getDaysRemaining(item.date_fin);
 
     return (
       <TouchableOpacity
-        style={styles.contractItem}
-        activeOpacity={0.8}
+        style={styles.contractCard}
+        activeOpacity={0.9}
+        onPress={() => item.listing && router.push(`/listing/${item.listing.id}`)}
       >
-        <View style={styles.contractHeader}>
-          <View style={styles.contractIcon}>
-            <Ionicons name="document-text-outline" size={24} color={lightTheme.colors.primary} />
+        {/* Header with image */}
+        <View style={styles.cardHeader}>
+          {imageUrl ? (
+            <Image source={{ uri: imageUrl }} style={styles.propertyImage} />
+          ) : (
+            <View style={[styles.propertyImage, styles.propertyImagePlaceholder]}>
+              <Ionicons name="home-outline" size={32} color={Colors.neutral[300]} />
+            </View>
+          )}
+          <View style={styles.imageOverlay} />
+
+          {/* Status badge */}
+          <View style={[styles.statusBadge, { backgroundColor: status.bgColor }]}>
+            <Ionicons name={status.icon as any} size={12} color={status.color} />
+            <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
           </View>
-          <View style={styles.contractInfo}>
-            <Text style={styles.contractNumber}>{item.numero_contrat}</Text>
-            <Text style={styles.contractType}>{getContractTypeLabel(item.type_contrat)}</Text>
-          </View>
-          <View style={[styles.statusBadge, { backgroundColor: status.color }]}>
-            <Text style={styles.statusText}>{status.label}</Text>
+
+          {/* Contract type badge */}
+          <View style={styles.typeBadge}>
+            <Ionicons name={typeConfig.icon as any} size={12} color="#fff" />
+            <Text style={styles.typeText}>{typeConfig.label}</Text>
           </View>
         </View>
 
-        {item.listing && (
-          <View style={styles.listingInfo}>
-            <Ionicons name="home-outline" size={14} color={Colors.neutral[500]} />
-            <Text style={styles.listingText} numberOfLines={1}>
-              {item.listing.titre}
+        {/* Content */}
+        <View style={styles.cardContent}>
+          {/* Contract number and property */}
+          <View style={styles.titleRow}>
+            <Text style={styles.contractNumber}>{item.numero_contrat}</Text>
+          </View>
+
+          {item.listing && (
+            <View style={styles.propertyInfo}>
+              <Ionicons name="location-outline" size={14} color={lightTheme.colors.primary} />
+              <Text style={styles.propertyTitle} numberOfLines={1}>
+                {item.listing.titre}
+              </Text>
+            </View>
+          )}
+
+          <View style={styles.locationRow}>
+            <Text style={styles.locationText}>
+              {item.listing?.quartier}, {item.listing?.commune}
             </Text>
           </View>
-        )}
 
-        <View style={styles.contractDetails}>
-          <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>Debut</Text>
-            <Text style={styles.detailValue}>{formatDate(item.date_debut)}</Text>
+          {/* Divider */}
+          <View style={styles.divider} />
+
+          {/* Details grid */}
+          <View style={styles.detailsGrid}>
+            <View style={styles.detailBox}>
+              <Text style={styles.detailLabel}>Debut</Text>
+              <Text style={styles.detailValue}>{formatDate(item.date_debut)}</Text>
+            </View>
+
+            {item.date_fin && (
+              <View style={styles.detailBox}>
+                <Text style={styles.detailLabel}>Fin</Text>
+                <Text style={styles.detailValue}>{formatDate(item.date_fin)}</Text>
+              </View>
+            )}
+
+            {item.montant_loyer && (
+              <View style={styles.detailBox}>
+                <Text style={styles.detailLabel}>Loyer/mois</Text>
+                <Text style={styles.detailValuePrice}>{formatPrice(item.montant_loyer)}</Text>
+              </View>
+            )}
           </View>
-          {item.date_fin && (
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Fin</Text>
-              <Text style={styles.detailValue}>{formatDate(item.date_fin)}</Text>
+
+          {/* Progress bar for active contracts */}
+          {progress !== null && item.statut === 'ACTIF' && (
+            <View style={styles.progressSection}>
+              <View style={styles.progressHeader}>
+                <Text style={styles.progressLabel}>Progression du contrat</Text>
+                <Text style={styles.progressDays}>
+                  {daysRemaining} jour{daysRemaining !== 1 ? 's' : ''} restant{daysRemaining !== 1 ? 's' : ''}
+                </Text>
+              </View>
+              <View style={styles.progressBar}>
+                <View style={[styles.progressFill, { width: `${progress}%` }]} />
+              </View>
             </View>
           )}
-          {item.montant_loyer && (
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Loyer</Text>
-              <Text style={styles.detailValuePrice}>{formatPrice(item.montant_loyer)}</Text>
-            </View>
-          )}
+
+          {/* Action buttons */}
+          <View style={styles.actions}>
+            <TouchableOpacity style={styles.actionButton} onPress={() => openDetails(item)}>
+              <Ionicons name="document-text-outline" size={18} color={lightTheme.colors.primary} />
+              <Text style={styles.actionText}>Voir details</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.actionButtonSecondary,
+                downloadingId === item.id && styles.actionButtonDisabled,
+              ]}
+              onPress={() => downloadContract(item)}
+              disabled={downloadingId === item.id}
+            >
+              {downloadingId === item.id ? (
+                <ActivityIndicator size="small" color={Colors.neutral[600]} />
+              ) : (
+                <Ionicons name="download-outline" size={18} color={Colors.neutral[600]} />
+              )}
+              <Text style={styles.actionTextSecondary}>
+                {downloadingId === item.id ? 'Telechargement...' : 'Telecharger'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -190,16 +387,228 @@ export default function MyContractsScreen() {
             }
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <Ionicons name="document-text-outline" size={64} color={Colors.neutral[300]} />
+                <View style={styles.emptyIconContainer}>
+                  <Ionicons name="document-text-outline" size={48} color={lightTheme.colors.primary} />
+                </View>
                 <Text style={styles.emptyTitle}>Aucun contrat</Text>
                 <Text style={styles.emptyText}>
-                  Vous n'avez pas encore de contrat
+                  Vous n'avez pas encore de contrat de location ou de vente
                 </Text>
               </View>
             }
           />
         )}
       </View>
+
+      {/* Contract Details Modal */}
+      <Modal
+        visible={showDetailsModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={closeDetails}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={closeDetails}>
+              <Ionicons name="close" size={28} color={Colors.secondary[800]} />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Details du contrat</Text>
+            <View style={{ width: 28 }} />
+          </View>
+
+          {selectedContract && (
+            <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+              {/* Property Image */}
+              <View style={styles.modalImageContainer}>
+                {(selectedContract.listing?.main_photo_url || selectedContract.listing?.photo_principale) ? (
+                  <Image
+                    source={{ uri: selectedContract.listing?.main_photo_url || selectedContract.listing?.photo_principale }}
+                    style={styles.modalImage}
+                  />
+                ) : (
+                  <View style={[styles.modalImage, styles.modalImagePlaceholder]}>
+                    <Ionicons name="home-outline" size={48} color={Colors.neutral[300]} />
+                  </View>
+                )}
+              </View>
+
+              {/* Contract Number & Status */}
+              <View style={styles.modalSection}>
+                <View style={styles.modalTitleRow}>
+                  <Text style={styles.modalContractNumber}>{selectedContract.numero_contrat}</Text>
+                  <View style={[styles.modalStatusBadge, { backgroundColor: getStatusConfig(selectedContract.statut).bgColor }]}>
+                    <Ionicons
+                      name={getStatusConfig(selectedContract.statut).icon as any}
+                      size={14}
+                      color={getStatusConfig(selectedContract.statut).color}
+                    />
+                    <Text style={[styles.modalStatusText, { color: getStatusConfig(selectedContract.statut).color }]}>
+                      {getStatusConfig(selectedContract.statut).label}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.modalTypeRow}>
+                  <Ionicons
+                    name={getContractTypeConfig(selectedContract.type_contrat).icon as any}
+                    size={16}
+                    color={getContractTypeConfig(selectedContract.type_contrat).color}
+                  />
+                  <Text style={styles.modalTypeText}>
+                    {getContractTypeConfig(selectedContract.type_contrat).label}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Property Info */}
+              {selectedContract.listing && (
+                <View style={styles.modalSection}>
+                  <Text style={styles.modalSectionTitle}>Propriete</Text>
+                  <View style={styles.modalInfoCard}>
+                    <View style={styles.modalInfoRow}>
+                      <Ionicons name="home-outline" size={18} color={lightTheme.colors.primary} />
+                      <Text style={styles.modalInfoText}>{selectedContract.listing.titre}</Text>
+                    </View>
+                    <View style={styles.modalInfoRow}>
+                      <Ionicons name="location-outline" size={18} color={lightTheme.colors.primary} />
+                      <Text style={styles.modalInfoText}>
+                        {selectedContract.listing.quartier}, {selectedContract.listing.commune}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              )}
+
+              {/* Dates */}
+              <View style={styles.modalSection}>
+                <Text style={styles.modalSectionTitle}>Periode</Text>
+                <View style={styles.modalDatesRow}>
+                  <View style={styles.modalDateBox}>
+                    <Ionicons name="calendar-outline" size={20} color={Colors.success[500]} />
+                    <Text style={styles.modalDateLabel}>Debut</Text>
+                    <Text style={styles.modalDateValue}>{formatDate(selectedContract.date_debut)}</Text>
+                  </View>
+                  {selectedContract.date_fin && (
+                    <View style={styles.modalDateBox}>
+                      <Ionicons name="calendar-outline" size={20} color={Colors.error[500]} />
+                      <Text style={styles.modalDateLabel}>Fin</Text>
+                      <Text style={styles.modalDateValue}>{formatDate(selectedContract.date_fin)}</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+
+              {/* Financial Info */}
+              {(selectedContract.montant_loyer || selectedContract.montant_caution) && (
+                <View style={styles.modalSection}>
+                  <Text style={styles.modalSectionTitle}>Informations financieres</Text>
+                  <View style={styles.modalFinanceGrid}>
+                    {selectedContract.montant_loyer && (
+                      <View style={styles.modalFinanceBox}>
+                        <Text style={styles.modalFinanceLabel}>Loyer mensuel</Text>
+                        <Text style={styles.modalFinanceValue}>{formatPrice(selectedContract.montant_loyer)}</Text>
+                      </View>
+                    )}
+                    {selectedContract.montant_caution && (
+                      <View style={styles.modalFinanceBox}>
+                        <Text style={styles.modalFinanceLabel}>Caution</Text>
+                        <Text style={styles.modalFinanceValue}>{formatPrice(selectedContract.montant_caution)}</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              )}
+
+              {/* Parties */}
+              <View style={styles.modalSection}>
+                <Text style={styles.modalSectionTitle}>Parties</Text>
+                <View style={styles.modalPartiesGrid}>
+                  {selectedContract.proprietaire && (
+                    <View style={styles.modalPartyBox}>
+                      <View style={styles.modalPartyIcon}>
+                        <Ionicons name="person-outline" size={20} color={lightTheme.colors.primary} />
+                      </View>
+                      <Text style={styles.modalPartyLabel}>Proprietaire</Text>
+                      <Text style={styles.modalPartyName}>{selectedContract.proprietaire.nom_complet}</Text>
+                    </View>
+                  )}
+                  {selectedContract.locataire && (
+                    <View style={styles.modalPartyBox}>
+                      <View style={styles.modalPartyIcon}>
+                        <Ionicons name="people-outline" size={20} color={Colors.success[500]} />
+                      </View>
+                      <Text style={styles.modalPartyLabel}>Locataire</Text>
+                      <Text style={styles.modalPartyName}>{selectedContract.locataire.nom_complet}</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+
+              {/* Progress for active contracts */}
+              {selectedContract.date_fin && selectedContract.statut === 'ACTIF' && (
+                <View style={styles.modalSection}>
+                  <Text style={styles.modalSectionTitle}>Progression</Text>
+                  <View style={styles.modalProgressCard}>
+                    <View style={styles.modalProgressHeader}>
+                      <Text style={styles.modalProgressPercent}>
+                        {calculateProgress(selectedContract.date_debut, selectedContract.date_fin)}%
+                      </Text>
+                      <Text style={styles.modalProgressDays}>
+                        {getDaysRemaining(selectedContract.date_fin)} jours restants
+                      </Text>
+                    </View>
+                    <View style={styles.modalProgressBar}>
+                      <View
+                        style={[
+                          styles.modalProgressFill,
+                          { width: `${calculateProgress(selectedContract.date_debut, selectedContract.date_fin) ?? 0}%` }
+                        ]}
+                      />
+                    </View>
+                  </View>
+                </View>
+              )}
+
+              {/* Action Buttons */}
+              <View style={styles.modalActions}>
+                {/* Download PDF Button */}
+                <TouchableOpacity
+                  style={[
+                    styles.modalDownloadButton,
+                    downloadingId === selectedContract.id && styles.actionButtonDisabled,
+                  ]}
+                  onPress={() => downloadContract(selectedContract)}
+                  disabled={downloadingId === selectedContract.id}
+                >
+                  {downloadingId === selectedContract.id ? (
+                    <ActivityIndicator size="small" color={lightTheme.colors.primary} />
+                  ) : (
+                    <Ionicons name="download-outline" size={20} color={lightTheme.colors.primary} />
+                  )}
+                  <Text style={styles.modalDownloadText}>
+                    {downloadingId === selectedContract.id ? 'Telechargement...' : 'Telecharger PDF'}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* View Property Button */}
+                {selectedContract.listing && (
+                  <TouchableOpacity
+                    style={styles.modalViewPropertyButton}
+                    onPress={() => {
+                      closeDetails();
+                      router.push(`/listing/${selectedContract.listing!.id}`);
+                    }}
+                  >
+                    <Ionicons name="eye-outline" size={20} color="#fff" />
+                    <Text style={styles.modalViewPropertyText}>Voir la propriete</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              <View style={{ height: 40 }} />
+            </ScrollView>
+          )}
+        </View>
+      </Modal>
     </>
   );
 }
@@ -225,87 +634,127 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 16,
+    paddingBottom: 32,
   },
-  contractItem: {
+  // Card styles
+  contractCard: {
     backgroundColor: Colors.background.primary,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
+    borderRadius: 20,
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+    overflow: 'hidden',
   },
-  contractHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  cardHeader: {
+    height: 140,
+    position: 'relative',
   },
-  contractIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: Colors.primary[50],
+  propertyImage: {
+    width: '100%',
+    height: '100%',
+  },
+  propertyImagePlaceholder: {
+    backgroundColor: Colors.neutral[100],
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
   },
-  contractInfo: {
-    flex: 1,
-  },
-  contractNumber: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: Colors.secondary[800],
-    marginBottom: 2,
-  },
-  contractType: {
-    fontSize: 13,
-    color: Colors.neutral[500],
+  imageOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.15)',
   },
   statusBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: 20,
   },
   statusText: {
-    color: '#fff',
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
   },
-  listingInfo: {
+  typeBadge: {
+    position: 'absolute',
+    bottom: 12,
+    left: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+  },
+  typeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  // Content styles
+  cardContent: {
+    padding: 16,
+  },
+  titleRow: {
+    marginBottom: 8,
+  },
+  contractNumber: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: Colors.secondary[800],
+    letterSpacing: -0.3,
+  },
+  propertyInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border.light,
+    marginBottom: 4,
   },
-  listingText: {
-    fontSize: 14,
-    color: Colors.neutral[600],
+  propertyTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.secondary[700],
     flex: 1,
   },
-  contractDetails: {
+  locationRow: {
+    marginBottom: 12,
+  },
+  locationText: {
+    fontSize: 13,
+    color: Colors.neutral[500],
+  },
+  divider: {
+    height: 1,
+    backgroundColor: Colors.border.light,
+    marginVertical: 12,
+  },
+  // Details grid
+  detailsGrid: {
     flexDirection: 'row',
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border.light,
-    gap: 16,
+    gap: 12,
   },
-  detailItem: {
+  detailBox: {
     flex: 1,
+    backgroundColor: Colors.background.secondary,
+    borderRadius: 12,
+    padding: 12,
   },
   detailLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: Colors.neutral[500],
     marginBottom: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   detailValue: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
     color: Colors.secondary[800],
   },
   detailValuePrice: {
@@ -313,22 +762,342 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: lightTheme.colors.primary,
   },
+  // Progress section
+  progressSection: {
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: Colors.background.secondary,
+    borderRadius: 12,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  progressLabel: {
+    fontSize: 12,
+    color: Colors.neutral[600],
+    fontWeight: '500',
+  },
+  progressDays: {
+    fontSize: 12,
+    color: lightTheme.colors.primary,
+    fontWeight: '600',
+  },
+  progressBar: {
+    height: 6,
+    backgroundColor: Colors.neutral[200],
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: lightTheme.colors.primary,
+    borderRadius: 3,
+  },
+  // Actions
+  actions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 16,
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: lightTheme.colors.primary + '15',
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  actionText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: lightTheme.colors.primary,
+  },
+  actionButtonSecondary: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: Colors.neutral[100],
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  actionTextSecondary: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.neutral[600],
+  },
+  actionButtonDisabled: {
+    opacity: 0.6,
+  },
+  // Empty state
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 80,
+    paddingHorizontal: 32,
+  },
+  emptyIconContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: lightTheme.colors.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
   },
   emptyTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '700',
     color: Colors.secondary[800],
-    marginTop: 16,
+    marginBottom: 8,
   },
   emptyText: {
     fontSize: 15,
     color: Colors.neutral[500],
-    marginTop: 8,
     textAlign: 'center',
+    lineHeight: 22,
+  },
+  // Modal styles
+  modalContainer: {
+    flex: 1,
+    backgroundColor: Colors.background.primary,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border.light,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.secondary[800],
+  },
+  modalContent: {
+    flex: 1,
+  },
+  modalImageContainer: {
+    height: 200,
+  },
+  modalImage: {
+    width: '100%',
+    height: '100%',
+  },
+  modalImagePlaceholder: {
+    backgroundColor: Colors.neutral[100],
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalSection: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border.light,
+  },
+  modalTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  modalContractNumber: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: Colors.secondary[800],
+  },
+  modalStatusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  modalStatusText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  modalTypeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  modalTypeText: {
+    fontSize: 14,
+    color: Colors.neutral[600],
+    fontWeight: '500',
+  },
+  modalSectionTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.secondary[800],
+    marginBottom: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  modalInfoCard: {
+    backgroundColor: Colors.background.secondary,
+    borderRadius: 12,
+    padding: 14,
+    gap: 10,
+  },
+  modalInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  modalInfoText: {
+    fontSize: 15,
+    color: Colors.secondary[700],
+    flex: 1,
+  },
+  modalDatesRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalDateBox: {
+    flex: 1,
+    backgroundColor: Colors.background.secondary,
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+    gap: 6,
+  },
+  modalDateLabel: {
+    fontSize: 12,
+    color: Colors.neutral[500],
+    textTransform: 'uppercase',
+  },
+  modalDateValue: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: Colors.secondary[800],
+  },
+  modalFinanceGrid: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalFinanceBox: {
+    flex: 1,
+    backgroundColor: lightTheme.colors.primary + '10',
+    borderRadius: 12,
+    padding: 14,
+  },
+  modalFinanceLabel: {
+    fontSize: 12,
+    color: Colors.neutral[600],
+    marginBottom: 4,
+  },
+  modalFinanceValue: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: lightTheme.colors.primary,
+  },
+  modalPartiesGrid: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalPartyBox: {
+    flex: 1,
+    backgroundColor: Colors.background.secondary,
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+  },
+  modalPartyIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.background.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  modalPartyLabel: {
+    fontSize: 11,
+    color: Colors.neutral[500],
+    textTransform: 'uppercase',
+    marginBottom: 4,
+  },
+  modalPartyName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.secondary[800],
+    textAlign: 'center',
+  },
+  modalProgressCard: {
+    backgroundColor: Colors.background.secondary,
+    borderRadius: 12,
+    padding: 14,
+  },
+  modalProgressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  modalProgressPercent: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: lightTheme.colors.primary,
+  },
+  modalProgressDays: {
+    fontSize: 13,
+    color: Colors.neutral[600],
+  },
+  modalProgressBar: {
+    height: 8,
+    backgroundColor: Colors.neutral[200],
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  modalProgressFill: {
+    height: '100%',
+    backgroundColor: lightTheme.colors.primary,
+    borderRadius: 4,
+  },
+  modalActions: {
+    paddingHorizontal: 16,
+    marginTop: 16,
+    gap: 12,
+  },
+  modalDownloadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: lightTheme.colors.primary + '15',
+    paddingVertical: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: lightTheme.colors.primary + '30',
+  },
+  modalDownloadText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: lightTheme.colors.primary,
+  },
+  modalViewPropertyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: lightTheme.colors.primary,
+    paddingVertical: 16,
+    borderRadius: 14,
+  },
+  modalViewPropertyText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#fff',
   },
 });

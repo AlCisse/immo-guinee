@@ -46,8 +46,15 @@ export const MAX_VIDEO_DURATION = 120;
  * @returns True if permission granted
  */
 export async function requestMediaLibraryPermission(): Promise<boolean> {
-  const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-  return permission.granted;
+  if (__DEV__) console.log('[MediaPicker] Requesting media library permission...');
+  try {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (__DEV__) console.log('[MediaPicker] Permission result:', permission);
+    return permission.granted;
+  } catch (error) {
+    if (__DEV__) console.error('[MediaPicker] Permission request error:', error);
+    throw error;
+  }
 }
 
 /**
@@ -87,23 +94,49 @@ export async function pickImage(options?: {
   allowsEditing?: boolean;
   quality?: number;
 }): Promise<PickedMedia | null> {
-  const hasPermission = await requestMediaLibraryPermission();
-  if (!hasPermission) {
-    throw new Error('Media library permission required');
+  if (__DEV__) console.log('[MediaPicker] pickImage called');
+
+  try {
+    // Check current permission status first
+    const currentStatus = await ImagePicker.getMediaLibraryPermissionsAsync();
+    if (__DEV__) console.log('[MediaPicker] Current permission status:', JSON.stringify(currentStatus));
+
+    // Request permission if not granted
+    if (!currentStatus.granted) {
+      if (__DEV__) console.log('[MediaPicker] Requesting permission...');
+      const requestResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (__DEV__) console.log('[MediaPicker] Permission request result:', JSON.stringify(requestResult));
+
+      if (!requestResult.granted) {
+        throw new Error('Permission d\'accès à la galerie requise. Veuillez l\'autoriser dans les réglages.');
+      }
+    }
+
+    if (__DEV__) console.log('[MediaPicker] Launching image library...');
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'] as ImagePicker.MediaType[],
+      allowsEditing: options?.allowsEditing ?? false,
+      quality: options?.quality ?? 0.8,
+      exif: false,
+    });
+
+    if (__DEV__) console.log('[MediaPicker] Result:', JSON.stringify(result));
+
+    if (result.canceled || !result.assets || !result.assets[0]) {
+      if (__DEV__) console.log('[MediaPicker] User canceled or no assets');
+      return null;
+    }
+
+    if (__DEV__) console.log('[MediaPicker] Processing asset...');
+    return processAsset(result.assets[0], 'image');
+  } catch (error: any) {
+    if (__DEV__) console.error('[MediaPicker] Error in pickImage:', error);
+    if (error.message?.includes('permission') || error.code === 'E_NO_PERMISSIONS') {
+      throw new Error('Permission d\'accès à la galerie requise. Veuillez l\'autoriser dans les réglages.');
+    }
+    throw error;
   }
-
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ['images'],
-    allowsEditing: options?.allowsEditing ?? false,
-    quality: options?.quality ?? 0.8,
-    exif: false,
-  });
-
-  if (result.canceled || !result.assets || !result.assets[0]) {
-    return null;
-  }
-
-  return processAsset(result.assets[0], 'image');
 }
 
 /**
@@ -116,23 +149,36 @@ export async function pickImage(options?: {
 export async function pickVideo(options?: {
   quality?: ImagePicker.UIImagePickerControllerQualityType;
 }): Promise<PickedMedia | null> {
-  const hasPermission = await requestMediaLibraryPermission();
-  if (!hasPermission) {
-    throw new Error('Media library permission required');
+  if (__DEV__) console.log('[MediaPicker] pickVideo called');
+
+  try {
+    const hasPermission = await requestMediaLibraryPermission();
+    if (__DEV__) console.log('[MediaPicker] Permission granted:', hasPermission);
+
+    if (!hasPermission) {
+      throw new Error('Permission d\'accès à la galerie requise. Veuillez l\'autoriser dans les réglages.');
+    }
+
+    if (__DEV__) console.log('[MediaPicker] Launching video library...');
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+      allowsEditing: false,
+      videoMaxDuration: MAX_VIDEO_DURATION,
+      videoQuality: options?.quality ?? ImagePicker.UIImagePickerControllerQualityType.Medium,
+    });
+
+    if (__DEV__) console.log('[MediaPicker] Result:', result.canceled ? 'canceled' : 'selected');
+
+    if (result.canceled || !result.assets || !result.assets[0]) {
+      return null;
+    }
+
+    return processAsset(result.assets[0], 'video');
+  } catch (error: any) {
+    if (__DEV__) console.error('[MediaPicker] Error in pickVideo:', error);
+    throw error;
   }
-
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ['videos'],
-    allowsEditing: false,
-    videoMaxDuration: MAX_VIDEO_DURATION,
-    videoQuality: options?.quality ?? ImagePicker.UIImagePickerControllerQualityType.Medium,
-  });
-
-  if (result.canceled || !result.assets || !result.assets[0]) {
-    return null;
-  }
-
-  return processAsset(result.assets[0], 'video');
 }
 
 /**
@@ -141,26 +187,33 @@ export async function pickVideo(options?: {
  * @returns PickedMedia or null if cancelled
  */
 export async function pickMedia(): Promise<PickedMedia | null> {
-  const hasPermission = await requestMediaLibraryPermission();
-  if (!hasPermission) {
-    throw new Error('Media library permission required');
+  if (__DEV__) console.log('[MediaPicker] pickMedia called');
+
+  try {
+    const hasPermission = await requestMediaLibraryPermission();
+    if (!hasPermission) {
+      throw new Error('Permission d\'accès à la galerie requise. Veuillez l\'autoriser dans les réglages.');
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: false,
+      quality: 0.8,
+      videoMaxDuration: MAX_VIDEO_DURATION,
+      videoQuality: ImagePicker.UIImagePickerControllerQualityType.Medium,
+    });
+
+    if (result.canceled || !result.assets || !result.assets[0]) {
+      return null;
+    }
+
+    const asset = result.assets[0];
+    const type = asset.type === 'video' ? 'video' : 'image';
+    return processAsset(asset, type);
+  } catch (error: any) {
+    if (__DEV__) console.error('[MediaPicker] Error in pickMedia:', error);
+    throw error;
   }
-
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ['images', 'videos'],
-    allowsEditing: false,
-    quality: 0.8,
-    videoMaxDuration: MAX_VIDEO_DURATION,
-    videoQuality: ImagePicker.UIImagePickerControllerQualityType.Medium,
-  });
-
-  if (result.canceled || !result.assets || !result.assets[0]) {
-    return null;
-  }
-
-  const asset = result.assets[0];
-  const type = asset.type === 'video' ? 'video' : 'image';
-  return processAsset(asset, type);
 }
 
 /**
@@ -173,22 +226,33 @@ export async function takePhoto(options?: {
   allowsEditing?: boolean;
   quality?: number;
 }): Promise<PickedMedia | null> {
-  const hasPermission = await requestCameraPermission();
-  if (!hasPermission) {
-    throw new Error('Camera permission required');
+  if (__DEV__) console.log('[MediaPicker] takePhoto called');
+
+  try {
+    const hasPermission = await requestCameraPermission();
+    if (__DEV__) console.log('[MediaPicker] Camera permission granted:', hasPermission);
+
+    if (!hasPermission) {
+      throw new Error('Permission d\'accès à la caméra requise. Veuillez l\'autoriser dans les réglages.');
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: options?.allowsEditing ?? false,
+      quality: options?.quality ?? 0.8,
+    });
+
+    if (__DEV__) console.log('[MediaPicker] Camera result:', result.canceled ? 'canceled' : 'captured');
+
+    if (result.canceled || !result.assets || !result.assets[0]) {
+      return null;
+    }
+
+    return processAsset(result.assets[0], 'image');
+  } catch (error: any) {
+    if (__DEV__) console.error('[MediaPicker] Error in takePhoto:', error);
+    throw error;
   }
-
-  const result = await ImagePicker.launchCameraAsync({
-    mediaTypes: ['images'],
-    allowsEditing: options?.allowsEditing ?? false,
-    quality: options?.quality ?? 0.8,
-  });
-
-  if (result.canceled || !result.assets || !result.assets[0]) {
-    return null;
-  }
-
-  return processAsset(result.assets[0], 'image');
 }
 
 /**
@@ -197,22 +261,33 @@ export async function takePhoto(options?: {
  * @returns PickedMedia or null if cancelled
  */
 export async function recordVideo(): Promise<PickedMedia | null> {
-  const hasPermission = await requestCameraPermission();
-  if (!hasPermission) {
-    throw new Error('Camera permission required');
+  if (__DEV__) console.log('[MediaPicker] recordVideo called');
+
+  try {
+    const hasPermission = await requestCameraPermission();
+    if (__DEV__) console.log('[MediaPicker] Camera permission granted:', hasPermission);
+
+    if (!hasPermission) {
+      throw new Error('Permission d\'accès à la caméra requise. Veuillez l\'autoriser dans les réglages.');
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+      videoMaxDuration: MAX_VIDEO_DURATION,
+      videoQuality: ImagePicker.UIImagePickerControllerQualityType.Medium,
+    });
+
+    if (__DEV__) console.log('[MediaPicker] Camera result:', result.canceled ? 'canceled' : 'recorded');
+
+    if (result.canceled || !result.assets || !result.assets[0]) {
+      return null;
+    }
+
+    return processAsset(result.assets[0], 'video');
+  } catch (error: any) {
+    if (__DEV__) console.error('[MediaPicker] Error in recordVideo:', error);
+    throw error;
   }
-
-  const result = await ImagePicker.launchCameraAsync({
-    mediaTypes: ['videos'],
-    videoMaxDuration: MAX_VIDEO_DURATION,
-    videoQuality: ImagePicker.UIImagePickerControllerQualityType.Medium,
-  });
-
-  if (result.canceled || !result.assets || !result.assets[0]) {
-    return null;
-  }
-
-  return processAsset(result.assets[0], 'video');
 }
 
 /**

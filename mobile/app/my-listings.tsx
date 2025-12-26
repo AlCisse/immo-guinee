@@ -9,6 +9,12 @@ import {
   Image,
   ActivityIndicator,
   Alert,
+  Modal,
+  TextInput,
+  ScrollView,
+  Switch,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,11 +24,55 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { Listing } from '@/types';
 import Colors, { lightTheme } from '@/constants/Colors';
 
+interface EditFormData {
+  titre: string;
+  description: string;
+  loyer_mensuel: string;
+  caution: string;
+  avance: string;
+  nombre_chambres: string;
+  nombre_salles_bain: string;
+  surface_m2: string;
+  quartier: string;
+  commune: string;
+  adresse_complete: string;
+  meuble: boolean;
+  disponible: boolean;
+}
+
 export default function MyListingsScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { isAuthenticated } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editingListing, setEditingListing] = useState<Listing | null>(null);
+  const [editForm, setEditForm] = useState<EditFormData>({
+    titre: '',
+    description: '',
+    loyer_mensuel: '',
+    caution: '',
+    avance: '',
+    nombre_chambres: '',
+    nombre_salles_bain: '',
+    surface_m2: '',
+    quartier: '',
+    commune: '',
+    adresse_complete: '',
+    meuble: false,
+    disponible: true,
+  });
+
+  // Delete modal state
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deleteReason, setDeleteReason] = useState<string | null>(null);
+
+  const deleteReasons = [
+    { id: 'loue_immoguinee', label: 'Loue grace a ImmoGuinee', icon: 'checkmark-circle' },
+    { id: 'loue_ailleurs', label: 'Loue ailleurs', icon: 'home' },
+    { id: 'plus_disponible', label: 'Plus disponible', icon: 'close-circle' },
+    { id: 'autre', label: 'Autre raison', icon: 'ellipsis-horizontal' },
+  ];
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['my-listings'],
@@ -34,6 +84,101 @@ export default function MyListingsScreen() {
   });
 
   const listings = data || [];
+
+  // Mutation to update listing
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: EditFormData }) => {
+      const formData = new FormData();
+      formData.append('titre', data.titre);
+      formData.append('description', data.description);
+      formData.append('loyer_mensuel', data.loyer_mensuel);
+      if (data.caution) formData.append('caution', data.caution);
+      if (data.avance) formData.append('avance', data.avance);
+      if (data.nombre_chambres) formData.append('nombre_chambres', data.nombre_chambres);
+      if (data.nombre_salles_bain) formData.append('nombre_salles_bain', data.nombre_salles_bain);
+      if (data.surface_m2) formData.append('surface_m2', data.surface_m2);
+      if (data.quartier) formData.append('quartier', data.quartier);
+      if (data.commune) formData.append('commune', data.commune);
+      if (data.adresse_complete) formData.append('adresse_complete', data.adresse_complete);
+      formData.append('meuble', data.meuble ? '1' : '0');
+      formData.append('disponible', data.disponible ? '1' : '0');
+      return api.listings.update(id, formData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-listings'] });
+      setEditModalVisible(false);
+      setEditingListing(null);
+      Alert.alert('Succes', 'Annonce mise a jour');
+    },
+    onError: (error: any) => {
+      Alert.alert('Erreur', error.message || 'Impossible de mettre a jour l\'annonce');
+    },
+  });
+
+  const openEditModal = (listing: Listing) => {
+    setEditingListing(listing);
+    setEditForm({
+      titre: listing.titre || '',
+      description: listing.description || '',
+      loyer_mensuel: listing.loyer_mensuel?.toString() || '',
+      caution: listing.caution?.toString() || '',
+      avance: listing.avance?.toString() || '',
+      nombre_chambres: listing.nombre_chambres?.toString() || '',
+      nombre_salles_bain: listing.nombre_salles_bain?.toString() || '',
+      surface_m2: listing.surface_m2?.toString() || '',
+      quartier: listing.quartier || '',
+      commune: listing.commune || '',
+      adresse_complete: listing.adresse_complete || '',
+      meuble: listing.meuble || false,
+      disponible: listing.disponible ?? true,
+    });
+    setEditModalVisible(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingListing) return;
+    if (!editForm.titre.trim()) {
+      Alert.alert('Erreur', 'Le titre est requis');
+      return;
+    }
+    if (!editForm.loyer_mensuel.trim()) {
+      Alert.alert('Erreur', 'Le prix est requis');
+      return;
+    }
+    updateMutation.mutate({ id: editingListing.id, data: editForm });
+  };
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
+      // On peut envoyer la raison au backend pour statistiques
+      return api.listings.delete(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-listings'] });
+      setDeleteModalVisible(false);
+      setEditModalVisible(false);
+      setEditingListing(null);
+      setDeleteReason(null);
+      Alert.alert('Succes', 'Annonce supprimee');
+    },
+    onError: (error: any) => {
+      Alert.alert('Erreur', error.message || 'Impossible de supprimer l\'annonce');
+    },
+  });
+
+  const openDeleteModal = () => {
+    setDeleteReason(null);
+    setDeleteModalVisible(true);
+  };
+
+  const handleDelete = () => {
+    if (!editingListing || !deleteReason) {
+      Alert.alert('Erreur', 'Veuillez selectionner une raison');
+      return;
+    }
+    deleteMutation.mutate({ id: editingListing.id, reason: deleteReason });
+  };
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -96,9 +241,17 @@ export default function MyListingsScreen() {
           </View>
           <Text style={styles.listingPrice}>{formatPrice(item)}</Text>
         </View>
-        <TouchableOpacity style={styles.editButton}>
-          <Ionicons name="create-outline" size={20} color={lightTheme.colors.primary} />
-        </TouchableOpacity>
+        <View style={styles.actionButtons}>
+          <TouchableOpacity style={styles.editButton} onPress={() => openEditModal(item)}>
+            <Ionicons name="create-outline" size={20} color={lightTheme.colors.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.deleteIconButton} onPress={() => {
+            setEditingListing(item);
+            openDeleteModal();
+          }}>
+            <Ionicons name="trash-outline" size={20} color={Colors.error[500]} />
+          </TouchableOpacity>
+        </View>
       </TouchableOpacity>
     );
   };
@@ -152,6 +305,277 @@ export default function MyListingsScreen() {
           />
         )}
       </View>
+
+      {/* Edit Modal */}
+      <Modal
+        visible={editModalVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setEditModalVisible(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalContainer}
+        >
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={() => setEditModalVisible(false)}>
+              <Ionicons name="close" size={28} color={Colors.secondary[800]} />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Modifier l'annonce</Text>
+            <TouchableOpacity onPress={handleSaveEdit} disabled={updateMutation.isPending}>
+              {updateMutation.isPending ? (
+                <ActivityIndicator size="small" color={lightTheme.colors.primary} />
+              ) : (
+                <Text style={styles.modalSaveText}>Enregistrer</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+            {/* Section: Informations generales */}
+            <Text style={styles.sectionTitle}>Informations generales</Text>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Titre *</Text>
+              <TextInput
+                style={styles.formInput}
+                value={editForm.titre}
+                onChangeText={(text) => setEditForm({ ...editForm, titre: text })}
+                placeholder="Titre de l'annonce"
+                placeholderTextColor={Colors.neutral[400]}
+              />
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Description</Text>
+              <TextInput
+                style={[styles.formInput, styles.formTextArea]}
+                value={editForm.description}
+                onChangeText={(text) => setEditForm({ ...editForm, description: text })}
+                placeholder="Description de l'annonce"
+                placeholderTextColor={Colors.neutral[400]}
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
+              />
+            </View>
+
+            {/* Section: Prix */}
+            <Text style={styles.sectionTitle}>Prix et conditions</Text>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Loyer mensuel (GNF) *</Text>
+              <TextInput
+                style={styles.formInput}
+                value={editForm.loyer_mensuel}
+                onChangeText={(text) => setEditForm({ ...editForm, loyer_mensuel: text.replace(/[^0-9]/g, '') })}
+                placeholder="Ex: 2500000"
+                placeholderTextColor={Colors.neutral[400]}
+                keyboardType="numeric"
+              />
+            </View>
+
+            <View style={styles.formRow}>
+              <View style={[styles.formGroup, { flex: 1 }]}>
+                <Text style={styles.formLabel}>Caution (GNF)</Text>
+                <TextInput
+                  style={styles.formInput}
+                  value={editForm.caution}
+                  onChangeText={(text) => setEditForm({ ...editForm, caution: text.replace(/[^0-9]/g, '') })}
+                  placeholder="0"
+                  placeholderTextColor={Colors.neutral[400]}
+                  keyboardType="numeric"
+                />
+              </View>
+              <View style={[styles.formGroup, { flex: 1 }]}>
+                <Text style={styles.formLabel}>Avance (GNF)</Text>
+                <TextInput
+                  style={styles.formInput}
+                  value={editForm.avance}
+                  onChangeText={(text) => setEditForm({ ...editForm, avance: text.replace(/[^0-9]/g, '') })}
+                  placeholder="0"
+                  placeholderTextColor={Colors.neutral[400]}
+                  keyboardType="numeric"
+                />
+              </View>
+            </View>
+
+            {/* Section: Caracteristiques */}
+            <Text style={styles.sectionTitle}>Caracteristiques</Text>
+
+            <View style={styles.formRow}>
+              <View style={[styles.formGroup, { flex: 1 }]}>
+                <Text style={styles.formLabel}>Chambres</Text>
+                <TextInput
+                  style={styles.formInput}
+                  value={editForm.nombre_chambres}
+                  onChangeText={(text) => setEditForm({ ...editForm, nombre_chambres: text.replace(/[^0-9]/g, '') })}
+                  placeholder="0"
+                  placeholderTextColor={Colors.neutral[400]}
+                  keyboardType="numeric"
+                />
+              </View>
+              <View style={[styles.formGroup, { flex: 1 }]}>
+                <Text style={styles.formLabel}>Salles de bain</Text>
+                <TextInput
+                  style={styles.formInput}
+                  value={editForm.nombre_salles_bain}
+                  onChangeText={(text) => setEditForm({ ...editForm, nombre_salles_bain: text.replace(/[^0-9]/g, '') })}
+                  placeholder="0"
+                  placeholderTextColor={Colors.neutral[400]}
+                  keyboardType="numeric"
+                />
+              </View>
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Surface (m²)</Text>
+              <TextInput
+                style={styles.formInput}
+                value={editForm.surface_m2}
+                onChangeText={(text) => setEditForm({ ...editForm, surface_m2: text.replace(/[^0-9]/g, '') })}
+                placeholder="Ex: 120"
+                placeholderTextColor={Colors.neutral[400]}
+                keyboardType="numeric"
+              />
+            </View>
+
+            {/* Section: Localisation */}
+            <Text style={styles.sectionTitle}>Localisation</Text>
+
+            <View style={styles.formRow}>
+              <View style={[styles.formGroup, { flex: 1 }]}>
+                <Text style={styles.formLabel}>Commune</Text>
+                <TextInput
+                  style={styles.formInput}
+                  value={editForm.commune}
+                  onChangeText={(text) => setEditForm({ ...editForm, commune: text })}
+                  placeholder="Ex: Ratoma"
+                  placeholderTextColor={Colors.neutral[400]}
+                />
+              </View>
+              <View style={[styles.formGroup, { flex: 1 }]}>
+                <Text style={styles.formLabel}>Quartier</Text>
+                <TextInput
+                  style={styles.formInput}
+                  value={editForm.quartier}
+                  onChangeText={(text) => setEditForm({ ...editForm, quartier: text })}
+                  placeholder="Ex: Nongo"
+                  placeholderTextColor={Colors.neutral[400]}
+                />
+              </View>
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Adresse complete</Text>
+              <TextInput
+                style={styles.formInput}
+                value={editForm.adresse_complete}
+                onChangeText={(text) => setEditForm({ ...editForm, adresse_complete: text })}
+                placeholder="Ex: Carrefour Nongo, face a..."
+                placeholderTextColor={Colors.neutral[400]}
+              />
+            </View>
+
+            {/* Section: Options */}
+            <Text style={styles.sectionTitle}>Options</Text>
+
+            <View style={styles.formSwitchRow}>
+              <View>
+                <Text style={styles.formLabel}>Meuble</Text>
+                <Text style={styles.formHint}>Le bien est-il meuble?</Text>
+              </View>
+              <Switch
+                value={editForm.meuble}
+                onValueChange={(value) => setEditForm({ ...editForm, meuble: value })}
+                trackColor={{ false: Colors.neutral[300], true: lightTheme.colors.primary }}
+                thumbColor="#fff"
+              />
+            </View>
+
+            <View style={styles.formSwitchRow}>
+              <View>
+                <Text style={styles.formLabel}>Disponible</Text>
+                <Text style={styles.formHint}>Le bien est-il disponible?</Text>
+              </View>
+              <Switch
+                value={editForm.disponible}
+                onValueChange={(value) => setEditForm({ ...editForm, disponible: value })}
+                trackColor={{ false: Colors.neutral[300], true: Colors.success[500] }}
+                thumbColor="#fff"
+              />
+            </View>
+
+            <View style={{ height: 50 }} />
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Delete confirmation modal */}
+      <Modal
+        visible={deleteModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setDeleteModalVisible(false)}
+      >
+        <View style={styles.deleteModalOverlay}>
+          <View style={styles.deleteModalContent}>
+            <Text style={styles.deleteModalTitle}>Supprimer l'annonce ?</Text>
+            <Text style={styles.deleteModalSubtitle}>Pourquoi souhaitez-vous supprimer ?</Text>
+
+            {deleteReasons.map((reason) => (
+              <TouchableOpacity
+                key={reason.id}
+                style={[
+                  styles.deleteReasonOption,
+                  deleteReason === reason.id && styles.deleteReasonSelected,
+                ]}
+                onPress={() => setDeleteReason(reason.id)}
+              >
+                <Ionicons
+                  name={reason.icon as any}
+                  size={22}
+                  color={deleteReason === reason.id ? lightTheme.colors.primary : Colors.neutral[500]}
+                />
+                <Text
+                  style={[
+                    styles.deleteReasonText,
+                    deleteReason === reason.id && styles.deleteReasonTextSelected,
+                  ]}
+                >
+                  {reason.label}
+                </Text>
+                {deleteReason === reason.id && (
+                  <Ionicons name="checkmark" size={20} color={lightTheme.colors.primary} />
+                )}
+              </TouchableOpacity>
+            ))}
+
+            <View style={styles.deleteModalActions}>
+              <TouchableOpacity
+                style={styles.deleteModalCancel}
+                onPress={() => setDeleteModalVisible(false)}
+              >
+                <Text style={styles.deleteModalCancelText}>Annuler</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.deleteModalConfirm,
+                  !deleteReason && styles.deleteModalConfirmDisabled,
+                ]}
+                onPress={handleDelete}
+                disabled={!deleteReason || deleteMutation.isPending}
+              >
+                {deleteMutation.isPending ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.deleteModalConfirmText}>Supprimer</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 }
@@ -244,8 +668,17 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: lightTheme.colors.primary,
   },
+  actionButtons: {
+    flexDirection: 'column',
+    justifyContent: 'center',
+    gap: 4,
+  },
   editButton: {
-    padding: 14,
+    padding: 10,
+    justifyContent: 'center',
+  },
+  deleteIconButton: {
+    padding: 10,
     justifyContent: 'center',
   },
   emptyContainer: {
@@ -265,5 +698,180 @@ const styles = StyleSheet.create({
     color: Colors.neutral[500],
     marginTop: 8,
     textAlign: 'center',
+  },
+  // Modal styles
+  modalContainer: {
+    flex: 1,
+    backgroundColor: Colors.background.primary,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border.light,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.secondary[800],
+  },
+  modalSaveText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: lightTheme.colors.primary,
+  },
+  modalContent: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 20,
+  },
+  formGroup: {
+    marginBottom: 20,
+  },
+  formLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.secondary[700],
+    marginBottom: 8,
+  },
+  formInput: {
+    backgroundColor: Colors.background.secondary,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: Colors.secondary[800],
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+  },
+  formTextArea: {
+    minHeight: 100,
+    paddingTop: 14,
+  },
+  formRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  formSwitchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    paddingVertical: 8,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: lightTheme.colors.primary,
+    marginBottom: 16,
+    marginTop: 8,
+  },
+  formHint: {
+    fontSize: 12,
+    color: Colors.neutral[400],
+    marginTop: 2,
+  },
+  // Delete button
+  deleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+    marginTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border.light,
+  },
+  deleteButtonText: {
+    fontSize: 16,
+    color: Colors.error[500],
+    fontWeight: '500',
+  },
+  // Delete modal
+  deleteModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  deleteModalContent: {
+    backgroundColor: Colors.background.primary,
+    borderRadius: 20,
+    padding: 24,
+    width: '100%',
+    maxWidth: 340,
+  },
+  deleteModalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: Colors.secondary[800],
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  deleteModalSubtitle: {
+    fontSize: 14,
+    color: Colors.neutral[500],
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  deleteReasonOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginBottom: 8,
+    backgroundColor: Colors.background.secondary,
+  },
+  deleteReasonSelected: {
+    backgroundColor: Colors.primary[50],
+    borderWidth: 1,
+    borderColor: lightTheme.colors.primary,
+  },
+  deleteReasonText: {
+    flex: 1,
+    fontSize: 15,
+    color: Colors.secondary[700],
+  },
+  deleteReasonTextSelected: {
+    color: lightTheme.colors.primary,
+    fontWeight: '600',
+  },
+  deleteModalActions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 16,
+  },
+  deleteModalCancel: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: Colors.background.secondary,
+    alignItems: 'center',
+  },
+  deleteModalCancelText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.secondary[700],
+  },
+  deleteModalConfirm: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: Colors.error[500],
+    alignItems: 'center',
+  },
+  deleteModalConfirmDisabled: {
+    backgroundColor: Colors.neutral[300],
+  },
+  deleteModalConfirmText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
   },
 });

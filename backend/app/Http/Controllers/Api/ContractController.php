@@ -295,15 +295,12 @@ class ContractController extends Controller
                 ], 404);
             }
 
-            // Check if user is part of contract OR is admin
+            // Use policy for authorization
             $user = $request->user();
-            $userId = $user->id;
-            $isAdmin = $user->hasRole('admin');
-
-            if (!$isAdmin && $contract->bailleur_id !== $userId && $contract->locataire_id !== $userId) {
+            if (!$user->can('view', $contract)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Non autorisé',
+                    'message' => 'Non autorisé. Seuls le propriétaire, le locataire ou un administrateur peuvent voir ce contrat.',
                 ], 403);
             }
 
@@ -504,12 +501,9 @@ class ContractController extends Controller
                 ], 404);
             }
 
-            // Check if user is part of contract OR is admin
+            // Use policy for authorization
             $user = $request->user();
-            $userId = $user->id;
-            $isAdmin = $user->hasRole('admin');
-
-            if (!$isAdmin && $contract->bailleur_id !== $userId && $contract->locataire_id !== $userId) {
+            if (!$user->can('view', $contract)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Non autorisé',
@@ -923,15 +917,13 @@ class ContractController extends Controller
                 ], 404);
             }
 
-            // Check if user is part of contract OR is admin
+            // Use policy for authorization
             $user = $request->user();
             $userId = $user->id;
-            $isAdmin = $user->hasRole('admin');
-
-            if (!$isAdmin && $contract->bailleur_id !== $userId && $contract->locataire_id !== $userId) {
+            if (!$user->can('preview', $contract)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Non autorisé',
+                    'message' => 'Non autorisé. Seuls le propriétaire, le locataire ou un administrateur peuvent voir ce contrat.',
                 ], 403);
             }
 
@@ -1190,7 +1182,8 @@ class ContractController extends Controller
     }
 
     /**
-     * Download contract with watermark (T137: FR-036)
+     * Download contract PDF (T137: FR-036)
+     * Uses ContractPolicy to authorize: only bailleur, locataire, or admin can download.
      *
      * @param Request $request
      * @param string $id
@@ -1208,23 +1201,48 @@ class ContractController extends Controller
                 ], 404);
             }
 
-            // Check if user is part of contract OR is admin
+            // Use policy for authorization
             $user = $request->user();
-            $isAdmin = $user->hasRole('admin');
-
-            if (!$isAdmin && $contract->bailleur_id !== $user->id && $contract->locataire_id !== $user->id) {
+            if (!$user->can('download', $contract)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Non autorisé',
+                    'message' => 'Non autorisé. Seuls le propriétaire, le locataire ou un administrateur peuvent télécharger ce contrat.',
                 ], 403);
             }
 
-            // Check if contract is signed
-            if (!$contract->bailleur_signed_at || !$contract->locataire_signed_at) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Le contrat doit être signé par les deux parties avant téléchargement',
-                ], 422);
+            // Check if we need to generate PDF (similar to preview)
+            $needsGeneration = !$contract->pdf_url || !$contract->pdf_storage_disk;
+
+            if (!$needsGeneration) {
+                // Check if file exists in storage
+                $disk = $contract->pdf_storage_disk;
+                $pdfPath = $contract->pdf_url;
+                if ($disk === 'public') {
+                    $baseUrl = Storage::disk($disk)->url('');
+                    $pdfPath = str_replace($baseUrl, '', $contract->pdf_url);
+                }
+                try {
+                    $needsGeneration = !$pdfPath || !Storage::disk($disk)->exists($pdfPath);
+                } catch (\Exception $e) {
+                    $needsGeneration = true;
+                }
+            }
+
+            if ($needsGeneration) {
+                try {
+                    $this->contractService->generatePdf($contract);
+                    // Reload contract from database to get updated values
+                    $contract = Contract::find($contract->id);
+                } catch (\Exception $e) {
+                    Log::error('Failed to generate PDF for download', [
+                        'contract_id' => $contract->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Impossible de générer le PDF du contrat',
+                    ], 500);
+                }
             }
 
             // Determine which disk was used
@@ -1232,6 +1250,13 @@ class ContractController extends Controller
 
             // Get PDF path
             $pdfPath = $contract->pdf_url;
+            if (!$pdfPath) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Fichier PDF non disponible',
+                ], 404);
+            }
+
             if ($disk === 'public') {
                 $baseUrl = Storage::disk($disk)->url('');
                 $pdfPath = str_replace($baseUrl, '', $contract->pdf_url);

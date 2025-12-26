@@ -554,21 +554,23 @@ class VisitController extends Controller
     }
 
     /**
-     * Delete a visit (only pending visits by the visitor who created it).
+     * Delete a visit (owner or visitor can delete their own visits).
      */
     public function destroy(Request $request, string $id): JsonResponse
     {
         $user = $request->user();
 
-        $visit = Visit::where('visiteur_id', $user->id)
-            ->where('statut', 'PENDING')
+        $visit = Visit::where(function ($q) use ($user) {
+                $q->where('proprietaire_id', $user->id)
+                    ->orWhere('visiteur_id', $user->id);
+            })
             ->findOrFail($id);
 
         $visit->delete();
 
         return response()->json([
             'success' => true,
-            'message' => 'Demande de visite supprimée',
+            'message' => 'Visite supprimée',
         ]);
     }
 

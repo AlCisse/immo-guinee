@@ -30,8 +30,12 @@
             }
           }
         },
-        "UIBackgroundModes": ["remote-notification"],
-        "NSMicrophoneUsageDescription": "Cette application utilise le microphone pour enregistrer des messages vocaux."
+        "UIBackgroundModes": [
+          "remote-notification"
+        ],
+        "NSMicrophoneUsageDescription": "Cette application utilise le microphone pour enregistrer des messages vocaux.",
+        "NSPhotoLibraryUsageDescription": "Cette application utilise votre galerie photo pour envoyer des images et vidéos.",
+        "NSCameraUsageDescription": "Cette application utilise la caméra pour prendre des photos et vidéos."
       }
     },
     "android": {
@@ -70,7 +74,15 @@
           "sounds": []
         }
       ],
-      "./plugins/withNetworkSecurity.js"
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Cette application utilise votre galerie photo pour envoyer des images et vidéos dans les messages.",
+          "cameraPermission": "Cette application utilise la caméra pour prendre des photos et vidéos dans les messages."
+        }
+      ],
+      "./plugins/withNetworkSecurity.js",
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true

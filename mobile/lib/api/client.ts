@@ -252,6 +252,9 @@ export const api = {
 
     cancel: (id: string, motif?: string) =>
       apiClient.post(`/visits/${id}/cancel`, { motif }),
+
+    delete: (id: string) =>
+      apiClient.delete(`/visits/${id}`),
   },
 
   // Messaging endpoints
@@ -326,6 +329,24 @@ export const api = {
 
     get: (id: string) =>
       apiClient.get(`/contracts/${id}`),
+
+    // Download contract PDF
+    download: (id: string) =>
+      apiClient.get(`/contracts/${id}/download`, {
+        responseType: 'blob',
+        timeout: 120000, // 2 minutes for PDF download
+      }),
+
+    // Preview contract PDF (inline)
+    preview: (id: string) =>
+      apiClient.get(`/contracts/${id}/preview`, {
+        responseType: 'blob',
+        timeout: 120000,
+      }),
+
+    // Get download URL for contract PDF
+    getDownloadUrl: (id: string) =>
+      `${API_URL}/contracts/${id}/download`,
   },
 
   // Health check

@@ -11,87 +11,195 @@ class ContractPolicy
     use HandlesAuthorization;
 
     /**
-     * Determine whether the user can view any contracts.
+     * Perform pre-authorization checks.
+     * Admins can do everything.
+     */
+    public function before(User $user, string $ability): ?bool
+    {
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+
+        return null;
+    }
+
+    /**
+     * Determine if the user can view any contracts.
      */
     public function viewAny(User $user): bool
     {
-        // User can view their own contracts
-        return true;
+        return true; // All authenticated users can list their contracts
     }
 
     /**
-     * Determine whether the user can view the contract.
+     * Determine if the user can view the contract.
+     * Only the bailleur (owner), locataire (tenant), or admin can view.
      */
     public function view(User $user, Contract $contract): bool
     {
-        // User can view if they are landlord or tenant
-        return $contract->proprietaire_id === $user->id
-            || $contract->locataire_acheteur_id === $user->id
-            || $user->hasRole('admin');
+        return $this->isParticipant($user, $contract);
     }
 
     /**
-     * Determine whether the user can create contracts.
+     * Determine if the user can create contracts.
      */
     public function create(User $user): bool
     {
-        // User must be active
-        return $user->is_active && !$user->is_suspended;
+        return true; // Any authenticated user can create a contract
     }
 
     /**
-     * Determine whether the user can sign the contract.
+     * Determine if the user can update the contract.
+     * Only the bailleur can update, and only if not signed by both parties.
      */
-    public function sign(User $user, Contract $contract): bool
+    public function update(User $user, Contract $contract): bool
     {
-        // User must be one of the parties
-        if ($contract->proprietaire_id !== $user->id && $contract->locataire_acheteur_id !== $user->id) {
+        if ($contract->is_locked) {
             return false;
         }
 
-        // Contract must be in signing status
-        if (!in_array($contract->statut, ['EN_ATTENTE_SIGNATURE', 'PARTIELLEMENT_SIGNE'])) {
+        if ($contract->isFullySigned()) {
+            return false;
+        }
+
+        return $contract->bailleur_id === $user->id;
+    }
+
+    /**
+     * Determine if the user can delete the contract.
+     * Only the bailleur can delete, and only if not signed by anyone.
+     */
+    public function delete(User $user, Contract $contract): bool
+    {
+        if ($contract->is_locked) {
+            return false;
+        }
+
+        if ($contract->bailleur_signed_at || $contract->locataire_signed_at) {
+            return false;
+        }
+
+        return $contract->bailleur_id === $user->id;
+    }
+
+    /**
+     * Determine if the user can download the contract PDF.
+     * Only the bailleur, locataire, or admin can download.
+     */
+    public function download(User $user, Contract $contract): bool
+    {
+        return $this->isParticipant($user, $contract);
+    }
+
+    /**
+     * Determine if the user can preview the contract PDF.
+     * Only the bailleur, locataire, or admin can preview.
+     */
+    public function preview(User $user, Contract $contract): bool
+    {
+        return $this->isParticipant($user, $contract);
+    }
+
+    /**
+     * Determine if the user can sign the contract.
+     */
+    public function sign(User $user, Contract $contract): bool
+    {
+        if ($contract->is_locked) {
+            return false;
+        }
+
+        // Check if user is a participant
+        if (!$this->isParticipant($user, $contract)) {
             return false;
         }
 
         // Check if user already signed
-        $signatures = $contract->signatures ?? [];
-        foreach ($signatures as $signature) {
-            if ($signature['user_id'] === $user->id) {
-                return false; // Already signed
-            }
+        if ($contract->bailleur_id === $user->id && $contract->bailleur_signed_at) {
+            return false;
+        }
+
+        if ($contract->locataire_id === $user->id && $contract->locataire_signed_at) {
+            return false;
         }
 
         return true;
     }
 
     /**
-     * Determine whether the user can cancel the contract.
+     * Determine if the user can cancel the contract.
      */
     public function cancel(User $user, Contract $contract): bool
     {
-        // Can cancel during retraction period (48h)
-        if ($contract->delai_retractation_expire && now() < $contract->delai_retractation_expire) {
-            return $contract->proprietaire_id === $user->id
-                || $contract->locataire_acheteur_id === $user->id;
+        // If not fully signed, only the bailleur or any party who hasn't signed can cancel
+        if (!$contract->isFullySigned()) {
+            if ($contract->bailleur_id === $user->id) {
+                return true;
+            }
+            // Locataire can cancel only if they haven't signed yet
+            if ($contract->locataire_id === $user->id && !$contract->locataire_signed_at) {
+                return true;
+            }
+            return false;
         }
 
-        // Can cancel if not signed
-        if ($contract->statut === 'BROUILLON' || $contract->statut === 'EN_ATTENTE_SIGNATURE') {
-            return $contract->proprietaire_id === $user->id;
-        }
+        // If fully signed, check retraction period (48 hours)
+        $signingTime = max(
+            $contract->bailleur_signed_at?->timestamp ?? 0,
+            $contract->locataire_signed_at?->timestamp ?? 0
+        );
 
-        return false;
+        $retractionPeriodEnd = $signingTime + (48 * 3600); // 48 hours
+
+        return time() < $retractionPeriodEnd && $this->isParticipant($user, $contract);
     }
 
     /**
-     * Determine whether the user can download the contract.
+     * Determine if the user can request termination.
      */
-    public function download(User $user, Contract $contract): bool
+    public function requestTermination(User $user, Contract $contract): bool
     {
-        // User can download if they are landlord or tenant, and contract is signed
-        return ($contract->proprietaire_id === $user->id
-                || $contract->locataire_acheteur_id === $user->id)
-            && $contract->statut === 'SIGNE_ARCHIVE';
+        // Can only terminate active/signed contracts
+        if (!in_array($contract->statut, ['ACTIF', 'SIGNE', 'signe'])) {
+            return false;
+        }
+
+        // Cannot request if already requested
+        if ($contract->resiliation_requested_at) {
+            return false;
+        }
+
+        return $this->isParticipant($user, $contract);
+    }
+
+    /**
+     * Determine if the user can confirm termination.
+     */
+    public function confirmTermination(User $user, Contract $contract): bool
+    {
+        // Must have a termination request
+        if (!$contract->resiliation_requested_at) {
+            return false;
+        }
+
+        // Already confirmed
+        if ($contract->resiliation_confirmed_at) {
+            return false;
+        }
+
+        // Must be a participant but NOT the one who requested
+        if (!$this->isParticipant($user, $contract)) {
+            return false;
+        }
+
+        return $contract->resiliation_requested_by !== $user->id;
+    }
+
+    /**
+     * Check if the user is a participant (bailleur or locataire) of the contract.
+     */
+    protected function isParticipant(User $user, Contract $contract): bool
+    {
+        return $contract->bailleur_id === $user->id || $contract->locataire_id === $user->id;
     }
 }

@@ -1011,9 +1011,9 @@ export default function ChatScreen() {
           </View>
         )}
 
-        {/* Recording UI overlay */}
+        {/* Recording UI - replaces input when recording */}
         {isRecordingVoice && (
-          <View style={styles.recordingOverlay}>
+          <View style={styles.recordingContainer}>
             <View style={styles.recordingContent}>
               <Animated.View
                 style={[
@@ -1159,7 +1159,8 @@ export default function ChatScreen() {
           </View>
         </Modal>
 
-        {/* Input area */}
+        {/* Input area - hidden during recording */}
+        {!isRecordingVoice && (
         <View style={styles.inputContainer}>
           <View style={styles.inputWrapper}>
             {/* Attachment button */}
@@ -1225,6 +1226,7 @@ export default function ChatScreen() {
             )}
           </View>
         </View>
+        )}
       </KeyboardAvoidingView>
     </>
   );
@@ -1417,7 +1419,8 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingTop: 12,
+    paddingBottom: 34,
     backgroundColor: Colors.background.primary,
     borderTopWidth: 1,
     borderTopColor: Colors.border.light,
@@ -1549,22 +1552,14 @@ const styles = StyleSheet.create({
   micButtonRecording: {
     backgroundColor: Colors.error[500],
   },
-  // Recording overlay
-  recordingOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+  // Recording container (replaces input when recording)
+  recordingContainer: {
     backgroundColor: Colors.background.primary,
-    paddingVertical: 24,
+    paddingTop: 20,
+    paddingBottom: 28,
     paddingHorizontal: 20,
     borderTopWidth: 1,
     borderTopColor: Colors.border.light,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 10,
   },
   recordingContent: {
     alignItems: 'center',
