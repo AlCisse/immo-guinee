@@ -88,6 +88,7 @@ Route::prefix('users')->middleware('auth:api')->group(function () {
 // User notifications endpoints
 Route::prefix('notifications')->middleware('auth:api')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\NotificationController::class, 'index']);
+    Route::post('/test', [\App\Http\Controllers\Api\NotificationController::class, 'sendTest']);
     Route::post('/{id}/read', [\App\Http\Controllers\Api\NotificationController::class, 'markAsRead']);
     Route::post('/read-all', [\App\Http\Controllers\Api\NotificationController::class, 'markAllAsRead']);
     Route::delete('/{id}', [\App\Http\Controllers\Api\NotificationController::class, 'destroy']);

@@ -360,6 +360,24 @@ export const api = {
       apiClient.get(`/contracts/${id}/signature-certificate`),
   },
 
+  // Notifications endpoints
+  notifications: {
+    list: () =>
+      apiClient.get('/notifications'),
+
+    markAsRead: (id: string) =>
+      apiClient.post(`/notifications/${id}/read`),
+
+    markAllAsRead: () =>
+      apiClient.post('/notifications/read-all'),
+
+    delete: (id: string) =>
+      apiClient.delete(`/notifications/${id}`),
+
+    sendTest: () =>
+      apiClient.post('/notifications/test'),
+  },
+
   // Health check
   health: () =>
     apiClient.get('/health'),

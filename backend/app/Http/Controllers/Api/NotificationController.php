@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Notification;
+use App\Models\User;
+use App\Services\ExpoPushService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -117,6 +119,45 @@ class NotificationController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Notification supprimee',
+        ]);
+    }
+
+    /**
+     * Send test push notification (authenticated user only)
+     */
+    public function sendTest(Request $request, ExpoPushService $pushService): JsonResponse
+    {
+        $user = $request->user();
+
+        if (empty($user->push_tokens)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Aucun token push enregistre. Ouvrez l\'app sur un appareil physique.',
+                'tokens_count' => 0,
+            ], 400);
+        }
+
+        $sent = $pushService->send(
+            $user,
+            'Test Notification 🏠',
+            'Ceci est une notification de test depuis ImmoGuinee!',
+            ['type' => 'test'],
+            'general'
+        );
+
+        // Also create in-app notification
+        Notification::create([
+            'user_id' => $user->id,
+            'type' => 'test',
+            'titre' => 'Test Notification',
+            'message' => 'Notification de test envoyee avec succes!',
+            'data' => ['sent_at' => now()->toISOString()],
+        ]);
+
+        return response()->json([
+            'success' => $sent,
+            'message' => $sent ? 'Notification push envoyee!' : 'Echec de l\'envoi',
+            'tokens_count' => count($user->push_tokens),
         ]);
     }
 }
