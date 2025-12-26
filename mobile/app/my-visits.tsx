@@ -187,6 +187,19 @@ export default function MyVisitsScreen() {
     },
   });
 
+  // Cancel visit mutation
+  const cancelVisitMutation = useMutation({
+    mutationFn: (visitId: string) => api.visits.cancel(visitId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['my-visits'] });
+      await refetch();
+      Alert.alert('Succes', 'Visite annulee');
+    },
+    onError: (error: any) => {
+      Alert.alert('Erreur', error.response?.data?.message || 'Impossible d\'annuler la visite');
+    },
+  });
+
   // Delete visit mutation
   const deleteVisitMutation = useMutation({
     mutationFn: (visitId: string) => api.visits.delete(visitId),
@@ -200,13 +213,29 @@ export default function MyVisitsScreen() {
     },
   });
 
+  // Handle cancel visit
+  const handleCancelVisit = (visitId: string) => {
+    Alert.alert(
+      'Annuler la visite',
+      'Etes-vous sur de vouloir annuler cette visite ?',
+      [
+        { text: 'Non', style: 'cancel' },
+        {
+          text: 'Oui, annuler',
+          style: 'destructive',
+          onPress: () => cancelVisitMutation.mutate(visitId),
+        },
+      ]
+    );
+  };
+
   // Handle delete visit
   const handleDeleteVisit = (visitId: string) => {
     Alert.alert(
       'Supprimer la visite',
       'Etes-vous sur de vouloir supprimer cette visite ?',
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: 'Non', style: 'cancel' },
         {
           text: 'Supprimer',
           style: 'destructive',
@@ -329,6 +358,7 @@ export default function MyVisitsScreen() {
     const listing = item.listing;
     const imageUrl = listing?.main_photo_url || listing?.photo_principale;
     const status = getStatusBadge(item.statut);
+    const canCancel = item.statut === 'EN_ATTENTE' || item.statut === 'CONFIRMEE';
 
     return (
       <TouchableOpacity
@@ -371,17 +401,32 @@ export default function MyVisitsScreen() {
             <Ionicons name={status.icon as any} size={12} color="#fff" />
             <Text style={styles.statusText}>{status.label}</Text>
           </View>
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={() => handleDeleteVisit(item.id)}
-            disabled={deleteVisitMutation.isPending}
-          >
-            {deleteVisitMutation.isPending ? (
-              <ActivityIndicator size="small" color={Colors.error[500]} />
-            ) : (
-              <Ionicons name="trash-outline" size={20} color={Colors.error[500]} />
+          <View style={styles.actionButtons}>
+            {canCancel && (
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => handleCancelVisit(item.id)}
+                disabled={cancelVisitMutation.isPending}
+              >
+                {cancelVisitMutation.isPending ? (
+                  <ActivityIndicator size="small" color={Colors.warning[600]} />
+                ) : (
+                  <Ionicons name="close-circle-outline" size={20} color={Colors.warning[600]} />
+                )}
+              </TouchableOpacity>
             )}
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={() => handleDeleteVisit(item.id)}
+              disabled={deleteVisitMutation.isPending}
+            >
+              {deleteVisitMutation.isPending ? (
+                <ActivityIndicator size="small" color={Colors.error[500]} />
+              ) : (
+                <Ionicons name="trash-outline" size={20} color={Colors.error[500]} />
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -846,6 +891,15 @@ const styles = StyleSheet.create({
     right: 8,
     alignItems: 'flex-end',
     gap: 8,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  cancelButton: {
+    padding: 8,
+    backgroundColor: Colors.warning[50],
+    borderRadius: 8,
   },
   deleteButton: {
     padding: 8,

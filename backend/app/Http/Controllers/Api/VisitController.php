@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Notification as AppNotification;
 use App\Notifications\VisitRequestNotification;
 use App\Services\WhatsAppService;
+use App\Services\ExpoPushService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -546,11 +547,135 @@ class VisitController extends Controller
 
         $visit->load(['listing', 'proprietaire', 'visiteur', 'cancelledBy']);
 
+        // Send cancellation notifications to the other party
+        $this->sendCancellationNotifications($visit, $user);
+
         return response()->json([
             'success' => true,
             'message' => 'Visite annulée avec succès',
             'data' => $visit,
         ]);
+    }
+
+    /**
+     * Send cancellation notifications via WhatsApp and Expo Push.
+     */
+    protected function sendCancellationNotifications(Visit $visit, User $cancelledBy): void
+    {
+        $listing = $visit->listing;
+        $visitDate = $visit->date_visite->format('d/m/Y');
+        $visitTime = $visit->heure_visite->format('H:i');
+        $cancellerName = $cancelledBy->nom_complet;
+        $motif = $visit->motif_annulation;
+
+        // Determine the recipient (the other party)
+        $isOwnerCancelling = $cancelledBy->id === $visit->proprietaire_id;
+
+        if ($isOwnerCancelling) {
+            // Owner cancelled -> notify the visitor/client
+            $recipient = $visit->visiteur;
+            $recipientPhone = $visit->client_telephone;
+            $recipientType = 'client';
+        } else {
+            // Visitor cancelled -> notify the owner
+            $recipient = $visit->proprietaire;
+            $recipientPhone = $recipient?->telephone;
+            $recipientType = 'proprietaire';
+        }
+
+        // Build WhatsApp message
+        $waMessage = "❌ *Visite annulée - ImmoGuinée*\n\n";
+        $waMessage .= "La visite a été annulée par " . ($isOwnerCancelling ? "le propriétaire" : "le visiteur") . ".\n\n";
+        $waMessage .= "🏠 *Bien:* {$listing->titre}\n";
+        $waMessage .= "📆 *Date prévue:* {$visitDate}\n";
+        $waMessage .= "🕐 *Heure prévue:* {$visitTime}\n";
+        $waMessage .= "👤 *Annulé par:* {$cancellerName}\n";
+        if ($motif) {
+            $waMessage .= "💬 *Motif:* {$motif}\n";
+        }
+        $waMessage .= "\n_Connectez-vous à l'application pour planifier une nouvelle visite._";
+
+        // Send WhatsApp notification
+        if ($recipientPhone) {
+            try {
+                $whatsApp = app(WhatsAppService::class);
+                $whatsApp->send($recipientPhone, $waMessage, 'visit_cancelled', [
+                    'visit_id' => $visit->id,
+                    'cancelled_by' => $cancelledBy->id,
+                ]);
+
+                \Log::info('[VISIT] WhatsApp cancellation notification sent', [
+                    'visit_id' => $visit->id,
+                    'recipient_phone' => $recipientPhone,
+                    'recipient_type' => $recipientType,
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('[VISIT] Failed to send WhatsApp cancellation notification', [
+                    'visit_id' => $visit->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // Send Expo Push notification to the recipient user
+        if ($recipient) {
+            try {
+                $pushService = app(ExpoPushService::class);
+
+                $pushTitle = 'Visite annulée';
+                $pushBody = "La visite de \"{$listing->titre}\" prévue le {$visitDate} à {$visitTime} a été annulée";
+                if ($motif) {
+                    $pushBody .= ". Motif: {$motif}";
+                }
+
+                $pushService->send(
+                    $recipient,
+                    $pushTitle,
+                    $pushBody,
+                    [
+                        'type' => 'visit_cancelled',
+                        'visit_id' => $visit->id,
+                        'listing_id' => $listing->id,
+                        'cancelled_by' => $cancelledBy->id,
+                    ],
+                    'visits'
+                );
+
+                \Log::info('[VISIT] Push cancellation notification sent', [
+                    'visit_id' => $visit->id,
+                    'recipient_id' => $recipient->id,
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('[VISIT] Failed to send push cancellation notification', [
+                    'visit_id' => $visit->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // Create in-app notification
+        if ($recipient) {
+            try {
+                AppNotification::notify(
+                    $recipient,
+                    AppNotification::TYPE_VISIT_CANCELLED,
+                    'Visite annulée',
+                    "La visite de \"{$listing->titre}\" prévue le {$visitDate} à {$visitTime} a été annulée par {$cancellerName}",
+                    [
+                        'visit_id' => $visit->id,
+                        'listing_id' => $listing->id,
+                        'cancelled_by' => $cancelledBy->id,
+                        'motif' => $motif,
+                    ],
+                    '/my-visits'
+                );
+            } catch (\Exception $e) {
+                \Log::error('[VISIT] Failed to create in-app notification', [
+                    'visit_id' => $visit->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
     }
 
     /**
