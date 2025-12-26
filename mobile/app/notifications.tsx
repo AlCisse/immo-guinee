@@ -229,15 +229,31 @@ export default function NotificationsScreen() {
       markAsReadMutation.mutate(notification.id);
     }
 
+    // Parse data if it's a string
+    let data = notification.data;
+    if (typeof data === 'string') {
+      try {
+        data = JSON.parse(data);
+      } catch {
+        data = {};
+      }
+    }
+
+    // Debug log
+    if (__DEV__) {
+      console.log('[Notification] Type:', notification.type, 'Data:', data);
+    }
+
     // Navigate based on action_url first (if provided)
     if (notification.action_url) {
       router.push(notification.action_url as any);
       return;
     }
 
-    // Navigate based on data fields
-    if (notification.data?.conversation_id) {
-      router.push(`/chat/${notification.data.conversation_id}` as any);
+    // Navigate based on data fields - check conversation_id first
+    const conversationId = data?.conversation_id;
+    if (conversationId) {
+      router.push(`/chat/${conversationId}` as any);
       return;
     }
 
@@ -246,8 +262,8 @@ export default function NotificationsScreen() {
       // Messages
       case 'new_message':
       case 'message_received':
-        if (notification.data?.conversation_id) {
-          router.push(`/chat/${notification.data.conversation_id}` as any);
+        if (data?.conversation_id) {
+          router.push(`/chat/${data.conversation_id}` as any);
         } else {
           router.push('/(tabs)/messages' as any);
         }
@@ -257,8 +273,8 @@ export default function NotificationsScreen() {
       case 'listing_created':
       case 'listing_approved':
       case 'listing_rejected':
-        if (notification.data?.listing_id) {
-          router.push(`/listing/${notification.data.listing_id}` as any);
+        if (data?.listing_id) {
+          router.push(`/listing/${data.listing_id}` as any);
         } else {
           router.push('/my-listings' as any);
         }
@@ -276,8 +292,8 @@ export default function NotificationsScreen() {
       case 'contract_created':
       case 'contract_signed':
       case 'contract_cancelled':
-        if (notification.data?.contract_id) {
-          router.push(`/contract/${notification.data.contract_id}` as any);
+        if (data?.contract_id) {
+          router.push(`/contract/${data.contract_id}` as any);
         } else {
           router.push('/my-contracts' as any);
         }
@@ -297,11 +313,11 @@ export default function NotificationsScreen() {
 
       // Fallback: use data fields
       default:
-        if (notification.data?.listing_id) {
-          router.push(`/listing/${notification.data.listing_id}` as any);
-        } else if (notification.data?.visit_id) {
+        if (data?.listing_id) {
+          router.push(`/listing/${data.listing_id}` as any);
+        } else if (data?.visit_id) {
           router.push('/my-visits' as any);
-        } else if (notification.data?.contract_id) {
+        } else if (data?.contract_id) {
           router.push('/my-contracts' as any);
         }
         // For system/welcome/test notifications, just mark as read (no navigation)
