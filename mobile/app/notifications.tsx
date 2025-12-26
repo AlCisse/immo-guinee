@@ -142,16 +142,66 @@ export default function NotificationsScreen() {
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
+      // Messages
       case 'new_message':
+      case 'message_received':
         return { name: 'chatbubble', color: Colors.success[500] };
-      case 'visit_reminder':
-        return { name: 'calendar', color: Colors.warning[500] };
-      case 'listing_update':
-        return { name: 'home', color: lightTheme.colors.primary };
-      case 'visit_cancelled':
-        return { name: 'close-circle', color: Colors.error[500] };
+
+      // Listings
+      case 'listing_created':
+      case 'listing_approved':
+        return { name: 'home', color: Colors.success[500] };
+      case 'listing_rejected':
+        return { name: 'home-outline', color: Colors.error[500] };
+
+      // Visits
+      case 'visit_requested':
+        return { name: 'calendar-outline', color: Colors.warning[500] };
       case 'visit_confirmed':
+        return { name: 'calendar', color: Colors.success[500] };
+      case 'visit_cancelled':
+        return { name: 'calendar-outline', color: Colors.error[500] };
+      case 'visit_reminder':
+        return { name: 'alarm', color: Colors.warning[500] };
+
+      // Contracts
+      case 'contract_created':
+        return { name: 'document-text-outline', color: lightTheme.colors.primary };
+      case 'contract_signed':
+        return { name: 'document-text', color: Colors.success[500] };
+      case 'contract_cancelled':
+        return { name: 'document-text-outline', color: Colors.error[500] };
+
+      // Payments
+      case 'payment_received':
+        return { name: 'card', color: Colors.success[500] };
+      case 'payment_reminder':
+        return { name: 'card-outline', color: Colors.warning[500] };
+
+      // Ratings
+      case 'rating_received':
+        return { name: 'star', color: Colors.warning[500] };
+
+      // Disputes
+      case 'dispute_opened':
+        return { name: 'warning', color: Colors.error[500] };
+      case 'dispute_resolved':
         return { name: 'checkmark-circle', color: Colors.success[500] };
+
+      // Certifications
+      case 'certification_approved':
+        return { name: 'shield-checkmark', color: Colors.success[500] };
+      case 'certification_rejected':
+        return { name: 'shield-outline', color: Colors.error[500] };
+
+      // System
+      case 'system':
+        return { name: 'information-circle', color: lightTheme.colors.primary };
+      case 'welcome':
+        return { name: 'person-add', color: lightTheme.colors.primary };
+      case 'test':
+        return { name: 'flask', color: Colors.warning[500] };
+
       default:
         return { name: 'notifications', color: Colors.neutral[500] };
     }
@@ -179,15 +229,83 @@ export default function NotificationsScreen() {
       markAsReadMutation.mutate(notification.id);
     }
 
-    // Navigate based on type or action_url
+    // Navigate based on action_url first (if provided)
     if (notification.action_url) {
       router.push(notification.action_url as any);
-    } else if (notification.data?.conversation_id) {
+      return;
+    }
+
+    // Navigate based on data fields
+    if (notification.data?.conversation_id) {
       router.push(`/chat/${notification.data.conversation_id}` as any);
-    } else if (notification.data?.listing_id) {
-      router.push(`/listing/${notification.data.listing_id}` as any);
-    } else if (notification.data?.visit_id) {
-      router.push('/my-visits' as any);
+      return;
+    }
+
+    // Navigate based on notification type
+    switch (notification.type) {
+      // Messages
+      case 'new_message':
+      case 'message_received':
+        if (notification.data?.conversation_id) {
+          router.push(`/chat/${notification.data.conversation_id}` as any);
+        } else {
+          router.push('/(tabs)/messages' as any);
+        }
+        break;
+
+      // Listings
+      case 'listing_created':
+      case 'listing_approved':
+      case 'listing_rejected':
+        if (notification.data?.listing_id) {
+          router.push(`/listing/${notification.data.listing_id}` as any);
+        } else {
+          router.push('/my-listings' as any);
+        }
+        break;
+
+      // Visits
+      case 'visit_requested':
+      case 'visit_confirmed':
+      case 'visit_cancelled':
+      case 'visit_reminder':
+        router.push('/my-visits' as any);
+        break;
+
+      // Contracts
+      case 'contract_created':
+      case 'contract_signed':
+      case 'contract_cancelled':
+        if (notification.data?.contract_id) {
+          router.push(`/contract/${notification.data.contract_id}` as any);
+        } else {
+          router.push('/my-contracts' as any);
+        }
+        break;
+
+      // Payments
+      case 'payment_received':
+      case 'payment_reminder':
+        router.push('/my-contracts' as any);
+        break;
+
+      // Certifications
+      case 'certification_approved':
+      case 'certification_rejected':
+        router.push('/settings' as any);
+        break;
+
+      // Fallback: use data fields
+      default:
+        if (notification.data?.listing_id) {
+          router.push(`/listing/${notification.data.listing_id}` as any);
+        } else if (notification.data?.visit_id) {
+          router.push('/my-visits' as any);
+        } else if (notification.data?.contract_id) {
+          router.push('/my-contracts' as any);
+        }
+        // For system/welcome/test notifications, just mark as read (no navigation)
+        break;
     }
   };
 
