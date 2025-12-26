@@ -215,7 +215,7 @@ export default function LegalScreen() {
 
         {/* Version */}
         <View style={styles.versionSection}>
-          <Text style={styles.versionText}>Version 1.0 - 26 decembre 2025</Text>
+          <Text style={styles.versionText}>Version 1.1 - 27 decembre 2025</Text>
           <Text style={styles.versionText}>Conforme aux lois guineennes et RGPD</Text>
         </View>
       </ScrollView>

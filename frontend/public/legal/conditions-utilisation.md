@@ -2,7 +2,7 @@
 
 **ImmoGuinee - Plateforme Immobiliere**
 
-*Derniere mise a jour : 26 decembre 2025*
+*Derniere mise a jour : 27 decembre 2025*
 
 ---
 
@@ -193,7 +193,7 @@ Ces mesures visent a proteger les Utilisateurs contre les arnaques.
 ### 6.4 Conservation des messages
 
 - Les messages texte sont conserves tant que le compte est actif
-- Les medias chiffres expirent automatiquement apres 5 jours sur le serveur
+- Les medias chiffres expirent automatiquement apres 7 jours sur le serveur
 - Les Utilisateurs peuvent supprimer leurs messages
 
 ---
@@ -441,6 +441,6 @@ Pour toute question relative aux presentes CGU :
 
 ---
 
-*Ces Conditions Generales d'Utilisation entrent en vigueur a compter du 26 decembre 2025.*
+*Ces Conditions Generales d'Utilisation entrent en vigueur a compter du 27 decembre 2025.*
 
-**Version 1.0**
+**Version 1.1**

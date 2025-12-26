@@ -2,7 +2,7 @@
 
 **ImmoGuinee - Protection de vos donnees personnelles**
 
-*Derniere mise a jour : 26 decembre 2025*
+*Derniere mise a jour : 27 decembre 2025*
 
 ---
 
@@ -86,8 +86,8 @@ Ces documents sont :
 | Donnee | Finalite | Conservation |
 |--------|----------|--------------|
 | Messages texte | Service de messagerie | Duree du compte |
-| Messages vocaux (E2E) | Communication | 5 jours sur serveur, permanent sur appareil |
-| Photos/Videos (E2E) | Partage de medias | 5 jours sur serveur, permanent sur appareil |
+| Messages vocaux (E2E) | Communication | 7 jours sur serveur, permanent sur appareil |
+| Photos/Videos (E2E) | Partage de medias | 7 jours sur serveur, permanent sur appareil |
 
 ### 2.7 Donnees de localisation
 
@@ -183,7 +183,7 @@ Pour les medias (photos, videos, messages vocaux) :
 - Les cles de chiffrement sont generees sur votre appareil
 - Les cles ne sont **jamais stockees sur nos serveurs**
 - Seuls vous et le destinataire pouvez dechiffrer le contenu
-- Les medias chiffres sont stockes temporairement (5 jours) sur le serveur
+- Les medias chiffres sont stockes temporairement (7 jours) sur le serveur
 - Apres telechargement, les medias sont supprimes du serveur
 
 ---
@@ -257,7 +257,7 @@ Pour les transferts hors de Guinee :
 | Annonces | Duree de publication + 1 an | Historique |
 | Contrats | 10 ans | Obligation legale |
 | Messages texte | Duree du compte | Service |
-| Medias chiffres (serveur) | 5 jours | Temporaire |
+| Medias chiffres (serveur) | 7 jours | Temporaire |
 | Medias chiffres (appareil) | Choix utilisateur | Controle utilisateur |
 | Logs de securite | 12 mois | Securite |
 | Donnees de paiement | 10 ans | Obligation fiscale |
@@ -267,7 +267,7 @@ Pour les transferts hors de Guinee :
 
 - **OTP** : Expire apres 5 minutes
 - **Sessions** : Expire apres 2 heures d'inactivite
-- **Medias E2E** : Supprimes du serveur apres 5 jours
+- **Medias E2E** : Supprimes du serveur apres 7 jours
 - **Contrats expires** : Supprimes apres 10 ans
 
 ### 7.3 Suppression sur demande
@@ -467,6 +467,7 @@ La date de derniere mise a jour est indiquee en haut de ce document.
 | Version | Date | Description |
 |---------|------|-------------|
 | 1.0 | 26/12/2025 | Version initiale |
+| 1.1 | 27/12/2025 | Harmonisation duree stockage medias E2E (7 jours) |
 
 ---
 
@@ -500,9 +501,9 @@ Vous pouvez contacter l'autorite de protection des donnees de votre pays de resi
 
 ---
 
-*Cette Politique de Confidentialite entre en vigueur le 26 decembre 2025.*
+*Cette Politique de Confidentialite entre en vigueur le 27 decembre 2025.*
 
-**Version 1.0**
+**Version 1.1**
 
 ---
 
