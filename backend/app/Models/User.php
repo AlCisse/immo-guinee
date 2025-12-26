@@ -82,6 +82,10 @@ class User extends Authenticatable implements MustVerifyEmail
         'is_online',
         'last_seen_at',
         'push_tokens',
+        // CGU acceptance
+        'cgu_accepted_at',
+        'cgu_version',
+        'cgu_accepted_ip',
     ];
 
     /**
@@ -117,6 +121,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'is_active' => 'boolean',
             'is_suspended' => 'boolean',
             'is_online' => 'boolean',
+            'cgu_accepted_at' => 'datetime',
             'total_transactions' => 'integer',
             'total_disputes' => 'integer',
             'disputes_resolved' => 'integer',

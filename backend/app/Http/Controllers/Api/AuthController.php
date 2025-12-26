@@ -173,6 +173,10 @@ class AuthController extends Controller
                         'adresse' => $request->adresse,
                         'telephone_verified_at' => null, // Reset verification
                         'is_active' => false, // Reset to inactive until OTP verified
+                        // CGU re-acceptance on re-registration
+                        'cgu_accepted_at' => now(),
+                        'cgu_version' => '1.0',
+                        'cgu_accepted_ip' => $request->ip(),
                     ]);
 
                     // Generate and send OTP
@@ -250,6 +254,10 @@ class AuthController extends Controller
                 'adresse' => $request->adresse,
                 'badge' => 'BRONZE',
                 'is_active' => false, // Inactive until OTP verified
+                // CGU acceptance tracking
+                'cgu_accepted_at' => now(),
+                'cgu_version' => '1.0',
+                'cgu_accepted_ip' => $request->ip(),
             ]);
 
             // Generate and send OTP

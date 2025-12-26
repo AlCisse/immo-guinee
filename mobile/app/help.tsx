@@ -41,11 +41,15 @@ export default function HelpScreen() {
   };
 
   const handleWhatsApp = () => {
-    Linking.openURL('https://wa.me/224620000000');
+    Linking.openURL('https://wa.me/224613354420');
   };
 
   const handleWebsite = () => {
     Linking.openURL('https://immoguinee.com/aide');
+  };
+
+  const handleLegal = () => {
+    router.push('/legal');
   };
 
   return (
@@ -85,17 +89,27 @@ export default function HelpScreen() {
               </View>
               <View style={styles.contactContent}>
                 <Text style={styles.contactLabel}>WhatsApp</Text>
-                <Text style={styles.contactValue}>+224 620 00 00 00</Text>
+                <Text style={styles.contactValue}>+224 613 354 420</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={Colors.neutral[300]} />
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.contactItem, styles.contactItemLast]} onPress={handleWebsite}>
+            <TouchableOpacity style={styles.contactItem} onPress={handleWebsite}>
               <View style={styles.contactIcon}>
                 <Ionicons name="globe-outline" size={24} color={lightTheme.colors.primary} />
               </View>
               <View style={styles.contactContent}>
                 <Text style={styles.contactLabel}>Site web</Text>
                 <Text style={styles.contactValue}>immoguinee.com/aide</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={Colors.neutral[300]} />
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.contactItem, styles.contactItemLast]} onPress={handleLegal}>
+              <View style={[styles.contactIcon, { backgroundColor: '#E0F2FE' }]}>
+                <Ionicons name="shield-checkmark-outline" size={24} color="#0284C7" />
+              </View>
+              <View style={styles.contactContent}>
+                <Text style={styles.contactLabel}>Informations legales</Text>
+                <Text style={styles.contactValue}>CGU et confidentialite</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={Colors.neutral[300]} />
             </TouchableOpacity>
@@ -128,7 +142,7 @@ export default function HelpScreen() {
         <View style={styles.appInfo}>
           <Text style={styles.appName}>ImmoGuinee</Text>
           <Text style={styles.appVersion}>Version 1.0.0</Text>
-          <Text style={styles.appCopyright}>2024 ImmoGuinee. Tous droits reserves.</Text>
+          <Text style={styles.appCopyright}>2025 ImmoGuinee. Tous droits reserves.</Text>
         </View>
       </ScrollView>
     </>

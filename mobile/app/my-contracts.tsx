@@ -12,6 +12,8 @@ import {
   ScrollView,
   Alert,
   Platform,
+  TextInput,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -31,6 +33,10 @@ interface Contract {
   date_fin?: string;
   montant_loyer?: number;
   montant_caution?: number;
+  bailleur_id?: string;
+  locataire_id?: string;
+  bailleur_signed_at?: string;
+  locataire_signed_at?: string;
   listing?: {
     id: string;
     titre: string;
@@ -40,20 +46,30 @@ interface Contract {
     photo_principale?: string;
   };
   locataire?: {
+    id?: string;
     nom_complet: string;
   };
   proprietaire?: {
+    id?: string;
     nom_complet: string;
   };
 }
 
 export default function MyContractsScreen() {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  // Signature state
+  const [showSignatureModal, setShowSignatureModal] = useState(false);
+  const [signatureContract, setSignatureContract] = useState<Contract | null>(null);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [signingLoading, setSigningLoading] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
 
   const openDetails = (contract: Contract) => {
     setSelectedContract(contract);
@@ -63,6 +79,91 @@ export default function MyContractsScreen() {
   const closeDetails = () => {
     setShowDetailsModal(false);
     setSelectedContract(null);
+  };
+
+  // Check if current user needs to sign
+  const userNeedsToSign = (contract: Contract): boolean => {
+    if (!user) return false;
+    const userId = user.id;
+    const isBailleur = contract.bailleur_id === userId;
+    const isLocataire = contract.locataire_id === userId;
+
+    if (isBailleur && !contract.bailleur_signed_at) return true;
+    if (isLocataire && !contract.locataire_signed_at) return true;
+    return false;
+  };
+
+  // Check if user has already signed
+  const userHasSigned = (contract: Contract): boolean => {
+    if (!user) return false;
+    const userId = user.id;
+    const isBailleur = contract.bailleur_id === userId;
+    const isLocataire = contract.locataire_id === userId;
+
+    if (isBailleur && contract.bailleur_signed_at) return true;
+    if (isLocataire && contract.locataire_signed_at) return true;
+    return false;
+  };
+
+  // Open signature modal
+  const openSignatureModal = (contract: Contract) => {
+    setSignatureContract(contract);
+    setOtpCode('');
+    setOtpSent(false);
+    setShowSignatureModal(true);
+  };
+
+  // Close signature modal
+  const closeSignatureModal = () => {
+    setShowSignatureModal(false);
+    setSignatureContract(null);
+    setOtpCode('');
+    setOtpSent(false);
+  };
+
+  // Request OTP for signature
+  const requestSignatureOtp = async () => {
+    if (!signatureContract || otpLoading) return;
+
+    setOtpLoading(true);
+    try {
+      await api.contracts.requestSignatureOtp(signatureContract.id);
+      setOtpSent(true);
+      Alert.alert('Code envoye', 'Un code OTP a ete envoye par SMS a votre numero de telephone.');
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Erreur lors de l\'envoi du code OTP';
+      Alert.alert('Erreur', message);
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  // Sign contract with OTP
+  const signContract = async () => {
+    if (!signatureContract || !otpCode || signingLoading) return;
+
+    if (otpCode.length !== 6) {
+      Alert.alert('Erreur', 'Le code OTP doit contenir 6 chiffres');
+      return;
+    }
+
+    setSigningLoading(true);
+    try {
+      await api.contracts.sign(signatureContract.id, otpCode);
+      Alert.alert(
+        'Contrat signe',
+        'Votre signature a ete enregistree avec succes.',
+        [{ text: 'OK', onPress: () => {
+          closeSignatureModal();
+          refetch();
+        }}]
+      );
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Erreur lors de la signature';
+      Alert.alert('Erreur', message);
+    } finally {
+      setSigningLoading(false);
+    }
   };
 
   // Download contract PDF
@@ -96,7 +197,18 @@ export default function MyContractsScreen() {
       );
 
       if (downloadResult.status !== 200) {
-        throw new Error(`Erreur de telechargement: ${downloadResult.status}`);
+        // Try to read error message from response
+        let errorMessage = `Erreur de telechargement: ${downloadResult.status}`;
+        try {
+          const errorContent = await FileSystem.readAsStringAsync(downloadResult.uri);
+          const errorJson = JSON.parse(errorContent);
+          if (errorJson.message) {
+            errorMessage = errorJson.message;
+          }
+        } catch {
+          // Ignore parsing errors
+        }
+        throw new Error(errorMessage);
       }
 
       // Check if sharing is available
@@ -315,6 +427,25 @@ export default function MyContractsScreen() {
               <View style={styles.progressBar}>
                 <View style={[styles.progressFill, { width: `${progress}%` }]} />
               </View>
+            </View>
+          )}
+
+          {/* Signature button - show if user needs to sign */}
+          {userNeedsToSign(item) && (
+            <TouchableOpacity
+              style={styles.signatureButton}
+              onPress={() => openSignatureModal(item)}
+            >
+              <Ionicons name="create-outline" size={20} color="#fff" />
+              <Text style={styles.signatureButtonText}>Signer le contrat</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Show signed badge if user has signed */}
+          {userHasSigned(item) && !userNeedsToSign(item) && (
+            <View style={styles.signedBadge}>
+              <Ionicons name="checkmark-circle" size={18} color={Colors.success[600]} />
+              <Text style={styles.signedBadgeText}>Vous avez signe ce contrat</Text>
             </View>
           )}
 
@@ -608,6 +739,163 @@ export default function MyContractsScreen() {
             </ScrollView>
           )}
         </View>
+      </Modal>
+
+      {/* Signature Modal */}
+      <Modal
+        visible={showSignatureModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={closeSignatureModal}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalContainer}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={closeSignatureModal}>
+              <Ionicons name="close" size={28} color={Colors.secondary[800]} />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Signer le contrat</Text>
+            <View style={{ width: 28 }} />
+          </View>
+
+          <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+            {signatureContract && (
+              <>
+                {/* Contract Info */}
+                <View style={styles.signatureInfo}>
+                  <View style={styles.signatureIconContainer}>
+                    <Ionicons name="document-text" size={48} color={lightTheme.colors.primary} />
+                  </View>
+                  <Text style={styles.signatureContractNumber}>
+                    Contrat N° {signatureContract.numero_contrat || signatureContract.id.slice(0, 8)}
+                  </Text>
+                  {signatureContract.listing && (
+                    <Text style={styles.signaturePropertyTitle}>
+                      {signatureContract.listing.titre}
+                    </Text>
+                  )}
+                </View>
+
+                {/* Signature Status */}
+                <View style={styles.signatureStatusSection}>
+                  <Text style={styles.sectionLabel}>Etat des signatures</Text>
+                  <View style={styles.signatureStatusCard}>
+                    <View style={styles.signatureStatusRow}>
+                      <Text style={styles.signatureStatusLabel}>Proprietaire</Text>
+                      {signatureContract.bailleur_signed_at ? (
+                        <View style={styles.signedIndicator}>
+                          <Ionicons name="checkmark-circle" size={20} color={Colors.success[600]} />
+                          <Text style={styles.signedText}>Signe</Text>
+                        </View>
+                      ) : (
+                        <View style={styles.pendingIndicator}>
+                          <Ionicons name="time-outline" size={20} color={Colors.warning[500]} />
+                          <Text style={styles.pendingText}>En attente</Text>
+                        </View>
+                      )}
+                    </View>
+                    <View style={styles.signatureStatusDivider} />
+                    <View style={styles.signatureStatusRow}>
+                      <Text style={styles.signatureStatusLabel}>Locataire</Text>
+                      {signatureContract.locataire_signed_at ? (
+                        <View style={styles.signedIndicator}>
+                          <Ionicons name="checkmark-circle" size={20} color={Colors.success[600]} />
+                          <Text style={styles.signedText}>Signe</Text>
+                        </View>
+                      ) : (
+                        <View style={styles.pendingIndicator}>
+                          <Ionicons name="time-outline" size={20} color={Colors.warning[500]} />
+                          <Text style={styles.pendingText}>En attente</Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                </View>
+
+                {/* OTP Section */}
+                <View style={styles.otpSection}>
+                  <Text style={styles.sectionLabel}>Verification par SMS</Text>
+                  <Text style={styles.otpDescription}>
+                    Pour signer ce contrat, vous devez verifier votre identite avec un code OTP envoye par SMS.
+                  </Text>
+
+                  {!otpSent ? (
+                    <TouchableOpacity
+                      style={[styles.requestOtpButton, otpLoading && styles.buttonDisabled]}
+                      onPress={requestSignatureOtp}
+                      disabled={otpLoading}
+                    >
+                      {otpLoading ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                      ) : (
+                        <>
+                          <Ionicons name="send-outline" size={20} color="#fff" />
+                          <Text style={styles.requestOtpButtonText}>Recevoir le code OTP</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  ) : (
+                    <>
+                      <View style={styles.otpInputContainer}>
+                        <Text style={styles.otpInputLabel}>Entrez le code a 6 chiffres</Text>
+                        <TextInput
+                          style={styles.otpInput}
+                          value={otpCode}
+                          onChangeText={setOtpCode}
+                          placeholder="000000"
+                          placeholderTextColor={Colors.neutral[400]}
+                          keyboardType="number-pad"
+                          maxLength={6}
+                          textAlign="center"
+                        />
+                      </View>
+
+                      <TouchableOpacity
+                        style={styles.resendOtpButton}
+                        onPress={requestSignatureOtp}
+                        disabled={otpLoading}
+                      >
+                        <Ionicons name="refresh-outline" size={16} color={lightTheme.colors.primary} />
+                        <Text style={styles.resendOtpText}>Renvoyer le code</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[
+                          styles.signButton,
+                          (signingLoading || otpCode.length !== 6) && styles.buttonDisabled,
+                        ]}
+                        onPress={signContract}
+                        disabled={signingLoading || otpCode.length !== 6}
+                      >
+                        {signingLoading ? (
+                          <ActivityIndicator size="small" color="#fff" />
+                        ) : (
+                          <>
+                            <Ionicons name="checkmark-circle-outline" size={22} color="#fff" />
+                            <Text style={styles.signButtonText}>Signer le contrat</Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+                    </>
+                  )}
+                </View>
+
+                {/* Legal Notice */}
+                <View style={styles.legalNotice}>
+                  <Ionicons name="information-circle-outline" size={20} color={Colors.neutral[500]} />
+                  <Text style={styles.legalNoticeText}>
+                    En signant ce contrat, vous acceptez toutes les conditions mentionnees dans le document.
+                    Cette signature electronique a valeur legale.
+                  </Text>
+                </View>
+
+                <View style={{ height: 40 }} />
+              </>
+            )}
+          </ScrollView>
+        </KeyboardAvoidingView>
       </Modal>
     </>
   );
@@ -1099,5 +1387,208 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: '#fff',
+  },
+  // Signature button on card
+  signatureButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: Colors.success[600],
+    paddingVertical: 14,
+    borderRadius: 12,
+    marginTop: 12,
+  },
+  signatureButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  signedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: Colors.success[50],
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    marginTop: 12,
+  },
+  signedBadgeText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.success[700],
+  },
+  // Signature modal styles
+  signatureInfo: {
+    alignItems: 'center',
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border.light,
+  },
+  signatureIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: lightTheme.colors.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  signatureContractNumber: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.secondary[800],
+    marginBottom: 4,
+  },
+  signaturePropertyTitle: {
+    fontSize: 14,
+    color: Colors.neutral[600],
+    textAlign: 'center',
+  },
+  signatureStatusSection: {
+    padding: 16,
+  },
+  sectionLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.neutral[500],
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 12,
+  },
+  signatureStatusCard: {
+    backgroundColor: Colors.background.secondary,
+    borderRadius: 14,
+    padding: 16,
+  },
+  signatureStatusRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  signatureStatusLabel: {
+    fontSize: 15,
+    color: Colors.secondary[700],
+  },
+  signatureStatusDivider: {
+    height: 1,
+    backgroundColor: Colors.border.light,
+    marginVertical: 12,
+  },
+  signedIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  signedText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.success[600],
+  },
+  pendingIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  pendingText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.warning[600],
+  },
+  otpSection: {
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border.light,
+  },
+  otpDescription: {
+    fontSize: 14,
+    color: Colors.neutral[600],
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  requestOtpButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: lightTheme.colors.primary,
+    paddingVertical: 16,
+    borderRadius: 14,
+  },
+  requestOtpButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  otpInputContainer: {
+    marginBottom: 16,
+  },
+  otpInputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.secondary[700],
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  otpInput: {
+    backgroundColor: Colors.background.secondary,
+    borderRadius: 14,
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    fontSize: 28,
+    fontWeight: '700',
+    color: Colors.secondary[800],
+    letterSpacing: 8,
+    borderWidth: 2,
+    borderColor: lightTheme.colors.primary + '30',
+  },
+  resendOtpButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    marginBottom: 16,
+  },
+  resendOtpText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: lightTheme.colors.primary,
+  },
+  signButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: Colors.success[600],
+    paddingVertical: 18,
+    borderRadius: 14,
+  },
+  signButtonText: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  legalNotice: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    padding: 16,
+    marginHorizontal: 16,
+    backgroundColor: Colors.neutral[50],
+    borderRadius: 12,
+    marginTop: 8,
+  },
+  legalNoticeText: {
+    flex: 1,
+    fontSize: 12,
+    color: Colors.neutral[600],
+    lineHeight: 18,
   },
 });

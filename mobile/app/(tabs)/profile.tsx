@@ -113,7 +113,11 @@ export default function ProfileScreen() {
                   </Text>
                 </View>
               )}
-              <TouchableOpacity style={styles.editAvatarBtn} activeOpacity={0.8}>
+              <TouchableOpacity
+                style={styles.editAvatarBtn}
+                activeOpacity={0.8}
+                onPress={() => router.push('/edit-profile')}
+              >
                 <Ionicons name="camera" size={16} color="#fff" />
               </TouchableOpacity>
             </View>

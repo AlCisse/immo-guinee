@@ -72,14 +72,14 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Compte</Text>
           <View style={styles.card}>
-            <TouchableOpacity style={styles.menuItem}>
+            <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/edit-profile')}>
               <View style={styles.menuItemIcon}>
                 <Ionicons name="person-outline" size={20} color={lightTheme.colors.primary} />
               </View>
               <Text style={styles.menuItemLabel}>Modifier le profil</Text>
               <Ionicons name="chevron-forward" size={20} color={Colors.neutral[300]} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem}>
+            <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/change-password')}>
               <View style={styles.menuItemIcon}>
                 <Ionicons name="lock-closed-outline" size={20} color={lightTheme.colors.primary} />
               </View>
@@ -135,18 +135,18 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>A propos</Text>
           <View style={styles.card}>
-            <TouchableOpacity style={styles.menuItem}>
+            <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/legal')}>
               <View style={styles.menuItemIcon}>
                 <Ionicons name="document-text-outline" size={20} color={lightTheme.colors.primary} />
               </View>
-              <Text style={styles.menuItemLabel}>Conditions d'utilisation</Text>
+              <Text style={styles.menuItemLabel}>Informations legales</Text>
               <Ionicons name="chevron-forward" size={20} color={Colors.neutral[300]} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem}>
+            <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/help')}>
               <View style={styles.menuItemIcon}>
-                <Ionicons name="shield-checkmark-outline" size={20} color={lightTheme.colors.primary} />
+                <Ionicons name="help-circle-outline" size={20} color={lightTheme.colors.primary} />
               </View>
-              <Text style={styles.menuItemLabel}>Politique de confidentialite</Text>
+              <Text style={styles.menuItemLabel}>Aide et support</Text>
               <Ionicons name="chevron-forward" size={20} color={Colors.neutral[300]} />
             </TouchableOpacity>
             <View style={[styles.menuItem, styles.menuItemLast]}>

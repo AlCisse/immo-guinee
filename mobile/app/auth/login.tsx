@@ -12,7 +12,7 @@ import {
   Alert,
   useWindowDimensions,
 } from 'react-native';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/lib/auth/AuthContext';
@@ -21,6 +21,7 @@ import Logo from '@/components/Logo';
 import PhoneInput, { Country } from '@/components/PhoneInput';
 
 export default function LoginScreen() {
+  const router = useRouter();
   const { login } = useAuth();
   const { width } = useWindowDimensions();
   const [telephone, setTelephone] = useState('');
@@ -111,8 +112,11 @@ export default function LoginScreen() {
                 </View>
               </View>
 
-              <TouchableOpacity style={styles.forgotPassword}>
-                <Text style={styles.forgotPasswordText}>Mot de passe oublié ?</Text>
+              <TouchableOpacity
+                style={styles.forgotPassword}
+                onPress={() => router.push('/auth/forgot-password')}
+              >
+                <Text style={styles.forgotPasswordText}>Mot de passe oublie ?</Text>
               </TouchableOpacity>
 
               <TouchableOpacity

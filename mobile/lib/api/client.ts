@@ -347,6 +347,17 @@ export const api = {
     // Get download URL for contract PDF
     getDownloadUrl: (id: string) =>
       `${API_URL}/contracts/${id}/download`,
+
+    // Signature endpoints
+    requestSignatureOtp: (id: string) =>
+      apiClient.post(`/contracts/${id}/sign/request-otp`),
+
+    sign: (id: string, otp: string) =>
+      apiClient.post(`/contracts/${id}/sign`, { otp }),
+
+    // Get signature certificate
+    getSignatureCertificate: (id: string) =>
+      apiClient.get(`/contracts/${id}/signature-certificate`),
   },
 
   // Health check

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth/AuthContext';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Eye, EyeOff, Lock, User, Building2, Loader2, ChevronDown, ArrowRight, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Lock, User, Building2, Loader2, ChevronDown, ArrowRight, AlertCircle, Check } from 'lucide-react';
 import { ROUTES } from '@/lib/routes';
 import { inputStyles } from '@/lib/utils';
 import PhoneInput from '@/components/ui/PhoneInput';
@@ -28,6 +28,7 @@ export default function RegisterPage() {
     nom_complet: '',
     type_compte: 'PARTICULIER' as 'PARTICULIER' | 'AGENCE' | 'PROMOTEUR',
   });
+  const [acceptedCGU, setAcceptedCGU] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -49,6 +50,11 @@ export default function RegisterPage() {
 
     if (formData.mot_de_passe.length < 8) {
       setError('Le mot de passe doit contenir au moins 8 caractères');
+      return;
+    }
+
+    if (!acceptedCGU) {
+      setError('Veuillez accepter les conditions générales d\'utilisation et la politique de confidentialité');
       return;
     }
 
@@ -333,11 +339,44 @@ export default function RegisterPage() {
                 </div>
               </div>
 
+              {/* CGU Acceptance */}
+              <div className="flex items-start gap-3 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setAcceptedCGU(!acceptedCGU)}
+                  className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                    acceptedCGU
+                      ? 'bg-primary-500 border-primary-500'
+                      : 'border-neutral-300 dark:border-neutral-600 hover:border-primary-400'
+                  }`}
+                >
+                  {acceptedCGU && <Check className="w-3 h-3 text-white" />}
+                </button>
+                <label className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                  J'accepte les{' '}
+                  <Link
+                    href="/legal/conditions-utilisation"
+                    target="_blank"
+                    className="text-primary-500 hover:text-primary-600 font-medium hover:underline"
+                  >
+                    Conditions Générales d'Utilisation
+                  </Link>{' '}
+                  et la{' '}
+                  <Link
+                    href="/legal/politique-confidentialite"
+                    target="_blank"
+                    className="text-primary-500 hover:text-primary-600 font-medium hover:underline"
+                  >
+                    Politique de Confidentialité
+                  </Link>
+                </label>
+              </div>
+
               {/* Submit */}
               <button
                 type="submit"
-                disabled={isLoading}
-                className="w-full py-2.5 sm:py-3.5 bg-primary-500 hover:bg-primary-600 disabled:bg-primary-300 text-white text-sm sm:text-base font-semibold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary-500/25 mt-4 sm:mt-6"
+                disabled={isLoading || !acceptedCGU}
+                className="w-full py-2.5 sm:py-3.5 bg-primary-500 hover:bg-primary-600 disabled:bg-primary-300 disabled:cursor-not-allowed text-white text-sm sm:text-base font-semibold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary-500/25 mt-4 sm:mt-6"
               >
                 {isLoading ? (
                   <>
@@ -364,12 +403,8 @@ export default function RegisterPage() {
 
           {/* Terms */}
           <p className="mt-4 sm:mt-6 text-[10px] sm:text-xs text-center text-neutral-500 px-2">
-            En vous inscrivant, vous acceptez nos{' '}
-            <Link href="/conditions" className="text-primary-500 hover:underline">
-              Conditions
-            </Link>{' '}
-            et{' '}
-            <Link href="/confidentialite" className="text-primary-500 hover:underline">
+            Vos donnees sont protegees conformement a notre{' '}
+            <Link href="/legal/politique-confidentialite" className="text-primary-500 hover:underline">
               Politique de confidentialité
             </Link>
           </p>

@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Alert,
   useWindowDimensions,
+  Linking,
 } from 'react-native';
 import { Link } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -39,6 +40,7 @@ export default function RegisterScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<Country>({ code: 'GN', name: 'Guinee', dialCode: '+224', flag: '🇬🇳' });
+  const [acceptedCGU, setAcceptedCGU] = useState(false);
 
   const isTablet = width >= 768;
   const maxWidth = isTablet ? 440 : width;
@@ -56,6 +58,11 @@ export default function RegisterScreen() {
 
     if (password.length < 8) {
       Alert.alert('Erreur', 'Le mot de passe doit contenir au moins 8 caractères');
+      return;
+    }
+
+    if (!acceptedCGU) {
+      Alert.alert('Conditions requises', 'Veuillez accepter les conditions generales d\'utilisation et la politique de confidentialite pour continuer.');
       return;
     }
 
@@ -205,10 +212,44 @@ export default function RegisterScreen() {
                 </View>
               </View>
 
+              {/* CGU Acceptance */}
+              <View style={styles.cguContainer}>
+                <TouchableOpacity
+                  style={styles.cguCheckbox}
+                  onPress={() => setAcceptedCGU(!acceptedCGU)}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.checkbox, acceptedCGU && styles.checkboxChecked]}>
+                    {acceptedCGU && (
+                      <Ionicons name="checkmark" size={14} color="#fff" />
+                    )}
+                  </View>
+                </TouchableOpacity>
+                <View style={styles.cguTextContainer}>
+                  <Text style={styles.cguText}>
+                    J'accepte les{' '}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => Linking.openURL('https://immoguinee.com/legal/conditions-utilisation')}
+                  >
+                    <Text style={styles.cguLink}>Conditions Generales</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.cguText}> et la </Text>
+                  <TouchableOpacity
+                    onPress={() => Linking.openURL('https://immoguinee.com/legal/politique-confidentialite')}
+                  >
+                    <Text style={styles.cguLink}>Politique de Confidentialite</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
               <TouchableOpacity
-                style={[styles.registerButton, isLoading && styles.registerButtonDisabled]}
+                style={[
+                  styles.registerButton,
+                  (isLoading || !acceptedCGU) && styles.registerButtonDisabled
+                ]}
                 onPress={handleRegister}
-                disabled={isLoading}
+                disabled={isLoading || !acceptedCGU}
                 activeOpacity={0.8}
               >
                 {isLoading ? (
@@ -379,5 +420,46 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: lightTheme.colors.primary,
     fontWeight: '700',
+  },
+  cguContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    marginTop: 8,
+    paddingHorizontal: 4,
+  },
+  cguCheckbox: {
+    marginTop: 2,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: Colors.border.medium,
+    backgroundColor: Colors.neutral[50],
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: lightTheme.colors.primary,
+    borderColor: lightTheme.colors.primary,
+  },
+  cguTextContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+  },
+  cguText: {
+    fontSize: 13,
+    color: Colors.neutral[600],
+    lineHeight: 20,
+  },
+  cguLink: {
+    fontSize: 13,
+    color: lightTheme.colors.primary,
+    fontWeight: '600',
+    lineHeight: 20,
   },
 });
