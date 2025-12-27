@@ -70,9 +70,23 @@ class StoreListingRequest extends FormRequest
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'photos' => ['nullable', 'array', 'max:10'],
-            'photos.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            // Accept common image formats including iPhone HEIC/HEIF
+            'photos.*' => ['image', 'mimes:jpg,jpeg,png,webp,heic,heif,gif', 'max:10240'],
             'disponible_a_partir_de' => ['nullable', 'date', 'after_or_equal:today'],
         ];
+    }
+
+    /**
+     * Handle a failed validation attempt.
+     */
+    protected function failedValidation(\Illuminate\Contracts\Validation\Validator $validator): void
+    {
+        Log::warning('Listing creation validation failed', [
+            'errors' => $validator->errors()->toArray(),
+            'user_id' => $this->user()?->id,
+        ]);
+
+        parent::failedValidation($validator);
     }
 
     /**
@@ -102,8 +116,8 @@ class StoreListingRequest extends FormRequest
             'quartier.required' => 'Le quartier est obligatoire',
             'photos.max' => 'Vous ne pouvez pas télécharger plus de 10 photos',
             'photos.*.image' => 'Chaque fichier doit être une image',
-            'photos.*.mimes' => 'Les images doivent être au format JPG, JPEG, PNG ou WebP',
-            'photos.*.max' => 'Chaque image ne peut pas dépasser 5 Mo',
+            'photos.*.mimes' => 'Les images doivent être au format JPG, JPEG, PNG, WebP, HEIC ou GIF',
+            'photos.*.max' => 'Chaque image ne peut pas dépasser 10 Mo',
             'disponible_a_partir_de.after_or_equal' => 'La date de disponibilité doit être aujourd\'hui ou dans le futur',
         ];
     }
