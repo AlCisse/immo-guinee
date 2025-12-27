@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\VisitController;
 use App\Http\Controllers\Api\ModeratorController;
 use App\Http\Controllers\Api\AiController;
+use App\Http\Controllers\Api\ConfigController;
 
 /*
 |--------------------------------------------------------------------------
@@ -37,6 +38,11 @@ Route::get('/health', function () {
 Route::post('/broadcasting/auth', function (Request $request) {
     return \Illuminate\Support\Facades\Broadcast::auth($request);
 })->middleware('auth:api');
+
+// App configuration endpoints (authenticated - to protect sensitive config)
+Route::prefix('config')->middleware('auth:api')->group(function () {
+    Route::get('/websocket', [ConfigController::class, 'websocket']);
+});
 
 // Contact form (public) - rate limited to prevent spam
 Route::post('/contact', [\App\Http\Controllers\Api\ContactController::class, 'store'])

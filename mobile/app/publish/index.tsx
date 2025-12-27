@@ -933,6 +933,8 @@ export default function PublishScreen() {
           title: t('publish.title'),
           headerTitle: t('publish.title'),
           headerBackVisible: false,
+          headerBackTitle: '',
+          headerBackTitleVisible: false,
           headerStyle: { backgroundColor: Colors.background.primary },
           headerTitleStyle: { fontSize: 18, fontWeight: '600' },
           headerShadowVisible: true,
@@ -948,41 +950,6 @@ export default function PublishScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.container}
       >
-        {/* Progress Steps */}
-        <View style={styles.progressContainer}>
-          {STEPS.map((step, index) => (
-            <View key={step.id} style={styles.stepIndicator}>
-              <View style={[
-                styles.stepCircle,
-                currentStep >= step.id && styles.stepCircleActive,
-                currentStep > step.id && styles.stepCircleCompleted,
-              ]}>
-                {currentStep > step.id ? (
-                  <Ionicons name="checkmark" size={16} color="#fff" />
-                ) : (
-                  <Ionicons
-                    name={step.icon as any}
-                    size={16}
-                    color={currentStep >= step.id ? '#fff' : Colors.neutral[400]}
-                  />
-                )}
-              </View>
-              <Text style={[
-                styles.stepLabel,
-                currentStep >= step.id && styles.stepLabelActive,
-              ]}>
-                {step.label}
-              </Text>
-              {index < STEPS.length - 1 && (
-                <View style={[
-                  styles.stepLine,
-                  currentStep > step.id && styles.stepLineActive,
-                ]} />
-              )}
-            </View>
-          ))}
-        </View>
-
         <ScrollView
           ref={scrollRef}
           style={styles.scrollView}
@@ -1102,54 +1069,6 @@ const styles = StyleSheet.create({
   headerButton: {
     padding: 8,
     marginLeft: -8,
-  },
-  progressContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    backgroundColor: Colors.background.primary,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border.light,
-  },
-  stepIndicator: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  stepCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: Colors.neutral[200],
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  stepCircleActive: {
-    backgroundColor: lightTheme.colors.primary,
-  },
-  stepCircleCompleted: {
-    backgroundColor: Colors.success[500],
-  },
-  stepLabel: {
-    fontSize: 11,
-    color: Colors.neutral[400],
-    marginTop: 4,
-  },
-  stepLabelActive: {
-    color: lightTheme.colors.primary,
-    fontWeight: '600',
-  },
-  stepLine: {
-    position: 'absolute',
-    top: 16,
-    right: -20,
-    width: 40,
-    height: 2,
-    backgroundColor: Colors.neutral[200],
-  },
-  stepLineActive: {
-    backgroundColor: Colors.success[500],
   },
   scrollView: {
     flex: 1,

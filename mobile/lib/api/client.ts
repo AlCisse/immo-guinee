@@ -401,6 +401,11 @@ export const api = {
     list: () => apiClient.get('/commissions'),
     get: (type: string) => apiClient.get(`/commissions/${type}`),
   },
+
+  // App Configuration (authenticated - security)
+  config: {
+    websocket: () => apiClient.get('/config/websocket'),
+  },
 };
 
 // Export axios instance for custom requests

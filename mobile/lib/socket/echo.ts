@@ -1,18 +1,57 @@
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
-import { tokenManager } from '@/lib/api/client';
+import { tokenManager, api } from '@/lib/api/client';
 import { AppState, AppStateStatus } from 'react-native';
 
 // Make Pusher available globally for Laravel Echo
 (global as any).Pusher = Pusher;
 
-// Reverb configuration
-const REVERB_CONFIG = {
-  key: process.env.EXPO_PUBLIC_REVERB_KEY || 'immoguinee-reverb-key',
-  host: process.env.EXPO_PUBLIC_API_HOST || 'immoguinee.com',
-  port: 443,
-  scheme: 'https',
-};
+// Default Reverb configuration (host/port/scheme from env, key fetched from API)
+interface ReverbConfig {
+  key: string;
+  host: string;
+  port: number;
+  scheme: string;
+}
+
+let reverbConfig: ReverbConfig | null = null;
+
+/**
+ * Fetch Reverb configuration from backend API
+ * This keeps the Reverb key secure on the server side
+ */
+async function fetchReverbConfig(): Promise<ReverbConfig | null> {
+  // Return cached config if available
+  if (reverbConfig) {
+    return reverbConfig;
+  }
+
+  try {
+    const response = await api.config.websocket();
+    if (response.data?.success && response.data?.data) {
+      const { key, host, port, scheme } = response.data.data;
+      reverbConfig = {
+        key,
+        host: host || process.env.EXPO_PUBLIC_REVERB_HOST || 'immoguinee.com',
+        port: port || 443,
+        scheme: scheme || 'https',
+      };
+      if (__DEV__) console.log('✅ [Echo] WebSocket config fetched from API');
+      return reverbConfig;
+    }
+    return null;
+  } catch (error) {
+    if (__DEV__) console.error('[Echo] Failed to fetch WebSocket config:', error);
+    return null;
+  }
+}
+
+/**
+ * Clear cached Reverb config (call on logout)
+ */
+export function clearReverbConfig(): void {
+  reverbConfig = null;
+}
 
 let echoInstance: Echo<'reverb'> | null = null;
 let connectionState: 'disconnected' | 'connecting' | 'connected' | 'error' = 'disconnected';
@@ -33,18 +72,25 @@ export async function initializeEcho(): Promise<Echo<'reverb'> | null> {
     return null;
   }
 
+  // Fetch Reverb config from backend API (secure)
+  const config = await fetchReverbConfig();
+  if (!config) {
+    if (__DEV__) console.error('[Echo] Cannot initialize: config not available');
+    return null;
+  }
+
   try {
     connectionState = 'connecting';
 
     echoInstance = new Echo({
       broadcaster: 'reverb',
-      key: REVERB_CONFIG.key,
-      wsHost: REVERB_CONFIG.host,
-      wsPort: REVERB_CONFIG.port,
-      wssPort: REVERB_CONFIG.port,
-      forceTLS: REVERB_CONFIG.scheme === 'https',
+      key: config.key,
+      wsHost: config.host,
+      wsPort: config.port,
+      wssPort: config.port,
+      forceTLS: config.scheme === 'https',
       enabledTransports: ['ws', 'wss'],
-      authEndpoint: `https://${REVERB_CONFIG.host}/api/broadcasting/auth`,
+      authEndpoint: `https://${config.host}/api/broadcasting/auth`,
       auth: {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -97,7 +143,10 @@ function setupConnectionHandlers(): void {
 
   pusher.connection.bind('error', (error: any) => {
     connectionState = 'error';
-    if (__DEV__) console.error('[Echo] Error:', error?.message || error);
+    // Only log critical errors, not normal disconnections (code 1006)
+    if (__DEV__ && error?.data?.code !== 1006) {
+      console.warn('[Echo] Connection error:', error?.data?.message || error?.message || 'Unknown');
+    }
     scheduleReconnect();
   });
 
@@ -193,6 +242,8 @@ export function disconnectEcho(): void {
   }
   connectionState = 'disconnected';
   reconnectAttempts = 0;
+  // Clear cached config on disconnect (security: don't keep key in memory)
+  clearReverbConfig();
 }
 
 /**
