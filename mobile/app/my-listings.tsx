@@ -19,6 +19,7 @@ import {
 import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { Listing } from '@/types';
@@ -42,6 +43,7 @@ interface EditFormData {
 }
 
 export default function MyListingsScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { isAuthenticated } = useAuth();
@@ -69,10 +71,10 @@ export default function MyListingsScreen() {
   const [deleteReason, setDeleteReason] = useState<string | null>(null);
 
   const deleteReasons = [
-    { id: 'loue_immoguinee', label: 'Loue grace a ImmoGuinee', icon: 'checkmark-circle' },
-    { id: 'loue_ailleurs', label: 'Loue ailleurs', icon: 'home' },
-    { id: 'plus_disponible', label: 'Plus disponible', icon: 'close-circle' },
-    { id: 'autre', label: 'Autre raison', icon: 'ellipsis-horizontal' },
+    { id: 'loue_immoguinee', label: t('myListings.rentedViaApp'), icon: 'checkmark-circle' },
+    { id: 'loue_ailleurs', label: t('myListings.rentedElsewhere'), icon: 'home' },
+    { id: 'plus_disponible', label: t('myListings.noLongerAvailable'), icon: 'close-circle' },
+    { id: 'autre', label: t('myListings.otherReason'), icon: 'ellipsis-horizontal' },
   ];
 
   const { data, isLoading, refetch } = useQuery({
@@ -109,10 +111,10 @@ export default function MyListingsScreen() {
       queryClient.invalidateQueries({ queryKey: ['my-listings'] });
       setEditModalVisible(false);
       setEditingListing(null);
-      Alert.alert('Succes', 'Annonce mise a jour');
+      Alert.alert(t('alerts.success'), t('myListings.listingUpdated'));
     },
     onError: (error: any) => {
-      Alert.alert('Erreur', error.message || 'Impossible de mettre a jour l\'annonce');
+      Alert.alert(t('common.error'), error.message || t('myListings.updateFailed'));
     },
   });
 
@@ -139,11 +141,11 @@ export default function MyListingsScreen() {
   const handleSaveEdit = () => {
     if (!editingListing) return;
     if (!editForm.titre.trim()) {
-      Alert.alert('Erreur', 'Le titre est requis');
+      Alert.alert(t('common.error'), t('myListings.titleRequired'));
       return;
     }
     if (!editForm.loyer_mensuel.trim()) {
-      Alert.alert('Erreur', 'Le prix est requis');
+      Alert.alert(t('common.error'), t('myListings.priceRequired'));
       return;
     }
     updateMutation.mutate({ id: editingListing.id, data: editForm });
@@ -161,10 +163,10 @@ export default function MyListingsScreen() {
       setEditModalVisible(false);
       setEditingListing(null);
       setDeleteReason(null);
-      Alert.alert('Succes', 'Annonce supprimee');
+      Alert.alert(t('alerts.success'), t('myListings.listingDeleted'));
     },
     onError: (error: any) => {
-      Alert.alert('Erreur', error.message || 'Impossible de supprimer l\'annonce');
+      Alert.alert(t('common.error'), error.message || t('myListings.deleteFailed'));
     },
   });
 
@@ -175,7 +177,7 @@ export default function MyListingsScreen() {
 
   const handleDelete = () => {
     if (!editingListing || !deleteReason) {
-      Alert.alert('Erreur', 'Veuillez selectionner une raison');
+      Alert.alert(t('common.error'), t('myListings.selectReason'));
       return;
     }
     deleteMutation.mutate({ id: editingListing.id, reason: deleteReason });
@@ -194,13 +196,13 @@ export default function MyListingsScreen() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'PUBLIE':
-        return { label: 'Publie', color: Colors.success[500] };
+        return { label: t('myListings.status.published'), color: Colors.success[500] };
       case 'EN_ATTENTE':
-        return { label: 'En attente', color: Colors.warning[500] };
+        return { label: t('myListings.status.pending'), color: Colors.warning[500] };
       case 'ARCHIVE':
-        return { label: 'Archive', color: Colors.neutral[500] };
+        return { label: t('myListings.status.archived'), color: Colors.neutral[500] };
       case 'BROUILLON':
-        return { label: 'Brouillon', color: Colors.neutral[400] };
+        return { label: t('myListings.status.draft'), color: Colors.neutral[400] };
       default:
         return { label: status, color: Colors.neutral[400] };
     }
@@ -258,7 +260,7 @@ export default function MyListingsScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Mes annonces',
+          title: t('profile.myListings'),
           headerStyle: { backgroundColor: Colors.background.primary },
           headerShadowVisible: true,
           headerLeft: () => (
@@ -273,7 +275,7 @@ export default function MyListingsScreen() {
         {isLoading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={lightTheme.colors.primary} />
-            <Text style={styles.loadingText}>Chargement...</Text>
+            <Text style={styles.loadingText}>{t('common.loading')}</Text>
           </View>
         ) : (
           <FlatList
@@ -293,9 +295,9 @@ export default function MyListingsScreen() {
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
                 <Ionicons name="home-outline" size={64} color={Colors.neutral[300]} />
-                <Text style={styles.emptyTitle}>Aucune annonce</Text>
+                <Text style={styles.emptyTitle}>{t('myListings.noListings')}</Text>
                 <Text style={styles.emptyText}>
-                  Vous n'avez pas encore publie d'annonce
+                  {t('myListings.noListingsHint')}
                 </Text>
               </View>
             }

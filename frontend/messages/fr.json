@@ -217,79 +217,279 @@
     "login": {
       "title": "Connexion",
       "subtitle": "Bienvenue sur ImmoGuinee",
+      "accessAccount": "Accedez a votre compte ImmoGuinee",
       "email": "Email",
       "phone": "Telephone",
+      "phoneLabel": "Numero de telephone",
+      "phoneHint": "Selectionnez votre pays - Guinee et diaspora acceptes",
       "password": "Mot de passe",
+      "passwordPlaceholder": "Entrez votre mot de passe",
       "rememberMe": "Se souvenir de moi",
       "forgotPassword": "Mot de passe oublie ?",
       "loginButton": "Se connecter",
-      "noAccount": "Vous n'avez pas de compte ?",
+      "loggingIn": "Connexion en cours...",
+      "noAccount": "Pas encore de compte ?",
+      "registerFree": "S'inscrire gratuitement",
       "register": "S'inscrire",
       "or": "ou",
       "continueWithGoogle": "Continuer avec Google",
       "continueWithFacebook": "Continuer avec Facebook",
+      "features": {
+        "freeListings": "Annonces gratuites",
+        "advancedSearch": "Recherche avancee",
+        "secureMessaging": "Messagerie securisee"
+      },
+      "promo": {
+        "platform": "La premiere plateforme immobiliere de Guinee",
+        "listings": "+10,000 annonces disponibles",
+        "community": "Communaute de confiance",
+        "secure": "Transactions securisees"
+      },
       "errors": {
-        "invalidCredentials": "Email ou mot de passe incorrect",
+        "fillAllFields": "Veuillez remplir tous les champs",
+        "invalidCredentials": "Identifiants incorrects. Veuillez reessayer.",
         "accountLocked": "Compte bloque. Veuillez contacter le support.",
-        "serverError": "Erreur serveur. Veuillez reessayer."
+        "serverError": "Erreur serveur. Veuillez reessayer.",
+        "googleError": "Erreur lors de la connexion avec Google",
+        "facebookError": "Erreur lors de la connexion avec Facebook"
       }
     },
     "register": {
       "title": "Inscription",
+      "createAccount": "Creer un compte",
       "subtitle": "Rejoignez ImmoGuinee",
+      "joinCommunity": "Rejoignez la communaute ImmoGuinee",
       "fullName": "Nom complet",
+      "fullNamePlaceholder": "Ex: Mamadou Diallo",
       "email": "Email",
       "phone": "Telephone",
+      "phoneWhatsapp": "Telephone (WhatsApp)",
       "password": "Mot de passe",
+      "passwordPlaceholder": "Min. 8 caracteres",
       "confirmPassword": "Confirmer le mot de passe",
+      "confirmPasswordShort": "Confirmer",
       "accountType": "Type de compte",
+      "accountTypes": {
+        "individual": "Particulier",
+        "individualDesc": "Chercher, louer ou vendre",
+        "agency": "Agence / Agent",
+        "agencyDesc": "Professionnel de l'immobilier",
+        "promoter": "Promoteur",
+        "promoterDesc": "Promoteur immobilier"
+      },
       "individual": "Particulier",
       "professional": "Professionnel",
       "agency": "Agence",
       "terms": "J'accepte les conditions d'utilisation",
-      "termsLink": "conditions d'utilisation",
-      "privacy": "politique de confidentialite",
+      "termsAccept": "J'accepte les",
+      "termsLink": "Conditions Generales d'Utilisation",
+      "andThe": "et la",
+      "privacy": "Politique de Confidentialite",
+      "privacyProtection": "Vos donnees sont protegees conformement a notre",
       "registerButton": "S'inscrire",
-      "hasAccount": "Vous avez deja un compte ?",
+      "registering": "Inscription en cours...",
+      "hasAccount": "Deja un compte ?",
       "login": "Se connecter",
+      "or": "ou",
+      "continueWithGoogle": "Continuer avec Google",
+      "continueWithFacebook": "Continuer avec Facebook",
+      "promo": {
+        "title": "Rejoignez ImmoGuinee",
+        "subtitle": "Creez votre compte et accedez a des milliers d'annonces immobilieres",
+        "freeListings": "Publiez gratuitement vos annonces",
+        "alerts": "Alertes personnalisees",
+        "messaging": "Messagerie integree"
+      },
       "errors": {
+        "fillAllFields": "Veuillez remplir tous les champs obligatoires",
         "emailExists": "Cet email est deja utilise",
         "phoneExists": "Ce numero de telephone est deja utilise",
         "passwordMismatch": "Les mots de passe ne correspondent pas",
         "weakPassword": "Le mot de passe doit contenir au moins 8 caracteres",
-        "serverError": "Erreur serveur. Veuillez reessayer."
+        "acceptTerms": "Veuillez accepter les conditions generales d'utilisation et la politique de confidentialite",
+        "serverError": "Une erreur est survenue lors de l'inscription",
+        "googleError": "Erreur lors de l'inscription avec Google",
+        "facebookError": "Erreur lors de l'inscription avec Facebook",
+        "accountExists": "Ce compte existe deja. Redirection vers la connexion..."
       }
     },
     "forgotPassword": {
-      "title": "Mot de passe oublie",
-      "subtitle": "Entrez votre email pour reinitialiser votre mot de passe",
+      "title": "Mot de passe oublie ?",
+      "subtitle": "Entrez votre numero de telephone pour recevoir un code de reinitialisation",
       "email": "Email",
+      "phone": "Numero de telephone",
       "sendLink": "Envoyer le lien",
+      "sendCode": "Envoyer le code",
+      "sending": "Envoi en cours...",
       "backToLogin": "Retour a la connexion",
-      "success": "Un email de reinitialisation a ete envoye"
+      "success": "Un email de reinitialisation a ete envoye",
+      "codeSent": "Code envoye !",
+      "codeSentMessage": "Un code de reinitialisation a ete envoye a votre numero de telephone. Utilisez ce code pour creer un nouveau mot de passe.",
+      "enterCode": "Entrer le code",
+      "resendCode": "Renvoyer le code",
+      "errors": {
+        "phoneRequired": "Veuillez entrer votre numero de telephone",
+        "generic": "Une erreur est survenue. Veuillez reessayer."
+      }
     },
     "otp": {
-      "title": "Verification",
-      "subtitle": "Entrez le code envoye a votre telephone",
-      "resend": "Renvoyer le code",
-      "resendIn": "Renvoyer dans",
-      "verify": "Verifier"
+      "title": "Verification WhatsApp",
+      "subtitle": "Un code a 6 chiffres a ete envoye sur WhatsApp au",
+      "whatsappHint": "Ouvrez WhatsApp et copiez le code recu de",
+      "enterCode": "Entrez le code recu sur WhatsApp",
+      "verify": "Verifier",
+      "verifying": "Verification en cours...",
+      "notReceived": "Vous n'avez pas recu le code ?",
+      "resend": "Renvoyer sur WhatsApp",
+      "resendIn": "Renvoyer sur WhatsApp ({seconds}s)",
+      "resending": "Envoi en cours...",
+      "cancel": "Annuler",
+      "loading": "Chargement...",
+      "errors": {
+        "enterAllDigits": "Veuillez entrer les 6 chiffres du code",
+        "invalidCode": "Code invalide. Veuillez reessayer.",
+        "resendFailed": "Erreur lors de l'envoi du code. Veuillez reessayer."
+      }
+    },
+    "resetPassword": {
+      "title": "Nouveau mot de passe",
+      "subtitle": "Entrez le code recu et choisissez un nouveau mot de passe",
+      "back": "Retour",
+      "code": "Code de verification",
+      "codePlaceholder": "000000",
+      "newPassword": "Nouveau mot de passe",
+      "newPasswordPlaceholder": "Minimum 8 caracteres",
+      "confirmPassword": "Confirmer le mot de passe",
+      "confirmPasswordPlaceholder": "Repetez le mot de passe",
+      "submit": "Reinitialiser le mot de passe",
+      "submitting": "Reinitialisation...",
+      "success": {
+        "title": "Mot de passe reinitialise !",
+        "message": "Votre mot de passe a ete modifie avec succes. Vous allez etre redirige vers la page de connexion.",
+        "goToLogin": "Aller a la connexion"
+      },
+      "errors": {
+        "passwordsMismatch": "Les mots de passe ne correspondent pas",
+        "passwordTooShort": "Le mot de passe doit contenir au moins 8 caracteres",
+        "invalidCode": "Le code doit contenir 6 chiffres",
+        "generic": "Une erreur est survenue. Veuillez reessayer."
+      }
+    },
+    "completeProfile": {
+      "title": "Completez votre profil",
+      "step": "Etape {current} sur {total}",
+      "welcome": "Bienvenue {name} !",
+      "connectedWith": "Connexion avec {provider} reussie",
+      "accountType": {
+        "title": "Quel type de compte souhaitez-vous ?",
+        "subtitle": "Cela nous aide a personnaliser votre experience",
+        "particulier": "Particulier",
+        "particulierDesc": "Je cherche a louer ou acheter un bien",
+        "proprietaire": "Proprietaire",
+        "proprietaireDesc": "Je souhaite mettre mes biens en location/vente",
+        "agent": "Agent immobilier",
+        "agentDesc": "Je gere des biens pour des clients",
+        "agence": "Agence immobiliere",
+        "agenceDesc": "Je represente une agence immobiliere"
+      },
+      "phone": {
+        "title": "Votre numero de telephone",
+        "subtitle": "Ideal si vous avez WhatsApp pour recevoir les notifications",
+        "label": "Numero de telephone (WhatsApp)",
+        "placeholder": "620 12 34 56",
+        "whatsappHint": "Recevez des notifications instantanees via WhatsApp"
+      },
+      "accountTypeSummary": "Type de compte",
+      "modify": "Modifier",
+      "continue": "Continuer",
+      "finish": "Terminer l'inscription",
+      "saving": "Enregistrement...",
+      "back": "Retour",
+      "terms": "En continuant, vous acceptez nos",
+      "termsLink": "conditions d'utilisation",
+      "errors": {
+        "selectAccountType": "Veuillez selectionner un type de compte",
+        "invalidPhone": "Veuillez entrer un numero de telephone valide",
+        "generic": "Une erreur est survenue. Veuillez reessayer."
+      }
+    },
+    "verify2fa": {
+      "title": "Verification 2FA",
+      "subtitle": "Securite renforcee pour votre compte administrateur",
+      "enterCode": "Entrez le code",
+      "enterCodeSubtitle": "Ouvrez Google Authenticator et entrez le code affiche",
+      "step1": "Ouvrez Google Authenticator",
+      "step2": "Trouvez le code pour ImmoGuinee",
+      "step3": "Entrez le code a 6 chiffres",
+      "verify": "Verifier",
+      "verifying": "Verification...",
+      "useRecoveryCode": "Utiliser un code de recuperation",
+      "recoveryCode": {
+        "title": "Code de recuperation",
+        "subtitle": "Entrez l'un de vos codes de recuperation",
+        "placeholder": "XXXX-XXXX-XXXX-XXXX",
+        "submit": "Utiliser ce code"
+      },
+      "back": "Retour",
+      "logout": "Se deconnecter",
+      "loading": "Chargement...",
+      "success": "Verification reussie",
+      "errors": {
+        "enterCode": "Veuillez entrer le code a 6 chiffres",
+        "sessionExpired": "Session expiree. Veuillez vous reconnecter.",
+        "invalidCode": "Code invalide. Veuillez reessayer.",
+        "enterRecoveryCode": "Veuillez entrer un code de recuperation",
+        "invalidRecoveryCode": "Code de recuperation invalide."
+      }
     }
   },
   "dashboard": {
     "title": "Tableau de bord",
     "welcome": "Bienvenue",
+    "greeting": "Bonjour, {name}",
+    "welcomeSubtitle": "Bienvenue sur votre tableau de bord ImmoGuinee",
+    "priceNotDefined": "Prix non defini",
     "stats": {
       "activeListings": "Annonces actives",
       "totalViews": "Vues totales",
       "messages": "Messages",
-      "favorites": "Favoris recus"
+      "favorites": "Favoris",
+      "visits": "Visites",
+      "contracts": "Contrats",
+      "myListings": "Mes annonces",
+      "activeCount": "{count} actives",
+      "completedCount": "{count} terminees"
     },
     "recentActivity": "Activite recente",
+    "recentListings": "Mes annonces recentes",
+    "upcomingVisits": "Prochaines visites",
+    "calendar": "Calendrier",
+    "defaultProperty": "Bien immobilier",
+    "noScheduledVisits": "Aucune visite programmee",
+    "quickActions": {
+      "title": "Actions rapides",
+      "publishListing": "Publier une annonce",
+      "scheduleVisit": "Planifier une visite",
+      "generateContract": "Generer un contrat",
+      "messages": "Messages"
+    },
+    "account": {
+      "title": "Mon compte",
+      "myProfile": "Mon profil",
+      "settings": "Parametres",
+      "certification": "Certification"
+    },
+    "accountTypes": {
+      "AGENCE": "Agence",
+      "PROPRIETAIRE": "Proprietaire",
+      "PARTICULIER": "Particulier",
+      "AGENT": "Agent"
+    },
     "myListings": {
       "title": "Mes annonces",
       "create": "Creer une annonce",
       "noListings": "Vous n'avez pas encore d'annonces",
+      "publishListing": "Publier une annonce",
       "status": {
         "active": "Active",
         "pending": "En attente",
@@ -302,6 +502,7 @@
     "contracts": {
       "title": "Mes contrats",
       "noContracts": "Aucun contrat",
+      "rentalContract": "Contrat de location",
       "status": {
         "draft": "Brouillon",
         "pending": "En attente",
@@ -401,16 +602,97 @@
     "lastSeen": "Vu",
     "today": "Aujourd'hui",
     "yesterday": "Hier",
-    "typing": "est en train d'ecrire..."
+    "typing": "est en train d'ecrire...",
+    "searchPlaceholder": "Rechercher une conversation...",
+    "linkedToProperty": "Conversation liee a cette propriete",
+    "yourMessages": "Vos messages",
+    "selectConversation": "Selectionnez une conversation pour commencer a discuter avec un proprietaire ou un locataire.",
+    "voiceMessage": "Message vocal",
+    "time": {
+      "minutesAgo": "Il y a {count} min",
+      "hoursAgo": "Il y a {count}h",
+      "yesterday": "Hier"
+    }
   },
   "favorites": {
-    "title": "Favoris",
+    "title": "Mes favoris",
+    "subtitle": "{count} bien(s) sauvegarde(s)",
     "noFavorites": "Aucun favori",
-    "addedOn": "Ajoute le"
+    "noFavoritesDesc": "Explorez nos annonces et sauvegardez celles qui vous interessent en cliquant sur le coeur.",
+    "exploreListing": "Explorer les annonces",
+    "addedOn": "Ajoute",
+    "verified": "Verifie",
+    "premium": "Premium",
+    "perMonth": "/mois",
+    "perDay": "/jour",
+    "priceAlerts": {
+      "title": "Alertes prix",
+      "description": "Activez les alertes sur vos favoris pour etre notifie en cas de baisse de prix ou de changement de disponibilite."
+    },
+    "error": {
+      "loading": "Erreur lors du chargement des favoris",
+      "retry": "Reessayer"
+    },
+    "dates": {
+      "today": "Aujourd'hui",
+      "yesterday": "Hier",
+      "daysAgo": "Il y a {days} jours"
+    }
+  },
+  "myListings": {
+    "title": "Mes annonces",
+    "subtitle": "Gerez vos annonces immobilieres",
+    "newListing": "Nouvelle annonce",
+    "stats": {
+      "total": "Total annonces",
+      "active": "Actives",
+      "totalViews": "Vues totales"
+    },
+    "search": "Rechercher une annonce...",
+    "filters": {
+      "all": "Toutes",
+      "active": "Active",
+      "pending": "En attente",
+      "expired": "Expiree",
+      "rejected": "Rejetee",
+      "published": "Publiee",
+      "draft": "Brouillon"
+    },
+    "status": {
+      "ACTIVE": "Active",
+      "EN_ATTENTE": "En attente",
+      "PENDING": "En attente",
+      "EXPIREE": "Expiree",
+      "REJETEE": "Rejetee",
+      "REJECTED": "Rejetee",
+      "BROUILLON": "Brouillon",
+      "publiee": "Publiee"
+    },
+    "noListings": "Aucune annonce trouvee",
+    "noListingsHint": "Essayez de modifier vos criteres de recherche.",
+    "noListingsEmpty": "Commencez par publier votre premiere annonce !",
+    "publishListing": "Publier une annonce",
+    "priceNotDefined": "Prix non defini",
+    "views": "{count} vues",
+    "shortRental": "Courte duree",
+    "actions": {
+      "viewListing": "Voir l'annonce",
+      "edit": "Modifier",
+      "delete": "Supprimer"
+    },
+    "deleteConfirm": "Voulez-vous vraiment supprimer cette annonce ?",
+    "deleteSuccess": "Annonce supprimee avec succes",
+    "deleteError": "Erreur lors de la suppression",
+    "publishSuccess": "Votre annonce a ete publiee avec succes ! Elle sera visible apres validation.",
+    "error": {
+      "loading": "Erreur lors du chargement des annonces",
+      "retry": "Reessayer"
+    }
   },
   "profile": {
     "title": "Mon profil",
     "edit": "Modifier le profil",
+    "editButton": "Modifier",
     "personalInfo": "Informations personnelles",
     "fullName": "Nom complet",
     "email": "Email",
@@ -418,7 +700,71 @@
     "address": "Adresse",
     "bio": "Bio",
     "accountType": "Type de compte",
-    "memberSince": "Membre depuis",
+    "memberSince": "Membre depuis {year}",
+    "defaultUser": "Utilisateur",
+    "stats": {
+      "favorites": "Favoris",
+      "views": "Vues",
+      "messages": "Messages",
+      "visits": "Visites"
+    },
+    "quickActions": {
+      "title": "Actions rapides",
+      "myFavorites": "Mes favoris",
+      "myMessages": "Mes messages",
+      "myVisits": "Mes visites",
+      "savedProperties": "{count} biens sauvegardes",
+      "newMessages": "{count} nouveaux messages",
+      "noNewMessages": "Aucun nouveau message",
+      "upcomingVisits": "{count} visite(s) a venir",
+      "noUpcomingVisits": "Aucune visite programmee"
+    },
+    "nextVisit": {
+      "title": "Prochaine visite",
+      "default": "Visite programmee"
+    },
+    "visitHistory": {
+      "title": "Historique des visites",
+      "viewAll": "Voir tout",
+      "noVisits": "Aucune visite pour le moment",
+      "visit": "Visite",
+      "status": {
+        "completed": "Terminee",
+        "cancelled": "Annulee",
+        "confirmed": "Confirmee",
+        "pending": "En attente"
+      }
+    },
+    "contracts": {
+      "title": "Mes contrats",
+      "viewAll": "Voir tout",
+      "noContracts": "Aucun contrat pour le moment",
+      "rentalContract": "Contrat de location",
+      "status": {
+        "signed": "Signe",
+        "active": "Actif",
+        "pending": "En attente",
+        "draft": "Brouillon"
+      }
+    },
+    "settingsSection": {
+      "title": "Parametres",
+      "personalInfo": "Informations personnelles",
+      "notifications": "Notifications",
+      "notificationsDesc": "Alertes et preferences",
+      "security": "Securite",
+      "securityDesc": "Mot de passe et connexion",
+      "language": "Langue",
+      "languageValue": "Francais",
+      "darkMode": "Mode sombre"
+    },
+    "help": {
+      "support": "Aide & Support",
+      "rateApp": "Noter l'application",
+      "terms": "Conditions d'utilisation"
+    },
+    "logout": "Deconnexion",
+    "appVersion": "ImmoGuinee v1.0.0",
     "verification": {
       "title": "Verification",
       "verified": "Verifie",
@@ -441,6 +787,22 @@
       "emailNotifications": "Notifications par email",
       "smsNotifications": "Notifications par SMS",
       "pushNotifications": "Notifications push"
+    },
+    "edit": {
+      "title": "Modifier le profil",
+      "personalInfo": "Informations personnelles",
+      "fullName": "Nom complet",
+      "fullNamePlaceholder": "Votre nom complet",
+      "email": "Email",
+      "emailPlaceholder": "votre@email.com",
+      "phone": "Telephone",
+      "phoneReadOnly": "(non modifiable)",
+      "address": "Adresse",
+      "addressPlaceholder": "Votre adresse",
+      "save": "Enregistrer les modifications",
+      "saving": "Enregistrement...",
+      "success": "Profil mis a jour avec succes",
+      "error": "Erreur lors de la mise a jour du profil"
     }
   },
   "settings": {
@@ -550,5 +912,96 @@
     "es": "Espanol",
     "de": "Deutsch",
     "zh": "Zhongwen"
+  },
+  "visits": {
+    "title": "Calendrier des visites",
+    "subtitle": "Gerez vos rendez-vous de visite",
+    "newVisit": "Nouvelle visite",
+    "scheduleVisit": "Planifier une visite",
+    "allVisits": "Toutes les visites",
+    "totalVisits": "{count} visite(s) au total",
+    "scheduledVisits": "{count} visite(s) planifiee(s)",
+    "noVisitToday": "Aucune visite ce jour",
+    "noVisitsFound": "Aucune visite trouvee",
+    "today": "Aujourd'hui",
+    "status": {
+      "all": "Tous les statuts",
+      "PENDING": "En attente",
+      "CONFIRMED": "Confirmee",
+      "COMPLETED": "Terminee",
+      "CANCELLED": "Annulee"
+    },
+    "days": {
+      "sun": "Dim",
+      "mon": "Lun",
+      "tue": "Mar",
+      "wed": "Mer",
+      "thu": "Jeu",
+      "fri": "Ven",
+      "sat": "Sam"
+    },
+    "months": {
+      "january": "Janvier",
+      "february": "Fevrier",
+      "march": "Mars",
+      "april": "Avril",
+      "may": "Mai",
+      "june": "Juin",
+      "july": "Juillet",
+      "august": "Aout",
+      "september": "Septembre",
+      "october": "Octobre",
+      "november": "Novembre",
+      "december": "Decembre"
+    },
+    "card": {
+      "defaultProperty": "Bien immobilier",
+      "addressNotAvailable": "Adresse non disponible",
+      "duration": "{minutes} min"
+    },
+    "actions": {
+      "confirm": "Confirmer",
+      "markComplete": "Marquer terminee",
+      "message": "Message",
+      "cancel": "Annuler"
+    },
+    "modal": {
+      "title": "Planifier une visite",
+      "property": "Propriete",
+      "selectProperty": "Selectionnez une propriete",
+      "client": "Client",
+      "enterManually": "Saisir manuellement",
+      "propertyContacts": "Contacts de ce bien",
+      "loadingContacts": "Chargement des contacts...",
+      "contactsCount": "{count} contact(s) ayant discute pour ce bien",
+      "noContacts": "Aucun contact pour ce bien",
+      "enterManuallyHint": "Saisissez les informations manuellement",
+      "phone": "Telephone",
+      "date": "Date",
+      "time": "Heure",
+      "notes": "Notes (optionnel)",
+      "notesPlaceholder": "Informations supplementaires...",
+      "sendNotification": "Envoyer une notification WhatsApp au client",
+      "notificationHint": "Le client recevra un message avec options: confirmer, indisponible, ou proposer une autre date",
+      "cancel": "Annuler",
+      "schedule": "Planifier",
+      "scheduling": "Planification...",
+      "noPhone": "Pas de telephone"
+    },
+    "dates": {
+      "today": "Aujourd'hui",
+      "yesterday": "Hier",
+      "daysAgo": "Il y a {days} jours"
+    },
+    "toast": {
+      "created": "Visite planifiee avec succes",
+      "createError": "Erreur lors de la planification de la visite",
+      "confirmed": "Visite confirmee",
+      "confirmError": "Erreur lors de la confirmation",
+      "completed": "Visite marquee comme terminee",
+      "completeError": "Erreur lors de la mise a jour",
+      "cancelled": "Visite annulee",
+      "cancelError": "Erreur lors de l'annulation"
+    }
   }
 }

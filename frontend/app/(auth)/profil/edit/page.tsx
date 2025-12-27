@@ -15,8 +15,10 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { api } from '@/lib/api/client';
+import { useTranslations } from '@/lib/i18n';
 
 export default function EditProfilePage() {
+  const { t } = useTranslations();
   const router = useRouter();
   const { user, refreshUser, isAuthenticated, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
@@ -70,14 +72,14 @@ export default function EditProfilePage() {
         adresse: formData.adresse || undefined,
       };
       await api.auth.updateProfile(updateData);
-      setSuccess('Profil mis à jour avec succès');
+      setSuccess(t('profile.edit.success'));
       await refreshUser();
       setTimeout(() => {
         router.push('/profil');
       }, 1500);
     } catch (err: any) {
       console.error('Update profile error:', err);
-      setError(err.response?.data?.message || 'Erreur lors de la mise à jour du profil');
+      setError(err.response?.data?.message || t('profile.edit.error'));
     } finally {
       setIsLoading(false);
     }
@@ -108,7 +110,7 @@ export default function EditProfilePage() {
             <ChevronLeft className="w-6 h-6 text-neutral-700 dark:text-white" />
           </button>
           <h1 className="text-lg font-semibold text-neutral-900 dark:text-white">
-            Modifier le profil
+            {t('profile.edit.title')}
           </h1>
         </div>
       </div>
@@ -144,14 +146,14 @@ export default function EditProfilePage() {
           {/* Name */}
           <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft p-6">
             <h2 className="font-semibold text-neutral-900 dark:text-white mb-4">
-              Informations personnelles
+              {t('profile.edit.personalInfo')}
             </h2>
 
             <div className="space-y-4">
               {/* Full Name */}
               <div>
                 <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                  Nom complet
+                  {t('profile.edit.fullName')}
                 </label>
                 <div className="relative">
                   <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
@@ -160,7 +162,7 @@ export default function EditProfilePage() {
                     name="nom_complet"
                     value={formData.nom_complet}
                     onChange={handleChange}
-                    placeholder="Votre nom complet"
+                    placeholder={t('profile.edit.fullNamePlaceholder')}
                     className="w-full pl-12 pr-4 py-3 bg-neutral-50 dark:bg-dark-bg border border-neutral-200 dark:border-dark-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:text-white"
                   />
                 </div>
@@ -169,7 +171,7 @@ export default function EditProfilePage() {
               {/* Email */}
               <div>
                 <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                  Email
+                  {t('profile.edit.email')}
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
@@ -178,7 +180,7 @@ export default function EditProfilePage() {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    placeholder="votre@email.com"
+                    placeholder={t('profile.edit.emailPlaceholder')}
                     className="w-full pl-12 pr-4 py-3 bg-neutral-50 dark:bg-dark-bg border border-neutral-200 dark:border-dark-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:text-white"
                   />
                 </div>
@@ -187,8 +189,8 @@ export default function EditProfilePage() {
               {/* Phone - Read only */}
               <div>
                 <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                  Téléphone
-                  <span className="text-xs text-neutral-400 ml-2">(non modifiable)</span>
+                  {t('profile.edit.phone')}
+                  <span className="text-xs text-neutral-400 ml-2">{t('profile.edit.phoneReadOnly')}</span>
                 </label>
                 <div className="relative">
                   <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
@@ -206,7 +208,7 @@ export default function EditProfilePage() {
               {/* Address */}
               <div>
                 <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                  Adresse
+                  {t('profile.edit.address')}
                 </label>
                 <div className="relative">
                   <MapPin className="absolute left-4 top-3 w-5 h-5 text-neutral-400" />
@@ -214,7 +216,7 @@ export default function EditProfilePage() {
                     name="adresse"
                     value={formData.adresse}
                     onChange={handleChange}
-                    placeholder="Votre adresse"
+                    placeholder={t('profile.edit.addressPlaceholder')}
                     rows={3}
                     className="w-full pl-12 pr-4 py-3 bg-neutral-50 dark:bg-dark-bg border border-neutral-200 dark:border-dark-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:text-white resize-none"
                   />
@@ -234,12 +236,12 @@ export default function EditProfilePage() {
             {isLoading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                Enregistrement...
+                {t('profile.edit.saving')}
               </>
             ) : (
               <>
                 <Save className="w-5 h-5" />
-                Enregistrer les modifications
+                {t('profile.edit.save')}
               </>
             )}
           </motion.button>

@@ -217,79 +217,279 @@
     "login": {
       "title": "Log in",
       "subtitle": "Welcome to ImmoGuinee",
+      "accessAccount": "Access your ImmoGuinee account",
       "email": "Email",
       "phone": "Phone",
+      "phoneLabel": "Phone number",
+      "phoneHint": "Select your country - Guinea and diaspora accepted",
       "password": "Password",
+      "passwordPlaceholder": "Enter your password",
       "rememberMe": "Remember me",
       "forgotPassword": "Forgot password?",
       "loginButton": "Log in",
+      "loggingIn": "Logging in...",
       "noAccount": "Don't have an account?",
+      "registerFree": "Sign up for free",
       "register": "Sign up",
       "or": "or",
       "continueWithGoogle": "Continue with Google",
       "continueWithFacebook": "Continue with Facebook",
+      "features": {
+        "freeListings": "Free listings",
+        "advancedSearch": "Advanced search",
+        "secureMessaging": "Secure messaging"
+      },
+      "promo": {
+        "platform": "The leading real estate platform in Guinea",
+        "listings": "+10,000 listings available",
+        "community": "Trusted community",
+        "secure": "Secure transactions"
+      },
       "errors": {
-        "invalidCredentials": "Invalid email or password",
+        "fillAllFields": "Please fill in all fields",
+        "invalidCredentials": "Invalid credentials. Please try again.",
         "accountLocked": "Account locked. Please contact support.",
-        "serverError": "Server error. Please try again."
+        "serverError": "Server error. Please try again.",
+        "googleError": "Error logging in with Google",
+        "facebookError": "Error logging in with Facebook"
       }
     },
     "register": {
       "title": "Sign up",
+      "createAccount": "Create an account",
       "subtitle": "Join ImmoGuinee",
+      "joinCommunity": "Join the ImmoGuinee community",
       "fullName": "Full name",
+      "fullNamePlaceholder": "Ex: John Doe",
       "email": "Email",
       "phone": "Phone",
+      "phoneWhatsapp": "Phone (WhatsApp)",
       "password": "Password",
+      "passwordPlaceholder": "Min. 8 characters",
       "confirmPassword": "Confirm password",
+      "confirmPasswordShort": "Confirm",
       "accountType": "Account type",
+      "accountTypes": {
+        "individual": "Individual",
+        "individualDesc": "Search, rent or sell",
+        "agency": "Agency / Agent",
+        "agencyDesc": "Real estate professional",
+        "promoter": "Developer",
+        "promoterDesc": "Real estate developer"
+      },
       "individual": "Individual",
       "professional": "Professional",
       "agency": "Agency",
       "terms": "I accept the terms of service",
-      "termsLink": "terms of service",
-      "privacy": "privacy policy",
+      "termsAccept": "I accept the",
+      "termsLink": "Terms of Service",
+      "andThe": "and the",
+      "privacy": "Privacy Policy",
+      "privacyProtection": "Your data is protected according to our",
       "registerButton": "Sign up",
+      "registering": "Signing up...",
       "hasAccount": "Already have an account?",
       "login": "Log in",
+      "or": "or",
+      "continueWithGoogle": "Continue with Google",
+      "continueWithFacebook": "Continue with Facebook",
+      "promo": {
+        "title": "Join ImmoGuinee",
+        "subtitle": "Create your account and access thousands of real estate listings",
+        "freeListings": "Publish your listings for free",
+        "alerts": "Personalized alerts",
+        "messaging": "Integrated messaging"
+      },
       "errors": {
+        "fillAllFields": "Please fill in all required fields",
         "emailExists": "This email is already in use",
         "phoneExists": "This phone number is already in use",
         "passwordMismatch": "Passwords do not match",
         "weakPassword": "Password must contain at least 8 characters",
-        "serverError": "Server error. Please try again."
+        "acceptTerms": "Please accept the terms of service and privacy policy",
+        "serverError": "An error occurred during registration",
+        "googleError": "Error signing up with Google",
+        "facebookError": "Error signing up with Facebook",
+        "accountExists": "This account already exists. Redirecting to login..."
       }
     },
     "forgotPassword": {
-      "title": "Forgot password",
-      "subtitle": "Enter your email to reset your password",
+      "title": "Forgot password?",
+      "subtitle": "Enter your phone number to receive a reset code",
       "email": "Email",
+      "phone": "Phone number",
       "sendLink": "Send link",
+      "sendCode": "Send code",
+      "sending": "Sending...",
       "backToLogin": "Back to login",
-      "success": "A reset email has been sent"
+      "success": "A reset email has been sent",
+      "codeSent": "Code sent!",
+      "codeSentMessage": "A reset code has been sent to your phone number. Use this code to create a new password.",
+      "enterCode": "Enter code",
+      "resendCode": "Resend code",
+      "errors": {
+        "phoneRequired": "Please enter your phone number",
+        "generic": "An error occurred. Please try again."
+      }
     },
     "otp": {
-      "title": "Verification",
-      "subtitle": "Enter the code sent to your phone",
-      "resend": "Resend code",
-      "resendIn": "Resend in",
-      "verify": "Verify"
+      "title": "WhatsApp Verification",
+      "subtitle": "A 6-digit code has been sent via WhatsApp to",
+      "whatsappHint": "Open WhatsApp and copy the code received from",
+      "enterCode": "Enter the code received on WhatsApp",
+      "verify": "Verify",
+      "verifying": "Verifying...",
+      "notReceived": "Didn't receive the code?",
+      "resend": "Resend via WhatsApp",
+      "resendIn": "Resend via WhatsApp ({seconds}s)",
+      "resending": "Sending...",
+      "cancel": "Cancel",
+      "loading": "Loading...",
+      "errors": {
+        "enterAllDigits": "Please enter all 6 digits",
+        "invalidCode": "Invalid code. Please try again.",
+        "resendFailed": "Failed to send code. Please try again."
+      }
+    },
+    "resetPassword": {
+      "title": "New Password",
+      "subtitle": "Enter the code received and choose a new password",
+      "back": "Back",
+      "code": "Verification code",
+      "codePlaceholder": "000000",
+      "newPassword": "New password",
+      "newPasswordPlaceholder": "Minimum 8 characters",
+      "confirmPassword": "Confirm password",
+      "confirmPasswordPlaceholder": "Repeat the password",
+      "submit": "Reset password",
+      "submitting": "Resetting...",
+      "success": {
+        "title": "Password reset!",
+        "message": "Your password has been changed successfully. You will be redirected to the login page.",
+        "goToLogin": "Go to login"
+      },
+      "errors": {
+        "passwordsMismatch": "Passwords do not match",
+        "passwordTooShort": "Password must be at least 8 characters",
+        "invalidCode": "Code must be 6 digits",
+        "generic": "An error occurred. Please try again."
+      }
+    },
+    "completeProfile": {
+      "title": "Complete your profile",
+      "step": "Step {current} of {total}",
+      "welcome": "Welcome {name}!",
+      "connectedWith": "Successfully connected with {provider}",
+      "accountType": {
+        "title": "What type of account do you want?",
+        "subtitle": "This helps us personalize your experience",
+        "particulier": "Individual",
+        "particulierDesc": "I'm looking to rent or buy a property",
+        "proprietaire": "Owner",
+        "proprietaireDesc": "I want to list my properties for rent/sale",
+        "agent": "Real estate agent",
+        "agentDesc": "I manage properties for clients",
+        "agence": "Real estate agency",
+        "agenceDesc": "I represent a real estate agency"
+      },
+      "phone": {
+        "title": "Your phone number",
+        "subtitle": "Ideal if you have WhatsApp to receive notifications",
+        "label": "Phone number (WhatsApp)",
+        "placeholder": "620 12 34 56",
+        "whatsappHint": "Receive instant notifications via WhatsApp"
+      },
+      "accountTypeSummary": "Account type",
+      "modify": "Modify",
+      "continue": "Continue",
+      "finish": "Complete registration",
+      "saving": "Saving...",
+      "back": "Back",
+      "terms": "By continuing, you agree to our",
+      "termsLink": "terms of service",
+      "errors": {
+        "selectAccountType": "Please select an account type",
+        "invalidPhone": "Please enter a valid phone number",
+        "generic": "An error occurred. Please try again."
+      }
+    },
+    "verify2fa": {
+      "title": "2FA Verification",
+      "subtitle": "Enhanced security for your admin account",
+      "enterCode": "Enter the code",
+      "enterCodeSubtitle": "Open Google Authenticator and enter the displayed code",
+      "step1": "Open Google Authenticator",
+      "step2": "Find the code for ImmoGuinee",
+      "step3": "Enter the 6-digit code",
+      "verify": "Verify",
+      "verifying": "Verifying...",
+      "useRecoveryCode": "Use a recovery code",
+      "recoveryCode": {
+        "title": "Recovery code",
+        "subtitle": "Enter one of your recovery codes",
+        "placeholder": "XXXX-XXXX-XXXX-XXXX",
+        "submit": "Use this code"
+      },
+      "back": "Back",
+      "logout": "Log out",
+      "loading": "Loading...",
+      "success": "Verification successful",
+      "errors": {
+        "enterCode": "Please enter the 6-digit code",
+        "sessionExpired": "Session expired. Please log in again.",
+        "invalidCode": "Invalid code. Please try again.",
+        "enterRecoveryCode": "Please enter a recovery code",
+        "invalidRecoveryCode": "Invalid recovery code."
+      }
     }
   },
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome",
+    "greeting": "Hello, {name}",
+    "welcomeSubtitle": "Welcome to your ImmoGuinee dashboard",
+    "priceNotDefined": "Price not set",
     "stats": {
       "activeListings": "Active listings",
       "totalViews": "Total views",
       "messages": "Messages",
-      "favorites": "Favorites received"
+      "favorites": "Favorites",
+      "visits": "Visits",
+      "contracts": "Contracts",
+      "myListings": "My listings",
+      "activeCount": "{count} active",
+      "completedCount": "{count} completed"
     },
     "recentActivity": "Recent activity",
+    "recentListings": "My recent listings",
+    "upcomingVisits": "Upcoming visits",
+    "calendar": "Calendar",
+    "defaultProperty": "Property",
+    "noScheduledVisits": "No scheduled visits",
+    "quickActions": {
+      "title": "Quick actions",
+      "publishListing": "Publish a listing",
+      "scheduleVisit": "Schedule a visit",
+      "generateContract": "Generate a contract",
+      "messages": "Messages"
+    },
+    "account": {
+      "title": "My account",
+      "myProfile": "My profile",
+      "settings": "Settings",
+      "certification": "Certification"
+    },
+    "accountTypes": {
+      "AGENCE": "Agency",
+      "PROPRIETAIRE": "Owner",
+      "PARTICULIER": "Individual",
+      "AGENT": "Agent"
+    },
     "myListings": {
       "title": "My listings",
       "create": "Create a listing",
       "noListings": "You don't have any listings yet",
+      "publishListing": "Publish a listing",
       "status": {
         "active": "Active",
         "pending": "Pending",
@@ -302,6 +502,7 @@
     "contracts": {
       "title": "My contracts",
       "noContracts": "No contracts",
+      "rentalContract": "Rental contract",
       "status": {
         "draft": "Draft",
         "pending": "Pending",
@@ -401,16 +602,97 @@
     "lastSeen": "Seen",
     "today": "Today",
     "yesterday": "Yesterday",
-    "typing": "is typing..."
+    "typing": "is typing...",
+    "searchPlaceholder": "Search conversations...",
+    "linkedToProperty": "Conversation linked to this property",
+    "yourMessages": "Your messages",
+    "selectConversation": "Select a conversation to start chatting with an owner or tenant.",
+    "voiceMessage": "Voice message",
+    "time": {
+      "minutesAgo": "{count} min ago",
+      "hoursAgo": "{count}h ago",
+      "yesterday": "Yesterday"
+    }
   },
   "favorites": {
-    "title": "Favorites",
+    "title": "My favorites",
+    "subtitle": "{count} saved property(ies)",
     "noFavorites": "No favorites",
-    "addedOn": "Added on"
+    "noFavoritesDesc": "Browse our listings and save the ones you like by clicking on the heart.",
+    "exploreListing": "Browse listings",
+    "addedOn": "Added",
+    "verified": "Verified",
+    "premium": "Premium",
+    "perMonth": "/month",
+    "perDay": "/day",
+    "priceAlerts": {
+      "title": "Price alerts",
+      "description": "Enable alerts on your favorites to be notified of price drops or availability changes."
+    },
+    "error": {
+      "loading": "Error loading favorites",
+      "retry": "Retry"
+    },
+    "dates": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "daysAgo": "{days} days ago"
+    }
+  },
+  "myListings": {
+    "title": "My listings",
+    "subtitle": "Manage your property listings",
+    "newListing": "New listing",
+    "stats": {
+      "total": "Total listings",
+      "active": "Active",
+      "totalViews": "Total views"
+    },
+    "search": "Search listings...",
+    "filters": {
+      "all": "All",
+      "active": "Active",
+      "pending": "Pending",
+      "expired": "Expired",
+      "rejected": "Rejected",
+      "published": "Published",
+      "draft": "Draft"
+    },
+    "status": {
+      "ACTIVE": "Active",
+      "EN_ATTENTE": "Pending",
+      "PENDING": "Pending",
+      "EXPIREE": "Expired",
+      "REJETEE": "Rejected",
+      "REJECTED": "Rejected",
+      "BROUILLON": "Draft",
+      "publiee": "Published"
+    },
+    "noListings": "No listings found",
+    "noListingsHint": "Try adjusting your search criteria.",
+    "noListingsEmpty": "Start by publishing your first listing!",
+    "publishListing": "Publish a listing",
+    "priceNotDefined": "Price not set",
+    "views": "{count} views",
+    "shortRental": "Short-term",
+    "actions": {
+      "viewListing": "View listing",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "deleteConfirm": "Are you sure you want to delete this listing?",
+    "deleteSuccess": "Listing deleted successfully",
+    "deleteError": "Error deleting listing",
+    "publishSuccess": "Your listing has been published! It will be visible after validation.",
+    "error": {
+      "loading": "Error loading listings",
+      "retry": "Retry"
+    }
   },
   "profile": {
     "title": "My profile",
     "edit": "Edit profile",
+    "editButton": "Edit",
     "personalInfo": "Personal information",
     "fullName": "Full name",
     "email": "Email",
@@ -418,7 +700,71 @@
     "address": "Address",
     "bio": "Bio",
     "accountType": "Account type",
-    "memberSince": "Member since",
+    "memberSince": "Member since {year}",
+    "defaultUser": "User",
+    "stats": {
+      "favorites": "Favorites",
+      "views": "Views",
+      "messages": "Messages",
+      "visits": "Visits"
+    },
+    "quickActions": {
+      "title": "Quick actions",
+      "myFavorites": "My favorites",
+      "myMessages": "My messages",
+      "myVisits": "My visits",
+      "savedProperties": "{count} saved properties",
+      "newMessages": "{count} new messages",
+      "noNewMessages": "No new messages",
+      "upcomingVisits": "{count} upcoming visit(s)",
+      "noUpcomingVisits": "No scheduled visits"
+    },
+    "nextVisit": {
+      "title": "Next visit",
+      "default": "Scheduled visit"
+    },
+    "visitHistory": {
+      "title": "Visit history",
+      "viewAll": "View all",
+      "noVisits": "No visits yet",
+      "visit": "Visit",
+      "status": {
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "confirmed": "Confirmed",
+        "pending": "Pending"
+      }
+    },
+    "contracts": {
+      "title": "My contracts",
+      "viewAll": "View all",
+      "noContracts": "No contracts yet",
+      "rentalContract": "Rental contract",
+      "status": {
+        "signed": "Signed",
+        "active": "Active",
+        "pending": "Pending",
+        "draft": "Draft"
+      }
+    },
+    "settingsSection": {
+      "title": "Settings",
+      "personalInfo": "Personal information",
+      "notifications": "Notifications",
+      "notificationsDesc": "Alerts and preferences",
+      "security": "Security",
+      "securityDesc": "Password and login",
+      "language": "Language",
+      "languageValue": "English",
+      "darkMode": "Dark mode"
+    },
+    "help": {
+      "support": "Help & Support",
+      "rateApp": "Rate the app",
+      "terms": "Terms of use"
+    },
+    "logout": "Logout",
+    "appVersion": "ImmoGuinee v1.0.0",
     "verification": {
       "title": "Verification",
       "verified": "Verified",
@@ -441,6 +787,22 @@
       "emailNotifications": "Email notifications",
       "smsNotifications": "SMS notifications",
       "pushNotifications": "Push notifications"
+    },
+    "edit": {
+      "title": "Edit profile",
+      "personalInfo": "Personal information",
+      "fullName": "Full name",
+      "fullNamePlaceholder": "Your full name",
+      "email": "Email",
+      "emailPlaceholder": "your@email.com",
+      "phone": "Phone",
+      "phoneReadOnly": "(read-only)",
+      "address": "Address",
+      "addressPlaceholder": "Your address",
+      "save": "Save changes",
+      "saving": "Saving...",
+      "success": "Profile updated successfully",
+      "error": "Error updating profile"
     }
   },
   "settings": {
@@ -550,5 +912,96 @@
     "es": "Espanol",
     "de": "Deutsch",
     "zh": "Zhongwen"
+  },
+  "visits": {
+    "title": "Visit Calendar",
+    "subtitle": "Manage your visit appointments",
+    "newVisit": "New visit",
+    "scheduleVisit": "Schedule a visit",
+    "allVisits": "All visits",
+    "totalVisits": "{count} visit(s) total",
+    "scheduledVisits": "{count} scheduled visit(s)",
+    "noVisitToday": "No visits this day",
+    "noVisitsFound": "No visits found",
+    "today": "Today",
+    "status": {
+      "all": "All statuses",
+      "PENDING": "Pending",
+      "CONFIRMED": "Confirmed",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled"
+    },
+    "days": {
+      "sun": "Sun",
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat"
+    },
+    "months": {
+      "january": "January",
+      "february": "February",
+      "march": "March",
+      "april": "April",
+      "may": "May",
+      "june": "June",
+      "july": "July",
+      "august": "August",
+      "september": "September",
+      "october": "October",
+      "november": "November",
+      "december": "December"
+    },
+    "card": {
+      "defaultProperty": "Property",
+      "addressNotAvailable": "Address not available",
+      "duration": "{minutes} min"
+    },
+    "actions": {
+      "confirm": "Confirm",
+      "markComplete": "Mark complete",
+      "message": "Message",
+      "cancel": "Cancel"
+    },
+    "modal": {
+      "title": "Schedule a visit",
+      "property": "Property",
+      "selectProperty": "Select a property",
+      "client": "Client",
+      "enterManually": "Enter manually",
+      "propertyContacts": "Contacts for this property",
+      "loadingContacts": "Loading contacts...",
+      "contactsCount": "{count} contact(s) who discussed this property",
+      "noContacts": "No contacts for this property",
+      "enterManuallyHint": "Enter information manually",
+      "phone": "Phone",
+      "date": "Date",
+      "time": "Time",
+      "notes": "Notes (optional)",
+      "notesPlaceholder": "Additional information...",
+      "sendNotification": "Send WhatsApp notification to client",
+      "notificationHint": "Client will receive a message with options: confirm, unavailable, or suggest another date",
+      "cancel": "Cancel",
+      "schedule": "Schedule",
+      "scheduling": "Scheduling...",
+      "noPhone": "No phone"
+    },
+    "dates": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "daysAgo": "{days} days ago"
+    },
+    "toast": {
+      "created": "Visit scheduled successfully",
+      "createError": "Error scheduling visit",
+      "confirmed": "Visit confirmed",
+      "confirmError": "Error confirming visit",
+      "completed": "Visit marked as complete",
+      "completeError": "Error updating visit",
+      "cancelled": "Visit cancelled",
+      "cancelError": "Error cancelling visit"
+    }
   }
 }

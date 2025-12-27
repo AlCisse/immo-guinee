@@ -16,6 +16,7 @@ import {
 import { Link } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/auth/AuthContext';
 import Colors, { lightTheme } from '@/constants/Colors';
 import Logo from '@/components/Logo';
@@ -23,13 +24,8 @@ import PhoneInput, { Country } from '@/components/PhoneInput';
 
 type AccountType = 'PARTICULIER' | 'PROFESSIONNEL' | 'AGENCE';
 
-const ACCOUNT_TYPES: { value: AccountType; label: string; icon: string }[] = [
-  { value: 'PARTICULIER', label: 'Particulier', icon: 'person-outline' },
-  { value: 'PROFESSIONNEL', label: 'Pro', icon: 'briefcase-outline' },
-  { value: 'AGENCE', label: 'Agence', icon: 'business-outline' },
-];
-
 export default function RegisterScreen() {
+  const { t } = useTranslation();
   const { register } = useAuth();
   const { width } = useWindowDimensions();
   const [nomComplet, setNomComplet] = useState('');
@@ -45,24 +41,30 @@ export default function RegisterScreen() {
   const isTablet = width >= 768;
   const maxWidth = isTablet ? 440 : width;
 
+  const ACCOUNT_TYPES: { value: AccountType; label: string; icon: string }[] = [
+    { value: 'PARTICULIER', label: t('auth.individual'), icon: 'person-outline' },
+    { value: 'PROFESSIONNEL', label: t('auth.professional'), icon: 'briefcase-outline' },
+    { value: 'AGENCE', label: t('auth.agency'), icon: 'business-outline' },
+  ];
+
   const handleRegister = async () => {
     if (!nomComplet || !telephone || !password || !confirmPassword) {
-      Alert.alert('Erreur', 'Veuillez remplir tous les champs');
+      Alert.alert(t('common.error'), t('errors.requiredField'));
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Erreur', 'Les mots de passe ne correspondent pas');
+      Alert.alert(t('common.error'), t('errors.passwordMismatch'));
       return;
     }
 
     if (password.length < 8) {
-      Alert.alert('Erreur', 'Le mot de passe doit contenir au moins 8 caractères');
+      Alert.alert(t('common.error'), t('errors.passwordTooShort'));
       return;
     }
 
     if (!acceptedCGU) {
-      Alert.alert('Conditions requises', 'Veuillez accepter les conditions generales d\'utilisation et la politique de confidentialite pour continuer.');
+      Alert.alert(t('alerts.attention'), t('auth.termsAgree'));
       return;
     }
 
@@ -78,7 +80,7 @@ export default function RegisterScreen() {
         type_compte: typeCompte,
       });
     } catch (error: any) {
-      Alert.alert('Erreur', error.message || 'Erreur lors de l\'inscription');
+      Alert.alert(t('common.error'), error.message || t('errors.generic'));
     } finally {
       setIsLoading(false);
     }
@@ -101,9 +103,9 @@ export default function RegisterScreen() {
               <View style={styles.logoContainer}>
                 <Logo size="xlarge" />
               </View>
-              <Text style={styles.title}>Créer un compte</Text>
+              <Text style={styles.title}>{t('auth.createAccount')}</Text>
               <Text style={styles.subtitle}>
-                Inscrivez-vous pour commencer
+                {t('auth.createYourAccount')}
               </Text>
             </View>
 
@@ -111,12 +113,12 @@ export default function RegisterScreen() {
             <View style={styles.form}>
               {/* Nom complet */}
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Nom complet</Text>
+                <Text style={styles.label}>{t('auth.fullName')}</Text>
                 <View style={styles.inputContainer}>
                   <Ionicons name="person-outline" size={20} color={Colors.neutral[400]} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Votre nom et prénom"
+                    placeholder={t('auth.fullName')}
                     placeholderTextColor={Colors.neutral[400]}
                     value={nomComplet}
                     onChangeText={setNomComplet}
@@ -127,7 +129,7 @@ export default function RegisterScreen() {
 
               {/* Téléphone */}
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Numéro de téléphone</Text>
+                <Text style={styles.label}>{t('auth.phone')}</Text>
                 <PhoneInput
                   value={telephone}
                   onChangeText={setTelephone}
@@ -138,7 +140,7 @@ export default function RegisterScreen() {
 
               {/* Type de compte */}
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Type de compte</Text>
+                <Text style={styles.label}>{t('auth.accountType')}</Text>
                 <View style={styles.accountTypes}>
                   {ACCOUNT_TYPES.map((type) => (
                     <TouchableOpacity
@@ -170,12 +172,12 @@ export default function RegisterScreen() {
 
               {/* Mot de passe */}
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Mot de passe</Text>
+                <Text style={styles.label}>{t('auth.password')}</Text>
                 <View style={styles.passwordContainer}>
                   <Ionicons name="lock-closed-outline" size={20} color={Colors.neutral[400]} />
                   <TextInput
                     style={styles.passwordInput}
-                    placeholder="Minimum 8 caractères"
+                    placeholder={t('errors.passwordTooShort')}
                     placeholderTextColor={Colors.neutral[400]}
                     secureTextEntry={!showPassword}
                     value={password}
@@ -197,12 +199,12 @@ export default function RegisterScreen() {
 
               {/* Confirmer mot de passe */}
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Confirmer le mot de passe</Text>
+                <Text style={styles.label}>{t('auth.confirmPassword')}</Text>
                 <View style={styles.inputContainer}>
                   <Ionicons name="lock-closed-outline" size={20} color={Colors.neutral[400]} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Confirmez votre mot de passe"
+                    placeholder={t('auth.confirmPassword')}
                     placeholderTextColor={Colors.neutral[400]}
                     secureTextEntry={!showPassword}
                     value={confirmPassword}
@@ -227,18 +229,18 @@ export default function RegisterScreen() {
                 </TouchableOpacity>
                 <View style={styles.cguTextContainer}>
                   <Text style={styles.cguText}>
-                    J'accepte les{' '}
+                    {t('auth.termsAgree').split(' ')[0]}{' '}
                   </Text>
                   <TouchableOpacity
                     onPress={() => Linking.openURL('https://immoguinee.com/legal/conditions-utilisation')}
                   >
-                    <Text style={styles.cguLink}>Conditions Generales</Text>
+                    <Text style={styles.cguLink}>{t('settings.termsOfService')}</Text>
                   </TouchableOpacity>
-                  <Text style={styles.cguText}> et la </Text>
+                  <Text style={styles.cguText}> {t('common.and') || '&'} </Text>
                   <TouchableOpacity
                     onPress={() => Linking.openURL('https://immoguinee.com/legal/politique-confidentialite')}
                   >
-                    <Text style={styles.cguLink}>Politique de Confidentialite</Text>
+                    <Text style={styles.cguLink}>{t('settings.privacyPolicy')}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -255,15 +257,15 @@ export default function RegisterScreen() {
                 {isLoading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.registerButtonText}>S'inscrire</Text>
+                  <Text style={styles.registerButtonText}>{t('auth.signUp')}</Text>
                 )}
               </TouchableOpacity>
 
               <View style={styles.loginLink}>
-                <Text style={styles.loginText}>Déjà un compte ?</Text>
+                <Text style={styles.loginText}>{t('auth.hasAccount')}</Text>
                 <Link href="/auth/login" asChild>
                   <TouchableOpacity>
-                    <Text style={styles.loginLinkText}>Se connecter</Text>
+                    <Text style={styles.loginLinkText}>{t('auth.signIn')}</Text>
                   </TouchableOpacity>
                 </Link>
               </View>
@@ -436,7 +438,7 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 6,
     borderWidth: 2,
-    borderColor: Colors.border.medium,
+    borderColor: Colors.border.default,
     backgroundColor: Colors.neutral[50],
     justifyContent: 'center',
     alignItems: 'center',

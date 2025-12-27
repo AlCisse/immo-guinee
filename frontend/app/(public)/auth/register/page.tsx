@@ -10,16 +10,18 @@ import { ROUTES } from '@/lib/routes';
 import { inputStyles } from '@/lib/utils';
 import PhoneInput from '@/components/ui/PhoneInput';
 import toast from 'react-hot-toast';
-
-const accountTypes = [
-  { value: 'PARTICULIER', label: 'Particulier', description: 'Chercher, louer ou vendre' },
-  { value: 'AGENCE', label: 'Agence / Agent', description: 'Professionnel de l\'immobilier' },
-  { value: 'PROMOTEUR', label: 'Promoteur', description: 'Promoteur immobilier' },
-];
+import { useTranslations } from '@/lib/i18n';
 
 export default function RegisterPage() {
   const { register } = useAuth();
   const router = useRouter();
+  const { t } = useTranslations();
+
+  const accountTypes = [
+    { value: 'PARTICULIER', label: t('auth.register.accountTypes.individual'), description: t('auth.register.accountTypes.individualDesc') },
+    { value: 'AGENCE', label: t('auth.register.accountTypes.agency'), description: t('auth.register.accountTypes.agencyDesc') },
+    { value: 'PROMOTEUR', label: t('auth.register.accountTypes.promoter'), description: t('auth.register.accountTypes.promoterDesc') },
+  ];
   const [formData, setFormData] = useState({
     telephone: '',
     countryCode: 'GN',
@@ -39,22 +41,22 @@ export default function RegisterPage() {
     setError('');
 
     if (!formData.telephone || !formData.mot_de_passe || !formData.nom_complet) {
-      setError('Veuillez remplir tous les champs obligatoires');
+      setError(t('auth.register.errors.fillAllFields'));
       return;
     }
 
     if (formData.mot_de_passe !== formData.mot_de_passe_confirmation) {
-      setError('Les mots de passe ne correspondent pas');
+      setError(t('auth.register.errors.passwordMismatch'));
       return;
     }
 
     if (formData.mot_de_passe.length < 8) {
-      setError('Le mot de passe doit contenir au moins 8 caractères');
+      setError(t('auth.register.errors.weakPassword'));
       return;
     }
 
     if (!acceptedCGU) {
-      setError('Veuillez accepter les conditions générales d\'utilisation et la politique de confidentialité');
+      setError(t('auth.register.errors.acceptTerms'));
       return;
     }
 
@@ -75,7 +77,7 @@ export default function RegisterPage() {
 
       // Check if user needs to be redirected to login (account already exists and verified)
       if (err.action === 'redirect_login') {
-        toast.success('Ce compte existe déjà. Redirection vers la connexion...', {
+        toast.success(t('auth.register.errors.accountExists'), {
           duration: 3000,
           icon: '👋',
         });
@@ -85,7 +87,7 @@ export default function RegisterPage() {
         setError(
           err.response?.data?.message ||
           err.message ||
-          'Une erreur est survenue lors de l\'inscription'
+          t('auth.register.errors.serverError')
         );
       }
     } finally {
@@ -100,7 +102,7 @@ export default function RegisterPage() {
       window.location.href = `/api/auth/${provider}/redirect?intent=register`;
     } catch (err) {
       console.error(`${provider} register error:`, err);
-      setError(`Erreur lors de l'inscription avec ${provider === 'google' ? 'Google' : 'Facebook'}`);
+      setError(provider === 'google' ? t('auth.register.errors.googleError') : t('auth.register.errors.facebookError'));
       setSocialLoading(null);
     }
   };
@@ -118,28 +120,28 @@ export default function RegisterPage() {
             height={80}
             className="rounded-2xl shadow-2xl mb-8"
           />
-          <h1 className="text-4xl font-bold mb-4 text-center">Rejoignez ImmoGuinée</h1>
+          <h1 className="text-4xl font-bold mb-4 text-center">{t('auth.register.promo.title')}</h1>
           <p className="text-xl text-white/90 text-center max-w-md">
-            Créez votre compte et accédez à des milliers d'annonces immobilières
+            {t('auth.register.promo.subtitle')}
           </p>
           <div className="mt-12 space-y-4 text-white/80">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
                 <span className="text-lg">📝</span>
               </div>
-              <span>Publiez gratuitement vos annonces</span>
+              <span>{t('auth.register.promo.freeListings')}</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
                 <span className="text-lg">🔔</span>
               </div>
-              <span>Alertes personnalisées</span>
+              <span>{t('auth.register.promo.alerts')}</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
                 <span className="text-lg">💬</span>
               </div>
-              <span>Messagerie intégrée</span>
+              <span>{t('auth.register.promo.messaging')}</span>
             </div>
           </div>
         </div>
@@ -162,10 +164,10 @@ export default function RegisterPage() {
 
           <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft p-4 sm:p-8">
             <h2 className="text-lg sm:text-2xl font-bold text-neutral-900 dark:text-white mb-1">
-              Créer un compte
+              {t('auth.register.createAccount')}
             </h2>
             <p className="text-sm text-neutral-500 mb-4 sm:mb-6">
-              Rejoignez la communauté ImmoGuinée
+              {t('auth.register.joinCommunity')}
             </p>
 
             {/* Social Register Buttons */}
@@ -186,7 +188,7 @@ export default function RegisterPage() {
                   </svg>
                 )}
                 <span className="text-sm sm:text-base font-medium text-neutral-700 dark:text-neutral-300">
-                  Continuer avec Google
+                  {t('auth.register.continueWithGoogle')}
                 </span>
               </button>
 
@@ -203,7 +205,7 @@ export default function RegisterPage() {
                   </svg>
                 )}
                 <span className="text-sm sm:text-base font-medium text-white">
-                  Continuer avec Facebook
+                  {t('auth.register.continueWithFacebook')}
                 </span>
               </button>
             </div>
@@ -214,7 +216,7 @@ export default function RegisterPage() {
                 <div className="w-full border-t border-neutral-200 dark:border-dark-border"></div>
               </div>
               <div className="relative flex justify-center text-xs sm:text-sm">
-                <span className="px-3 sm:px-4 bg-white dark:bg-dark-card text-neutral-500">ou</span>
+                <span className="px-3 sm:px-4 bg-white dark:bg-dark-card text-neutral-500">{t('auth.register.or')}</span>
               </div>
             </div>
 
@@ -231,7 +233,7 @@ export default function RegisterPage() {
               {/* Nom Complet */}
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1 sm:mb-2">
-                  Nom complet *
+                  {t('auth.register.fullName')} *
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 sm:pl-4">
@@ -242,7 +244,7 @@ export default function RegisterPage() {
                     value={formData.nom_complet}
                     onChange={(e) => setFormData({ ...formData, nom_complet: e.target.value })}
                     className={`${inputStyles.base} ${inputStyles.withIcon}`}
-                    placeholder="Ex: Mamadou Diallo"
+                    placeholder={t('auth.register.fullNamePlaceholder')}
                   />
                 </div>
               </div>
@@ -250,7 +252,7 @@ export default function RegisterPage() {
               {/* Telephone */}
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1 sm:mb-2">
-                  Téléphone (WhatsApp) *
+                  {t('auth.register.phoneWhatsapp')} *
                 </label>
                 <PhoneInput
                   value={formData.telephone}
@@ -264,7 +266,7 @@ export default function RegisterPage() {
               {/* Type de compte */}
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1 sm:mb-2">
-                  Type de compte *
+                  {t('auth.register.accountType')} *
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 sm:pl-4 pointer-events-none">
@@ -290,7 +292,7 @@ export default function RegisterPage() {
               {/* Mot de passe */}
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1 sm:mb-2">
-                  Mot de passe *
+                  {t('auth.register.password')} *
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 sm:pl-4">
@@ -301,7 +303,7 @@ export default function RegisterPage() {
                     value={formData.mot_de_passe}
                     onChange={(e) => setFormData({ ...formData, mot_de_passe: e.target.value })}
                     className={`${inputStyles.base} ${inputStyles.withIconRight}`}
-                    placeholder="Min. 8 caractères"
+                    placeholder={t('auth.register.passwordPlaceholder')}
                   />
                   <button
                     type="button"
@@ -316,7 +318,7 @@ export default function RegisterPage() {
               {/* Confirmation mot de passe */}
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1 sm:mb-2">
-                  Confirmer *
+                  {t('auth.register.confirmPasswordShort')} *
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 sm:pl-4">
@@ -327,7 +329,7 @@ export default function RegisterPage() {
                     value={formData.mot_de_passe_confirmation}
                     onChange={(e) => setFormData({ ...formData, mot_de_passe_confirmation: e.target.value })}
                     className={`${inputStyles.base} ${inputStyles.withIconRight}`}
-                    placeholder="Confirmer"
+                    placeholder={t('auth.register.confirmPasswordShort')}
                   />
                   <button
                     type="button"
@@ -353,21 +355,21 @@ export default function RegisterPage() {
                   {acceptedCGU && <Check className="w-3 h-3 text-white" />}
                 </button>
                 <label className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                  J'accepte les{' '}
+                  {t('auth.register.termsAccept')}{' '}
                   <Link
                     href="/legal/conditions-utilisation"
                     target="_blank"
                     className="text-primary-500 hover:text-primary-600 font-medium hover:underline"
                   >
-                    Conditions Générales d'Utilisation
+                    {t('auth.register.termsLink')}
                   </Link>{' '}
-                  et la{' '}
+                  {t('auth.register.andThe')}{' '}
                   <Link
                     href="/legal/politique-confidentialite"
                     target="_blank"
                     className="text-primary-500 hover:text-primary-600 font-medium hover:underline"
                   >
-                    Politique de Confidentialité
+                    {t('auth.register.privacy')}
                   </Link>
                 </label>
               </div>
@@ -381,11 +383,11 @@ export default function RegisterPage() {
                 {isLoading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    Inscription en cours...
+                    {t('auth.register.registering')}
                   </>
                 ) : (
                   <>
-                    S'inscrire
+                    {t('auth.register.registerButton')}
                     <ArrowRight className="w-5 h-5" />
                   </>
                 )}
@@ -394,18 +396,18 @@ export default function RegisterPage() {
 
             {/* Login link */}
             <div className="mt-4 sm:mt-6 text-center text-sm">
-              <span className="text-neutral-500">Déjà un compte ? </span>
+              <span className="text-neutral-500">{t('auth.register.hasAccount')} </span>
               <Link href={ROUTES.LOGIN} className="text-primary-500 hover:text-primary-600 font-semibold">
-                Se connecter
+                {t('auth.register.login')}
               </Link>
             </div>
           </div>
 
           {/* Terms */}
           <p className="mt-4 sm:mt-6 text-[10px] sm:text-xs text-center text-neutral-500 px-2">
-            Vos donnees sont protegees conformement a notre{' '}
+            {t('auth.register.privacyProtection')}{' '}
             <Link href="/legal/politique-confidentialite" className="text-primary-500 hover:underline">
-              Politique de confidentialité
+              {t('auth.register.privacy')}
             </Link>
           </p>
         </div>

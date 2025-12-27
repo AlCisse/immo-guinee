@@ -8,50 +8,40 @@ import {
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import Colors, { lightTheme } from '@/constants/Colors';
 
-const LEGAL_ITEMS = [
+const LEGAL_KEYS = ['termsOfUse', 'privacyPolicy'];
+
+const LEGAL_ITEMS_CONFIG = [
   {
     id: 'cgu',
-    title: "Conditions Generales d'Utilisation",
-    description: "Regles d'utilisation de la plateforme, droits et obligations",
+    key: 'termsOfUse',
     icon: 'document-text-outline' as const,
     url: 'https://immoguinee.com/legal/conditions-utilisation',
   },
   {
     id: 'privacy',
-    title: 'Politique de Confidentialite',
-    description: 'Protection de vos donnees personnelles et vos droits',
+    key: 'privacyPolicy',
     icon: 'shield-checkmark-outline' as const,
     url: 'https://immoguinee.com/legal/politique-confidentialite',
   },
 ];
 
-const SECURITY_FEATURES = [
-  {
-    icon: 'lock-closed' as const,
-    title: 'Chiffrement AES-256',
-    description: 'Documents et contrats proteges',
-  },
-  {
-    icon: 'shield' as const,
-    title: 'E2E pour les medias',
-    description: 'Cles jamais stockees sur serveur',
-  },
-  {
-    icon: 'key' as const,
-    title: '2FA disponible',
-    description: 'Double authentification',
-  },
-  {
-    icon: 'eye-off' as const,
-    title: 'Vie privee',
-    description: 'Nous ne vendons pas vos donnees',
-  },
+const SECURITY_KEYS = ['encryption', 'e2e', 'twoFactor', 'privacy'];
+
+const SECURITY_CONFIG = [
+  { key: 'encryption', icon: 'lock-closed' as const },
+  { key: 'e2e', icon: 'shield' as const },
+  { key: 'twoFactor', icon: 'key' as const },
+  { key: 'privacy', icon: 'eye-off' as const },
 ];
+
+const KEY_POINTS_KEYS = ['dataProtection', 'noDataSale', 'rightsRespected', 'secureContracts'];
 
 export default function LegalScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   const openLink = (url: string) => {
     Linking.openURL(url);
@@ -62,7 +52,7 @@ export default function LegalScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Informations Legales',
+          title: t('legal.title'),
           headerStyle: { backgroundColor: Colors.background.primary },
           headerShadowVisible: true,
           headerLeft: () => (
@@ -76,14 +66,14 @@ export default function LegalScreen() {
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         {/* Legal Documents */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Documents Legaux</Text>
+          <Text style={styles.sectionTitle}>{t('legal.documents')}</Text>
           <View style={styles.card}>
-            {LEGAL_ITEMS.map((item, index) => (
+            {LEGAL_ITEMS_CONFIG.map((item, index) => (
               <TouchableOpacity
                 key={item.id}
                 style={[
                   styles.legalItem,
-                  index === LEGAL_ITEMS.length - 1 && styles.legalItemLast,
+                  index === LEGAL_ITEMS_CONFIG.length - 1 && styles.legalItemLast,
                 ]}
                 onPress={() => openLink(item.url)}
               >
@@ -91,8 +81,8 @@ export default function LegalScreen() {
                   <Ionicons name={item.icon} size={24} color={lightTheme.colors.primary} />
                 </View>
                 <View style={styles.legalContent}>
-                  <Text style={styles.legalTitle}>{item.title}</Text>
-                  <Text style={styles.legalDescription}>{item.description}</Text>
+                  <Text style={styles.legalTitle}>{t(`legal.${item.key}.title`)}</Text>
+                  <Text style={styles.legalDescription}>{t(`legal.${item.key}.description`)}</Text>
                 </View>
                 <Ionicons name="open-outline" size={20} color={Colors.neutral[400]} />
               </TouchableOpacity>
@@ -102,15 +92,15 @@ export default function LegalScreen() {
 
         {/* Security Features */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Notre Engagement Securite</Text>
+          <Text style={styles.sectionTitle}>{t('legal.securityCommitment')}</Text>
           <View style={styles.securityGrid}>
-            {SECURITY_FEATURES.map((feature, index) => (
+            {SECURITY_CONFIG.map((feature, index) => (
               <View key={index} style={styles.securityItem}>
                 <View style={styles.securityIconContainer}>
                   <Ionicons name={feature.icon} size={24} color={lightTheme.colors.primary} />
                 </View>
-                <Text style={styles.securityTitle}>{feature.title}</Text>
-                <Text style={styles.securityDescription}>{feature.description}</Text>
+                <Text style={styles.securityTitle}>{t(`legal.security.${feature.key}.title`)}</Text>
+                <Text style={styles.securityDescription}>{t(`legal.security.${feature.key}.description`)}</Text>
               </View>
             ))}
           </View>
@@ -118,58 +108,27 @@ export default function LegalScreen() {
 
         {/* Key Points */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Points Cles</Text>
+          <Text style={styles.sectionTitle}>{t('legal.keyPoints')}</Text>
           <View style={styles.card}>
-            <View style={styles.keyPoint}>
-              <View style={[styles.keyPointIcon, { backgroundColor: '#DCFCE7' }]}>
-                <Ionicons name="checkmark-circle" size={20} color="#22C55E" />
+            {KEY_POINTS_KEYS.map((key, index) => (
+              <View key={key} style={[styles.keyPoint, index === KEY_POINTS_KEYS.length - 1 && { borderBottomWidth: 0 }]}>
+                <View style={[styles.keyPointIcon, { backgroundColor: '#DCFCE7' }]}>
+                  <Ionicons name="checkmark-circle" size={20} color="#22C55E" />
+                </View>
+                <View style={styles.keyPointContent}>
+                  <Text style={styles.keyPointTitle}>{t(`legal.keyPointsList.${key}.title`)}</Text>
+                  <Text style={styles.keyPointText}>
+                    {t(`legal.keyPointsList.${key}.text`)}
+                  </Text>
+                </View>
               </View>
-              <View style={styles.keyPointContent}>
-                <Text style={styles.keyPointTitle}>Donnees Protegees</Text>
-                <Text style={styles.keyPointText}>
-                  Vos donnees sont chiffrees et stockees en Europe (Francfort)
-                </Text>
-              </View>
-            </View>
-            <View style={styles.keyPoint}>
-              <View style={[styles.keyPointIcon, { backgroundColor: '#DCFCE7' }]}>
-                <Ionicons name="checkmark-circle" size={20} color="#22C55E" />
-              </View>
-              <View style={styles.keyPointContent}>
-                <Text style={styles.keyPointTitle}>Pas de Vente de Donnees</Text>
-                <Text style={styles.keyPointText}>
-                  Nous ne vendons jamais vos donnees personnelles a des tiers
-                </Text>
-              </View>
-            </View>
-            <View style={styles.keyPoint}>
-              <View style={[styles.keyPointIcon, { backgroundColor: '#DCFCE7' }]}>
-                <Ionicons name="checkmark-circle" size={20} color="#22C55E" />
-              </View>
-              <View style={styles.keyPointContent}>
-                <Text style={styles.keyPointTitle}>Vos Droits Respectes</Text>
-                <Text style={styles.keyPointText}>
-                  Acces, rectification, suppression - contactez privacy@immoguinee.com
-                </Text>
-              </View>
-            </View>
-            <View style={[styles.keyPoint, { borderBottomWidth: 0 }]}>
-              <View style={[styles.keyPointIcon, { backgroundColor: '#DCFCE7' }]}>
-                <Ionicons name="checkmark-circle" size={20} color="#22C55E" />
-              </View>
-              <View style={styles.keyPointContent}>
-                <Text style={styles.keyPointTitle}>Contrats Securises</Text>
-                <Text style={styles.keyPointText}>
-                  Signature electronique valide juridiquement, conservation 10 ans
-                </Text>
-              </View>
-            </View>
+            ))}
           </View>
         </View>
 
         {/* Contact */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Contact</Text>
+          <Text style={styles.sectionTitle}>{t('legal.contact')}</Text>
           <View style={styles.card}>
             <TouchableOpacity
               style={styles.contactItem}
@@ -179,8 +138,8 @@ export default function LegalScreen() {
                 <Ionicons name="mail-outline" size={22} color={lightTheme.colors.primary} />
               </View>
               <View style={styles.contactContent}>
-                <Text style={styles.contactLabel}>Confidentialite</Text>
-                <Text style={styles.contactValue}>privacy@immoguinee.com</Text>
+                <Text style={styles.contactLabel}>{t('legal.contactItems.privacy.label')}</Text>
+                <Text style={styles.contactValue}>{t('legal.contactItems.privacy.email')}</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={Colors.neutral[300]} />
             </TouchableOpacity>
@@ -192,8 +151,8 @@ export default function LegalScreen() {
                 <Ionicons name="person-outline" size={22} color={lightTheme.colors.primary} />
               </View>
               <View style={styles.contactContent}>
-                <Text style={styles.contactLabel}>Delegue Protection Donnees</Text>
-                <Text style={styles.contactValue}>dpo@immoguinee.com</Text>
+                <Text style={styles.contactLabel}>{t('legal.contactItems.dpo.label')}</Text>
+                <Text style={styles.contactValue}>{t('legal.contactItems.dpo.email')}</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={Colors.neutral[300]} />
             </TouchableOpacity>
@@ -205,8 +164,8 @@ export default function LegalScreen() {
                 <Ionicons name="alert-circle-outline" size={22} color="#EF4444" />
               </View>
               <View style={styles.contactContent}>
-                <Text style={styles.contactLabel}>Signaler une vulnerabilite</Text>
-                <Text style={styles.contactValue}>security@immoguinee.com</Text>
+                <Text style={styles.contactLabel}>{t('legal.contactItems.security.label')}</Text>
+                <Text style={styles.contactValue}>{t('legal.contactItems.security.email')}</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={Colors.neutral[300]} />
             </TouchableOpacity>
@@ -215,8 +174,8 @@ export default function LegalScreen() {
 
         {/* Version */}
         <View style={styles.versionSection}>
-          <Text style={styles.versionText}>Version 1.1 - 27 decembre 2025</Text>
-          <Text style={styles.versionText}>Conforme aux lois guineennes et RGPD</Text>
+          <Text style={styles.versionText}>{t('legal.versionInfo')}</Text>
+          <Text style={styles.versionText}>{t('legal.compliance')}</Text>
         </View>
       </ScrollView>
     </>

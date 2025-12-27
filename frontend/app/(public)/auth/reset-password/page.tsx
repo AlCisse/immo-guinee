@@ -8,10 +8,12 @@ import { motion } from 'framer-motion';
 import { Lock, Eye, EyeOff, ArrowLeft, Loader2, CheckCircle, AlertCircle, KeyRound } from 'lucide-react';
 import { apiClient } from '@/lib/api/client';
 import { ROUTES } from '@/lib/routes';
+import { useTranslations } from '@/lib/i18n';
 
 function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useTranslations();
   const phoneFromUrl = searchParams.get('phone') || '';
 
   const [formData, setFormData] = useState({
@@ -38,19 +40,19 @@ function ResetPasswordContent() {
 
     // Validate passwords match
     if (formData.mot_de_passe !== formData.mot_de_passe_confirmation) {
-      setError('Les mots de passe ne correspondent pas');
+      setError(t('auth.resetPassword.errors.passwordsMismatch'));
       return;
     }
 
     // Validate password length
     if (formData.mot_de_passe.length < 8) {
-      setError('Le mot de passe doit contenir au moins 8 caracteres');
+      setError(t('auth.resetPassword.errors.passwordTooShort'));
       return;
     }
 
     // Validate code
     if (formData.code.length !== 6) {
-      setError('Le code doit contenir 6 chiffres');
+      setError(t('auth.resetPassword.errors.invalidCode'));
       return;
     }
 
@@ -71,13 +73,13 @@ function ResetPasswordContent() {
           router.push(ROUTES.LOGIN);
         }, 3000);
       } else {
-        setError(response.data.message || 'Une erreur est survenue');
+        setError(response.data.message || t('auth.resetPassword.errors.generic'));
       }
     } catch (err: any) {
       console.error('Reset password error:', err);
       setError(
         err.response?.data?.message ||
-        'Une erreur est survenue. Veuillez reessayer.'
+        t('auth.resetPassword.errors.generic')
       );
     } finally {
       setIsLoading(false);
@@ -95,16 +97,16 @@ function ResetPasswordContent() {
           <CheckCircle className="w-10 h-10 text-green-500" />
         </div>
         <h2 className="text-2xl font-bold text-neutral-900 dark:text-white mb-3">
-          Mot de passe reinitialise !
+          {t('auth.resetPassword.success.title')}
         </h2>
         <p className="text-neutral-600 dark:text-neutral-400 mb-6">
-          Votre mot de passe a ete modifie avec succes. Vous allez etre redirige vers la page de connexion.
+          {t('auth.resetPassword.success.message')}
         </p>
         <Link
           href={ROUTES.LOGIN}
           className="inline-flex items-center gap-2 text-primary-500 hover:text-primary-600 font-medium"
         >
-          Aller a la connexion
+          {t('auth.resetPassword.success.goToLogin')}
         </Link>
       </motion.div>
     );
@@ -118,7 +120,7 @@ function ResetPasswordContent() {
         className="inline-flex items-center gap-2 text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200 mb-6 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
-        Retour
+        {t('auth.resetPassword.back')}
       </Link>
 
       <div className="text-center mb-8">
@@ -126,10 +128,10 @@ function ResetPasswordContent() {
           <KeyRound className="w-8 h-8 text-primary-500" />
         </div>
         <h1 className="text-2xl font-bold text-neutral-900 dark:text-white mb-2">
-          Nouveau mot de passe
+          {t('auth.resetPassword.title')}
         </h1>
         <p className="text-neutral-600 dark:text-neutral-400">
-          Entrez le code recu et choisissez un nouveau mot de passe
+          {t('auth.resetPassword.subtitle')}
         </p>
       </div>
 
@@ -148,7 +150,7 @@ function ResetPasswordContent() {
         {/* OTP Code */}
         <div>
           <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-            Code de verification
+            {t('auth.resetPassword.code')}
           </label>
           <input
             type="text"
@@ -157,7 +159,7 @@ function ResetPasswordContent() {
               const value = e.target.value.replace(/\D/g, '').slice(0, 6);
               setFormData({ ...formData, code: value });
             }}
-            placeholder="000000"
+            placeholder={t('auth.resetPassword.codePlaceholder')}
             maxLength={6}
             className="w-full px-4 py-3 text-center text-2xl tracking-[0.5em] font-mono bg-neutral-50 dark:bg-dark-bg border-2 border-neutral-200 dark:border-dark-border rounded-xl focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 text-neutral-900 dark:text-white"
           />
@@ -166,7 +168,7 @@ function ResetPasswordContent() {
         {/* New Password */}
         <div>
           <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-            Nouveau mot de passe
+            {t('auth.resetPassword.newPassword')}
           </label>
           <div className="relative">
             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
@@ -174,7 +176,7 @@ function ResetPasswordContent() {
               type={showPassword ? 'text' : 'password'}
               value={formData.mot_de_passe}
               onChange={(e) => setFormData({ ...formData, mot_de_passe: e.target.value })}
-              placeholder="Minimum 8 caracteres"
+              placeholder={t('auth.resetPassword.newPasswordPlaceholder')}
               required
               minLength={8}
               className="w-full pl-12 pr-12 py-3 rounded-xl border-2 border-neutral-200 dark:border-dark-border focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 bg-white dark:bg-dark-card text-neutral-900 dark:text-white"
@@ -192,7 +194,7 @@ function ResetPasswordContent() {
         {/* Confirm Password */}
         <div>
           <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-            Confirmer le mot de passe
+            {t('auth.resetPassword.confirmPassword')}
           </label>
           <div className="relative">
             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
@@ -200,7 +202,7 @@ function ResetPasswordContent() {
               type={showConfirmPassword ? 'text' : 'password'}
               value={formData.mot_de_passe_confirmation}
               onChange={(e) => setFormData({ ...formData, mot_de_passe_confirmation: e.target.value })}
-              placeholder="Repetez le mot de passe"
+              placeholder={t('auth.resetPassword.confirmPasswordPlaceholder')}
               required
               minLength={8}
               className="w-full pl-12 pr-12 py-3 rounded-xl border-2 border-neutral-200 dark:border-dark-border focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 bg-white dark:bg-dark-card text-neutral-900 dark:text-white"
@@ -223,10 +225,10 @@ function ResetPasswordContent() {
           {isLoading ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              Reinitialisation...
+              {t('auth.resetPassword.submitting')}
             </>
           ) : (
-            'Reinitialiser le mot de passe'
+            t('auth.resetPassword.submit')
           )}
         </button>
       </form>

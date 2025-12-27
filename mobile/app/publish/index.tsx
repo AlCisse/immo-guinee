@@ -20,6 +20,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import Colors, { lightTheme } from '@/constants/Colors';
@@ -64,15 +65,16 @@ interface FormData {
   avanceMois: number;
 }
 
-const STEPS = [
-  { id: 1, label: 'Type', icon: 'options-outline' },
-  { id: 2, label: 'Lieu', icon: 'location-outline' },
-  { id: 3, label: 'Details', icon: 'document-text-outline' },
-  { id: 4, label: 'Photos', icon: 'camera-outline' },
-];
-
 export default function PublishScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
+
+  const STEPS = [
+    { id: 1, label: t('publish.step1'), icon: 'options-outline' },
+    { id: 2, label: t('publish.step2'), icon: 'location-outline' },
+    { id: 3, label: t('publish.step3'), icon: 'document-text-outline' },
+    { id: 4, label: t('publish.step4'), icon: 'camera-outline' },
+  ];
   const queryClient = useQueryClient();
   const { isAuthenticated, user } = useAuth();
   const scrollRef = useRef<ScrollView>(null);
@@ -194,14 +196,14 @@ export default function PublishScreen() {
       queryClient.invalidateQueries({ queryKey: ['my-listings'] });
       queryClient.invalidateQueries({ queryKey: ['listings'] });
       Alert.alert(
-        'Succes',
-        'Votre annonce a ete creee avec succes!',
-        [{ text: 'OK', onPress: () => router.replace('/my-listings') }]
+        t('alerts.success'),
+        t('publish.success'),
+        [{ text: t('common.ok'), onPress: () => router.replace('/my-listings') }]
       );
     },
     onError: (error: any) => {
       if (__DEV__) console.log('Publish error:', error.response?.data);
-      let message = error.response?.data?.message || 'Une erreur est survenue';
+      let message = error.response?.data?.message || t('errors.generic');
 
       // Show validation errors if any
       const errors = error.response?.data?.errors;
@@ -210,7 +212,7 @@ export default function PublishScreen() {
         message = errorMessages || message;
       }
 
-      Alert.alert('Erreur', message);
+      Alert.alert(t('common.error'), message);
     },
   });
 
@@ -218,11 +220,11 @@ export default function PublishScreen() {
   useEffect(() => {
     if (!isAuthenticated) {
       Alert.alert(
-        'Connexion requise',
-        'Vous devez etre connecte pour publier une annonce',
+        t('auth.loginRequired'),
+        t('publish.loginRequired'),
         [
-          { text: 'Annuler', onPress: () => router.back() },
-          { text: 'Se connecter', onPress: () => router.push('/auth/login') },
+          { text: t('common.cancel'), onPress: () => router.back() },
+          { text: t('auth.signIn'), onPress: () => router.push('/auth/login') },
         ]
       );
     }
@@ -234,7 +236,7 @@ export default function PublishScreen() {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission refusee', 'Activez la localisation pour continuer');
+        Alert.alert(t('publish.permissionDenied'), t('publish.enableLocation'));
         setIsLocating(false);
         return;
       }
@@ -266,7 +268,7 @@ export default function PublishScreen() {
       fetchNearbyLandmarks(location.coords.latitude, location.coords.longitude);
 
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de detecter votre position');
+      Alert.alert(t('common.error'), t('publish.locationDetectFailed'));
     } finally {
       setIsLocating(false);
     }
@@ -325,7 +327,7 @@ export default function PublishScreen() {
   const pickImages = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission requise', 'Autorisez l\'acces aux photos');
+      Alert.alert(t('publish.permissionRequired'), t('publish.allowPhotosAccess'));
       return;
     }
 
@@ -347,7 +349,7 @@ export default function PublishScreen() {
   const takePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission requise', 'Autorisez l\'acces a la camera');
+      Alert.alert(t('publish.permissionRequired'), t('publish.allowCameraAccess'));
       return;
     }
 
@@ -928,8 +930,8 @@ export default function PublishScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Publier une annonce',
-          headerTitle: 'Publier une annonce',
+          title: t('publish.title'),
+          headerTitle: t('publish.title'),
           headerBackVisible: false,
           headerStyle: { backgroundColor: Colors.background.primary },
           headerTitleStyle: { fontSize: 18, fontWeight: '600' },
@@ -1000,7 +1002,7 @@ export default function PublishScreen() {
           {currentStep > 1 && (
             <TouchableOpacity style={styles.prevButton} onPress={prevStep}>
               <Ionicons name="arrow-back" size={20} color={Colors.secondary[800]} />
-              <Text style={styles.prevButtonText}>Retour</Text>
+              <Text style={styles.prevButtonText}>{t('publish.back')}</Text>
             </TouchableOpacity>
           )}
           <TouchableOpacity
@@ -1013,7 +1015,7 @@ export default function PublishScreen() {
             ) : (
               <>
                 <Text style={styles.nextButtonText}>
-                  {currentStep === 4 ? 'Publier' : 'Continuer'}
+                  {currentStep === 4 ? t('publish.publish') : t('publish.continue')}
                 </Text>
                 {currentStep < 4 && <Ionicons name="arrow-forward" size={20} color="#fff" />}
               </>

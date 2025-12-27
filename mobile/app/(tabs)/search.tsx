@@ -16,31 +16,33 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api/client';
 import { Listing, ListingFilters } from '@/types';
 import Colors, { lightTheme } from '@/constants/Colors';
 import { formatPrice as formatPriceUtil } from '@/lib/utils/formatPrice';
 
-const PROPERTY_TYPES = [
-  { value: '', label: 'Tous' },
-  { value: 'APPARTEMENT', label: 'Appartement' },
-  { value: 'MAISON', label: 'Maison' },
-  { value: 'VILLA', label: 'Villa' },
-  { value: 'STUDIO', label: 'Studio' },
-  { value: 'TERRAIN', label: 'Terrain' },
-  { value: 'BUREAU', label: 'Bureau' },
-  { value: 'COMMERCIAL', label: 'Commercial' },
-];
-
-const TRANSACTION_TYPES = [
-  { value: '', label: 'Tous' },
-  { value: 'LOCATION', label: 'Location' },
-  { value: 'LOCATION_COURTE', label: 'Courte durée' },
-  { value: 'VENTE', label: 'Vente' },
-];
-
 export default function SearchScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
+
+  const PROPERTY_TYPES = [
+    { value: '', label: t('common.all') },
+    { value: 'APPARTEMENT', label: t('propertyTypes.APPARTEMENT') },
+    { value: 'MAISON', label: t('propertyTypes.MAISON') },
+    { value: 'VILLA', label: t('propertyTypes.VILLA') },
+    { value: 'STUDIO', label: t('propertyTypes.STUDIO') },
+    { value: 'TERRAIN', label: t('propertyTypes.TERRAIN') },
+    { value: 'BUREAU', label: t('propertyTypes.BUREAU') },
+    { value: 'COMMERCIAL', label: t('propertyTypes.LOCAL_COMMERCIAL') },
+  ];
+
+  const TRANSACTION_TYPES = [
+    { value: '', label: t('common.all') },
+    { value: 'LOCATION', label: t('transactionTypes.LOCATION') },
+    { value: 'LOCATION_COURTE', label: t('transactionTypes.LOCATION_COURTE') },
+    { value: 'VENTE', label: t('transactionTypes.VENTE') },
+  ];
   const { width } = useWindowDimensions();
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -118,7 +120,7 @@ export default function SearchScreen() {
             item.type_transaction === 'VENTE' ? styles.badgeVente : styles.badgeLocation
           ]}>
             <Text style={styles.typeBadgeText}>
-              {item.type_transaction === 'VENTE' ? 'Vente' : 'Location'}
+              {item.type_transaction === 'VENTE' ? t('transactionTypes.VENTE') : t('transactionTypes.LOCATION')}
             </Text>
           </View>
         </View>
@@ -169,7 +171,7 @@ export default function SearchScreen() {
             {formatPrice(item)} GNF
             <Text style={styles.listItemPriceLabel}>
               {item.type_transaction === 'VENTE' ? '' :
-               item.type_transaction === 'LOCATION_COURTE' ? '/jour' : '/mois'}
+               item.type_transaction === 'LOCATION_COURTE' ? t('listings.perDay') : t('listings.perMonth')}
             </Text>
           </Text>
         </View>
@@ -185,7 +187,7 @@ export default function SearchScreen() {
           <Ionicons name="search" size={20} color={lightTheme.colors.primary} />
           <TextInput
             style={styles.searchInput}
-            placeholder="Rechercher par quartier, commune..."
+            placeholder={t('search.placeholder')}
             placeholderTextColor={Colors.neutral[400]}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -217,12 +219,12 @@ export default function SearchScreen() {
       {/* Results Count */}
       <View style={[styles.resultsHeader, { paddingHorizontal: horizontalPadding }]}>
         <Text style={styles.resultsCount}>
-          {listings.length} résultat{listings.length > 1 ? 's' : ''}
+          {t('search.resultsCount', { count: listings.length })}
         </Text>
         {activeFiltersCount > 0 && (
           <TouchableOpacity onPress={clearFilters} style={styles.clearBtn}>
             <Ionicons name="close" size={14} color={lightTheme.colors.primary} />
-            <Text style={styles.clearFilters}>Effacer</Text>
+            <Text style={styles.clearFilters}>{t('search.clearFilters')}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -231,20 +233,20 @@ export default function SearchScreen() {
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={lightTheme.colors.primary} />
-          <Text style={styles.loadingText}>Recherche en cours...</Text>
+          <Text style={styles.loadingText}>{t('search.searching')}</Text>
         </View>
       ) : isError ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="cloud-offline-outline" size={64} color={Colors.error[400]} />
-          <Text style={styles.emptyTitle}>Erreur de connexion</Text>
+          <Text style={styles.emptyTitle}>{t('errors.network')}</Text>
           <Text style={styles.emptyText}>
-            Impossible de charger les résultats
+            {t('search.loadResultsFailed')}
           </Text>
           <TouchableOpacity
             style={styles.retryButton}
             onPress={() => refetch()}
           >
-            <Text style={styles.retryButtonText}>Réessayer</Text>
+            <Text style={styles.retryButtonText}>{t('common.retry')}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -260,9 +262,9 @@ export default function SearchScreen() {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Ionicons name="search-outline" size={64} color={Colors.neutral[300]} />
-              <Text style={styles.emptyTitle}>Aucun résultat</Text>
+              <Text style={styles.emptyTitle}>{t('common.noResults')}</Text>
               <Text style={styles.emptyText}>
-                Essayez de modifier vos critères de recherche
+                {t('search.modifySearchCriteria')}
               </Text>
             </View>
           }
@@ -278,7 +280,7 @@ export default function SearchScreen() {
       >
         <SafeAreaView style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Filtres</Text>
+            <Text style={styles.modalTitle}>{t('search.filters')}</Text>
             <TouchableOpacity
               style={styles.modalCloseBtn}
               onPress={() => setShowFilters(false)}
@@ -290,7 +292,7 @@ export default function SearchScreen() {
           <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
             {/* Type de bien */}
             <View style={styles.filterSection}>
-              <Text style={styles.filterLabel}>Type de bien</Text>
+              <Text style={styles.filterLabel}>{t('search.propertyType')}</Text>
               <View style={styles.filterOptions}>
                 {PROPERTY_TYPES.map((type) => (
                   <TouchableOpacity
@@ -316,7 +318,7 @@ export default function SearchScreen() {
 
             {/* Type de transaction */}
             <View style={styles.filterSection}>
-              <Text style={styles.filterLabel}>Type de transaction</Text>
+              <Text style={styles.filterLabel}>{t('search.transactionType')}</Text>
               <View style={styles.filterOptions}>
                 {TRANSACTION_TYPES.map((type) => (
                   <TouchableOpacity
@@ -342,7 +344,7 @@ export default function SearchScreen() {
 
             {/* Chambres */}
             <View style={styles.filterSection}>
-              <Text style={styles.filterLabel}>Chambres minimum</Text>
+              <Text style={styles.filterLabel}>{t('search.minBedrooms')}</Text>
               <View style={styles.filterOptions}>
                 {[1, 2, 3, 4, 5].map((num) => (
                   <TouchableOpacity
@@ -372,7 +374,7 @@ export default function SearchScreen() {
 
             {/* Meublé */}
             <View style={styles.filterSection}>
-              <Text style={styles.filterLabel}>Meublé</Text>
+              <Text style={styles.filterLabel}>{t('search.furnished')}</Text>
               <View style={styles.filterOptions}>
                 <TouchableOpacity
                   style={[
@@ -387,7 +389,7 @@ export default function SearchScreen() {
                       filters.meuble === undefined && styles.filterOptionTextActive,
                     ]}
                   >
-                    Tous
+                    {t('common.all')}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -403,7 +405,7 @@ export default function SearchScreen() {
                       filters.meuble === true && styles.filterOptionTextActive,
                     ]}
                   >
-                    Oui
+                    {t('common.yes')}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -419,7 +421,7 @@ export default function SearchScreen() {
                       filters.meuble === false && styles.filterOptionTextActive,
                     ]}
                   >
-                    Non
+                    {t('common.no')}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -431,14 +433,14 @@ export default function SearchScreen() {
               style={styles.clearButton}
               onPress={() => setFilters({})}
             >
-              <Text style={styles.clearButtonText}>Effacer tout</Text>
+              <Text style={styles.clearButtonText}>{t('search.clearAll')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.applyButton}
               onPress={() => setShowFilters(false)}
             >
               <Text style={styles.applyButtonText}>
-                Appliquer ({listings.length})
+                {t('common.apply')} ({listings.length})
               </Text>
             </TouchableOpacity>
           </View>

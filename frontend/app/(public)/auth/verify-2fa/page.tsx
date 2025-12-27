@@ -6,9 +6,11 @@ import Image from 'next/image';
 import { Shield, Loader2, ArrowLeft, Key } from 'lucide-react';
 import { apiClient } from '@/lib/api/client';
 import toast from 'react-hot-toast';
+import { useTranslations } from '@/lib/i18n';
 
 export default function Verify2FAPage() {
   const router = useRouter();
+  const { t } = useTranslations();
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -75,7 +77,7 @@ export default function Verify2FAPage() {
     const codeToSubmit = submittedCode || code.join('');
 
     if (codeToSubmit.length !== 6) {
-      setError('Veuillez entrer le code a 6 chiffres');
+      setError(t('auth.verify2fa.errors.enterCode'));
       return;
     }
 
@@ -86,7 +88,7 @@ export default function Verify2FAPage() {
       // Get the pending token from sessionStorage
       const pendingToken = sessionStorage.getItem('pending_2fa_token');
       if (!pendingToken) {
-        setError('Session expiree. Veuillez vous reconnecter.');
+        setError(t('auth.verify2fa.errors.sessionExpired'));
         router.push('/auth/login');
         return;
       }
@@ -119,7 +121,7 @@ export default function Verify2FAPage() {
         sessionStorage.removeItem('pending_2fa_user');
         sessionStorage.removeItem('pending_2fa_redirect');
 
-        toast.success('Verification reussie');
+        toast.success(t('auth.verify2fa.success'));
 
         // Get the intended destination from session storage or redirect to admin
         const intendedPath = sessionStorage.getItem('2fa_redirect') || '/admin';
@@ -130,7 +132,7 @@ export default function Verify2FAPage() {
       }
     } catch (err: any) {
       console.error('2FA verification error:', err);
-      setError(err.response?.data?.message || 'Code invalide. Veuillez reessayer.');
+      setError(err.response?.data?.message || t('auth.verify2fa.errors.invalidCode'));
       setCode(['', '', '', '', '', '']);
       inputRefs.current[0]?.focus();
     } finally {
@@ -142,7 +144,7 @@ export default function Verify2FAPage() {
     e.preventDefault();
 
     if (!recoveryCode.trim()) {
-      setError('Veuillez entrer un code de recuperation');
+      setError(t('auth.verify2fa.errors.enterRecoveryCode'));
       return;
     }
 
@@ -153,7 +155,7 @@ export default function Verify2FAPage() {
       // Get the pending token from sessionStorage
       const pendingToken = sessionStorage.getItem('pending_2fa_token');
       if (!pendingToken) {
-        setError('Session expiree. Veuillez vous reconnecter.');
+        setError(t('auth.verify2fa.errors.sessionExpired'));
         router.push('/auth/login');
         return;
       }
@@ -192,7 +194,7 @@ export default function Verify2FAPage() {
       }
     } catch (err: any) {
       console.error('Recovery code error:', err);
-      setError(err.response?.data?.message || 'Code de recuperation invalide.');
+      setError(err.response?.data?.message || t('auth.verify2fa.errors.invalidRecoveryCode'));
     } finally {
       setIsLoading(false);
     }
@@ -226,7 +228,7 @@ export default function Verify2FAPage() {
       <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-dark-bg">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent mx-auto mb-4" />
-          <p className="text-neutral-500">Chargement...</p>
+          <p className="text-neutral-500">{t('auth.verify2fa.loading')}</p>
         </div>
       </div>
     );
@@ -241,28 +243,28 @@ export default function Verify2FAPage() {
           <div className="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center mb-8">
             <Shield className="w-12 h-12 text-white" />
           </div>
-          <h1 className="text-4xl font-bold mb-4 text-center">Verification 2FA</h1>
+          <h1 className="text-4xl font-bold mb-4 text-center">{t('auth.verify2fa.title')}</h1>
           <p className="text-xl text-white/90 text-center max-w-md">
-            Securite renforcee pour votre compte administrateur
+            {t('auth.verify2fa.subtitle')}
           </p>
           <div className="mt-12 space-y-4 text-white/80">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
                 <span className="text-lg">1</span>
               </div>
-              <span>Ouvrez Google Authenticator</span>
+              <span>{t('auth.verify2fa.step1')}</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
                 <span className="text-lg">2</span>
               </div>
-              <span>Trouvez le code pour ImmoGuinee</span>
+              <span>{t('auth.verify2fa.step2')}</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
                 <span className="text-lg">3</span>
               </div>
-              <span>Entrez le code a 6 chiffres</span>
+              <span>{t('auth.verify2fa.step3')}</span>
             </div>
           </div>
         </div>
@@ -276,17 +278,17 @@ export default function Verify2FAPage() {
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary-100 dark:bg-primary-500/10 flex items-center justify-center">
               <Shield className="w-8 h-8 text-primary-500" />
             </div>
-            <h1 className="text-xl font-bold text-neutral-900 dark:text-white">Verification 2FA</h1>
+            <h1 className="text-xl font-bold text-neutral-900 dark:text-white">{t('auth.verify2fa.title')}</h1>
           </div>
 
           <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft p-5 sm:p-8">
             {!showRecoveryInput ? (
               <>
                 <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-white mb-1 text-center">
-                  Entrez le code
+                  {t('auth.verify2fa.enterCode')}
                 </h2>
                 <p className="text-sm text-neutral-500 mb-6 text-center">
-                  Ouvrez Google Authenticator et entrez le code affiche
+                  {t('auth.verify2fa.enterCodeSubtitle')}
                 </p>
 
                 {error && (
@@ -320,12 +322,12 @@ export default function Verify2FAPage() {
                   {isLoading ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      Verification...
+                      {t('auth.verify2fa.verifying')}
                     </>
                   ) : (
                     <>
                       <Shield className="w-5 h-5" />
-                      Verifier
+                      {t('auth.verify2fa.verify')}
                     </>
                   )}
                 </button>
@@ -336,7 +338,7 @@ export default function Verify2FAPage() {
                   className="w-full mt-4 text-sm text-primary-500 hover:text-primary-600 font-medium"
                 >
                   <Key className="w-4 h-4 inline mr-1" />
-                  Utiliser un code de recuperation
+                  {t('auth.verify2fa.useRecoveryCode')}
                 </button>
               </>
             ) : (
@@ -351,14 +353,14 @@ export default function Verify2FAPage() {
                   className="flex items-center text-sm text-neutral-500 hover:text-neutral-700 mb-4"
                 >
                   <ArrowLeft className="w-4 h-4 mr-1" />
-                  Retour
+                  {t('auth.verify2fa.back')}
                 </button>
 
                 <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-white mb-1">
-                  Code de recuperation
+                  {t('auth.verify2fa.recoveryCode.title')}
                 </h2>
                 <p className="text-sm text-neutral-500 mb-6">
-                  Entrez l'un de vos codes de recuperation
+                  {t('auth.verify2fa.recoveryCode.subtitle')}
                 </p>
 
                 {error && (
@@ -372,7 +374,7 @@ export default function Verify2FAPage() {
                     type="text"
                     value={recoveryCode}
                     onChange={(e) => setRecoveryCode(e.target.value.toUpperCase())}
-                    placeholder="XXXX-XXXX-XXXX-XXXX"
+                    placeholder={t('auth.verify2fa.recoveryCode.placeholder')}
                     disabled={isLoading}
                     className="w-full px-4 py-3 text-center font-mono text-lg border-2 border-neutral-200 dark:border-dark-border rounded-xl focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 bg-white dark:bg-dark-bg text-neutral-900 dark:text-white disabled:opacity-50 transition-all mb-4"
                   />
@@ -385,12 +387,12 @@ export default function Verify2FAPage() {
                     {isLoading ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        Verification...
+                        {t('auth.verify2fa.verifying')}
                       </>
                     ) : (
                       <>
                         <Key className="w-5 h-5" />
-                        Utiliser ce code
+                        {t('auth.verify2fa.recoveryCode.submit')}
                       </>
                     )}
                   </button>
@@ -403,7 +405,7 @@ export default function Verify2FAPage() {
                 onClick={handleLogout}
                 className="w-full text-sm text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
               >
-                Se deconnecter
+                {t('auth.verify2fa.logout')}
               </button>
             </div>
           </div>

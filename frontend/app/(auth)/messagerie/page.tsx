@@ -24,6 +24,7 @@ import {
   ArrowLeft,
   Circle,
 } from 'lucide-react';
+import { useTranslations } from '@/lib/i18n';
 
 // Types
 interface Message {
@@ -271,21 +272,22 @@ function formatTime(date: Date): string {
   return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 }
 
-function formatLastSeen(date: Date): string {
+function formatLastSeen(date: Date, t: (key: string, params?: Record<string, any>) => string): string {
   const now = new Date();
   const diff = now.getTime() - date.getTime();
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
 
-  if (minutes < 1) return 'En ligne';
-  if (minutes < 60) return `Il y a ${minutes} min`;
-  if (hours < 24) return `Il y a ${hours}h`;
-  if (days === 1) return 'Hier';
+  if (minutes < 1) return t('messages.online');
+  if (minutes < 60) return t('messages.time.minutesAgo', { count: minutes });
+  if (hours < 24) return t('messages.time.hoursAgo', { count: hours });
+  if (days === 1) return t('messages.time.yesterday');
   return date.toLocaleDateString('fr-FR');
 }
 
 export default function MessagingPage() {
+  const { t } = useTranslations();
   const [conversations] = useState<Conversation[]>(mockConversations);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>(mockMessages);
@@ -391,13 +393,13 @@ export default function MessagingPage() {
         {/* Header */}
         <div className="p-4 border-b border-neutral-200 dark:border-dark-border">
           <h1 className="text-xl font-bold text-neutral-900 dark:text-white mb-4">
-            Messages
+            {t('messages.title')}
           </h1>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
             <input
               type="text"
-              placeholder="Rechercher une conversation..."
+              placeholder={t('messages.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-neutral-100 dark:bg-dark-bg border-0 rounded-xl text-sm focus:ring-2 focus:ring-primary-500 dark:text-white"
@@ -435,7 +437,7 @@ export default function MessagingPage() {
                     {conv.participant.name}
                   </h3>
                   <span className="text-xs text-neutral-500 dark:text-neutral-400 flex-shrink-0">
-                    {formatLastSeen(conv.lastMessage.timestamp)}
+                    {formatLastSeen(conv.lastMessage.timestamp, t)}
                   </span>
                 </div>
 
@@ -493,8 +495,8 @@ export default function MessagingPage() {
                 </h2>
                 <p className="text-xs text-neutral-500 dark:text-neutral-400">
                   {selectedConversation.participant.isOnline
-                    ? 'En ligne'
-                    : `Vu ${formatLastSeen(selectedConversation.participant.lastSeen || new Date())}`}
+                    ? t('messages.online')
+                    : `${t('messages.lastSeen')} ${formatLastSeen(selectedConversation.participant.lastSeen || new Date(), t)}`}
                 </p>
               </div>
 
@@ -523,7 +525,7 @@ export default function MessagingPage() {
                       {selectedConversation.property.title}
                     </p>
                     <p className="text-xs text-primary-600 dark:text-primary-400">
-                      Conversation liée à cette propriété
+                      {t('messages.linkedToProperty')}
                     </p>
                   </div>
                 </div>
@@ -654,7 +656,7 @@ export default function MessagingPage() {
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                      placeholder="Écrivez votre message..."
+                      placeholder={t('messages.typeMessage')}
                       className="flex-1 px-4 py-2.5 bg-neutral-100 dark:bg-dark-bg border-0 rounded-full text-sm focus:ring-2 focus:ring-primary-500 dark:text-white"
                     />
 
@@ -692,10 +694,10 @@ export default function MessagingPage() {
                 <Send className="w-10 h-10 text-primary-500" />
               </div>
               <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
-                Vos messages
+                {t('messages.yourMessages')}
               </h2>
               <p className="text-neutral-500 dark:text-neutral-400 max-w-sm">
-                Sélectionnez une conversation pour commencer à discuter avec un propriétaire ou un locataire.
+                {t('messages.selectConversation')}
               </p>
             </motion.div>
           </div>

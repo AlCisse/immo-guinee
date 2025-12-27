@@ -15,12 +15,14 @@ import {
 import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { api } from '@/lib/api/client';
 import Colors, { lightTheme } from '@/constants/Colors';
 
 export default function EditProfileScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { user, refreshUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
@@ -44,7 +46,7 @@ export default function EditProfileScreen() {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (!permissionResult.granted) {
-      Alert.alert('Permission requise', 'Veuillez autoriser l\'acces a la galerie photo.');
+      Alert.alert(t('editProfile.permissionRequired'), t('editProfile.allowGalleryAccess'));
       return;
     }
 
@@ -64,7 +66,7 @@ export default function EditProfileScreen() {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
 
     if (!permissionResult.granted) {
-      Alert.alert('Permission requise', 'Veuillez autoriser l\'acces a la camera.');
+      Alert.alert(t('editProfile.permissionRequired'), t('editProfile.allowCameraAccess'));
       return;
     }
 
@@ -81,19 +83,19 @@ export default function EditProfileScreen() {
 
   const showImageOptions = () => {
     Alert.alert(
-      'Photo de profil',
-      'Choisissez une option',
+      t('editProfile.profilePhoto'),
+      t('editProfile.chooseOption'),
       [
-        { text: 'Prendre une photo', onPress: takePhoto },
-        { text: 'Choisir dans la galerie', onPress: pickImage },
-        { text: 'Annuler', style: 'cancel' },
+        { text: t('editProfile.takePhoto'), onPress: takePhoto },
+        { text: t('editProfile.chooseFromGallery'), onPress: pickImage },
+        { text: t('common.cancel'), style: 'cancel' },
       ]
     );
   };
 
   const handleSave = async () => {
     if (!nomComplet.trim()) {
-      Alert.alert('Erreur', 'Le nom complet est requis.');
+      Alert.alert(t('common.error'), t('editProfile.fullNameRequired'));
       return;
     }
 
@@ -130,13 +132,13 @@ export default function EditProfileScreen() {
         await refreshUser();
       }
 
-      Alert.alert('Succes', 'Votre profil a ete mis a jour.', [
-        { text: 'OK', onPress: () => router.back() }
+      Alert.alert(t('common.success'), t('editProfile.profileUpdated'), [
+        { text: t('common.ok'), onPress: () => router.back() }
       ]);
     } catch (error: any) {
       console.error('Update profile error:', error);
-      const message = error.response?.data?.message || 'Erreur lors de la mise a jour du profil.';
-      Alert.alert('Erreur', message);
+      const message = error.response?.data?.message || t('editProfile.updateFailed');
+      Alert.alert(t('common.error'), message);
     } finally {
       setLoading(false);
     }
@@ -147,7 +149,7 @@ export default function EditProfileScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Modifier le profil',
+          title: t('editProfile.title'),
           headerStyle: { backgroundColor: Colors.background.primary },
           headerShadowVisible: true,
           headerLeft: () => (
@@ -164,7 +166,7 @@ export default function EditProfileScreen() {
               {loading ? (
                 <ActivityIndicator size="small" color={lightTheme.colors.primary} />
               ) : (
-                <Text style={styles.saveButtonText}>Enregistrer</Text>
+                <Text style={styles.saveButtonText}>{t('editProfile.save')}</Text>
               )}
             </TouchableOpacity>
           ),
@@ -196,21 +198,21 @@ export default function EditProfileScreen() {
                 <Ionicons name="camera" size={18} color="#fff" />
               </View>
             </TouchableOpacity>
-            <Text style={styles.photoHint}>Appuyez pour changer la photo</Text>
+            <Text style={styles.photoHint}>{t('editProfile.tapToChange')}</Text>
           </View>
 
           {/* Form Fields */}
           <View style={styles.formSection}>
             {/* Nom complet */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Nom complet *</Text>
+              <Text style={styles.label}>{t('editProfile.fullName')}</Text>
               <View style={styles.inputContainer}>
                 <Ionicons name="person-outline" size={20} color={Colors.neutral[400]} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   value={nomComplet}
                   onChangeText={setNomComplet}
-                  placeholder="Votre nom complet"
+                  placeholder={t('editProfile.fullNamePlaceholder')}
                   placeholderTextColor={Colors.neutral[400]}
                 />
               </View>
@@ -218,14 +220,14 @@ export default function EditProfileScreen() {
 
             {/* Email */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email</Text>
+              <Text style={styles.label}>{t('auth.email')}</Text>
               <View style={styles.inputContainer}>
                 <Ionicons name="mail-outline" size={20} color={Colors.neutral[400]} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   value={email}
                   onChangeText={setEmail}
-                  placeholder="votre@email.com"
+                  placeholder={t('editProfile.emailPlaceholder')}
                   placeholderTextColor={Colors.neutral[400]}
                   keyboardType="email-address"
                   autoCapitalize="none"
@@ -235,7 +237,7 @@ export default function EditProfileScreen() {
 
             {/* Telephone (read-only) */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Telephone</Text>
+              <Text style={styles.label}>{t('editProfile.phone')}</Text>
               <View style={[styles.inputContainer, styles.inputDisabled]}>
                 <Ionicons name="call-outline" size={20} color={Colors.neutral[400]} style={styles.inputIcon} />
                 <TextInput
@@ -246,20 +248,20 @@ export default function EditProfileScreen() {
                 <Ionicons name="lock-closed" size={16} color={Colors.neutral[400]} />
               </View>
               <Text style={styles.helperText}>
-                Le numero de telephone ne peut pas etre modifie
+                {t('editProfile.phoneCannotBeChanged')}
               </Text>
             </View>
 
             {/* Adresse */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Adresse</Text>
+              <Text style={styles.label}>{t('editProfile.address')}</Text>
               <View style={styles.inputContainer}>
                 <Ionicons name="location-outline" size={20} color={Colors.neutral[400]} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   value={adresse}
                   onChangeText={setAdresse}
-                  placeholder="Votre adresse"
+                  placeholder={t('editProfile.addressPlaceholder')}
                   placeholderTextColor={Colors.neutral[400]}
                 />
               </View>
@@ -267,7 +269,7 @@ export default function EditProfileScreen() {
 
             {/* Type de compte (read-only) */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Type de compte</Text>
+              <Text style={styles.label}>{t('editProfile.accountType')}</Text>
               <View style={[styles.inputContainer, styles.inputDisabled]}>
                 <Ionicons
                   name={
@@ -281,8 +283,8 @@ export default function EditProfileScreen() {
                 <TextInput
                   style={[styles.input, styles.inputTextDisabled]}
                   value={
-                    user?.type_compte === 'AGENCE' ? 'Agence immobiliere' :
-                    user?.type_compte === 'PROFESSIONNEL' ? 'Professionnel' : 'Particulier'
+                    user?.type_compte === 'AGENCE' ? t('editProfile.agency') :
+                    user?.type_compte === 'PROFESSIONNEL' ? t('editProfile.professional') : t('editProfile.individual')
                   }
                   editable={false}
                 />

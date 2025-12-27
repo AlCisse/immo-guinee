@@ -10,6 +10,7 @@ import 'react-native-reanimated';
 import { useColorScheme } from '@/components/useColorScheme';
 import { AuthProvider, useAuth } from '@/lib/auth/AuthContext';
 import { SecurityProvider } from '@/lib/security';
+import '@/lib/i18n';
 
 export {
   ErrorBoundary,

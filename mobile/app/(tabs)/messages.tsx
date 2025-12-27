@@ -14,12 +14,14 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { Conversation } from '@/types';
 import Colors, { lightTheme } from '@/constants/Colors';
 
 export default function MessagesScreen() {
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { isAuthenticated, user } = useAuth();
@@ -63,37 +65,38 @@ export default function MessagesScreen() {
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const locale = i18n.language === 'fr' ? 'fr-FR' : 'en-US';
 
     if (days === 0) {
-      return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      return date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
     } else if (days === 1) {
-      return 'Hier';
+      return t('messages.yesterday');
     } else if (days < 7) {
-      return date.toLocaleDateString('fr-FR', { weekday: 'short' });
+      return date.toLocaleDateString(locale, { weekday: 'short' });
     }
-    return date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+    return date.toLocaleDateString(locale, { day: '2-digit', month: 'short' });
   };
 
   if (!isAuthenticated) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={[styles.header, { paddingHorizontal: horizontalPadding }]}>
-          <Text style={styles.headerTitle}>Messages</Text>
+          <Text style={styles.headerTitle}>{t('messages.title')}</Text>
         </View>
         <View style={styles.authRequired}>
           <View style={styles.authIconContainer}>
             <Ionicons name="chatbubble-outline" size={48} color={lightTheme.colors.primary} />
           </View>
-          <Text style={styles.authTitle}>Connectez-vous</Text>
+          <Text style={styles.authTitle}>{t('auth.signIn')}</Text>
           <Text style={styles.authText}>
-            Connectez-vous pour voir vos messages
+            {t('messages.loginToViewMessages')}
           </Text>
           <TouchableOpacity
             style={styles.authButton}
             onPress={() => router.push('/auth/login')}
             activeOpacity={0.8}
           >
-            <Text style={styles.authButtonText}>Se connecter</Text>
+            <Text style={styles.authButtonText}>{t('auth.signIn')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -114,7 +117,7 @@ export default function MessagesScreen() {
         ]}
         onPress={() => {
           // Pass conversation ID (not listing ID) - chat screen will handle it
-          router.push(`/chat/${item.id}?ownerName=${encodeURIComponent(otherParticipant?.nom_complet || 'Utilisateur')}&ownerPhoto=${encodeURIComponent(otherParticipant?.photo_profil || '')}&listingTitle=${encodeURIComponent(listing?.titre || '')}` as any);
+          router.push(`/chat/${item.id}?ownerName=${encodeURIComponent(otherParticipant?.nom_complet || t('messages.user'))}&ownerPhoto=${encodeURIComponent(otherParticipant?.photo_profil || '')}&listingTitle=${encodeURIComponent(listing?.titre || '')}` as any);
         }}
         activeOpacity={0.8}
       >
@@ -146,7 +149,7 @@ export default function MessagesScreen() {
               styles.participantName,
               item.unread_count > 0 && styles.participantNameUnread,
             ]} numberOfLines={1}>
-              {otherParticipant?.nom_complet || 'Utilisateur'}
+              {otherParticipant?.nom_complet || t('messages.user')}
             </Text>
             {lastMessage && (
               <Text style={styles.messageTime}>{formatDate(lastMessage.created_at)}</Text>
@@ -168,7 +171,7 @@ export default function MessagesScreen() {
               ]}
               numberOfLines={1}
             >
-              {lastMessage.type_message === 'VOCAL' ? '🎤 Message vocal' : lastMessage.contenu}
+              {lastMessage.type_message === 'VOCAL' ? `🎤 ${t('messages.voiceMessage')}` : lastMessage.contenu}
             </Text>
           )}
         </View>
@@ -181,7 +184,7 @@ export default function MessagesScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={[styles.header, { paddingHorizontal: horizontalPadding }]}>
-        <Text style={styles.headerTitle}>Messages</Text>
+        <Text style={styles.headerTitle}>{t('messages.title')}</Text>
         {conversations.length > 0 && (
           <View style={styles.headerCountBadge}>
             <Text style={styles.headerCount}>{conversations.length}</Text>
@@ -192,7 +195,7 @@ export default function MessagesScreen() {
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={lightTheme.colors.primary} />
-          <Text style={styles.loadingText}>Chargement...</Text>
+          <Text style={styles.loadingText}>{t('common.loading')}</Text>
         </View>
       ) : (
         <FlatList
@@ -214,9 +217,9 @@ export default function MessagesScreen() {
               <View style={styles.emptyIconContainer}>
                 <Ionicons name="chatbubbles-outline" size={48} color={lightTheme.colors.primary} />
               </View>
-              <Text style={styles.emptyTitle}>Aucune conversation</Text>
+              <Text style={styles.emptyTitle}>{t('messages.noConversations')}</Text>
               <Text style={styles.emptyText}>
-                Contactez un proprietaire pour demarrer une conversation
+                {t('messages.contactOwnerToStart')}
               </Text>
               <TouchableOpacity
                 style={styles.browseButton}
@@ -224,7 +227,7 @@ export default function MessagesScreen() {
                 activeOpacity={0.8}
               >
                 <Ionicons name="search-outline" size={18} color="#fff" />
-                <Text style={styles.browseButtonText}>Parcourir les annonces</Text>
+                <Text style={styles.browseButtonText}>{t('favorites.browseListings')}</Text>
               </TouchableOpacity>
             </View>
           }

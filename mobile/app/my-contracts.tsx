@@ -20,6 +20,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
+import { useTranslation } from 'react-i18next';
 import { api, tokenManager } from '@/lib/api/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import Colors, { lightTheme } from '@/constants/Colors';
@@ -58,6 +59,7 @@ interface Contract {
 
 export default function MyContractsScreen() {
   const router = useRouter();
+  const { t, i18n } = useTranslation();
   const { isAuthenticated, user } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
@@ -130,10 +132,10 @@ export default function MyContractsScreen() {
     try {
       await api.contracts.requestSignatureOtp(signatureContract.id);
       setOtpSent(true);
-      Alert.alert('Code envoye', 'Un code OTP a ete envoye par SMS a votre numero de telephone.');
+      Alert.alert(t('contracts.signature.codeSent'), t('contracts.signature.codeSentDescription'));
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Erreur lors de l\'envoi du code OTP';
-      Alert.alert('Erreur', message);
+      const message = error.response?.data?.message || t('contracts.errors.sendOtpFailed');
+      Alert.alert(t('common.error'), message);
     } finally {
       setOtpLoading(false);
     }
@@ -144,7 +146,7 @@ export default function MyContractsScreen() {
     if (!signatureContract || !otpCode || signingLoading) return;
 
     if (otpCode.length !== 6) {
-      Alert.alert('Erreur', 'Le code OTP doit contenir 6 chiffres');
+      Alert.alert(t('common.error'), t('contracts.errors.otpLength'));
       return;
     }
 
@@ -152,16 +154,16 @@ export default function MyContractsScreen() {
     try {
       await api.contracts.sign(signatureContract.id, otpCode);
       Alert.alert(
-        'Contrat signe',
-        'Votre signature a ete enregistree avec succes.',
-        [{ text: 'OK', onPress: () => {
+        t('contracts.signature.contractSigned'),
+        t('contracts.signature.signatureSuccess'),
+        [{ text: t('common.ok'), onPress: () => {
           closeSignatureModal();
           refetch();
         }}]
       );
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Erreur lors de la signature';
-      Alert.alert('Erreur', message);
+      const message = error.response?.data?.message || t('contracts.errors.signFailed');
+      Alert.alert(t('common.error'), message);
     } finally {
       setSigningLoading(false);
     }
@@ -177,7 +179,7 @@ export default function MyContractsScreen() {
       // Get auth token for the request
       const token = await tokenManager.getToken();
       if (!token) {
-        Alert.alert('Erreur', 'Vous devez etre connecte pour telecharger le contrat.');
+        Alert.alert(t('common.error'), t('contracts.errors.loginRequired'));
         return;
       }
 
@@ -199,7 +201,7 @@ export default function MyContractsScreen() {
 
       if (downloadResult.status !== 200) {
         // Try to read error message from response
-        let errorMessage = `Erreur de telechargement: ${downloadResult.status}`;
+        let errorMessage = t('contracts.errors.downloadFailed');
         try {
           const errorContent = await FileSystem.readAsStringAsync(downloadResult.uri);
           const errorJson = JSON.parse(errorContent);
@@ -219,28 +221,28 @@ export default function MyContractsScreen() {
         // Share/save the file
         await Sharing.shareAsync(downloadResult.uri, {
           mimeType: 'application/pdf',
-          dialogTitle: 'Enregistrer le contrat PDF',
+          dialogTitle: t('contracts.saveContractPdf'),
           UTI: 'com.adobe.pdf', // iOS specific
         });
       } else {
         // Fallback for devices that don't support sharing
         Alert.alert(
-          'Telechargement reussi',
-          `Le contrat a ete telecharge: ${fileName}`,
-          [{ text: 'OK' }]
+          t('common.success'),
+          t('contracts.downloadSuccess'),
+          [{ text: t('common.ok') }]
         );
       }
     } catch (error: any) {
       console.error('Download error:', error);
-      let errorMessage = 'Impossible de telecharger le contrat. Veuillez reessayer.';
+      let errorMessage = t('contracts.errors.downloadFailed');
 
       if (error.message?.includes('403')) {
-        errorMessage = 'Acces refuse. Vous n\'avez pas les droits pour telecharger ce contrat.';
+        errorMessage = t('contracts.errors.accessDenied');
       } else if (error.message?.includes('404')) {
-        errorMessage = 'Contrat introuvable ou PDF non disponible.';
+        errorMessage = t('contracts.errors.notFound');
       }
 
-      Alert.alert('Erreur', errorMessage);
+      Alert.alert(t('common.error'), errorMessage);
     } finally {
       setDownloadingId(null);
     }
@@ -265,7 +267,8 @@ export default function MyContractsScreen() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
+    const locale = i18n.language === 'fr' ? 'fr-FR' : 'en-US';
+    return date.toLocaleDateString(locale, {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
@@ -275,17 +278,17 @@ export default function MyContractsScreen() {
   const getStatusConfig = (status: string) => {
     switch (status) {
       case 'ACTIF':
-        return { label: 'Actif', color: Colors.success[500], bgColor: Colors.success[50], icon: 'checkmark-circle' };
+        return { label: t('contracts.status.ACTIF'), color: Colors.success[500], bgColor: Colors.success[50], icon: 'checkmark-circle' };
       case 'EN_ATTENTE':
-        return { label: 'En attente', color: Colors.warning[500], bgColor: Colors.warning[50], icon: 'time' };
+        return { label: t('contracts.status.EN_ATTENTE'), color: Colors.warning[500], bgColor: Colors.warning[50], icon: 'time' };
       case 'SIGNE':
-        return { label: 'Signe', color: Colors.success[600], bgColor: Colors.success[50], icon: 'create' };
+        return { label: t('contracts.status.SIGNE'), color: Colors.success[600], bgColor: Colors.success[50], icon: 'create' };
       case 'RESILIE':
-        return { label: 'Resilie', color: Colors.error[500], bgColor: Colors.error[50], icon: 'close-circle' };
+        return { label: t('contracts.status.RESILIE'), color: Colors.error[500], bgColor: Colors.error[50], icon: 'close-circle' };
       case 'TERMINE':
-        return { label: 'Termine', color: Colors.neutral[500], bgColor: Colors.neutral[100], icon: 'checkmark-done-circle' };
+        return { label: t('contracts.status.TERMINE'), color: Colors.neutral[500], bgColor: Colors.neutral[100], icon: 'checkmark-done-circle' };
       case 'BROUILLON':
-        return { label: 'Brouillon', color: Colors.neutral[400], bgColor: Colors.neutral[100], icon: 'document-outline' };
+        return { label: t('contracts.status.BROUILLON'), color: Colors.neutral[400], bgColor: Colors.neutral[100], icon: 'document-outline' };
       default:
         return { label: status, color: Colors.neutral[400], bgColor: Colors.neutral[100], icon: 'document' };
     }
@@ -294,11 +297,11 @@ export default function MyContractsScreen() {
   const getContractTypeConfig = (type: string) => {
     switch (type) {
       case 'LOCATION':
-        return { label: 'Location', icon: 'key-outline', color: lightTheme.colors.primary };
+        return { label: t('contracts.type.LOCATION'), icon: 'key-outline', color: lightTheme.colors.primary };
       case 'VENTE':
-        return { label: 'Vente', icon: 'home-outline', color: Colors.success[500] };
+        return { label: t('contracts.type.VENTE'), icon: 'home-outline', color: Colors.success[500] };
       case 'LOCATION_COURTE':
-        return { label: 'Courte duree', icon: 'calendar-outline', color: Colors.warning[500] };
+        return { label: t('contracts.type.LOCATION_COURTE'), icon: 'calendar-outline', color: Colors.warning[500] };
       default:
         return { label: type, icon: 'document-outline', color: Colors.neutral[500] };
     }
@@ -393,20 +396,20 @@ export default function MyContractsScreen() {
           {/* Details grid */}
           <View style={styles.detailsGrid}>
             <View style={styles.detailBox}>
-              <Text style={styles.detailLabel}>Debut</Text>
+              <Text style={styles.detailLabel}>{t('contracts.start')}</Text>
               <Text style={styles.detailValue}>{formatDate(item.date_debut)}</Text>
             </View>
 
             {item.date_fin && (
               <View style={styles.detailBox}>
-                <Text style={styles.detailLabel}>Fin</Text>
+                <Text style={styles.detailLabel}>{t('contracts.end')}</Text>
                 <Text style={styles.detailValue}>{formatDate(item.date_fin)}</Text>
               </View>
             )}
 
             {item.montant_loyer && (
               <View style={styles.detailBox}>
-                <Text style={styles.detailLabel}>Loyer/mois</Text>
+                <Text style={styles.detailLabel}>{t('contracts.monthlyRent')}</Text>
                 <Text style={styles.detailValuePrice}>{formatPrice(item.montant_loyer)}</Text>
               </View>
             )}
@@ -416,9 +419,9 @@ export default function MyContractsScreen() {
           {progress !== null && item.statut === 'ACTIF' && (
             <View style={styles.progressSection}>
               <View style={styles.progressHeader}>
-                <Text style={styles.progressLabel}>Progression du contrat</Text>
+                <Text style={styles.progressLabel}>{t('contracts.contractProgress')}</Text>
                 <Text style={styles.progressDays}>
-                  {daysRemaining} jour{daysRemaining !== 1 ? 's' : ''} restant{daysRemaining !== 1 ? 's' : ''}
+                  {t('contracts.daysRemaining', { count: daysRemaining })}
                 </Text>
               </View>
               <View style={styles.progressBar}>
@@ -434,7 +437,7 @@ export default function MyContractsScreen() {
               onPress={() => openSignatureModal(item)}
             >
               <Ionicons name="create-outline" size={20} color="#fff" />
-              <Text style={styles.signatureButtonText}>Signer le contrat</Text>
+              <Text style={styles.signatureButtonText}>{t('contracts.signContract')}</Text>
             </TouchableOpacity>
           )}
 
@@ -442,7 +445,7 @@ export default function MyContractsScreen() {
           {userHasSigned(item) && !userNeedsToSign(item) && (
             <View style={styles.signedBadge}>
               <Ionicons name="checkmark-circle" size={18} color={Colors.success[600]} />
-              <Text style={styles.signedBadgeText}>Vous avez signe ce contrat</Text>
+              <Text style={styles.signedBadgeText}>{t('contracts.youSignedContract')}</Text>
             </View>
           )}
 
@@ -450,7 +453,7 @@ export default function MyContractsScreen() {
           <View style={styles.actions}>
             <TouchableOpacity style={styles.actionButton} onPress={() => openDetails(item)}>
               <Ionicons name="document-text-outline" size={18} color={lightTheme.colors.primary} />
-              <Text style={styles.actionText}>Voir details</Text>
+              <Text style={styles.actionText}>{t('contracts.viewDetails')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -467,7 +470,7 @@ export default function MyContractsScreen() {
                 <Ionicons name="download-outline" size={18} color={Colors.neutral[600]} />
               )}
               <Text style={styles.actionTextSecondary}>
-                {downloadingId === item.id ? 'Telechargement...' : 'Telecharger'}
+                {downloadingId === item.id ? t('contracts.downloading') : t('contracts.download')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -481,7 +484,7 @@ export default function MyContractsScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Mes contrats',
+          title: t('contracts.myContracts'),
           headerStyle: { backgroundColor: Colors.background.primary },
           headerShadowVisible: true,
           headerLeft: () => (
@@ -496,7 +499,7 @@ export default function MyContractsScreen() {
         {isLoading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={lightTheme.colors.primary} />
-            <Text style={styles.loadingText}>Chargement...</Text>
+            <Text style={styles.loadingText}>{t('common.loading')}</Text>
           </View>
         ) : (
           <FlatList
@@ -518,9 +521,9 @@ export default function MyContractsScreen() {
                 <View style={styles.emptyIconContainer}>
                   <Ionicons name="document-text-outline" size={48} color={lightTheme.colors.primary} />
                 </View>
-                <Text style={styles.emptyTitle}>Aucun contrat</Text>
+                <Text style={styles.emptyTitle}>{t('contracts.noContracts')}</Text>
                 <Text style={styles.emptyText}>
-                  Vous n'avez pas encore de contrat de location ou de vente
+                  {t('contracts.noContractsHint')}
                 </Text>
               </View>
             }
@@ -540,7 +543,7 @@ export default function MyContractsScreen() {
             <TouchableOpacity onPress={closeDetails}>
               <Ionicons name="close" size={28} color={Colors.secondary[800]} />
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>Details du contrat</Text>
+            <Text style={styles.modalTitle}>{t('contracts.contractDetails')}</Text>
             <View style={{ width: 28 }} />
           </View>
 
@@ -590,7 +593,7 @@ export default function MyContractsScreen() {
               {/* Property Info */}
               {selectedContract.listing && (
                 <View style={styles.modalSection}>
-                  <Text style={styles.modalSectionTitle}>Propriete</Text>
+                  <Text style={styles.modalSectionTitle}>{t('contracts.property')}</Text>
                   <View style={styles.modalInfoCard}>
                     <View style={styles.modalInfoRow}>
                       <Ionicons name="home-outline" size={18} color={lightTheme.colors.primary} />
@@ -608,17 +611,17 @@ export default function MyContractsScreen() {
 
               {/* Dates */}
               <View style={styles.modalSection}>
-                <Text style={styles.modalSectionTitle}>Periode</Text>
+                <Text style={styles.modalSectionTitle}>{t('contracts.period')}</Text>
                 <View style={styles.modalDatesRow}>
                   <View style={styles.modalDateBox}>
                     <Ionicons name="calendar-outline" size={20} color={Colors.success[500]} />
-                    <Text style={styles.modalDateLabel}>Debut</Text>
+                    <Text style={styles.modalDateLabel}>{t('contracts.start')}</Text>
                     <Text style={styles.modalDateValue}>{formatDate(selectedContract.date_debut)}</Text>
                   </View>
                   {selectedContract.date_fin && (
                     <View style={styles.modalDateBox}>
                       <Ionicons name="calendar-outline" size={20} color={Colors.error[500]} />
-                      <Text style={styles.modalDateLabel}>Fin</Text>
+                      <Text style={styles.modalDateLabel}>{t('contracts.end')}</Text>
                       <Text style={styles.modalDateValue}>{formatDate(selectedContract.date_fin)}</Text>
                     </View>
                   )}
@@ -628,17 +631,17 @@ export default function MyContractsScreen() {
               {/* Financial Info */}
               {(selectedContract.montant_loyer || selectedContract.montant_caution) && (
                 <View style={styles.modalSection}>
-                  <Text style={styles.modalSectionTitle}>Informations financieres</Text>
+                  <Text style={styles.modalSectionTitle}>{t('contracts.financialInfo')}</Text>
                   <View style={styles.modalFinanceGrid}>
                     {selectedContract.montant_loyer && (
                       <View style={styles.modalFinanceBox}>
-                        <Text style={styles.modalFinanceLabel}>Loyer mensuel</Text>
+                        <Text style={styles.modalFinanceLabel}>{t('contracts.monthlyRent')}</Text>
                         <Text style={styles.modalFinanceValue}>{formatPrice(selectedContract.montant_loyer)}</Text>
                       </View>
                     )}
                     {selectedContract.montant_caution && (
                       <View style={styles.modalFinanceBox}>
-                        <Text style={styles.modalFinanceLabel}>Caution</Text>
+                        <Text style={styles.modalFinanceLabel}>{t('contracts.deposit')}</Text>
                         <Text style={styles.modalFinanceValue}>{formatPrice(selectedContract.montant_caution)}</Text>
                       </View>
                     )}
@@ -648,14 +651,14 @@ export default function MyContractsScreen() {
 
               {/* Parties */}
               <View style={styles.modalSection}>
-                <Text style={styles.modalSectionTitle}>Parties</Text>
+                <Text style={styles.modalSectionTitle}>{t('contracts.parties')}</Text>
                 <View style={styles.modalPartiesGrid}>
                   {selectedContract.proprietaire && (
                     <View style={styles.modalPartyBox}>
                       <View style={styles.modalPartyIcon}>
                         <Ionicons name="person-outline" size={20} color={lightTheme.colors.primary} />
                       </View>
-                      <Text style={styles.modalPartyLabel}>Proprietaire</Text>
+                      <Text style={styles.modalPartyLabel}>{t('contracts.owner')}</Text>
                       <Text style={styles.modalPartyName}>{selectedContract.proprietaire.nom_complet}</Text>
                     </View>
                   )}
@@ -664,7 +667,7 @@ export default function MyContractsScreen() {
                       <View style={styles.modalPartyIcon}>
                         <Ionicons name="people-outline" size={20} color={Colors.success[500]} />
                       </View>
-                      <Text style={styles.modalPartyLabel}>Locataire</Text>
+                      <Text style={styles.modalPartyLabel}>{t('contracts.tenant')}</Text>
                       <Text style={styles.modalPartyName}>{selectedContract.locataire.nom_complet}</Text>
                     </View>
                   )}
@@ -674,14 +677,14 @@ export default function MyContractsScreen() {
               {/* Progress for active contracts */}
               {selectedContract.date_fin && selectedContract.statut === 'ACTIF' && (
                 <View style={styles.modalSection}>
-                  <Text style={styles.modalSectionTitle}>Progression</Text>
+                  <Text style={styles.modalSectionTitle}>{t('contracts.progress')}</Text>
                   <View style={styles.modalProgressCard}>
                     <View style={styles.modalProgressHeader}>
                       <Text style={styles.modalProgressPercent}>
                         {calculateProgress(selectedContract.date_debut, selectedContract.date_fin)}%
                       </Text>
                       <Text style={styles.modalProgressDays}>
-                        {getDaysRemaining(selectedContract.date_fin)} jours restants
+                        {t('contracts.daysRemaining', { count: getDaysRemaining(selectedContract.date_fin) })}
                       </Text>
                     </View>
                     <View style={styles.modalProgressBar}>
@@ -713,7 +716,7 @@ export default function MyContractsScreen() {
                     <Ionicons name="download-outline" size={20} color={lightTheme.colors.primary} />
                   )}
                   <Text style={styles.modalDownloadText}>
-                    {downloadingId === selectedContract.id ? 'Telechargement...' : 'Telecharger PDF'}
+                    {downloadingId === selectedContract.id ? t('contracts.downloading') : t('contracts.downloadPdf')}
                   </Text>
                 </TouchableOpacity>
 
@@ -727,7 +730,7 @@ export default function MyContractsScreen() {
                     }}
                   >
                     <Ionicons name="eye-outline" size={20} color="#fff" />
-                    <Text style={styles.modalViewPropertyText}>Voir la propriete</Text>
+                    <Text style={styles.modalViewPropertyText}>{t('contracts.viewProperty')}</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -753,7 +756,7 @@ export default function MyContractsScreen() {
             <TouchableOpacity onPress={closeSignatureModal}>
               <Ionicons name="close" size={28} color={Colors.secondary[800]} />
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>Signer le contrat</Text>
+            <Text style={styles.modalTitle}>{t('contracts.signature.title')}</Text>
             <View style={{ width: 28 }} />
           </View>
 
@@ -766,7 +769,7 @@ export default function MyContractsScreen() {
                     <Ionicons name="document-text" size={48} color={lightTheme.colors.primary} />
                   </View>
                   <Text style={styles.signatureContractNumber}>
-                    Contrat N° {signatureContract.numero_contrat || signatureContract.id.slice(0, 8)}
+                    {t('contracts.contractNumber')} {signatureContract.numero_contrat || signatureContract.id.slice(0, 8)}
                   </Text>
                   {signatureContract.listing && (
                     <Text style={styles.signaturePropertyTitle}>
@@ -777,34 +780,34 @@ export default function MyContractsScreen() {
 
                 {/* Signature Status */}
                 <View style={styles.signatureStatusSection}>
-                  <Text style={styles.sectionLabel}>Etat des signatures</Text>
+                  <Text style={styles.sectionLabel}>{t('contracts.signature.signatureStatus')}</Text>
                   <View style={styles.signatureStatusCard}>
                     <View style={styles.signatureStatusRow}>
-                      <Text style={styles.signatureStatusLabel}>Proprietaire</Text>
+                      <Text style={styles.signatureStatusLabel}>{t('contracts.owner')}</Text>
                       {signatureContract.bailleur_signed_at ? (
                         <View style={styles.signedIndicator}>
                           <Ionicons name="checkmark-circle" size={20} color={Colors.success[600]} />
-                          <Text style={styles.signedText}>Signe</Text>
+                          <Text style={styles.signedText}>{t('contracts.signature.signed')}</Text>
                         </View>
                       ) : (
                         <View style={styles.pendingIndicator}>
                           <Ionicons name="time-outline" size={20} color={Colors.warning[500]} />
-                          <Text style={styles.pendingText}>En attente</Text>
+                          <Text style={styles.pendingText}>{t('contracts.signature.pending')}</Text>
                         </View>
                       )}
                     </View>
                     <View style={styles.signatureStatusDivider} />
                     <View style={styles.signatureStatusRow}>
-                      <Text style={styles.signatureStatusLabel}>Locataire</Text>
+                      <Text style={styles.signatureStatusLabel}>{t('contracts.tenant')}</Text>
                       {signatureContract.locataire_signed_at ? (
                         <View style={styles.signedIndicator}>
                           <Ionicons name="checkmark-circle" size={20} color={Colors.success[600]} />
-                          <Text style={styles.signedText}>Signe</Text>
+                          <Text style={styles.signedText}>{t('contracts.signature.signed')}</Text>
                         </View>
                       ) : (
                         <View style={styles.pendingIndicator}>
                           <Ionicons name="time-outline" size={20} color={Colors.warning[500]} />
-                          <Text style={styles.pendingText}>En attente</Text>
+                          <Text style={styles.pendingText}>{t('contracts.signature.pending')}</Text>
                         </View>
                       )}
                     </View>
@@ -813,9 +816,9 @@ export default function MyContractsScreen() {
 
                 {/* OTP Section */}
                 <View style={styles.otpSection}>
-                  <Text style={styles.sectionLabel}>Verification par SMS</Text>
+                  <Text style={styles.sectionLabel}>{t('contracts.signature.smsVerification')}</Text>
                   <Text style={styles.otpDescription}>
-                    Pour signer ce contrat, vous devez verifier votre identite avec un code OTP envoye par SMS.
+                    {t('contracts.signature.smsDescription')}
                   </Text>
 
                   {!otpSent ? (
@@ -829,14 +832,14 @@ export default function MyContractsScreen() {
                       ) : (
                         <>
                           <Ionicons name="send-outline" size={20} color="#fff" />
-                          <Text style={styles.requestOtpButtonText}>Recevoir le code OTP</Text>
+                          <Text style={styles.requestOtpButtonText}>{t('contracts.signature.receiveOtp')}</Text>
                         </>
                       )}
                     </TouchableOpacity>
                   ) : (
                     <>
                       <View style={styles.otpInputContainer}>
-                        <Text style={styles.otpInputLabel}>Entrez le code a 6 chiffres</Text>
+                        <Text style={styles.otpInputLabel}>{t('contracts.signature.enterCode')}</Text>
                         <TextInput
                           style={styles.otpInput}
                           value={otpCode}
@@ -855,7 +858,7 @@ export default function MyContractsScreen() {
                         disabled={otpLoading}
                       >
                         <Ionicons name="refresh-outline" size={16} color={lightTheme.colors.primary} />
-                        <Text style={styles.resendOtpText}>Renvoyer le code</Text>
+                        <Text style={styles.resendOtpText}>{t('contracts.signature.resendCode')}</Text>
                       </TouchableOpacity>
 
                       <TouchableOpacity
@@ -871,7 +874,7 @@ export default function MyContractsScreen() {
                         ) : (
                           <>
                             <Ionicons name="checkmark-circle-outline" size={22} color="#fff" />
-                            <Text style={styles.signButtonText}>Signer le contrat</Text>
+                            <Text style={styles.signButtonText}>{t('contracts.signature.signNow')}</Text>
                           </>
                         )}
                       </TouchableOpacity>
@@ -883,8 +886,7 @@ export default function MyContractsScreen() {
                 <View style={styles.legalNotice}>
                   <Ionicons name="information-circle-outline" size={20} color={Colors.neutral[500]} />
                   <Text style={styles.legalNoticeText}>
-                    En signant ce contrat, vous acceptez toutes les conditions mentionnees dans le document.
-                    Cette signature electronique a valeur legale.
+                    {t('contracts.signature.legalNotice')}
                   </Text>
                 </View>
 

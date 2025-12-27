@@ -13,6 +13,7 @@ import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as Notifications from 'expo-notifications';
+import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import Colors, { lightTheme } from '@/constants/Colors';
@@ -31,6 +32,7 @@ interface Notification {
 
 export default function NotificationsScreen() {
   const router = useRouter();
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const { isAuthenticated } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
@@ -55,7 +57,7 @@ export default function NotificationsScreen() {
         <Stack.Screen
           options={{
             headerShown: true,
-            title: 'Notifications',
+            title: t('notificationsScreen.title'),
             headerStyle: { backgroundColor: Colors.background.primary },
             headerLeft: () => (
               <TouchableOpacity onPress={() => router.back()} style={{ padding: 8, marginLeft: -8 }}>
@@ -66,13 +68,13 @@ export default function NotificationsScreen() {
         />
         <View style={styles.emptyContainer}>
           <Ionicons name="cloud-offline-outline" size={64} color={Colors.neutral[300]} />
-          <Text style={styles.emptyTitle}>Connexion impossible</Text>
-          <Text style={styles.emptyText}>Verifiez votre connexion internet</Text>
+          <Text style={styles.emptyTitle}>{t('notificationsScreen.connectionError')}</Text>
+          <Text style={styles.emptyText}>{t('notificationsScreen.checkConnection')}</Text>
           <TouchableOpacity
             style={{ marginTop: 20, padding: 12, backgroundColor: lightTheme.colors.primary, borderRadius: 8 }}
             onPress={() => refetch()}
           >
-            <Text style={{ color: '#fff', fontWeight: '600' }}>Reessayer</Text>
+            <Text style={{ color: '#fff', fontWeight: '600' }}>{t('common.retry')}</Text>
           </TouchableOpacity>
         </View>
       </>
@@ -92,7 +94,7 @@ export default function NotificationsScreen() {
     mutationFn: () => api.notifications.markAllAsRead(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      Alert.alert('Succes', 'Toutes les notifications ont ete marquees comme lues');
+      Alert.alert(t('common.success'), t('notificationsScreen.allMarkedRead'));
     },
   });
 
@@ -115,20 +117,20 @@ export default function NotificationsScreen() {
     try {
       const response = await api.notifications.sendTest();
       if (response.data?.success) {
-        Alert.alert('Succes!', `Push notification envoyee! (${response.data.tokens_count} token(s))`);
+        Alert.alert(t('common.success'), `${t('notificationsScreen.pushSent')} (${t('notificationsScreen.tokenCount', { count: response.data.tokens_count })})`);
         refetch(); // Refresh to show new in-app notification
       } else {
-        Alert.alert('Erreur', response.data?.message || 'Echec de l\'envoi');
+        Alert.alert(t('common.error'), response.data?.message || t('notificationsScreen.sendFailed'));
       }
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Erreur de connexion';
-      Alert.alert('Erreur', message);
+      const message = error.response?.data?.message || t('notificationsScreen.connectionErrorShort');
+      Alert.alert(t('common.error'), message);
 
       // Fallback to local notification
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: 'Test Local 🏠',
-          body: 'Notification locale (push non disponible)',
+          title: t('notificationsScreen.localTest'),
+          body: t('notificationsScreen.localTestBody'),
           data: { type: 'test' },
           sound: 'default',
         },
@@ -214,13 +216,14 @@ export default function NotificationsScreen() {
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
+    const locale = i18n.language === 'fr' ? 'fr-FR' : 'en-US';
 
-    if (diffMins < 1) return "A l'instant";
-    if (diffMins < 60) return `Il y a ${diffMins} min`;
-    if (diffHours < 24) return `Il y a ${diffHours}h`;
-    if (diffDays === 1) return 'Hier';
-    if (diffDays < 7) return `Il y a ${diffDays} jours`;
-    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+    if (diffMins < 1) return t('notificationsScreen.time.justNow');
+    if (diffMins < 60) return t('notificationsScreen.time.minutesAgo', { count: diffMins });
+    if (diffHours < 24) return t('notificationsScreen.time.hoursAgo', { count: diffHours });
+    if (diffDays === 1) return t('notificationsScreen.time.yesterday');
+    if (diffDays < 7) return t('notificationsScreen.time.daysAgo', { count: diffDays });
+    return date.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
   };
 
   const handleNotificationPress = (notification: Notification) => {
@@ -350,12 +353,12 @@ export default function NotificationsScreen() {
 
   const handleDeleteNotification = (id: string) => {
     Alert.alert(
-      'Supprimer',
-      'Supprimer cette notification ?',
+      t('notificationsScreen.deleteNotification'),
+      t('notificationsScreen.deleteConfirm'),
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Supprimer',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: () => deleteMutation.mutate(id),
         },
@@ -396,7 +399,7 @@ export default function NotificationsScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Notifications',
+          title: t('notificationsScreen.title'),
           headerStyle: { backgroundColor: Colors.background.primary },
           headerShadowVisible: true,
           headerLeft: () => (
@@ -413,7 +416,7 @@ export default function NotificationsScreen() {
               {markAllAsReadMutation.isPending ? (
                 <ActivityIndicator size="small" color={lightTheme.colors.primary} />
               ) : (
-                <Text style={styles.markAllText}>Tout lire</Text>
+                <Text style={styles.markAllText}>{t('notificationsScreen.markAllRead')}</Text>
               )}
             </TouchableOpacity>
           ) : null,
@@ -424,7 +427,7 @@ export default function NotificationsScreen() {
         {isLoading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={lightTheme.colors.primary} />
-            <Text style={styles.loadingText}>Chargement...</Text>
+            <Text style={styles.loadingText}>{t('common.loading')}</Text>
           </View>
         ) : (
           <FlatList
@@ -444,9 +447,9 @@ export default function NotificationsScreen() {
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
                 <Ionicons name="notifications-off-outline" size={64} color={Colors.neutral[300]} />
-                <Text style={styles.emptyTitle}>Aucune notification</Text>
+                <Text style={styles.emptyTitle}>{t('notificationsScreen.noNotifications')}</Text>
                 <Text style={styles.emptyText}>
-                  Vous n'avez pas encore de notifications
+                  {t('notificationsScreen.noNotificationsHint')}
                 </Text>
               </View>
             }
@@ -461,7 +464,7 @@ export default function NotificationsScreen() {
             activeOpacity={0.8}
           >
             <Ionicons name="flask-outline" size={20} color="#fff" />
-            <Text style={styles.testButtonText}>Test Notif</Text>
+            <Text style={styles.testButtonText}>{t('notificationsScreen.testNotification')}</Text>
           </TouchableOpacity>
         )}
       </View>

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { useTranslations } from '@/lib/i18n';
 
 interface OtpVerificationProps {
   telephone: string;
@@ -18,6 +19,7 @@ const WhatsAppIcon = ({ className }: { className?: string }) => (
 
 export default function OtpVerification({ telephone, onSuccess, onCancel }: OtpVerificationProps) {
   const { verifyOtp, resendOtp } = useAuth();
+  const { t } = useTranslations();
   const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -84,7 +86,7 @@ export default function OtpVerification({ telephone, onSuccess, onCancel }: OtpV
     const code = otpCode || otp.join('');
 
     if (code.length !== 6) {
-      setError('Veuillez entrer les 6 chiffres du code');
+      setError(t('auth.otp.errors.enterAllDigits'));
       return;
     }
 
@@ -99,7 +101,7 @@ export default function OtpVerification({ telephone, onSuccess, onCancel }: OtpV
       setError(
         err.response?.data?.message ||
         err.message ||
-        'Code invalide. Veuillez réessayer.'
+        t('auth.otp.errors.invalidCode')
       );
       // Clear OTP on error
       setOtp(['', '', '', '', '', '']);
@@ -126,7 +128,7 @@ export default function OtpVerification({ telephone, onSuccess, onCancel }: OtpV
       setError(
         err.response?.data?.message ||
         err.message ||
-        'Erreur lors de l\'envoi du code. Veuillez réessayer.'
+        t('auth.otp.errors.resendFailed')
       );
     } finally {
       setIsResending(false);
@@ -157,10 +159,10 @@ export default function OtpVerification({ telephone, onSuccess, onCancel }: OtpV
           <WhatsAppIcon className="w-9 h-9 text-white" />
         </div>
         <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Vérification WhatsApp
+          {t('auth.otp.title')}
         </h2>
         <p className="text-sm text-gray-600">
-          Un code à 6 chiffres a été envoyé sur WhatsApp au
+          {t('auth.otp.subtitle')}
         </p>
         <p className="text-sm font-medium text-[#25D366] mt-1">
           {formattedPhone}
@@ -172,7 +174,7 @@ export default function OtpVerification({ telephone, onSuccess, onCancel }: OtpV
         <div className="flex items-center gap-2">
           <WhatsAppIcon className="w-5 h-5 text-[#25D366] flex-shrink-0" />
           <p className="text-xs text-gray-700">
-            Ouvrez WhatsApp et copiez le code reçu de <span className="font-semibold">ImmoGuinée</span>
+            {t('auth.otp.whatsappHint')} <span className="font-semibold">ImmoGuinée</span>
           </p>
         </div>
       </div>
@@ -204,7 +206,7 @@ export default function OtpVerification({ telephone, onSuccess, onCancel }: OtpV
           ))}
         </div>
         <p className="text-xs text-center text-gray-500 mt-2">
-          Entrez le code reçu sur WhatsApp
+          {t('auth.otp.enterCode')}
         </p>
       </div>
 
@@ -214,13 +216,13 @@ export default function OtpVerification({ telephone, onSuccess, onCancel }: OtpV
         disabled={isLoading || otp.some(digit => digit === '')}
         className="w-full py-3 px-4 bg-[#25D366] hover:bg-[#128C7E] text-white font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors mb-4 shadow-md"
       >
-        {isLoading ? 'Vérification en cours...' : 'Vérifier'}
+        {isLoading ? t('auth.otp.verifying') : t('auth.otp.verify')}
       </button>
 
       {/* Resend Button */}
       <div className="text-center">
         <p className="text-sm text-gray-600 mb-2">
-          Vous n'avez pas reçu le code ?
+          {t('auth.otp.notReceived')}
         </p>
         <button
           onClick={handleResend}
@@ -229,10 +231,10 @@ export default function OtpVerification({ telephone, onSuccess, onCancel }: OtpV
         >
           <WhatsAppIcon className="w-4 h-4" />
           {isResending
-            ? 'Envoi en cours...'
+            ? t('auth.otp.resending')
             : resendCooldown > 0
-            ? `Renvoyer sur WhatsApp (${resendCooldown}s)`
-            : 'Renvoyer sur WhatsApp'
+            ? t('auth.otp.resendIn', { seconds: resendCooldown })
+            : t('auth.otp.resend')
           }
         </button>
       </div>
@@ -244,7 +246,7 @@ export default function OtpVerification({ telephone, onSuccess, onCancel }: OtpV
           disabled={isLoading || isResending}
           className="w-full mt-6 py-2 px-4 text-sm text-gray-600 hover:text-gray-900 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
         >
-          Annuler
+          {t('auth.otp.cancel')}
         </button>
       )}
     </div>

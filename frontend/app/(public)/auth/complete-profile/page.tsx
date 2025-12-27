@@ -18,38 +18,40 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth/AuthContext';
-
-const accountTypes = [
-  {
-    id: 'PARTICULIER',
-    label: 'Particulier',
-    description: 'Je cherche à louer ou acheter un bien',
-    icon: UserCircle,
-  },
-  {
-    id: 'PROPRIETAIRE',
-    label: 'Propriétaire',
-    description: 'Je souhaite mettre mes biens en location/vente',
-    icon: Home,
-  },
-  {
-    id: 'AGENT',
-    label: 'Agent immobilier',
-    description: 'Je gère des biens pour des clients',
-    icon: Briefcase,
-  },
-  {
-    id: 'AGENCE',
-    label: 'Agence immobilière',
-    description: 'Je représente une agence immobilière',
-    icon: Building2,
-  },
-];
+import { useTranslations } from '@/lib/i18n';
 
 export default function CompleteProfilePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, updateProfile } = useAuth();
+  const { t } = useTranslations();
+
+  const accountTypes = [
+    {
+      id: 'PARTICULIER',
+      label: t('auth.completeProfile.accountType.particulier'),
+      description: t('auth.completeProfile.accountType.particulierDesc'),
+      icon: UserCircle,
+    },
+    {
+      id: 'PROPRIETAIRE',
+      label: t('auth.completeProfile.accountType.proprietaire'),
+      description: t('auth.completeProfile.accountType.proprietaireDesc'),
+      icon: Home,
+    },
+    {
+      id: 'AGENT',
+      label: t('auth.completeProfile.accountType.agent'),
+      description: t('auth.completeProfile.accountType.agentDesc'),
+      icon: Briefcase,
+    },
+    {
+      id: 'AGENCE',
+      label: t('auth.completeProfile.accountType.agence'),
+      description: t('auth.completeProfile.accountType.agenceDesc'),
+      icon: Building2,
+    },
+  ];
 
   const [step, setStep] = useState(1);
   const [accountType, setAccountType] = useState('');
@@ -63,12 +65,12 @@ export default function CompleteProfilePage() {
 
   const handleSubmit = async () => {
     if (!accountType) {
-      setError('Veuillez sélectionner un type de compte');
+      setError(t('auth.completeProfile.errors.selectAccountType'));
       return;
     }
 
     if (!phone || phone.length < 8) {
-      setError('Veuillez entrer un numéro de téléphone valide');
+      setError(t('auth.completeProfile.errors.invalidPhone'));
       return;
     }
 
@@ -90,7 +92,7 @@ export default function CompleteProfilePage() {
       });
 
       if (!response.ok) {
-        throw new Error('Erreur lors de la mise à jour du profil');
+        throw new Error(t('auth.completeProfile.errors.generic'));
       }
 
       // Update local user state
@@ -105,7 +107,7 @@ export default function CompleteProfilePage() {
       const redirect = searchParams.get('redirect') || '/';
       router.push(redirect);
     } catch (err) {
-      setError('Une erreur est survenue. Veuillez réessayer.');
+      setError(t('auth.completeProfile.errors.generic'));
     } finally {
       setIsSubmitting(false);
     }
@@ -121,9 +123,9 @@ export default function CompleteProfilePage() {
           </Link>
           <div className="flex-1">
             <h1 className="font-semibold text-neutral-900 dark:text-white">
-              Complétez votre profil
+              {t('auth.completeProfile.title')}
             </h1>
-            <p className="text-sm text-neutral-500">Étape {step} sur 2</p>
+            <p className="text-sm text-neutral-500">{t('auth.completeProfile.step', { current: step, total: 2 })}</p>
           </div>
         </div>
       </div>
@@ -157,10 +159,10 @@ export default function CompleteProfilePage() {
               </div>
               <div>
                 <p className="font-medium text-emerald-800 dark:text-emerald-300">
-                  Bienvenue {userName} !
+                  {t('auth.completeProfile.welcome', { name: userName })}
                 </p>
                 <p className="text-sm text-emerald-600 dark:text-emerald-400">
-                  Connexion avec {provider === 'google' ? 'Google' : 'Facebook'} réussie
+                  {t('auth.completeProfile.connectedWith', { provider: provider === 'google' ? 'Google' : 'Facebook' })}
                 </p>
               </div>
             </motion.div>
@@ -179,10 +181,10 @@ export default function CompleteProfilePage() {
                   <User className="w-8 h-8 text-primary-500" />
                 </div>
                 <h2 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">
-                  Quel type de compte souhaitez-vous ?
+                  {t('auth.completeProfile.accountType.title')}
                 </h2>
                 <p className="text-neutral-500">
-                  Cela nous aide à personnaliser votre expérience
+                  {t('auth.completeProfile.accountType.subtitle')}
                 </p>
               </div>
 
@@ -233,7 +235,7 @@ export default function CompleteProfilePage() {
                     setStep(2);
                     setError('');
                   } else {
-                    setError('Veuillez sélectionner un type de compte');
+                    setError(t('auth.completeProfile.errors.selectAccountType'));
                   }
                 }}
                 whileHover={{ scale: 1.01 }}
@@ -245,7 +247,7 @@ export default function CompleteProfilePage() {
                     : 'bg-neutral-200 dark:bg-dark-border text-neutral-400 cursor-not-allowed'
                 }`}
               >
-                Continuer
+                {t('auth.completeProfile.continue')}
                 <ChevronRight className="w-5 h-5" />
               </motion.button>
             </motion.div>
@@ -262,10 +264,10 @@ export default function CompleteProfilePage() {
                   <Phone className="w-8 h-8 text-primary-500" />
                 </div>
                 <h2 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">
-                  Votre numéro de téléphone
+                  {t('auth.completeProfile.phone.title')}
                 </h2>
                 <p className="text-neutral-500">
-                  Idéal si vous avez WhatsApp pour recevoir les notifications
+                  {t('auth.completeProfile.phone.subtitle')}
                 </p>
               </div>
 
@@ -273,7 +275,7 @@ export default function CompleteProfilePage() {
                 {/* Phone Input */}
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                    Numéro de téléphone (WhatsApp)
+                    {t('auth.completeProfile.phone.label')}
                   </label>
                   <div className="flex gap-2">
                     <div className="flex items-center gap-2 px-4 py-3 bg-neutral-100 dark:bg-dark-bg rounded-xl text-neutral-600 dark:text-neutral-300 font-medium">
@@ -289,13 +291,13 @@ export default function CompleteProfilePage() {
                           setPhone(value);
                         }
                       }}
-                      placeholder="620 12 34 56"
+                      placeholder={t('auth.completeProfile.phone.placeholder')}
                       className="flex-1 px-4 py-3 bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-xl text-neutral-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent text-lg"
                     />
                   </div>
                   <div className="flex items-center gap-2 mt-2 text-sm text-emerald-600 dark:text-emerald-400">
                     <MessageCircle className="w-4 h-4" />
-                    <span>Recevez des notifications instantanées via WhatsApp</span>
+                    <span>{t('auth.completeProfile.phone.whatsappHint')}</span>
                   </div>
                 </div>
 
@@ -304,17 +306,17 @@ export default function CompleteProfilePage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-primary-100 dark:bg-primary-500/20 rounded-lg">
-                        {accountTypes.find(t => t.id === accountType)?.icon && (
+                        {accountTypes.find(at => at.id === accountType)?.icon && (
                           (() => {
-                            const Icon = accountTypes.find(t => t.id === accountType)!.icon;
+                            const Icon = accountTypes.find(at => at.id === accountType)!.icon;
                             return <Icon className="w-5 h-5 text-primary-500" />;
                           })()
                         )}
                       </div>
                       <div>
-                        <p className="text-sm text-neutral-500">Type de compte</p>
+                        <p className="text-sm text-neutral-500">{t('auth.completeProfile.accountTypeSummary')}</p>
                         <p className="font-medium text-neutral-900 dark:text-white">
-                          {accountTypes.find(t => t.id === accountType)?.label}
+                          {accountTypes.find(at => at.id === accountType)?.label}
                         </p>
                       </div>
                     </div>
@@ -322,7 +324,7 @@ export default function CompleteProfilePage() {
                       onClick={() => setStep(1)}
                       className="text-sm text-primary-500 font-medium"
                     >
-                      Modifier
+                      {t('auth.completeProfile.modify')}
                     </button>
                   </div>
                 </div>
@@ -354,11 +356,11 @@ export default function CompleteProfilePage() {
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      Enregistrement...
+                      {t('auth.completeProfile.saving')}
                     </>
                   ) : (
                     <>
-                      Terminer l'inscription
+                      {t('auth.completeProfile.finish')}
                       <CheckCircle className="w-5 h-5" />
                     </>
                   )}
@@ -368,7 +370,7 @@ export default function CompleteProfilePage() {
                   onClick={() => setStep(1)}
                   className="w-full py-3 text-neutral-600 dark:text-neutral-400 font-medium"
                 >
-                  Retour
+                  {t('auth.completeProfile.back')}
                 </button>
               </div>
             </motion.div>
@@ -379,9 +381,9 @@ export default function CompleteProfilePage() {
       {/* Footer */}
       <div className="px-4 py-6 text-center">
         <p className="text-sm text-neutral-400">
-          En continuant, vous acceptez nos{' '}
+          {t('auth.completeProfile.terms')}{' '}
           <Link href="/conditions" className="text-primary-500 hover:underline">
-            conditions d'utilisation
+            {t('auth.completeProfile.termsLink')}
           </Link>
         </p>
       </div>

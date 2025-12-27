@@ -18,6 +18,7 @@ import {
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Audio } from 'expo-av';
 import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/auth/AuthContext';
@@ -84,6 +85,7 @@ async function enrichMessagesWithLocalMediaStatus(
 export default function ChatScreen() {
   // Prevent screenshots on this sensitive screen
   useScreenProtection();
+  const { t } = useTranslation();
 
   const params = useLocalSearchParams<{
     id: string;
@@ -203,7 +205,7 @@ export default function ChatScreen() {
       });
       setIsRecordingVoice(true);
     } catch (error: any) {
-      Alert.alert('Erreur', error.message || 'Impossible de demarrer l\'enregistrement');
+      Alert.alert(t('common.error'), error.message || t('chat.errors.startRecording'));
     }
   }, []);
 
@@ -239,7 +241,7 @@ export default function ChatScreen() {
           console.error('Server response:', JSON.stringify(error.response.data, null, 2));
         }
       }
-      Alert.alert('Erreur', error.response?.data?.error || error.message || 'Impossible d\'envoyer le message vocal');
+      Alert.alert(t('common.error'), error.response?.data?.error || error.message || t('chat.errors.sendVoice'));
     } finally {
       setIsSendingMedia(false);
     }
@@ -260,7 +262,7 @@ export default function ChatScreen() {
         setSelectedMedia(media);
       }
     } catch (error: any) {
-      Alert.alert('Erreur', error.message || 'Impossible de selectionner l\'image');
+      Alert.alert(t('common.error'), error.message || t('chat.errors.selectImage'));
     }
   }, []);
 
@@ -272,7 +274,7 @@ export default function ChatScreen() {
         setSelectedMedia(media);
       }
     } catch (error: any) {
-      Alert.alert('Erreur', error.message || 'Impossible de selectionner la video');
+      Alert.alert(t('common.error'), error.message || t('chat.errors.selectVideo'));
     }
   }, []);
 
@@ -284,7 +286,7 @@ export default function ChatScreen() {
         setSelectedMedia(media);
       }
     } catch (error: any) {
-      Alert.alert('Erreur', error.message || 'Impossible de prendre la photo');
+      Alert.alert(t('common.error'), error.message || t('chat.errors.takePhoto'));
     }
   }, []);
 
@@ -314,7 +316,7 @@ export default function ChatScreen() {
       setMessages(enriched);
     } catch (error: any) {
       if (__DEV__) console.error('Error sending media:', error);
-      Alert.alert('Erreur', error.message || 'Impossible d\'envoyer le media');
+      Alert.alert(t('common.error'), error.message || t('chat.errors.sendMedia'));
     } finally {
       setIsSendingMedia(false);
     }
@@ -386,7 +388,7 @@ export default function ChatScreen() {
           await deletePendingKey(mediaId);
         } else {
           if (__DEV__) console.log('[Media] No local media and no encryption_key - cannot download');
-          Alert.alert('Erreur', 'Média non disponible');
+          Alert.alert(t('common.error'), t('chat.errors.mediaUnavailable'));
           return;
         }
       }
@@ -397,11 +399,11 @@ export default function ChatScreen() {
         setMediaUris((prev) => ({ ...prev, [mediaId]: uri }));
         setFullscreenMedia({ uri, type: mediaType });
       } else {
-        Alert.alert('Erreur', 'Impossible de déchiffrer le média');
+        Alert.alert(t('common.error'), t('chat.errors.decryptMedia'));
       }
     } catch (error) {
       if (__DEV__) console.error('[Media] Error loading media:', error);
-      Alert.alert('Erreur', 'Impossible de charger le média');
+      Alert.alert(t('common.error'), t('chat.errors.loadMedia'));
     } finally {
       setDownloadingMedia((prev) => {
         const next = new Set(prev);
@@ -495,7 +497,7 @@ export default function ChatScreen() {
 
       if (!audioUri) {
         if (__DEV__) console.log('[Audio] No audio URI available');
-        Alert.alert('Erreur', 'Média non disponible');
+        Alert.alert(t('common.error'), t('chat.errors.mediaUnavailable'));
         return;
       }
 
@@ -527,7 +529,7 @@ export default function ChatScreen() {
       setPlayingMessageId(messageId);
     } catch (error) {
       if (__DEV__) console.error('Error playing audio:', error);
-      Alert.alert('Erreur', 'Impossible de lire le message vocal');
+      Alert.alert(t('common.error'), t('chat.errors.playVoice'));
     }
   }, [playingMessageId]);
 
@@ -660,7 +662,7 @@ export default function ChatScreen() {
         setConversationId(convId);
 
         if (!convId) {
-          Alert.alert('Erreur', 'Impossible de demarrer la conversation');
+          Alert.alert(t('common.error'), t('chat.errors.startConversation'));
           return;
         }
 
@@ -674,7 +676,7 @@ export default function ChatScreen() {
       }
 
       if (!convId) {
-        Alert.alert('Erreur', 'Conversation non trouvee');
+        Alert.alert(t('common.error'), t('chat.errors.conversationNotFound'));
         return;
       }
 
@@ -693,7 +695,7 @@ export default function ChatScreen() {
 
     } catch (error: any) {
       if (__DEV__) console.error('Error sending message:', error);
-      Alert.alert('Erreur', error.response?.data?.message || "Impossible d'envoyer le message");
+      Alert.alert(t('common.error'), error.response?.data?.message || t('chat.errors.sendMessage'));
     } finally {
       setIsSending(false);
     }
@@ -734,19 +736,19 @@ export default function ChatScreen() {
         ) : isDownloading ? (
           <View style={styles.encryptedMediaLoading}>
             <ActivityIndicator size="small" color={lightTheme.colors.primary} />
-            <Text style={styles.encryptedMediaLoadingText}>Téléchargement...</Text>
+            <Text style={styles.encryptedMediaLoadingText}>{t('chat.downloading')}</Text>
           </View>
         ) : (
           <View style={styles.encryptedMediaLoading}>
             <Ionicons name="image-outline" size={32} color={Colors.neutral[400]} />
             <Text style={styles.encryptedMediaLoadingText}>
-              {isE2EFromOther ? 'Appuyer pour voir' : 'Image chiffrée'}
+              {isE2EFromOther ? t('chat.tapToView') : t('chat.encryptedImage')}
             </Text>
           </View>
         )}
         <View style={styles.e2eBadge}>
           <Ionicons name="lock-closed" size={10} color={Colors.neutral[400]} />
-          <Text style={styles.e2eBadgeText}>Chiffré E2E</Text>
+          <Text style={styles.e2eBadgeText}>{t('chat.encryptedE2E')}</Text>
         </View>
       </TouchableOpacity>
     );
@@ -776,19 +778,19 @@ export default function ChatScreen() {
         ) : isDownloading ? (
           <>
             <ActivityIndicator size="small" color="#fff" />
-            <Text style={[styles.encryptedMediaLoadingText, { color: '#fff' }]}>Téléchargement...</Text>
+            <Text style={[styles.encryptedMediaLoadingText, { color: '#fff' }]}>{t('chat.downloading')}</Text>
           </>
         ) : (
           <>
             <Ionicons name="videocam-outline" size={32} color="rgba(255,255,255,0.8)" />
             <Text style={[styles.encryptedMediaLoadingText, { color: 'rgba(255,255,255,0.8)' }]}>
-              {isE2EFromOther ? 'Appuyer pour voir' : 'Vidéo chiffrée'}
+              {isE2EFromOther ? t('chat.tapToView') : t('chat.encryptedVideo')}
             </Text>
           </>
         )}
         <View style={[styles.e2eBadge, { marginTop: 8 }]}>
           <Ionicons name="lock-closed" size={10} color="rgba(255,255,255,0.6)" />
-          <Text style={[styles.e2eBadgeText, { color: 'rgba(255,255,255,0.6)' }]}>Chiffré E2E</Text>
+          <Text style={[styles.e2eBadgeText, { color: 'rgba(255,255,255,0.6)' }]}>{t('chat.encryptedE2E')}</Text>
         </View>
       </TouchableOpacity>
     );
@@ -834,7 +836,7 @@ export default function ChatScreen() {
             <View style={[styles.voiceWaveProgress, { width: `${progress}%` }]} />
           </View>
           <Text style={[styles.voiceDuration, isMe && styles.voiceDurationMe]}>
-            {isDownloading ? 'Téléchargement...' : isPlaying ? formatDuration(audioPosition) : 'Message vocal'}
+            {isDownloading ? t('chat.downloading') : isPlaying ? formatDuration(audioPosition) : t('messages.voiceMessage')}
           </Text>
         </View>
       </TouchableOpacity>
@@ -921,7 +923,7 @@ export default function ChatScreen() {
               </View>
               <View>
                 <Text style={styles.headerName} numberOfLines={1}>
-                  {params.ownerName || 'Proprietaire'}
+                  {params.ownerName || t('chat.owner')}
                 </Text>
                 {params.listingTitle && (
                   <Text style={styles.headerListing} numberOfLines={1}>
@@ -997,7 +999,7 @@ export default function ChatScreen() {
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
                 <Ionicons name="chatbubble-ellipses-outline" size={48} color={Colors.neutral[300]} />
-                <Text style={styles.emptyText}>Envoyez votre premier message</Text>
+                <Text style={styles.emptyText}>{t('chat.sendFirstMessage')}</Text>
               </View>
             }
           />
@@ -1030,16 +1032,16 @@ export default function ChatScreen() {
               <Text style={styles.recordingDuration}>
                 {recordingState ? formatVoiceDuration(Math.floor(recordingState.durationMs / 1000)) : '0:00'}
               </Text>
-              <Text style={styles.recordingText}>Enregistrement en cours...</Text>
+              <Text style={styles.recordingText}>{t('chat.recording')}</Text>
             </View>
             <View style={styles.recordingActions}>
               <TouchableOpacity style={styles.recordingCancelButton} onPress={handleCancelRecording}>
                 <Ionicons name="close" size={24} color={Colors.error[500]} />
-                <Text style={styles.recordingCancelText}>Annuler</Text>
+                <Text style={styles.recordingCancelText}>{t('chat.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.recordingStopButton} onPress={handleStopRecording}>
                 <Ionicons name="send" size={24} color="#fff" />
-                <Text style={styles.recordingStopText}>Envoyer</Text>
+                <Text style={styles.recordingStopText}>{t('chat.send')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1060,7 +1062,7 @@ export default function ChatScreen() {
               ) : (
                 <View style={styles.mediaPreviewVideo}>
                   <Ionicons name="videocam" size={48} color="#fff" />
-                  <Text style={styles.mediaPreviewVideoText}>Video</Text>
+                  <Text style={styles.mediaPreviewVideoText}>{t('chat.video')}</Text>
                 </View>
               )}
               <View style={styles.mediaPreviewInfo}>
@@ -1078,7 +1080,7 @@ export default function ChatScreen() {
                 ) : (
                   <>
                     <Ionicons name="send" size={20} color="#fff" />
-                    <Text style={styles.mediaPreviewSendText}>Envoyer</Text>
+                    <Text style={styles.mediaPreviewSendText}>{t('chat.send')}</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -1096,7 +1098,7 @@ export default function ChatScreen() {
           <Pressable style={styles.mediaPickerOverlay} onPress={() => setShowMediaPicker(false)}>
             <View style={styles.mediaPickerContent}>
               <View style={styles.mediaPickerHeader}>
-                <Text style={styles.mediaPickerTitle}>Partager un media</Text>
+                <Text style={styles.mediaPickerTitle}>{t('chat.shareMedia')}</Text>
                 <TouchableOpacity onPress={() => setShowMediaPicker(false)}>
                   <Ionicons name="close" size={24} color={Colors.neutral[500]} />
                 </TouchableOpacity>
@@ -1106,19 +1108,19 @@ export default function ChatScreen() {
                   <View style={[styles.mediaPickerIcon, { backgroundColor: Colors.primary[100] }]}>
                     <Ionicons name="camera" size={28} color={lightTheme.colors.primary} />
                   </View>
-                  <Text style={styles.mediaPickerOptionText}>Prendre une photo</Text>
+                  <Text style={styles.mediaPickerOptionText}>{t('chat.takePhoto')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.mediaPickerOption} onPress={handlePickImage}>
                   <View style={[styles.mediaPickerIcon, { backgroundColor: Colors.success[100] }]}>
                     <Ionicons name="image" size={28} color={Colors.success[600]} />
                   </View>
-                  <Text style={styles.mediaPickerOptionText}>Galerie d'images</Text>
+                  <Text style={styles.mediaPickerOptionText}>{t('chat.imageGallery')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.mediaPickerOption} onPress={handlePickVideo}>
                   <View style={[styles.mediaPickerIcon, { backgroundColor: Colors.warning[100] }]}>
                     <Ionicons name="videocam" size={28} color={Colors.warning[600]} />
                   </View>
-                  <Text style={styles.mediaPickerOptionText}>Galerie de videos</Text>
+                  <Text style={styles.mediaPickerOptionText}>{t('chat.videoGallery')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -1149,16 +1151,16 @@ export default function ChatScreen() {
               <View style={styles.fullscreenVideoContainer}>
                 <Ionicons name="videocam" size={64} color="rgba(255,255,255,0.5)" />
                 <Text style={styles.fullscreenVideoText}>
-                  Lecture vidéo non disponible
+                  {t('chat.videoPlaybackUnavailable')}
                 </Text>
                 <Text style={styles.fullscreenVideoSubtext}>
-                  Ouvrir avec une app externe
+                  {t('chat.openWithExternalApp')}
                 </Text>
               </View>
             ) : null}
             <View style={styles.fullscreenMediaBadge}>
               <Ionicons name="lock-closed" size={12} color="rgba(255,255,255,0.7)" />
-              <Text style={styles.fullscreenMediaBadgeText}>Chiffrement de bout en bout</Text>
+              <Text style={styles.fullscreenMediaBadgeText}>{t('chat.e2eEncryption')}</Text>
             </View>
           </View>
         </Modal>
@@ -1178,7 +1180,7 @@ export default function ChatScreen() {
 
             <TextInput
               style={styles.input}
-              placeholder="Votre message..."
+              placeholder={t('chat.yourMessage')}
               placeholderTextColor={Colors.neutral[400]}
               value={message}
               onChangeText={(text) => {

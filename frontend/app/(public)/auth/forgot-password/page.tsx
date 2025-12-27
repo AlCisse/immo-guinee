@@ -8,10 +8,12 @@ import { Phone, ArrowLeft, Loader2, CheckCircle, AlertCircle } from 'lucide-reac
 import PhoneInput from '@/components/ui/PhoneInput';
 import { apiClient } from '@/lib/api/client';
 import { ROUTES } from '@/lib/routes';
+import { useTranslations } from '@/lib/i18n';
 
 type Step = 'phone' | 'success';
 
 export default function ForgotPasswordPage() {
+  const { t } = useTranslations();
   const [step, setStep] = useState<Step>('phone');
   const [telephone, setTelephone] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -22,7 +24,7 @@ export default function ForgotPasswordPage() {
     setError('');
 
     if (!telephone) {
-      setError('Veuillez entrer votre numéro de téléphone');
+      setError(t('auth.forgotPassword.errors.phoneRequired'));
       return;
     }
 
@@ -36,13 +38,13 @@ export default function ForgotPasswordPage() {
       if (response.data.success) {
         setStep('success');
       } else {
-        setError(response.data.message || 'Une erreur est survenue');
+        setError(response.data.message || t('auth.forgotPassword.errors.generic'));
       }
     } catch (err: any) {
       console.error('Forgot password error:', err);
       setError(
         err.response?.data?.message ||
-        'Une erreur est survenue. Veuillez réessayer.'
+        t('auth.forgotPassword.errors.generic')
       );
     } finally {
       setIsLoading(false);
@@ -88,7 +90,7 @@ export default function ForgotPasswordPage() {
                   className="inline-flex items-center gap-2 text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200 mb-6 transition-colors"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  Retour à la connexion
+                  {t('auth.forgotPassword.backToLogin')}
                 </Link>
 
                 <div className="text-center mb-8">
@@ -96,10 +98,10 @@ export default function ForgotPasswordPage() {
                     <Phone className="w-8 h-8 text-primary-500" />
                   </div>
                   <h1 className="text-2xl font-bold text-neutral-900 dark:text-white mb-2">
-                    Mot de passe oublie ?
+                    {t('auth.forgotPassword.title')}
                   </h1>
                   <p className="text-neutral-600 dark:text-neutral-400">
-                    Entrez votre numero de telephone pour recevoir un code de reinitialisation
+                    {t('auth.forgotPassword.subtitle')}
                   </p>
                 </div>
 
@@ -117,7 +119,7 @@ export default function ForgotPasswordPage() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div>
                     <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                      Numero de telephone
+                      {t('auth.forgotPassword.phone')}
                     </label>
                     <PhoneInput
                       value={telephone}
@@ -136,10 +138,10 @@ export default function ForgotPasswordPage() {
                     {isLoading ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        Envoi en cours...
+                        {t('auth.forgotPassword.sending')}
                       </>
                     ) : (
-                      'Envoyer le code'
+                      t('auth.forgotPassword.sendCode')
                     )}
                   </button>
                 </form>
@@ -155,11 +157,10 @@ export default function ForgotPasswordPage() {
                   <CheckCircle className="w-10 h-10 text-green-500" />
                 </div>
                 <h2 className="text-2xl font-bold text-neutral-900 dark:text-white mb-3">
-                  Code envoye !
+                  {t('auth.forgotPassword.codeSent')}
                 </h2>
                 <p className="text-neutral-600 dark:text-neutral-400 mb-6">
-                  Un code de reinitialisation a ete envoye a votre numero de telephone.
-                  Utilisez ce code pour creer un nouveau mot de passe.
+                  {t('auth.forgotPassword.codeSentMessage')}
                 </p>
 
                 <div className="space-y-3">
@@ -167,7 +168,7 @@ export default function ForgotPasswordPage() {
                     href={`/auth/reset-password?phone=${encodeURIComponent(telephone)}`}
                     className="block w-full py-3.5 bg-gradient-to-r from-primary-500 to-orange-500 text-white font-semibold rounded-xl hover:from-primary-600 hover:to-orange-600 transition-all text-center shadow-lg shadow-primary-500/25"
                   >
-                    Entrer le code
+                    {t('auth.forgotPassword.enterCode')}
                   </Link>
                   <button
                     onClick={() => {
@@ -176,7 +177,7 @@ export default function ForgotPasswordPage() {
                     }}
                     className="w-full py-3 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white font-medium transition-colors"
                   >
-                    Renvoyer le code
+                    {t('auth.forgotPassword.resendCode')}
                   </button>
                 </div>
               </motion.div>

@@ -20,6 +20,7 @@ import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/dat
 import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { api, apiClient } from '@/lib/api/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import Colors, { lightTheme } from '@/constants/Colors';
@@ -80,6 +81,7 @@ interface Visit {
 }
 
 export default function MyVisitsScreen() {
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { isAuthenticated, user } = useAuth();
@@ -180,10 +182,11 @@ export default function MyVisitsScreen() {
     const diffMs = now.getTime() - date.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return "Aujourd'hui";
-    if (diffDays === 1) return 'Hier';
-    if (diffDays < 7) return `Il y a ${diffDays} jours`;
-    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+    if (diffDays === 0) return t('visits.today');
+    if (diffDays === 1) return t('visits.yesterday');
+    if (diffDays < 7) return t('visits.daysAgo', { count: diffDays });
+    const locale = i18n.language === 'fr' ? 'fr-FR' : 'en-US';
+    return date.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
   };
 
   // Create visit mutation
@@ -202,10 +205,10 @@ export default function MyVisitsScreen() {
       await refetch();
       setShowNewVisitModal(false);
       resetForm();
-      Alert.alert('Succes', 'Visite planifiee avec succes');
+      Alert.alert(t('common.success'), t('visits.visitScheduled'));
     },
     onError: (error: any) => {
-      Alert.alert('Erreur', error.response?.data?.message || 'Impossible de creer la visite');
+      Alert.alert(t('common.error'), error.response?.data?.message || t('visits.errors.createFailed'));
     },
   });
 
@@ -215,10 +218,10 @@ export default function MyVisitsScreen() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['my-visits'] });
       await refetch();
-      Alert.alert('Succes', 'Visite confirmee');
+      Alert.alert(t('common.success'), t('visits.visitConfirmed'));
     },
     onError: (error: any) => {
-      Alert.alert('Erreur', error.response?.data?.message || 'Impossible de confirmer la visite');
+      Alert.alert(t('common.error'), error.response?.data?.message || t('visits.errors.confirmFailed'));
     },
   });
 
@@ -228,10 +231,10 @@ export default function MyVisitsScreen() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['my-visits'] });
       await refetch();
-      Alert.alert('Succes', 'Visite annulee');
+      Alert.alert(t('common.success'), t('visits.visitCancelled'));
     },
     onError: (error: any) => {
-      Alert.alert('Erreur', error.response?.data?.message || 'Impossible d\'annuler la visite');
+      Alert.alert(t('common.error'), error.response?.data?.message || t('visits.errors.cancelFailed'));
     },
   });
 
@@ -241,22 +244,22 @@ export default function MyVisitsScreen() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['my-visits'] });
       await refetch();
-      Alert.alert('Succes', 'Visite supprimee');
+      Alert.alert(t('common.success'), t('visits.visitDeleted'));
     },
     onError: (error: any) => {
-      Alert.alert('Erreur', error.response?.data?.message || 'Impossible de supprimer la visite');
+      Alert.alert(t('common.error'), error.response?.data?.message || t('visits.errors.deleteFailed'));
     },
   });
 
   // Handle confirm visit
   const handleConfirmVisit = (visitId: string) => {
     Alert.alert(
-      'Confirmer la visite',
-      'Voulez-vous confirmer cette visite ?',
+      t('visits.confirmVisit'),
+      t('visits.confirmVisitQuestion'),
       [
-        { text: 'Non', style: 'cancel' },
+        { text: t('common.no'), style: 'cancel' },
         {
-          text: 'Oui, confirmer',
+          text: t('visits.yesConfirm'),
           onPress: () => confirmVisitMutation.mutate(visitId),
         },
       ]
@@ -266,12 +269,12 @@ export default function MyVisitsScreen() {
   // Handle cancel visit
   const handleCancelVisit = (visitId: string) => {
     Alert.alert(
-      'Annuler la visite',
-      'Etes-vous sur de vouloir annuler cette visite ?',
+      t('visits.cancelVisit'),
+      t('visits.cancelVisitQuestion'),
       [
-        { text: 'Non', style: 'cancel' },
+        { text: t('common.no'), style: 'cancel' },
         {
-          text: 'Oui, annuler',
+          text: t('visits.yesCancel'),
           style: 'destructive',
           onPress: () => cancelVisitMutation.mutate(visitId),
         },
@@ -282,12 +285,12 @@ export default function MyVisitsScreen() {
   // Handle delete visit
   const handleDeleteVisit = (visitId: string) => {
     Alert.alert(
-      'Supprimer la visite',
-      'Etes-vous sur de vouloir supprimer cette visite ?',
+      t('visits.deleteVisit'),
+      t('visits.deleteVisitQuestion'),
       [
-        { text: 'Non', style: 'cancel' },
+        { text: t('common.no'), style: 'cancel' },
         {
-          text: 'Supprimer',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: () => deleteVisitMutation.mutate(visitId),
         },
@@ -346,23 +349,23 @@ export default function MyVisitsScreen() {
 
   const handleCreateVisit = () => {
     if (!newVisitForm.listing_id) {
-      Alert.alert('Erreur', 'Veuillez selectionner une propriete');
+      Alert.alert(t('common.error'), t('visits.errors.selectProperty'));
       return;
     }
     if (!newVisitForm.client_nom.trim()) {
-      Alert.alert('Erreur', 'Le nom du client est requis');
+      Alert.alert(t('common.error'), t('visits.errors.clientNameRequired'));
       return;
     }
     if (!newVisitForm.client_telephone.trim()) {
-      Alert.alert('Erreur', 'Le telephone du client est requis');
+      Alert.alert(t('common.error'), t('visits.errors.clientPhoneRequired'));
       return;
     }
     if (!newVisitForm.date_visite) {
-      Alert.alert('Erreur', 'La date de visite est requise');
+      Alert.alert(t('common.error'), t('visits.errors.dateRequired'));
       return;
     }
     if (!newVisitForm.heure_visite) {
-      Alert.alert('Erreur', 'L\'heure de visite est requise');
+      Alert.alert(t('common.error'), t('visits.errors.timeRequired'));
       return;
     }
     createVisitMutation.mutate(newVisitForm);
@@ -378,7 +381,8 @@ export default function MyVisitsScreen() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
+    const locale = i18n.language === 'fr' ? 'fr-FR' : 'en-US';
+    return date.toLocaleDateString(locale, {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
@@ -392,13 +396,13 @@ export default function MyVisitsScreen() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'CONFIRMEE':
-        return { label: 'Confirmee', color: Colors.success[500], icon: 'checkmark-circle' };
+        return { label: t('visits.confirmed'), color: Colors.success[500], icon: 'checkmark-circle' };
       case 'EN_ATTENTE':
-        return { label: 'En attente', color: Colors.warning[500], icon: 'time' };
+        return { label: t('visits.pending'), color: Colors.warning[500], icon: 'time' };
       case 'ANNULEE':
-        return { label: 'Annulee', color: Colors.error[500], icon: 'close-circle' };
+        return { label: t('visits.cancelled'), color: Colors.error[500], icon: 'close-circle' };
       case 'TERMINEE':
-        return { label: 'Terminee', color: Colors.neutral[500], icon: 'checkmark-done-circle' };
+        return { label: t('visits.completed'), color: Colors.neutral[500], icon: 'checkmark-done-circle' };
       default:
         return { label: status, color: Colors.neutral[400], icon: 'ellipse' };
     }
@@ -512,7 +516,7 @@ export default function MyVisitsScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Mes visites',
+          title: t('visits.myVisits'),
           headerStyle: { backgroundColor: Colors.background.primary },
           headerShadowVisible: true,
           headerLeft: () => (
@@ -532,7 +536,7 @@ export default function MyVisitsScreen() {
         {isLoading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={lightTheme.colors.primary} />
-            <Text style={styles.loadingText}>Chargement...</Text>
+            <Text style={styles.loadingText}>{t('common.loading')}</Text>
           </View>
         ) : (
           <FlatList
@@ -552,9 +556,9 @@ export default function MyVisitsScreen() {
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
                 <Ionicons name="calendar-outline" size={64} color={Colors.neutral[300]} />
-                <Text style={styles.emptyTitle}>Aucune visite</Text>
+                <Text style={styles.emptyTitle}>{t('visits.noVisits')}</Text>
                 <Text style={styles.emptyText}>
-                  Vous n'avez pas encore programme de visite
+                  {t('visits.noVisitsHint')}
                 </Text>
               </View>
             }
@@ -577,31 +581,31 @@ export default function MyVisitsScreen() {
             <TouchableOpacity onPress={() => { setShowNewVisitModal(false); resetForm(); }}>
               <Ionicons name="close" size={28} color={Colors.secondary[800]} />
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>Nouvelle visite</Text>
+            <Text style={styles.modalTitle}>{t('visits.newVisit')}</Text>
             <TouchableOpacity onPress={handleCreateVisit} disabled={createVisitMutation.isPending}>
               {createVisitMutation.isPending ? (
                 <ActivityIndicator size="small" color={lightTheme.colors.primary} />
               ) : (
-                <Text style={styles.modalSaveText}>Creer</Text>
+                <Text style={styles.modalSaveText}>{t('visits.create')}</Text>
               )}
             </TouchableOpacity>
           </View>
 
           <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
             {/* Property Selection - Inline List */}
-            <Text style={styles.sectionTitle}>Propriete</Text>
+            <Text style={styles.sectionTitle}>{t('visits.property')}</Text>
             <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>Selectionnez une annonce *</Text>
+              <Text style={styles.formLabel}>{t('visits.selectListing')}</Text>
 
               {isLoadingListings ? (
                 <View style={styles.loadingContacts}>
                   <ActivityIndicator size="small" color={lightTheme.colors.primary} />
-                  <Text style={styles.loadingContactsText}>Chargement...</Text>
+                  <Text style={styles.loadingContactsText}>{t('common.loading')}</Text>
                 </View>
               ) : myListings.length === 0 ? (
                 <View style={styles.noContacts}>
                   <Ionicons name="home-outline" size={32} color={Colors.neutral[300]} />
-                  <Text style={styles.noContactsText}>Aucune annonce</Text>
+                  <Text style={styles.noContactsText}>{t('visits.noListing')}</Text>
                 </View>
               ) : (
                 <View style={styles.propertyList}>
@@ -640,14 +644,14 @@ export default function MyVisitsScreen() {
             </View>
 
             {/* Client Selection */}
-            <Text style={styles.sectionTitle}>Client</Text>
+            <Text style={styles.sectionTitle}>{t('visits.client')}</Text>
             <View style={styles.formGroup}>
               <View style={styles.clientLabelRow}>
-                <Text style={styles.formLabel}>Client *</Text>
+                <Text style={styles.formLabel}>{t('visits.client')} *</Text>
                 {newVisitForm.listing_id && (
                   <TouchableOpacity onPress={() => setShowContactsList(!showContactsList)}>
                     <Text style={styles.toggleContactsText}>
-                      {showContactsList ? 'Saisir manuellement' : 'Contacts du bien'}
+                      {showContactsList ? t('visits.enterManually') : t('visits.listingContacts')}
                     </Text>
                   </TouchableOpacity>
                 )}
@@ -657,7 +661,7 @@ export default function MyVisitsScreen() {
               {isLoadingContacts && newVisitForm.listing_id && (
                 <View style={styles.loadingContacts}>
                   <ActivityIndicator size="small" color={lightTheme.colors.primary} />
-                  <Text style={styles.loadingContactsText}>Chargement des contacts...</Text>
+                  <Text style={styles.loadingContactsText}>{t('visits.loadingContacts')}</Text>
                 </View>
               )}
 
@@ -668,7 +672,7 @@ export default function MyVisitsScreen() {
                     <View style={styles.contactsHeader}>
                       <Ionicons name="chatbubbles-outline" size={14} color={lightTheme.colors.primary} />
                       <Text style={styles.contactsHeaderText}>
-                        {listingContacts.length} contact(s) pour ce bien
+                        {t('visits.contactsCount', { count: listingContacts.length })}
                       </Text>
                     </View>
                     {listingContacts.map((contact) => (
@@ -689,7 +693,7 @@ export default function MyVisitsScreen() {
                         <View style={styles.contactInfo}>
                           <Text style={styles.contactName}>{contact.nom_complet}</Text>
                           <View style={styles.contactMeta}>
-                            <Text style={styles.contactPhone}>{contact.telephone || 'Pas de telephone'}</Text>
+                            <Text style={styles.contactPhone}>{contact.telephone || t('visits.noPhone')}</Text>
                             {contact.last_message_at && (
                               <>
                                 <Text style={styles.contactMetaDot}>•</Text>
@@ -709,9 +713,9 @@ export default function MyVisitsScreen() {
                 ) : (
                   <View style={styles.noContacts}>
                     <Ionicons name="people-outline" size={32} color={Colors.neutral[300]} />
-                    <Text style={styles.noContactsText}>Aucun contact pour ce bien</Text>
+                    <Text style={styles.noContactsText}>{t('visits.noContactsForListing')}</Text>
                     <TouchableOpacity onPress={() => setShowContactsList(false)}>
-                      <Text style={styles.noContactsLink}>Saisir manuellement</Text>
+                      <Text style={styles.noContactsLink}>{t('visits.enterManually')}</Text>
                     </TouchableOpacity>
                   </View>
                 )
@@ -725,7 +729,7 @@ export default function MyVisitsScreen() {
                     placeholderTextColor={Colors.neutral[400]}
                   />
                   <View style={[styles.formGroup, { marginTop: 12 }]}>
-                    <Text style={styles.formLabel}>Telephone *</Text>
+                    <Text style={styles.formLabel}>{t('visits.phone')} *</Text>
                     <TextInput
                       style={styles.formInput}
                       value={newVisitForm.client_telephone}
@@ -740,10 +744,10 @@ export default function MyVisitsScreen() {
             </View>
 
             {/* Date & Time */}
-            <Text style={styles.sectionTitle}>Date et heure</Text>
+            <Text style={styles.sectionTitle}>{t('visits.dateTime')}</Text>
             <View style={styles.formRow}>
               <View style={[styles.formGroup, { flex: 1 }]}>
-                <Text style={styles.formLabel}>Date *</Text>
+                <Text style={styles.formLabel}>{t('visits.date')} *</Text>
                 <TouchableOpacity
                   style={styles.datePickerButton}
                   onPress={() => setShowDatePicker(true)}
@@ -753,12 +757,12 @@ export default function MyVisitsScreen() {
                     styles.datePickerText,
                     !newVisitForm.date_visite && styles.datePickerPlaceholder
                   ]}>
-                    {newVisitForm.date_visite ? formatDisplayDate(newVisitForm.date_visite) : 'Choisir une date'}
+                    {newVisitForm.date_visite ? formatDisplayDate(newVisitForm.date_visite) : t('visits.chooseDate')}
                   </Text>
                 </TouchableOpacity>
               </View>
               <View style={[styles.formGroup, { flex: 1 }]}>
-                <Text style={styles.formLabel}>Heure *</Text>
+                <Text style={styles.formLabel}>{t('visits.time')} *</Text>
                 <TouchableOpacity
                   style={styles.datePickerButton}
                   onPress={() => setShowTimePicker(true)}
@@ -768,7 +772,7 @@ export default function MyVisitsScreen() {
                     styles.datePickerText,
                     !newVisitForm.heure_visite && styles.datePickerPlaceholder
                   ]}>
-                    {newVisitForm.heure_visite || 'Choisir'}
+                    {newVisitForm.heure_visite || t('visits.chooseTime')}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -778,12 +782,12 @@ export default function MyVisitsScreen() {
             {showDatePicker && (
               <View style={styles.pickerContainer}>
                 <View style={styles.pickerHeader}>
-                  <Text style={styles.pickerHeaderText}>Choisir une date</Text>
+                  <Text style={styles.pickerHeaderText}>{t('visits.chooseDate')}</Text>
                   <TouchableOpacity
                     style={styles.pickerOkButton}
                     onPress={() => setShowDatePicker(false)}
                   >
-                    <Text style={styles.pickerOkText}>OK</Text>
+                    <Text style={styles.pickerOkText}>{t('common.ok')}</Text>
                   </TouchableOpacity>
                 </View>
                 <DateTimePicker
@@ -802,12 +806,12 @@ export default function MyVisitsScreen() {
             {showTimePicker && (
               <View style={styles.pickerContainer}>
                 <View style={styles.pickerHeader}>
-                  <Text style={styles.pickerHeaderText}>Choisir une heure</Text>
+                  <Text style={styles.pickerHeaderText}>{t('visits.selectTime')}</Text>
                   <TouchableOpacity
                     style={styles.pickerOkButton}
                     onPress={() => setShowTimePicker(false)}
                   >
-                    <Text style={styles.pickerOkText}>OK</Text>
+                    <Text style={styles.pickerOkText}>{t('common.ok')}</Text>
                   </TouchableOpacity>
                 </View>
                 <DateTimePicker
@@ -842,13 +846,13 @@ export default function MyVisitsScreen() {
             </View>
 
             {/* Notes */}
-            <Text style={styles.sectionTitle}>Notes (optionnel)</Text>
+            <Text style={styles.sectionTitle}>{t('visits.notesOptional')}</Text>
             <View style={styles.formGroup}>
               <TextInput
                 style={[styles.formInput, styles.formTextArea]}
                 value={newVisitForm.notes}
                 onChangeText={(text) => setNewVisitForm({ ...newVisitForm, notes: text })}
-                placeholder="Informations supplementaires..."
+                placeholder={t('visits.additionalInfo')}
                 placeholderTextColor={Colors.neutral[400]}
                 multiline
                 numberOfLines={3}
@@ -873,7 +877,7 @@ export default function MyVisitsScreen() {
             <TouchableOpacity onPress={() => setShowVisitDetailModal(false)}>
               <Ionicons name="close" size={28} color={Colors.secondary[800]} />
             </TouchableOpacity>
-            <Text style={styles.detailModalTitle}>Details de la visite</Text>
+            <Text style={styles.detailModalTitle}>{t('visits.visitDetails')}</Text>
             <View style={{ width: 28 }} />
           </View>
 
@@ -881,7 +885,7 @@ export default function MyVisitsScreen() {
             <ScrollView style={styles.detailModalContent} showsVerticalScrollIndicator={false}>
               {/* Listing Info */}
               <View style={styles.detailSection}>
-                <Text style={styles.detailSectionTitle}>Propriete</Text>
+                <Text style={styles.detailSectionTitle}>{t('visits.property')}</Text>
                 <TouchableOpacity
                   style={styles.detailListingCard}
                   onPress={() => {
@@ -918,12 +922,12 @@ export default function MyVisitsScreen() {
 
               {/* Date & Time */}
               <View style={styles.detailSection}>
-                <Text style={styles.detailSectionTitle}>Date et heure</Text>
+                <Text style={styles.detailSectionTitle}>{t('visits.dateTime')}</Text>
                 <View style={styles.detailDateTimeRow}>
                   <View style={styles.detailDateTimeItem}>
                     <Ionicons name="calendar-outline" size={20} color={lightTheme.colors.primary} />
                     <Text style={styles.detailDateTimeText}>
-                      {new Date(selectedVisit.date_visite).toLocaleDateString('fr-FR', {
+                      {new Date(selectedVisit.date_visite).toLocaleDateString(i18n.language === 'fr' ? 'fr-FR' : 'en-US', {
                         weekday: 'long',
                         day: 'numeric',
                         month: 'long',
@@ -942,7 +946,7 @@ export default function MyVisitsScreen() {
 
               {/* Status */}
               <View style={styles.detailSection}>
-                <Text style={styles.detailSectionTitle}>Statut</Text>
+                <Text style={styles.detailSectionTitle}>{t('common.status') || 'Status'}</Text>
                 <View style={[styles.detailStatusBadge, { backgroundColor: getStatusBadge(selectedVisit.statut).color }]}>
                   <Ionicons name={getStatusBadge(selectedVisit.statut).icon as any} size={16} color="#fff" />
                   <Text style={styles.detailStatusText}>{getStatusBadge(selectedVisit.statut).label}</Text>
@@ -952,7 +956,7 @@ export default function MyVisitsScreen() {
               {/* Contact Info - Show owner or visitor depending on who is viewing */}
               <View style={styles.detailSection}>
                 <Text style={styles.detailSectionTitle}>
-                  {user?.id === selectedVisit.proprietaire_id ? 'Visiteur' : 'Proprietaire'}
+                  {user?.id === selectedVisit.proprietaire_id ? t('visits.visitor') : t('visits.owner')}
                 </Text>
                 <View style={styles.detailContactCard}>
                   <View style={styles.detailContactAvatar}>
@@ -980,14 +984,14 @@ export default function MyVisitsScreen() {
                   <View style={styles.detailContactInfo}>
                     <Text style={styles.detailContactName}>
                       {user?.id === selectedVisit.proprietaire_id
-                        ? (selectedVisit.client_nom || selectedVisit.visiteur?.nom_complet || 'Visiteur')
-                        : (selectedVisit.proprietaire?.nom_complet || 'Proprietaire')
+                        ? (selectedVisit.client_nom || selectedVisit.visiteur?.nom_complet || t('visits.visitor'))
+                        : (selectedVisit.proprietaire?.nom_complet || t('visits.owner'))
                       }
                     </Text>
                     <Text style={styles.detailContactPhone}>
                       {user?.id === selectedVisit.proprietaire_id
-                        ? (selectedVisit.client_telephone || selectedVisit.visiteur?.telephone || 'Non disponible')
-                        : (selectedVisit.proprietaire?.telephone || 'Non disponible')
+                        ? (selectedVisit.client_telephone || selectedVisit.visiteur?.telephone || t('visits.notAvailable'))
+                        : (selectedVisit.proprietaire?.telephone || t('visits.notAvailable'))
                       }
                     </Text>
                   </View>
@@ -1007,7 +1011,7 @@ export default function MyVisitsScreen() {
                     }}
                   >
                     <Ionicons name="call-outline" size={20} color="#fff" />
-                    <Text style={styles.detailContactActionText}>Appeler</Text>
+                    <Text style={styles.detailContactActionText}>{t('visits.call')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.detailContactActionBtn, styles.detailContactActionBtnSecondary]}
@@ -1029,7 +1033,7 @@ export default function MyVisitsScreen() {
               {/* Notes */}
               {selectedVisit.notes && (
                 <View style={styles.detailSection}>
-                  <Text style={styles.detailSectionTitle}>Notes</Text>
+                  <Text style={styles.detailSectionTitle}>{t('visits.notes')}</Text>
                   <View style={styles.detailNotesCard}>
                     <Text style={styles.detailNotesText}>{selectedVisit.notes}</Text>
                   </View>
@@ -1047,7 +1051,7 @@ export default function MyVisitsScreen() {
                     }}
                   >
                     <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
-                    <Text style={styles.detailActionBtnText}>Confirmer</Text>
+                    <Text style={styles.detailActionBtnText}>{t('common.confirm')}</Text>
                   </TouchableOpacity>
                 )}
                 {(selectedVisit.statut === 'EN_ATTENTE' || selectedVisit.statut === 'PENDING' || selectedVisit.statut === 'CONFIRMEE') && (
@@ -1059,7 +1063,7 @@ export default function MyVisitsScreen() {
                     }}
                   >
                     <Ionicons name="close-circle-outline" size={20} color={Colors.warning[600]} />
-                    <Text style={[styles.detailActionBtnText, { color: Colors.warning[600] }]}>Annuler</Text>
+                    <Text style={[styles.detailActionBtnText, { color: Colors.warning[600] }]}>{t('common.cancel')}</Text>
                   </TouchableOpacity>
                 )}
                 {user?.id === selectedVisit.proprietaire_id && (
@@ -1071,7 +1075,7 @@ export default function MyVisitsScreen() {
                     }}
                   >
                     <Ionicons name="trash-outline" size={20} color={Colors.error[500]} />
-                    <Text style={[styles.detailActionBtnText, { color: Colors.error[500] }]}>Supprimer</Text>
+                    <Text style={[styles.detailActionBtnText, { color: Colors.error[500] }]}>{t('common.delete')}</Text>
                   </TouchableOpacity>
                 )}
               </View>

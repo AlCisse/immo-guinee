@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api/client';
+import { useTranslations } from '@/lib/i18n';
 import {
   Heart,
   MapPin,
@@ -62,16 +63,16 @@ const formatPrice = (price: number) => {
   return new Intl.NumberFormat('fr-GN').format(price) + ' GNF';
 };
 
-// Format date
-const formatDate = (dateString: string) => {
+// Format date - now accepts translation function
+const formatDate = (dateString: string, t: (key: string, params?: Record<string, any>) => string) => {
   const date = new Date(dateString);
   const now = new Date();
   const diff = now.getTime() - date.getTime();
   const days = Math.floor(diff / (24 * 60 * 60 * 1000));
 
-  if (days === 0) return "Aujourd'hui";
-  if (days === 1) return 'Hier';
-  if (days < 7) return `Il y a ${days} jours`;
+  if (days === 0) return t('favorites.dates.today');
+  if (days === 1) return t('favorites.dates.yesterday');
+  if (days < 7) return t('favorites.dates.daysAgo', { days });
   return date.toLocaleDateString('fr-FR');
 };
 
@@ -81,11 +82,13 @@ function FavoriteCard({
   viewMode,
   onRemove,
   isRemoving,
+  t,
 }: {
   property: Favorite;
   viewMode: 'grid' | 'list';
   onRemove: () => void;
   isRemoving: boolean;
+  t: (key: string, params?: Record<string, any>) => string;
 }) {
   if (viewMode === 'list') {
     return (
@@ -114,7 +117,7 @@ function FavoriteCard({
               {property.est_premium && (
                 <span className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-semibold rounded-full">
                   <Sparkles className="w-3 h-3" />
-                  Premium
+                  {t('favorites.premium')}
                 </span>
               )}
             </div>
@@ -131,7 +134,7 @@ function FavoriteCard({
                   {property.est_verifie && (
                     <span className="flex items-center gap-1 text-xs text-emerald-600">
                       <Check className="w-3 h-3" />
-                      Verifie
+                      {t('favorites.verified')}
                     </span>
                   )}
                 </div>
@@ -143,7 +146,7 @@ function FavoriteCard({
                   {property.quartier}, {property.commune}
                 </div>
                 <p className="text-xs text-neutral-400">
-                  Ajoute {formatDate(property.added_at)}
+                  {t('favorites.addedOn')} {formatDate(property.added_at, t)}
                 </p>
               </div>
 
@@ -152,10 +155,10 @@ function FavoriteCard({
                   {formatPrice(property.prix)}
                 </p>
                 {(property.type_transaction === 'LOCATION' || property.type_transaction === 'location') && (
-                  <span className="text-sm text-neutral-500">/mois</span>
+                  <span className="text-sm text-neutral-500">{t('favorites.perMonth')}</span>
                 )}
                 {(property.type_transaction === 'LOCATION_COURTE' || property.type_transaction === 'location_courte') && (
-                  <span className="text-sm text-purple-500">/jour</span>
+                  <span className="text-sm text-purple-500">{t('favorites.perDay')}</span>
                 )}
               </div>
             </div>
@@ -217,7 +220,7 @@ function FavoriteCard({
             {property.est_premium && (
               <span className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-semibold rounded-full">
                 <Sparkles className="w-3 h-3" />
-                Premium
+                {t('favorites.premium')}
               </span>
             )}
           </div>
@@ -244,10 +247,10 @@ function FavoriteCard({
             <span className="px-3 py-1.5 bg-white dark:bg-dark-card rounded-lg font-bold text-neutral-900 dark:text-white shadow-lg">
               {formatPrice(property.prix)}
               {(property.type_transaction === 'LOCATION' || property.type_transaction === 'location') && (
-                <span className="text-sm font-normal text-neutral-500">/mois</span>
+                <span className="text-sm font-normal text-neutral-500">{t('favorites.perMonth')}</span>
               )}
               {(property.type_transaction === 'LOCATION_COURTE' || property.type_transaction === 'location_courte') && (
-                <span className="text-sm font-normal text-purple-500">/jour</span>
+                <span className="text-sm font-normal text-purple-500">{t('favorites.perDay')}</span>
               )}
             </span>
           </div>
@@ -262,7 +265,7 @@ function FavoriteCard({
             {property.est_verifie && (
               <span className="flex items-center gap-1 text-xs text-emerald-600">
                 <Check className="w-3 h-3" />
-                Verifie
+                {t('favorites.verified')}
               </span>
             )}
           </div>
@@ -287,7 +290,7 @@ function FavoriteCard({
 
           {/* Added date */}
           <p className="text-xs text-neutral-400 mt-2">
-            Ajoute {formatDate(property.added_at)}
+            {t('favorites.addedOn')} {formatDate(property.added_at, t)}
           </p>
         </div>
       </Link>
@@ -296,6 +299,7 @@ function FavoriteCard({
 }
 
 export default function FavoritesPage() {
+  const { t } = useTranslations();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [removingId, setRemovingId] = useState<string | null>(null);
   const queryClient = useQueryClient();
@@ -336,12 +340,12 @@ export default function FavoritesPage() {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="text-center">
-          <p className="text-red-500 mb-4">Erreur lors du chargement des favoris</p>
+          <p className="text-red-500 mb-4">{t('favorites.error.loading')}</p>
           <button
             onClick={() => queryClient.invalidateQueries({ queryKey: ['favorites'] })}
             className="px-4 py-2 bg-primary-500 text-white rounded-lg"
           >
-            Reessayer
+            {t('favorites.error.retry')}
           </button>
         </div>
       </div>
@@ -356,10 +360,10 @@ export default function FavoritesPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-xl font-bold text-neutral-900 dark:text-white">
-                Mes favoris
+                {t('favorites.title')}
               </h1>
               <p className="text-sm text-neutral-500">
-                {favorites.length} bien(s) sauvegarde(s)
+                {t('favorites.subtitle', { count: favorites.length })}
               </p>
             </div>
 
@@ -411,6 +415,7 @@ export default function FavoritesPage() {
                   viewMode={viewMode}
                   onRemove={() => handleRemove(property.id)}
                   isRemoving={removingId === property.id}
+                  t={t}
                 />
               ))}
             </motion.div>
@@ -425,10 +430,10 @@ export default function FavoritesPage() {
               <Heart className="w-10 h-10 text-neutral-400" />
             </div>
             <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
-              Aucun favori
+              {t('favorites.noFavorites')}
             </h2>
             <p className="text-neutral-500 mb-6 max-w-md mx-auto">
-              Explorez nos annonces et sauvegardez celles qui vous interessent en cliquant sur le coeur.
+              {t('favorites.noFavoritesDesc')}
             </p>
             <Link href="/recherche">
               <motion.button
@@ -436,7 +441,7 @@ export default function FavoritesPage() {
                 whileTap={{ scale: 0.98 }}
                 className="px-8 py-3 bg-primary-500 text-white font-semibold rounded-xl"
               >
-                Explorer les annonces
+                {t('favorites.exploreListing')}
               </motion.button>
             </Link>
           </motion.div>
@@ -456,10 +461,10 @@ export default function FavoritesPage() {
               </div>
               <div>
                 <h3 className="font-semibold text-neutral-900 dark:text-white mb-1">
-                  Alertes prix
+                  {t('favorites.priceAlerts.title')}
                 </h3>
                 <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                  Activez les alertes sur vos favoris pour etre notifie en cas de baisse de prix ou de changement de disponibilite.
+                  {t('favorites.priceAlerts.description')}
                 </p>
               </div>
             </div>

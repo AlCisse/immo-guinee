@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api/client';
+import { useTranslations } from '@/lib/i18n';
 import toast from 'react-hot-toast';
 import {
   Plus,
@@ -44,55 +45,47 @@ interface Annonce {
   created_at: string;
 }
 
-const STATUS_CONFIG: Record<string, { label: string; icon: any; className: string }> = {
+const STATUS_CONFIG: Record<string, { icon: any; className: string }> = {
   ACTIVE: {
-    label: 'Active',
     icon: CheckCircle,
     className: 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400',
   },
   publiee: {
-    label: 'Publiee',
     icon: CheckCircle,
     className: 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400',
   },
   EN_ATTENTE: {
-    label: 'En attente',
     icon: Clock,
     className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400',
   },
   PENDING: {
-    label: 'En attente',
     icon: Clock,
     className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400',
   },
   BROUILLON: {
-    label: 'Brouillon',
     icon: Clock,
     className: 'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400',
   },
   EXPIREE: {
-    label: 'Expiree',
     icon: AlertCircle,
     className: 'bg-neutral-100 text-neutral-600 dark:bg-neutral-500/10 dark:text-neutral-400',
   },
   REJETEE: {
-    label: 'Rejetee',
     icon: XCircle,
     className: 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400',
   },
   REJECTED: {
-    label: 'Rejetee',
     icon: XCircle,
     className: 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400',
   },
 };
 
-function formatPrice(price: number | string | null | undefined): string {
+function formatPrice(price: number | string | null | undefined, priceNotDefined: string): string {
   // Convert string to number and handle invalid values
   const numPrice = typeof price === 'string' ? parseFloat(price) : (price || 0);
 
   if (isNaN(numPrice) || numPrice === 0) {
-    return 'Prix non defini';
+    return priceNotDefined;
   }
 
   if (numPrice >= 1000000000) {
@@ -112,6 +105,7 @@ function formatPrice(price: number | string | null | undefined): string {
 }
 
 export default function MesAnnoncesPage() {
+  const { t } = useTranslations();
   const searchParams = useSearchParams();
   const successParam = searchParams.get('success');
   const showSuccess = successParam === 'true' || successParam === 'created';
@@ -121,14 +115,17 @@ export default function MesAnnoncesPage() {
   const [filterStatus, setFilterStatus] = useState<AnnonceStatus | 'ALL'>('ALL');
   const [showSuccessMessage, setShowSuccessMessage] = useState(showSuccess);
 
+  // Get status label from translations
+  const getStatusLabel = (status: string) => t(`myListings.status.${status}`) || status;
+
   // Show toast notification for created listing
   useEffect(() => {
     if (successParam === 'created') {
-      toast.success('Annonce publiée avec succès !');
+      toast.success(t('myListings.publishSuccess'));
       // Clean up URL without refresh
       window.history.replaceState({}, '', '/mes-annonces');
     }
-  }, [successParam]);
+  }, [successParam, t]);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
 
   // Fetch user's listings from API
@@ -147,11 +144,11 @@ export default function MesAnnoncesPage() {
     mutationFn: (id: string) => api.listings.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-listings'] });
-      toast.success('Annonce supprimee avec succes');
+      toast.success(t('myListings.deleteSuccess'));
       setActiveMenu(null);
     },
     onError: () => {
-      toast.error('Erreur lors de la suppression');
+      toast.error(t('myListings.deleteError'));
     },
   });
 
@@ -182,7 +179,7 @@ export default function MesAnnoncesPage() {
 
   // Supprimer une annonce
   const handleDelete = (id: string) => {
-    if (confirm('Voulez-vous vraiment supprimer cette annonce ?')) {
+    if (confirm(t('myListings.deleteConfirm'))) {
       deleteMutation.mutate(id);
     }
   };
@@ -191,12 +188,12 @@ export default function MesAnnoncesPage() {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="text-center">
-          <p className="text-red-500 mb-4">Erreur lors du chargement des annonces</p>
+          <p className="text-red-500 mb-4">{t('myListings.error.loading')}</p>
           <button
             onClick={() => queryClient.invalidateQueries({ queryKey: ['my-listings'] })}
             className="px-4 py-2 bg-primary-500 text-white rounded-lg"
           >
-            Reessayer
+            {t('myListings.error.retry')}
           </button>
         </div>
       </div>
@@ -221,10 +218,10 @@ export default function MesAnnoncesPage() {
             </Link>
             <div className="flex-1">
               <h1 className="text-2xl md:text-3xl font-bold text-white">
-                Mes annonces
+                {t('myListings.title')}
               </h1>
               <p className="text-white/80 text-sm md:text-base">
-                Gerez vos annonces immobilieres
+                {t('myListings.subtitle')}
               </p>
             </div>
             <Link href="/publier">
@@ -234,7 +231,7 @@ export default function MesAnnoncesPage() {
                 className="flex items-center gap-2 px-4 py-2.5 bg-white text-primary-600 font-semibold rounded-xl shadow-lg"
               >
                 <Plus className="w-5 h-5" />
-                <span className="hidden sm:inline">Nouvelle annonce</span>
+                <span className="hidden sm:inline">{t('myListings.newListing')}</span>
               </motion.button>
             </Link>
           </motion.div>
@@ -248,15 +245,15 @@ export default function MesAnnoncesPage() {
           >
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center">
               <p className="text-2xl font-bold text-white">{stats.total}</p>
-              <p className="text-xs text-white/80">Total annonces</p>
+              <p className="text-xs text-white/80">{t('myListings.stats.total')}</p>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center">
               <p className="text-2xl font-bold text-white">{stats.active}</p>
-              <p className="text-xs text-white/80">Actives</p>
+              <p className="text-xs text-white/80">{t('myListings.stats.active')}</p>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center">
               <p className="text-2xl font-bold text-white">{stats.totalVues}</p>
-              <p className="text-xs text-white/80">Vues totales</p>
+              <p className="text-xs text-white/80">{t('myListings.stats.totalViews')}</p>
             </div>
           </motion.div>
         </div>
@@ -275,7 +272,7 @@ export default function MesAnnoncesPage() {
             >
               <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
               <p className="text-green-700 dark:text-green-400 font-medium">
-                Votre annonce a ete publiee avec succes ! Elle sera visible apres validation.
+                {t('myListings.publishSuccess')}
               </p>
             </motion.div>
           )}
@@ -296,7 +293,7 @@ export default function MesAnnoncesPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Rechercher une annonce..."
+                placeholder={t('myListings.search')}
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-neutral-200 dark:border-dark-border bg-neutral-50 dark:bg-dark-bg focus:outline-none focus:border-primary-500 text-neutral-900 dark:text-white"
               />
             </div>
@@ -313,7 +310,7 @@ export default function MesAnnoncesPage() {
                       : 'bg-neutral-100 dark:bg-dark-bg text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-dark-border'
                   }`}
                 >
-                  {status === 'ALL' ? 'Toutes' : STATUS_CONFIG[status]?.label || status}
+                  {status === 'ALL' ? t('myListings.filters.all') : getStatusLabel(status)}
                 </button>
               ))}
             </div>
@@ -333,16 +330,16 @@ export default function MesAnnoncesPage() {
           >
             <Home className="w-16 h-16 text-neutral-300 dark:text-neutral-600 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-2">
-              Aucune annonce trouvee
+              {t('myListings.noListings')}
             </h3>
             <p className="text-neutral-500 mb-6">
               {searchQuery || filterStatus !== 'ALL'
-                ? 'Essayez de modifier vos criteres de recherche.'
-                : 'Commencez par publier votre premiere annonce !'}
+                ? t('myListings.noListingsHint')
+                : t('myListings.noListingsEmpty')}
             </p>
             <Link href="/publier">
               <button className="px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors">
-                Publier une annonce
+                {t('myListings.publishListing')}
               </button>
             </Link>
           </motion.div>
@@ -383,7 +380,7 @@ export default function MesAnnoncesPage() {
                           {/* Status Badge */}
                           <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium mb-2 ${statusConfig.className}`}>
                             <StatusIcon className="w-3.5 h-3.5" />
-                            {statusConfig.label}
+                            {getStatusLabel(annonce.statut)}
                           </span>
 
                           {/* Title */}
@@ -400,17 +397,17 @@ export default function MesAnnoncesPage() {
                           {/* Price and Type */}
                           <div className="flex items-center gap-4">
                             <span className="text-lg font-bold text-primary-500">
-                              {formatPrice(annonce.loyer_mensuel || annonce.prix || 0)}
+                              {formatPrice(annonce.loyer_mensuel || annonce.prix || 0, t('myListings.priceNotDefined'))}
                               {(annonce.type_transaction === 'LOCATION' || annonce.type_transaction === 'location') && (
-                                <span className="text-sm font-normal text-neutral-500">/mois</span>
+                                <span className="text-sm font-normal text-neutral-500">{t('common.perMonth')}</span>
                               )}
                               {(annonce.type_transaction === 'LOCATION_COURTE' || annonce.type_transaction === 'location_courte') && (
-                                <span className="text-sm font-normal text-purple-500">/jour</span>
+                                <span className="text-sm font-normal text-purple-500">{t('common.perDay')}</span>
                               )}
                             </span>
                             {(annonce.type_transaction === 'LOCATION_COURTE' || annonce.type_transaction === 'location_courte') && (
                               <span className="text-xs text-purple-600 bg-purple-100 dark:bg-purple-500/10 px-2 py-0.5 rounded">
-                                Courte durée
+                                {t('myListings.shortRental')}
                               </span>
                             )}
                             <span className="text-sm text-neutral-500 bg-neutral-100 dark:bg-dark-bg px-2 py-0.5 rounded">
@@ -421,7 +418,7 @@ export default function MesAnnoncesPage() {
                           {/* Views */}
                           <div className="flex items-center gap-1.5 text-sm text-neutral-500 mt-2">
                             <Eye className="w-4 h-4" />
-                            {annonce.vues_count || annonce.vues || 0} vues
+                            {t('myListings.views', { count: annonce.vues_count || annonce.vues || 0 })}
                           </div>
                         </div>
 
@@ -447,14 +444,14 @@ export default function MesAnnoncesPage() {
                                   className="flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-50 dark:hover:bg-dark-bg text-neutral-700 dark:text-neutral-300"
                                 >
                                   <Eye className="w-4 h-4" />
-                                  Voir l'annonce
+                                  {t('myListings.actions.viewListing')}
                                 </Link>
                                 <Link
                                   href={`/mes-annonces/${annonce.id}/modifier`}
                                   className="flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-50 dark:hover:bg-dark-bg text-neutral-700 dark:text-neutral-300"
                                 >
                                   <Edit className="w-4 h-4" />
-                                  Modifier
+                                  {t('myListings.actions.edit')}
                                 </Link>
                                 <button
                                   onClick={() => handleDelete(annonce.id)}
@@ -466,7 +463,7 @@ export default function MesAnnoncesPage() {
                                   ) : (
                                     <Trash2 className="w-4 h-4" />
                                   )}
-                                  Supprimer
+                                  {t('myListings.actions.delete')}
                                 </button>
                               </motion.div>
                             )}

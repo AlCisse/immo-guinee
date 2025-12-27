@@ -15,12 +15,14 @@ import {
 import { Link, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/auth/AuthContext';
 import Colors, { lightTheme } from '@/constants/Colors';
 import Logo from '@/components/Logo';
 import PhoneInput, { Country } from '@/components/PhoneInput';
 
 export default function LoginScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { login } = useAuth();
   const { width } = useWindowDimensions();
@@ -35,7 +37,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!telephone || !password) {
-      Alert.alert('Erreur', 'Veuillez remplir tous les champs');
+      Alert.alert(t('common.error'), t('errors.requiredField'));
       return;
     }
 
@@ -46,7 +48,7 @@ export default function LoginScreen() {
     try {
       await login(formattedPhone, password);
     } catch (error: any) {
-      Alert.alert('Erreur', error.message || 'Erreur de connexion');
+      Alert.alert(t('common.error'), error.message || t('errors.invalidCredentials'));
     } finally {
       setIsLoading(false);
     }
@@ -69,16 +71,16 @@ export default function LoginScreen() {
               <View style={styles.logoContainer}>
                 <Logo size="xlarge" />
               </View>
-              <Text style={styles.title}>Connexion</Text>
+              <Text style={styles.title}>{t('auth.login')}</Text>
               <Text style={styles.subtitle}>
-                Connectez-vous pour acceder a votre compte
+                {t('auth.welcomeBack')}
               </Text>
             </View>
 
             {/* Form */}
             <View style={styles.form}>
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Numero de telephone</Text>
+                <Text style={styles.label}>{t('auth.phone')}</Text>
                 <PhoneInput
                   value={telephone}
                   onChangeText={setTelephone}
@@ -88,11 +90,11 @@ export default function LoginScreen() {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Mot de passe</Text>
+                <Text style={styles.label}>{t('auth.password')}</Text>
                 <View style={styles.passwordContainer}>
                   <TextInput
                     style={styles.passwordInput}
-                    placeholder="Votre mot de passe"
+                    placeholder={t('auth.password')}
                     placeholderTextColor={Colors.neutral[400]}
                     secureTextEntry={!showPassword}
                     value={password}
@@ -116,7 +118,7 @@ export default function LoginScreen() {
                 style={styles.forgotPassword}
                 onPress={() => router.push('/auth/forgot-password')}
               >
-                <Text style={styles.forgotPasswordText}>Mot de passe oublie ?</Text>
+                <Text style={styles.forgotPasswordText}>{t('auth.forgotPassword')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -128,21 +130,21 @@ export default function LoginScreen() {
                 {isLoading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.loginButtonText}>Se connecter</Text>
+                  <Text style={styles.loginButtonText}>{t('auth.signIn')}</Text>
                 )}
               </TouchableOpacity>
 
               <View style={styles.divider}>
                 <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>ou</Text>
+                <Text style={styles.dividerText}>{t('common.or')}</Text>
                 <View style={styles.dividerLine} />
               </View>
 
               <View style={styles.registerLink}>
-                <Text style={styles.registerText}>Pas encore de compte ?</Text>
+                <Text style={styles.registerText}>{t('auth.noAccount')}</Text>
                 <Link href="/auth/register" asChild>
                   <TouchableOpacity>
-                    <Text style={styles.registerLinkText}>S'inscrire</Text>
+                    <Text style={styles.registerLinkText}>{t('auth.signUp')}</Text>
                   </TouchableOpacity>
                 </Link>
               </View>

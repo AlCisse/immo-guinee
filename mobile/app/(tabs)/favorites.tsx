@@ -15,12 +15,14 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import Colors, { lightTheme } from '@/constants/Colors';
 import { formatListingPrice } from '@/lib/utils/formatPrice';
 
 export default function FavoritesScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { isAuthenticated } = useAuth();
@@ -46,7 +48,7 @@ export default function FavoritesScreen() {
       queryClient.invalidateQueries({ queryKey: ['favorites'] });
     },
     onError: () => {
-      Alert.alert('Erreur', 'Impossible de retirer le favori');
+      Alert.alert(t('common.error'), t('errors.removeFavoriteFailed'));
     },
   });
 
@@ -60,12 +62,12 @@ export default function FavoritesScreen() {
 
   const handleRemoveFavorite = (listingId: string) => {
     Alert.alert(
-      'Retirer des favoris',
-      'Voulez-vous retirer cette annonce de vos favoris ?',
+      t('favorites.removeFromFavorites'),
+      t('favorites.removeFavoriteConfirm'),
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Retirer',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: () => removeMutation.mutate(listingId),
         },
@@ -81,22 +83,22 @@ export default function FavoritesScreen() {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={[styles.header, { paddingHorizontal: horizontalPadding }]}>
-          <Text style={styles.headerTitle}>Favoris</Text>
+          <Text style={styles.headerTitle}>{t('favorites.title')}</Text>
         </View>
         <View style={styles.authRequired}>
           <View style={styles.authIconContainer}>
             <Ionicons name="heart-outline" size={48} color={lightTheme.colors.primary} />
           </View>
-          <Text style={styles.authTitle}>Connectez-vous</Text>
+          <Text style={styles.authTitle}>{t('auth.signIn')}</Text>
           <Text style={styles.authText}>
-            Connectez-vous pour voir et gerer vos favoris
+            {t('favorites.loginToViewFavorites')}
           </Text>
           <TouchableOpacity
             style={styles.authButton}
             onPress={() => router.push('/auth/login')}
             activeOpacity={0.8}
           >
-            <Text style={styles.authButtonText}>Se connecter</Text>
+            <Text style={styles.authButtonText}>{t('auth.signIn')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -200,7 +202,7 @@ export default function FavoritesScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={[styles.header, { paddingHorizontal: horizontalPadding }]}>
-        <Text style={styles.headerTitle}>Favoris</Text>
+        <Text style={styles.headerTitle}>{t('favorites.title')}</Text>
         <View style={styles.headerCountBadge}>
           <Text style={styles.headerCount}>{favorites.length}</Text>
         </View>
@@ -209,7 +211,7 @@ export default function FavoritesScreen() {
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={lightTheme.colors.primary} />
-          <Text style={styles.loadingText}>Chargement...</Text>
+          <Text style={styles.loadingText}>{t('common.loading')}</Text>
         </View>
       ) : (
         <FlatList
@@ -231,9 +233,9 @@ export default function FavoritesScreen() {
               <View style={styles.emptyIconContainer}>
                 <Ionicons name="heart-outline" size={48} color={lightTheme.colors.primary} />
               </View>
-              <Text style={styles.emptyTitle}>Aucun favori</Text>
+              <Text style={styles.emptyTitle}>{t('favorites.noFavorites')}</Text>
               <Text style={styles.emptyText}>
-                Ajoutez des annonces a vos favoris pour les retrouver facilement
+                {t('favorites.addFavoritesHint')}
               </Text>
               <TouchableOpacity
                 style={styles.browseButton}
@@ -241,7 +243,7 @@ export default function FavoritesScreen() {
                 activeOpacity={0.8}
               >
                 <Ionicons name="search-outline" size={18} color="#fff" />
-                <Text style={styles.browseButtonText}>Parcourir les annonces</Text>
+                <Text style={styles.browseButtonText}>{t('favorites.browseListings')}</Text>
               </TouchableOpacity>
             </View>
           }

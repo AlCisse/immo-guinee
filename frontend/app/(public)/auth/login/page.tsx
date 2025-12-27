@@ -8,9 +8,11 @@ import { Eye, EyeOff, Lock, Loader2, ArrowRight } from 'lucide-react';
 import { ROUTES } from '@/lib/routes';
 import { inputStyles } from '@/lib/utils';
 import PhoneInput from '@/components/ui/PhoneInput';
+import { useTranslations } from '@/lib/i18n';
 
 export default function LoginPage() {
   const { login } = useAuth();
+  const { t } = useTranslations();
   const [formData, setFormData] = useState({
     telephone: '',
     mot_de_passe: '',
@@ -25,7 +27,7 @@ export default function LoginPage() {
     setError('');
 
     if (!formData.telephone || !formData.mot_de_passe) {
-      setError('Veuillez remplir tous les champs');
+      setError(t('auth.login.errors.fillAllFields'));
       return;
     }
 
@@ -41,7 +43,7 @@ export default function LoginPage() {
       setError(
         err.response?.data?.message ||
         err.message ||
-        'Identifiants incorrects. Veuillez réessayer.'
+        t('auth.login.errors.invalidCredentials')
       );
     } finally {
       setIsLoading(false);
@@ -55,7 +57,7 @@ export default function LoginPage() {
       window.location.href = `/api/auth/${provider}/redirect`;
     } catch (err) {
       console.error(`${provider} login error:`, err);
-      setError(`Erreur lors de la connexion avec ${provider === 'google' ? 'Google' : 'Facebook'}`);
+      setError(provider === 'google' ? t('auth.login.errors.googleError') : t('auth.login.errors.facebookError'));
       setSocialLoading(null);
     }
   };
@@ -75,26 +77,26 @@ export default function LoginPage() {
           />
           <h1 className="text-4xl font-bold mb-4 text-center">ImmoGuinée</h1>
           <p className="text-xl text-white/90 text-center max-w-md">
-            La première plateforme immobilière de Guinée
+            {t('auth.login.promo.platform')}
           </p>
           <div className="mt-12 space-y-4 text-white/80">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
                 <span className="text-lg">🏠</span>
               </div>
-              <span>+10,000 annonces disponibles</span>
+              <span>{t('auth.login.promo.listings')}</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
                 <span className="text-lg">👥</span>
               </div>
-              <span>Communauté de confiance</span>
+              <span>{t('auth.login.promo.community')}</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
                 <span className="text-lg">🔒</span>
               </div>
-              <span>Transactions sécurisées</span>
+              <span>{t('auth.login.promo.secure')}</span>
             </div>
           </div>
         </div>
@@ -117,10 +119,10 @@ export default function LoginPage() {
 
           <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft p-5 sm:p-8">
             <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-white mb-1">
-              Connexion
+              {t('auth.login.title')}
             </h2>
             <p className="text-sm text-neutral-500 mb-4 sm:mb-6">
-              Accédez à votre compte ImmoGuinée
+              {t('auth.login.accessAccount')}
             </p>
 
             {/* Social Login Buttons */}
@@ -169,7 +171,7 @@ export default function LoginPage() {
                 <div className="w-full border-t border-neutral-200 dark:border-dark-border"></div>
               </div>
               <div className="relative flex justify-center text-xs sm:text-sm">
-                <span className="px-3 sm:px-4 bg-white dark:bg-dark-card text-neutral-500">ou</span>
+                <span className="px-3 sm:px-4 bg-white dark:bg-dark-card text-neutral-500">{t('auth.login.or')}</span>
               </div>
             </div>
 
@@ -183,7 +185,7 @@ export default function LoginPage() {
               {/* Phone Input */}
               <div>
                 <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                  Numéro de téléphone
+                  {t('auth.login.phoneLabel')}
                 </label>
                 <PhoneInput
                   value={formData.telephone}
@@ -193,14 +195,14 @@ export default function LoginPage() {
                   defaultCountry="GN"
                 />
                 <p className="mt-1 text-xs text-neutral-500">
-                  Sélectionnez votre pays - Guinée et diaspora acceptés
+                  {t('auth.login.phoneHint')}
                 </p>
               </div>
 
               {/* Password */}
               <div>
                 <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                  Mot de passe
+                  {t('auth.login.password')}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-4">
@@ -211,7 +213,7 @@ export default function LoginPage() {
                     value={formData.mot_de_passe}
                     onChange={(e) => setFormData({ ...formData, mot_de_passe: e.target.value })}
                     className={`${inputStyles.base} ${inputStyles.withIconRight}`}
-                    placeholder="Entrez votre mot de passe"
+                    placeholder={t('auth.login.passwordPlaceholder')}
                   />
                   <button
                     type="button"
@@ -230,10 +232,10 @@ export default function LoginPage() {
                     type="checkbox"
                     className="w-4 h-4 rounded border-neutral-300 text-primary-500 focus:ring-primary-500"
                   />
-                  <span className="text-sm text-neutral-600 dark:text-neutral-400">Se souvenir de moi</span>
+                  <span className="text-sm text-neutral-600 dark:text-neutral-400">{t('auth.login.rememberMe')}</span>
                 </label>
                 <Link href={ROUTES.FORGOT_PASSWORD} className="text-sm text-primary-500 hover:text-primary-600 font-medium">
-                  Mot de passe oublie ?
+                  {t('auth.login.forgotPassword')}
                 </Link>
               </div>
 
@@ -246,11 +248,11 @@ export default function LoginPage() {
                 {isLoading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    Connexion en cours...
+                    {t('auth.login.loggingIn')}
                   </>
                 ) : (
                   <>
-                    Se connecter
+                    {t('auth.login.loginButton')}
                     <ArrowRight className="w-5 h-5" />
                   </>
                 )}
@@ -259,9 +261,9 @@ export default function LoginPage() {
 
             {/* Register link */}
             <div className="mt-6 sm:mt-8 text-center text-sm">
-              <span className="text-neutral-500">Pas encore de compte ? </span>
+              <span className="text-neutral-500">{t('auth.login.noAccount')} </span>
               <Link href={ROUTES.REGISTER} className="text-primary-500 hover:text-primary-600 font-semibold">
-                S'inscrire gratuitement
+                {t('auth.login.registerFree')}
               </Link>
             </div>
           </div>
@@ -272,19 +274,19 @@ export default function LoginPage() {
               <div className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-1 sm:mb-2 rounded-full bg-primary-100 dark:bg-primary-500/10 flex items-center justify-center">
                 <span className="text-primary-500 text-xs sm:text-sm">✓</span>
               </div>
-              Annonces gratuites
+              {t('auth.login.features.freeListings')}
             </div>
             <div>
               <div className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-1 sm:mb-2 rounded-full bg-primary-100 dark:bg-primary-500/10 flex items-center justify-center">
                 <span className="text-primary-500 text-xs sm:text-sm">✓</span>
               </div>
-              Recherche avancée
+              {t('auth.login.features.advancedSearch')}
             </div>
             <div>
               <div className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-1 sm:mb-2 rounded-full bg-primary-100 dark:bg-primary-500/10 flex items-center justify-center">
                 <span className="text-primary-500 text-xs sm:text-sm">✓</span>
               </div>
-              Messagerie sécurisée
+              {t('auth.login.features.secureMessaging')}
             </div>
           </div>
         </div>

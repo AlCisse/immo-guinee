@@ -13,12 +13,14 @@ import {
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { api, apiClient } from '@/lib/api/client';
 import Colors, { lightTheme } from '@/constants/Colors';
 
 export default function ChangePasswordScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { user } = useAuth();
 
   // Step management
@@ -37,7 +39,7 @@ export default function ChangePasswordScreen() {
 
   const requestOtp = async () => {
     if (!user?.telephone) {
-      Alert.alert('Erreur', 'Numero de telephone non disponible.');
+      Alert.alert(t('common.error'), t('changePassword.errors.phoneNotAvailable'));
       return;
     }
 
@@ -47,11 +49,11 @@ export default function ChangePasswordScreen() {
         telephone: user.telephone,
       });
       setStep('verify');
-      Alert.alert('Code envoye', 'Un code OTP a ete envoye sur votre WhatsApp.');
+      Alert.alert(t('changePassword.codeSent'), t('changePassword.codeSentWhatsapp'));
     } catch (error: any) {
       console.error('Request OTP error:', error);
-      const message = error.response?.data?.message || 'Erreur lors de l\'envoi du code OTP.';
-      Alert.alert('Erreur', message);
+      const message = error.response?.data?.message || t('changePassword.errors.sendOtpFailed');
+      Alert.alert(t('common.error'), message);
     } finally {
       setRequestingOtp(false);
     }
@@ -59,17 +61,17 @@ export default function ChangePasswordScreen() {
 
   const resetPassword = async () => {
     if (!otpCode || otpCode.length !== 6) {
-      Alert.alert('Erreur', 'Veuillez entrer le code OTP a 6 chiffres.');
+      Alert.alert(t('common.error'), t('changePassword.errors.enterOtp'));
       return;
     }
 
     if (!newPassword || newPassword.length < 6) {
-      Alert.alert('Erreur', 'Le mot de passe doit contenir au moins 6 caracteres.');
+      Alert.alert(t('common.error'), t('changePassword.errors.passwordMinLength'));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      Alert.alert('Erreur', 'Les mots de passe ne correspondent pas.');
+      Alert.alert(t('common.error'), t('changePassword.errors.passwordMismatch'));
       return;
     }
 
@@ -83,14 +85,14 @@ export default function ChangePasswordScreen() {
       });
 
       Alert.alert(
-        'Succes',
-        'Votre mot de passe a ete modifie avec succes.',
-        [{ text: 'OK', onPress: () => router.back() }]
+        t('common.success'),
+        t('changePassword.passwordChanged'),
+        [{ text: t('common.ok'), onPress: () => router.back() }]
       );
     } catch (error: any) {
       console.error('Reset password error:', error);
-      const message = error.response?.data?.message || 'Erreur lors du changement de mot de passe.';
-      Alert.alert('Erreur', message);
+      const message = error.response?.data?.message || t('changePassword.errors.resetFailed');
+      Alert.alert(t('common.error'), message);
     } finally {
       setResetting(false);
     }
@@ -101,7 +103,7 @@ export default function ChangePasswordScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Changer le mot de passe',
+          title: t('changePassword.title'),
           headerStyle: { backgroundColor: Colors.background.primary },
           headerShadowVisible: true,
           headerLeft: () => (
@@ -127,12 +129,12 @@ export default function ChangePasswordScreen() {
               <Ionicons name="lock-closed" size={48} color={lightTheme.colors.primary} />
             </View>
             <Text style={styles.title}>
-              {step === 'request' ? 'Securisez votre compte' : 'Nouveau mot de passe'}
+              {step === 'request' ? t('changePassword.secureAccount') : t('changePassword.newPasswordTitle')}
             </Text>
             <Text style={styles.subtitle}>
               {step === 'request'
-                ? 'Pour changer votre mot de passe, nous devons verifier votre identite via WhatsApp.'
-                : 'Entrez le code recu et votre nouveau mot de passe.'}
+                ? t('changePassword.verifyIdentity')
+                : t('changePassword.enterCodeAndPassword')}
             </Text>
           </View>
 
@@ -142,7 +144,7 @@ export default function ChangePasswordScreen() {
               <View style={styles.infoCard}>
                 <Ionicons name="call-outline" size={24} color={lightTheme.colors.primary} />
                 <View style={styles.infoCardContent}>
-                  <Text style={styles.infoCardLabel}>Numero de telephone</Text>
+                  <Text style={styles.infoCardLabel}>{t('changePassword.phoneNumber')}</Text>
                   <Text style={styles.infoCardValue}>{user?.telephone}</Text>
                 </View>
               </View>
@@ -157,7 +159,7 @@ export default function ChangePasswordScreen() {
                 ) : (
                   <>
                     <Ionicons name="send-outline" size={20} color="#fff" />
-                    <Text style={styles.primaryButtonText}>Recevoir le code OTP</Text>
+                    <Text style={styles.primaryButtonText}>{t('changePassword.receiveOtp')}</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -167,7 +169,7 @@ export default function ChangePasswordScreen() {
             <View style={styles.formSection}>
               {/* OTP Input */}
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Code OTP</Text>
+                <Text style={styles.label}>{t('changePassword.otpCode')}</Text>
                 <View style={styles.inputContainer}>
                   <Ionicons name="key-outline" size={20} color={Colors.neutral[400]} style={styles.inputIcon} />
                   <TextInput
@@ -184,14 +186,14 @@ export default function ChangePasswordScreen() {
 
               {/* New Password */}
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Nouveau mot de passe</Text>
+                <Text style={styles.label}>{t('changePassword.newPassword')}</Text>
                 <View style={styles.inputContainer}>
                   <Ionicons name="lock-closed-outline" size={20} color={Colors.neutral[400]} style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
                     value={newPassword}
                     onChangeText={setNewPassword}
-                    placeholder="Minimum 6 caracteres"
+                    placeholder={t('changePassword.minCharacters')}
                     placeholderTextColor={Colors.neutral[400]}
                     secureTextEntry={!showPassword}
                   />
@@ -207,14 +209,14 @@ export default function ChangePasswordScreen() {
 
               {/* Confirm Password */}
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Confirmer le mot de passe</Text>
+                <Text style={styles.label}>{t('changePassword.confirmPassword')}</Text>
                 <View style={styles.inputContainer}>
                   <Ionicons name="lock-closed-outline" size={20} color={Colors.neutral[400]} style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
-                    placeholder="Retapez le mot de passe"
+                    placeholder={t('changePassword.retypePassword')}
                     placeholderTextColor={Colors.neutral[400]}
                     secureTextEntry={!showConfirmPassword}
                   />
@@ -235,7 +237,7 @@ export default function ChangePasswordScreen() {
                 disabled={requestingOtp}
               >
                 <Ionicons name="refresh-outline" size={18} color={lightTheme.colors.primary} />
-                <Text style={styles.resendButtonText}>Renvoyer le code</Text>
+                <Text style={styles.resendButtonText}>{t('changePassword.resendCode')}</Text>
               </TouchableOpacity>
 
               {/* Submit Button */}
@@ -252,7 +254,7 @@ export default function ChangePasswordScreen() {
                 ) : (
                   <>
                     <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
-                    <Text style={styles.primaryButtonText}>Changer le mot de passe</Text>
+                    <Text style={styles.primaryButtonText}>{t('changePassword.changePasswordBtn')}</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -262,7 +264,7 @@ export default function ChangePasswordScreen() {
                 style={styles.secondaryButton}
                 onPress={() => setStep('request')}
               >
-                <Text style={styles.secondaryButtonText}>Retour</Text>
+                <Text style={styles.secondaryButtonText}>{t('common.back')}</Text>
               </TouchableOpacity>
             </View>
           )}

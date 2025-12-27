@@ -8,33 +8,20 @@ import {
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import Colors, { lightTheme } from '@/constants/Colors';
 
-const FAQ_ITEMS = [
-  {
-    question: 'Comment publier une annonce ?',
-    answer: 'Pour publier une annonce, allez dans votre profil et appuyez sur "Mes annonces", puis sur le bouton "+" pour creer une nouvelle annonce.',
-  },
-  {
-    question: 'Comment contacter un proprietaire ?',
-    answer: 'Sur la page de detail d\'une annonce, appuyez sur le bouton "Contacter" pour envoyer un message au proprietaire.',
-  },
-  {
-    question: 'Comment programmer une visite ?',
-    answer: 'Sur la page de detail d\'une annonce, appuyez sur le bouton "Programmer une visite" et selectionnez une date et heure disponibles.',
-  },
-  {
-    question: 'Comment modifier mon profil ?',
-    answer: 'Allez dans Profil > Parametres > Modifier le profil pour mettre a jour vos informations personnelles.',
-  },
-  {
-    question: 'Comment signaler une annonce ?',
-    answer: 'Sur la page de detail d\'une annonce, appuyez sur les trois points en haut a droite et selectionnez "Signaler".',
-  },
+const FAQ_KEYS = [
+  'publishListing',
+  'contactOwner',
+  'scheduleVisit',
+  'editProfile',
+  'reportListing',
 ];
 
 export default function HelpScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   const handleContact = () => {
     Linking.openURL('mailto:support@immoguinee.com');
@@ -57,7 +44,7 @@ export default function HelpScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Aide',
+          title: t('help.title'),
           headerStyle: { backgroundColor: Colors.background.primary },
           headerShadowVisible: true,
           headerLeft: () => (
@@ -71,14 +58,14 @@ export default function HelpScreen() {
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         {/* Contact Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Nous contacter</Text>
+          <Text style={styles.sectionTitle}>{t('help.contact')}</Text>
           <View style={styles.contactCard}>
             <TouchableOpacity style={styles.contactItem} onPress={handleContact}>
               <View style={styles.contactIcon}>
                 <Ionicons name="mail-outline" size={24} color={lightTheme.colors.primary} />
               </View>
               <View style={styles.contactContent}>
-                <Text style={styles.contactLabel}>Email</Text>
+                <Text style={styles.contactLabel}>{t('help.email')}</Text>
                 <Text style={styles.contactValue}>support@immoguinee.com</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={Colors.neutral[300]} />
@@ -88,7 +75,7 @@ export default function HelpScreen() {
                 <Ionicons name="logo-whatsapp" size={24} color="#22C55E" />
               </View>
               <View style={styles.contactContent}>
-                <Text style={styles.contactLabel}>WhatsApp</Text>
+                <Text style={styles.contactLabel}>{t('help.whatsapp')}</Text>
                 <Text style={styles.contactValue}>+224 613 354 420</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={Colors.neutral[300]} />
@@ -98,7 +85,7 @@ export default function HelpScreen() {
                 <Ionicons name="globe-outline" size={24} color={lightTheme.colors.primary} />
               </View>
               <View style={styles.contactContent}>
-                <Text style={styles.contactLabel}>Site web</Text>
+                <Text style={styles.contactLabel}>{t('help.website')}</Text>
                 <Text style={styles.contactValue}>immoguinee.com/aide</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={Colors.neutral[300]} />
@@ -108,8 +95,8 @@ export default function HelpScreen() {
                 <Ionicons name="shield-checkmark-outline" size={24} color="#0284C7" />
               </View>
               <View style={styles.contactContent}>
-                <Text style={styles.contactLabel}>Informations legales</Text>
-                <Text style={styles.contactValue}>CGU et confidentialite</Text>
+                <Text style={styles.contactLabel}>{t('help.legalInfo')}</Text>
+                <Text style={styles.contactValue}>{t('help.termsAndPrivacy')}</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={Colors.neutral[300]} />
             </TouchableOpacity>
@@ -118,21 +105,21 @@ export default function HelpScreen() {
 
         {/* FAQ Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Questions frequentes</Text>
+          <Text style={styles.sectionTitle}>{t('help.faq')}</Text>
           <View style={styles.faqCard}>
-            {FAQ_ITEMS.map((item, index) => (
+            {FAQ_KEYS.map((key, index) => (
               <View
-                key={index}
+                key={key}
                 style={[
                   styles.faqItem,
-                  index === FAQ_ITEMS.length - 1 && styles.faqItemLast,
+                  index === FAQ_KEYS.length - 1 && styles.faqItemLast,
                 ]}
               >
                 <View style={styles.faqQuestion}>
                   <Ionicons name="help-circle" size={20} color={lightTheme.colors.primary} />
-                  <Text style={styles.faqQuestionText}>{item.question}</Text>
+                  <Text style={styles.faqQuestionText}>{t(`help.faqItems.${key}.question`)}</Text>
                 </View>
-                <Text style={styles.faqAnswer}>{item.answer}</Text>
+                <Text style={styles.faqAnswer}>{t(`help.faqItems.${key}.answer`)}</Text>
               </View>
             ))}
           </View>
@@ -141,8 +128,8 @@ export default function HelpScreen() {
         {/* App Info */}
         <View style={styles.appInfo}>
           <Text style={styles.appName}>ImmoGuinee</Text>
-          <Text style={styles.appVersion}>Version 1.0.0</Text>
-          <Text style={styles.appCopyright}>2025 ImmoGuinee. Tous droits reserves.</Text>
+          <Text style={styles.appVersion}>{t('help.version')} 1.0.0</Text>
+          <Text style={styles.appCopyright}>{t('help.copyright', { year: new Date().getFullYear() })}</Text>
         </View>
       </ScrollView>
     </>

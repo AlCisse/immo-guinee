@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { apiClient } from '@/lib/api/client';
+import { useTranslations } from '@/lib/i18n';
 
 // Fetch user counts (favorites, messages, notifications)
 async function fetchUserCounts() {
@@ -165,6 +166,7 @@ function MenuItem({
 
 export default function ProfilePage() {
   const { user, logout } = useAuth();
+  const { t } = useTranslations();
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Fetch real data
@@ -219,7 +221,7 @@ export default function ProfilePage() {
       <div className="bg-gradient-to-br from-primary-500 to-orange-500 pt-8 pb-20">
         <div className="max-w-3xl mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
-            <h1 className="text-xl font-bold text-white">Mon profil</h1>
+            <h1 className="text-xl font-bold text-white">{t('profile.title')}</h1>
             <Link href="/parametres">
               <button className="p-2 bg-white/20 backdrop-blur-sm rounded-full">
                 <Settings className="w-5 h-5 text-white" />
@@ -239,19 +241,19 @@ export default function ProfilePage() {
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold text-white">{user?.name || 'Utilisateur'}</h2>
+                <h2 className="text-xl font-bold text-white">{user?.name || t('profile.defaultUser')}</h2>
                 {user?.isVerified && (
                   <CheckCircle className="w-5 h-5 text-emerald-300" />
                 )}
               </div>
               <p className="text-white/80 text-sm">{user?.email || user?.phone || ''}</p>
               <p className="text-white/60 text-xs mt-1">
-                Membre depuis {memberSince}
+                {t('profile.memberSince', { year: memberSince })}
               </p>
             </div>
             <Link href="/profil/edit">
               <button className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white font-medium rounded-xl text-sm">
-                Modifier
+                {t('profile.editButton')}
               </button>
             </Link>
           </div>
@@ -263,28 +265,28 @@ export default function ProfilePage() {
         <div className="grid grid-cols-4 gap-3">
           <StatCard
             icon={Heart}
-            label="Favoris"
+            label={t('profile.stats.favorites')}
             value={counts?.favorites_count || 0}
             color="bg-red-500"
             isLoading={countsLoading}
           />
           <StatCard
             icon={Eye}
-            label="Vues"
+            label={t('profile.stats.views')}
             value={totalViews}
             color="bg-blue-500"
             isLoading={listingsLoading}
           />
           <StatCard
             icon={MessageSquare}
-            label="Messages"
+            label={t('profile.stats.messages')}
             value={counts?.unread_messages || 0}
             color="bg-emerald-500"
             isLoading={countsLoading}
           />
           <StatCard
             icon={Calendar}
-            label="Visites"
+            label={t('profile.stats.visits')}
             value={visitsArray.length}
             color="bg-purple-500"
             isLoading={visitsLoading}
@@ -297,27 +299,27 @@ export default function ProfilePage() {
         {/* Quick Actions */}
         <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft overflow-hidden">
           <div className="p-4 border-b border-neutral-100 dark:border-dark-border">
-            <h3 className="font-semibold text-neutral-900 dark:text-white">Actions rapides</h3>
+            <h3 className="font-semibold text-neutral-900 dark:text-white">{t('profile.quickActions.title')}</h3>
           </div>
           <div className="divide-y divide-neutral-100 dark:divide-dark-border">
             <MenuItem
               icon={Heart}
-              label="Mes favoris"
-              description={`${counts?.favorites_count || 0} biens sauvegardés`}
+              label={t('profile.quickActions.myFavorites')}
+              description={t('profile.quickActions.savedProperties', { count: counts?.favorites_count || 0 })}
               href="/favoris"
               badge={counts?.favorites_count || 0}
             />
             <MenuItem
               icon={MessageSquare}
-              label="Mes messages"
-              description={counts?.unread_messages ? `${counts.unread_messages} nouveaux messages` : 'Aucun nouveau message'}
+              label={t('profile.quickActions.myMessages')}
+              description={counts?.unread_messages ? t('profile.quickActions.newMessages', { count: counts.unread_messages }) : t('profile.quickActions.noNewMessages')}
               href="/messages"
               badge={counts?.unread_messages || 0}
             />
             <MenuItem
               icon={Calendar}
-              label="Mes visites"
-              description={upcomingVisits.length ? `${upcomingVisits.length} visite(s) à venir` : 'Aucune visite programmée'}
+              label={t('profile.quickActions.myVisits')}
+              description={upcomingVisits.length ? t('profile.quickActions.upcomingVisits', { count: upcomingVisits.length }) : t('profile.quickActions.noUpcomingVisits')}
               href="/visites"
               badge={upcomingVisits.length}
             />
@@ -334,10 +336,10 @@ export default function ProfilePage() {
                 </div>
                 <div className="flex-1">
                   <p className="font-semibold text-neutral-900 dark:text-white">
-                    Prochaine visite
+                    {t('profile.nextVisit.title')}
                   </p>
                   <p className="text-sm text-primary-600 dark:text-primary-400">
-                    {upcomingVisits[0]?.listing?.titre || 'Visite programmée'}
+                    {upcomingVisits[0]?.listing?.titre || t('profile.nextVisit.default')}
                   </p>
                   <p className="text-xs text-neutral-500">
                     {upcomingVisits[0]?.date_visite && new Date(upcomingVisits[0].date_visite).toLocaleDateString('fr-FR', {
@@ -356,9 +358,9 @@ export default function ProfilePage() {
         {/* Visit History */}
         <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft overflow-hidden">
           <div className="p-4 border-b border-neutral-100 dark:border-dark-border flex items-center justify-between">
-            <h3 className="font-semibold text-neutral-900 dark:text-white">Historique des visites</h3>
+            <h3 className="font-semibold text-neutral-900 dark:text-white">{t('profile.visitHistory.title')}</h3>
             <Link href="/visites" className="text-sm text-primary-500 font-medium">
-              Voir tout
+              {t('profile.visitHistory.viewAll')}
             </Link>
           </div>
           <div className="divide-y divide-neutral-100 dark:divide-dark-border">
@@ -384,7 +386,7 @@ export default function ProfilePage() {
                   </div>
                   <div className="flex-1">
                     <p className="font-medium text-neutral-900 dark:text-white text-sm">
-                      {visit.listing?.titre || 'Visite'}
+                      {visit.listing?.titre || t('profile.visitHistory.visit')}
                     </p>
                     <p className="text-xs text-neutral-500">
                       {visit.date_visite && new Date(visit.date_visite).toLocaleDateString('fr-FR')}
@@ -397,15 +399,15 @@ export default function ProfilePage() {
                       ? 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400'
                       : 'bg-primary-100 text-primary-700 dark:bg-primary-500/10 dark:text-primary-400'
                   }`}>
-                    {visit.statut === 'TERMINEE' ? 'Terminée' :
-                     visit.statut === 'ANNULEE' ? 'Annulée' :
-                     visit.statut === 'CONFIRMEE' ? 'Confirmée' : 'En attente'}
+                    {visit.statut === 'TERMINEE' ? t('profile.visitHistory.status.completed') :
+                     visit.statut === 'ANNULEE' ? t('profile.visitHistory.status.cancelled') :
+                     visit.statut === 'CONFIRMEE' ? t('profile.visitHistory.status.confirmed') : t('profile.visitHistory.status.pending')}
                   </span>
                 </div>
               ))
             ) : (
               <div className="p-8 text-center text-neutral-500">
-                Aucune visite pour le moment
+                {t('profile.visitHistory.noVisits')}
               </div>
             )}
           </div>
@@ -414,9 +416,9 @@ export default function ProfilePage() {
         {/* Documents (Contracts) */}
         <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft overflow-hidden">
           <div className="p-4 border-b border-neutral-100 dark:border-dark-border flex items-center justify-between">
-            <h3 className="font-semibold text-neutral-900 dark:text-white">Mes contrats</h3>
+            <h3 className="font-semibold text-neutral-900 dark:text-white">{t('profile.contracts.title')}</h3>
             <Link href="/dashboard/mes-contrats" className="text-sm text-primary-500 font-medium">
-              Voir tout
+              {t('profile.contracts.viewAll')}
             </Link>
           </div>
           <div className="divide-y divide-neutral-100 dark:divide-dark-border">
@@ -436,7 +438,7 @@ export default function ProfilePage() {
                         {contract.reference || `Contrat ${contract.id.slice(0, 8)}`}
                       </p>
                       <p className="text-xs text-neutral-500">
-                        {contract.listing?.titre || 'Contrat de location'}
+                        {contract.listing?.titre || t('profile.contracts.rentalContract')}
                       </p>
                     </div>
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${
@@ -446,17 +448,17 @@ export default function ProfilePage() {
                         ? 'bg-yellow-100 text-yellow-700'
                         : 'bg-neutral-100 text-neutral-700'
                     }`}>
-                      {contract.statut === 'SIGNE' ? 'Signé' :
-                       contract.statut === 'ACTIF' ? 'Actif' :
-                       contract.statut?.includes('ATTENTE') ? 'En attente' :
-                       contract.statut || 'Brouillon'}
+                      {contract.statut === 'SIGNE' ? t('profile.contracts.status.signed') :
+                       contract.statut === 'ACTIF' ? t('profile.contracts.status.active') :
+                       contract.statut?.includes('ATTENTE') ? t('profile.contracts.status.pending') :
+                       contract.statut || t('profile.contracts.status.draft')}
                     </span>
                   </div>
                 </Link>
               ))
             ) : (
               <div className="p-8 text-center text-neutral-500">
-                Aucun contrat pour le moment
+                {t('profile.contracts.noContracts')}
               </div>
             )}
           </div>
@@ -465,13 +467,13 @@ export default function ProfilePage() {
         {/* Settings */}
         <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft overflow-hidden">
           <div className="p-4 border-b border-neutral-100 dark:border-dark-border">
-            <h3 className="font-semibold text-neutral-900 dark:text-white">Paramètres</h3>
+            <h3 className="font-semibold text-neutral-900 dark:text-white">{t('profile.settingsSection.title')}</h3>
           </div>
           <div className="divide-y divide-neutral-100 dark:divide-dark-border">
-            <MenuItem icon={User} label="Informations personnelles" href="/profil/edit" />
-            <MenuItem icon={Bell} label="Notifications" description="Alertes et préférences" href="/parametres" />
-            <MenuItem icon={Shield} label="Sécurité" description="Mot de passe et connexion" href="/parametres" />
-            <MenuItem icon={Globe} label="Langue" description="Français" href="/parametres" />
+            <MenuItem icon={User} label={t('profile.settingsSection.personalInfo')} href="/profil/edit" />
+            <MenuItem icon={Bell} label={t('profile.settingsSection.notifications')} description={t('profile.settingsSection.notificationsDesc')} href="/parametres" />
+            <MenuItem icon={Shield} label={t('profile.settingsSection.security')} description={t('profile.settingsSection.securityDesc')} href="/parametres" />
+            <MenuItem icon={Globe} label={t('profile.settingsSection.language')} description={t('profile.settingsSection.languageValue')} href="/parametres" />
 
             {/* Dark Mode Toggle */}
             <div className="flex items-center gap-4 p-4">
@@ -483,7 +485,7 @@ export default function ProfilePage() {
                 )}
               </div>
               <div className="flex-1">
-                <p className="font-medium text-neutral-900 dark:text-white">Mode sombre</p>
+                <p className="font-medium text-neutral-900 dark:text-white">{t('profile.settingsSection.darkMode')}</p>
               </div>
               <button
                 onClick={toggleDarkMode}
@@ -503,20 +505,20 @@ export default function ProfilePage() {
         {/* Help & Support */}
         <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft overflow-hidden">
           <div className="divide-y divide-neutral-100 dark:divide-dark-border">
-            <MenuItem icon={MessageSquare} label="Aide & Support" href="/aide" />
-            <MenuItem icon={Star} label="Noter l'application" onClick={() => {}} />
-            <MenuItem icon={FileText} label="Conditions d'utilisation" href="/conditions" />
+            <MenuItem icon={MessageSquare} label={t('profile.help.support')} href="/aide" />
+            <MenuItem icon={Star} label={t('profile.help.rateApp')} onClick={() => {}} />
+            <MenuItem icon={FileText} label={t('profile.help.terms')} href="/conditions" />
           </div>
         </div>
 
         {/* Logout */}
         <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft overflow-hidden">
-          <MenuItem icon={LogOut} label="Déconnexion" danger onClick={handleLogout} />
+          <MenuItem icon={LogOut} label={t('profile.logout')} danger onClick={handleLogout} />
         </div>
 
         {/* App Version */}
         <p className="text-center text-xs text-neutral-400">
-          ImmoGuinée v1.0.0
+          {t('profile.appVersion')}
         </p>
       </div>
     </div>

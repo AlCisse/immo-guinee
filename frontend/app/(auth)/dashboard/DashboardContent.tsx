@@ -26,6 +26,7 @@ import {
   Wallet,
 } from 'lucide-react';
 import { api } from '@/lib/api/client';
+import { useTranslations } from '@/lib/i18n';
 
 // Types
 interface DashboardStats {
@@ -87,11 +88,11 @@ interface UpcomingVisit {
 }
 
 // Format price - handles string, number, null, undefined
-const formatPrice = (price: number | string | null | undefined) => {
+const formatPrice = (price: number | string | null | undefined, priceNotDefined: string) => {
   const numPrice = typeof price === 'string' ? parseFloat(price) : (price || 0);
 
   if (isNaN(numPrice) || numPrice === 0) {
-    return 'Prix non defini';
+    return priceNotDefined;
   }
 
   if (numPrice >= 1000000000) {
@@ -116,40 +117,40 @@ const formatDate = (dateString: string) => {
 };
 
 // Status badge component
-function StatusBadge({ status }: { status: string }) {
-  const config: Record<string, { label: string; className: string; icon: any }> = {
+function StatusBadge({ status, labels }: { status: string; labels: Record<string, string> }) {
+  const config: Record<string, { labelKey: string; className: string; icon: any }> = {
     ACTIVE: {
-      label: 'Active',
+      labelKey: 'active',
       className: 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400',
       icon: CheckCircle,
     },
     EN_ATTENTE: {
-      label: 'En attente',
+      labelKey: 'pending',
       className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400',
       icon: Clock,
     },
     PENDING: {
-      label: 'En attente',
+      labelKey: 'pending',
       className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400',
       icon: Clock,
     },
     CONFIRMED: {
-      label: 'Confirmee',
+      labelKey: 'confirmed',
       className: 'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400',
       icon: CheckCircle,
     },
     COMPLETED: {
-      label: 'Terminee',
+      labelKey: 'completed',
       className: 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400',
       icon: CheckCircle,
     },
     CANCELLED: {
-      label: 'Annulee',
+      labelKey: 'cancelled',
       className: 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400',
       icon: XCircle,
     },
     EXPIREE: {
-      label: 'Expiree',
+      labelKey: 'expired',
       className: 'bg-neutral-100 text-neutral-600 dark:bg-neutral-500/10 dark:text-neutral-400',
       icon: AlertCircle,
     },
@@ -161,7 +162,7 @@ function StatusBadge({ status }: { status: string }) {
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${statusConfig.className}`}>
       <Icon className="w-3 h-3" />
-      {statusConfig.label}
+      {labels[statusConfig.labelKey] || statusConfig.labelKey}
     </span>
   );
 }
@@ -251,6 +252,18 @@ function QuickAction({
 }
 
 export default function DashboardContent() {
+  const { t } = useTranslations();
+
+  // Status labels for StatusBadge
+  const statusLabels = {
+    active: t('dashboard.myListings.status.active'),
+    pending: t('dashboard.myListings.status.pending'),
+    confirmed: t('dashboard.visits.status.confirmed'),
+    completed: t('dashboard.visits.status.completed'),
+    cancelled: t('dashboard.visits.status.cancelled'),
+    expired: t('dashboard.myListings.status.expired'),
+  };
+
   // Fetch user data
   const { data: userData } = useQuery({
     queryKey: ['user'],
@@ -361,10 +374,10 @@ export default function DashboardContent() {
             animate={{ opacity: 1, y: 0 }}
           >
             <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
-              Bonjour, {user?.nom_complet?.split(' ')[0] || 'Utilisateur'}
+              {t('dashboard.greeting', { name: user?.nom_complet?.split(' ')[0] || t('profile.defaultUser') })}
             </h1>
             <p className="text-white/80">
-              Bienvenue sur votre tableau de bord ImmoGuinee
+              {t('dashboard.welcomeSubtitle')}
             </p>
           </motion.div>
         </div>
@@ -381,30 +394,30 @@ export default function DashboardContent() {
         >
           <StatCard
             icon={Building}
-            label="Mes annonces"
+            label={t('dashboard.stats.myListings')}
             value={stats.totalListings}
-            subValue={`${stats.activeListings} actives`}
+            subValue={t('dashboard.stats.activeCount', { count: stats.activeListings })}
             href="/mes-annonces"
             color="primary"
           />
           <StatCard
             icon={Heart}
-            label="Favoris"
+            label={t('dashboard.stats.favorites')}
             value={stats.totalFavorites}
             href="/favoris"
             color="warning"
           />
           <StatCard
             icon={Calendar}
-            label="Visites"
+            label={t('dashboard.stats.visits')}
             value={stats.upcomingVisits}
-            subValue={`${stats.completedVisits} terminees`}
+            subValue={t('dashboard.stats.completedCount', { count: stats.completedVisits })}
             href="/visites"
             color="info"
           />
           <StatCard
             icon={FileText}
-            label="Contrats"
+            label={t('dashboard.stats.contracts')}
             value={stats.totalContracts}
             href="/dashboard/mes-contrats"
             color="success"
@@ -423,13 +436,13 @@ export default function DashboardContent() {
             >
               <div className="flex items-center justify-between p-5 border-b border-neutral-100 dark:border-dark-border">
                 <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">
-                  Mes annonces recentes
+                  {t('dashboard.recentListings')}
                 </h2>
                 <Link
                   href="/mes-annonces"
                   className="text-sm text-primary-500 hover:text-primary-600 font-medium flex items-center gap-1"
                 >
-                  Voir tout
+                  {t('common.viewAll')}
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
@@ -465,9 +478,9 @@ export default function DashboardContent() {
                         </div>
                         <div className="flex items-center gap-3 mt-1">
                           <span className="text-primary-500 font-semibold text-sm">
-                            {formatPrice(listing.loyer_mensuel || listing.prix)}
+                            {formatPrice(listing.loyer_mensuel || listing.prix, t('dashboard.priceNotDefined'))}
                           </span>
-                          <StatusBadge status={listing.statut} />
+                          <StatusBadge status={listing.statut} labels={statusLabels} />
                         </div>
                       </div>
                       <div className="text-right flex-shrink-0">
@@ -483,7 +496,7 @@ export default function DashboardContent() {
                 <div className="p-8 text-center">
                   <Home className="w-12 h-12 text-neutral-300 dark:text-neutral-600 mx-auto mb-3" />
                   <p className="text-neutral-500 dark:text-neutral-400 mb-4">
-                    Vous n'avez pas encore d'annonces
+                    {t('dashboard.myListings.noListings')}
                   </p>
                   <Link href="/publier">
                     <motion.button
@@ -491,7 +504,7 @@ export default function DashboardContent() {
                       whileTap={{ scale: 0.98 }}
                       className="px-6 py-2.5 bg-primary-500 text-white font-medium rounded-xl"
                     >
-                      Publier une annonce
+                      {t('dashboard.myListings.publishListing')}
                     </motion.button>
                   </Link>
                 </div>
@@ -507,13 +520,13 @@ export default function DashboardContent() {
             >
               <div className="flex items-center justify-between p-5 border-b border-neutral-100 dark:border-dark-border">
                 <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">
-                  Prochaines visites
+                  {t('dashboard.upcomingVisits')}
                 </h2>
                 <Link
                   href="/visites"
                   className="text-sm text-primary-500 hover:text-primary-600 font-medium flex items-center gap-1"
                 >
-                  Calendrier
+                  {t('dashboard.calendar')}
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
@@ -535,7 +548,7 @@ export default function DashboardContent() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-medium text-neutral-900 dark:text-white truncate">
-                          {visit.listing?.titre || 'Bien immobilier'}
+                          {visit.listing?.titre || t('dashboard.defaultProperty')}
                         </h3>
                         <div className="flex items-center gap-3 text-sm text-neutral-500">
                           <span className="flex items-center gap-1">
@@ -545,7 +558,7 @@ export default function DashboardContent() {
                           <span>{visit.client_nom}</span>
                         </div>
                       </div>
-                      <StatusBadge status={visit.statut} />
+                      <StatusBadge status={visit.statut} labels={statusLabels} />
                     </div>
                   ))}
                 </div>
@@ -553,7 +566,7 @@ export default function DashboardContent() {
                 <div className="p-8 text-center">
                   <Calendar className="w-12 h-12 text-neutral-300 dark:text-neutral-600 mx-auto mb-3" />
                   <p className="text-neutral-500 dark:text-neutral-400">
-                    Aucune visite programmee
+                    {t('dashboard.noScheduledVisits')}
                   </p>
                 </div>
               )}
@@ -570,7 +583,7 @@ export default function DashboardContent() {
               className="bg-white dark:bg-dark-card rounded-2xl shadow-soft p-5"
             >
               <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
-                Actions rapides
+                {t('dashboard.quickActions.title')}
               </h2>
               <div className="space-y-3">
                 <Link href="/publier">
@@ -580,25 +593,25 @@ export default function DashboardContent() {
                     className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-primary-500 to-orange-500 text-white font-semibold rounded-xl"
                   >
                     <Plus className="w-5 h-5" />
-                    Publier une annonce
+                    {t('dashboard.quickActions.publishListing')}
                   </motion.button>
                 </Link>
 
                 <QuickAction
                   icon={Calendar}
-                  label="Planifier une visite"
+                  label={t('dashboard.quickActions.scheduleVisit')}
                   href="/visites"
                   color="primary"
                 />
                 <QuickAction
                   icon={FileText}
-                  label="Generer un contrat"
+                  label={t('dashboard.quickActions.generateContract')}
                   href="/contrats/generer"
                   color="primary"
                 />
                 <QuickAction
                   icon={MessageSquare}
-                  label="Messages"
+                  label={t('dashboard.quickActions.messages')}
                   href="/messagerie"
                   color="primary"
                 />
@@ -613,7 +626,7 @@ export default function DashboardContent() {
               className="bg-white dark:bg-dark-card rounded-2xl shadow-soft p-5"
             >
               <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
-                Mon compte
+                {t('dashboard.account.title')}
               </h2>
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
@@ -622,10 +635,10 @@ export default function DashboardContent() {
                   </div>
                   <div>
                     <p className="font-medium text-neutral-900 dark:text-white">
-                      {user?.nom_complet || 'Utilisateur'}
+                      {user?.nom_complet || t('profile.defaultUser')}
                     </p>
                     <p className="text-sm text-neutral-500">
-                      {user?.type_compte === 'AGENCE' ? 'Agence' : user?.type_compte === 'PROPRIETAIRE' ? 'Proprietaire' : 'Particulier'}
+                      {t(`dashboard.accountTypes.${user?.type_compte || 'PARTICULIER'}`)}
                     </p>
                   </div>
                 </div>
@@ -635,21 +648,21 @@ export default function DashboardContent() {
                     href="/profil"
                     className="flex items-center justify-between py-2 text-sm text-neutral-600 dark:text-neutral-400 hover:text-primary-500"
                   >
-                    <span>Mon profil</span>
+                    <span>{t('dashboard.account.myProfile')}</span>
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                   <Link
                     href="/parametres"
                     className="flex items-center justify-between py-2 text-sm text-neutral-600 dark:text-neutral-400 hover:text-primary-500"
                   >
-                    <span>Parametres</span>
+                    <span>{t('dashboard.account.settings')}</span>
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                   <Link
                     href="/dashboard/certification"
                     className="flex items-center justify-between py-2 text-sm text-neutral-600 dark:text-neutral-400 hover:text-primary-500"
                   >
-                    <span>Certification</span>
+                    <span>{t('dashboard.account.certification')}</span>
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>

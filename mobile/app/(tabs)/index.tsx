@@ -11,29 +11,33 @@ import {
   useWindowDimensions,
   ScrollView,
   Alert,
+  Modal,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { changeLanguage, LANGUAGES, getCurrentLanguage } from '@/lib/i18n';
 import { Listing } from '@/types';
 import Colors, { lightTheme } from '@/constants/Colors';
 import Logo from '@/components/Logo';
 import { formatPrice as formatPriceUtil } from '@/lib/utils/formatPrice';
 
-const PROPERTY_TYPES = [
-  { value: '', label: 'Tous', icon: 'grid-outline' },
-  { value: 'APPARTEMENT', label: 'Appartement', icon: 'business-outline' },
-  { value: 'MAISON', label: 'Maison', icon: 'home-outline' },
-  { value: 'VILLA', label: 'Villa', icon: 'home-outline' },
-  { value: 'STUDIO', label: 'Studio', icon: 'bed-outline' },
-  { value: 'TERRAIN', label: 'Terrain', icon: 'map-outline' },
-  { value: 'BUREAU', label: 'Bureau', icon: 'briefcase-outline' },
-];
-
 export default function HomeScreen() {
+  const { t } = useTranslation();
+
+  const PROPERTY_TYPES = [
+    { value: '', label: t('common.all'), icon: 'grid-outline' },
+    { value: 'APPARTEMENT', label: t('propertyTypes.APPARTEMENT'), icon: 'business-outline' },
+    { value: 'MAISON', label: t('propertyTypes.MAISON'), icon: 'home-outline' },
+    { value: 'VILLA', label: t('propertyTypes.VILLA'), icon: 'home-outline' },
+    { value: 'STUDIO', label: t('propertyTypes.STUDIO'), icon: 'bed-outline' },
+    { value: 'TERRAIN', label: t('propertyTypes.TERRAIN'), icon: 'map-outline' },
+    { value: 'BUREAU', label: t('propertyTypes.BUREAU'), icon: 'briefcase-outline' },
+  ];
   const router = useRouter();
   const queryClient = useQueryClient();
   const { isAuthenticated } = useAuth();
@@ -41,6 +45,19 @@ export default function HomeScreen() {
   const [selectedType, setSelectedType] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [currentLang, setCurrentLang] = useState(getCurrentLanguage());
+
+  const handleLanguageChange = async (langCode: string) => {
+    await changeLanguage(langCode);
+    setCurrentLang(langCode);
+    setShowLanguageModal(false);
+  };
+
+  const getCurrentFlag = () => {
+    const lang = LANGUAGES.find(l => l.code === currentLang);
+    return lang?.flag || '🇫🇷';
+  };
 
   // Responsive breakpoints
   const isTablet = width >= 768;
@@ -111,15 +128,15 @@ export default function HomeScreen() {
       queryClient.invalidateQueries({ queryKey: ['favorites'] });
     },
     onError: (error: any) => {
-      Alert.alert('Erreur', error?.response?.data?.message || 'Impossible de modifier les favoris');
+      Alert.alert(t('common.error'), error?.response?.data?.message || t('errors.generic'));
     },
   });
 
   const handleToggleFavorite = (listingId: string) => {
     if (!isAuthenticated) {
-      Alert.alert('Connexion requise', 'Veuillez vous connecter pour ajouter aux favoris', [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Se connecter', onPress: () => router.push('/auth/login') },
+      Alert.alert(t('auth.loginRequired') || 'Login required', t('auth.loginToFavorite') || 'Please login to add favorites', [
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('auth.signIn'), onPress: () => router.push('/auth/login') },
       ]);
       return;
     }
@@ -141,15 +158,15 @@ export default function HomeScreen() {
 
   const getPriceLabel = (listing: Listing) => {
     if (listing.type_transaction === 'VENTE') return '';
-    if (listing.type_transaction === 'LOCATION_COURTE') return '/jour';
-    return '/mois';
+    if (listing.type_transaction === 'LOCATION_COURTE') return t('listings.perDay');
+    return t('listings.perMonth');
   };
 
   const getTransactionLabel = (type: string) => {
     switch (type) {
-      case 'VENTE': return 'Vente';
-      case 'LOCATION_COURTE': return 'Courte durée';
-      default: return 'Location';
+      case 'VENTE': return t('transactionTypes.VENTE');
+      case 'LOCATION_COURTE': return t('transactionTypes.LOCATION_COURTE');
+      default: return t('transactionTypes.LOCATION');
     }
   };
 
@@ -265,22 +282,32 @@ export default function HomeScreen() {
       {/* Header */}
       <View style={[styles.header, { paddingHorizontal: horizontalPadding }]}>
         <View>
-          <Text style={styles.greeting}>Bienvenue sur</Text>
+          <Text style={styles.greeting}>{t('common.welcomeTo') || 'Bienvenue sur'}</Text>
           <Logo size="large" />
         </View>
-        <TouchableOpacity
-          style={styles.notificationBtn}
-          onPress={() => router.push('/notifications')}
-        >
-          <Ionicons name="notifications-outline" size={24} color={Colors.secondary[800]} />
-          {unreadNotificationCount > 0 && (
-            <View style={styles.notificationBadge}>
-              <Text style={styles.notificationBadgeText}>
-                {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          {/* Language Selector */}
+          <TouchableOpacity
+            style={styles.langBtn}
+            onPress={() => setShowLanguageModal(true)}
+          >
+            <Text style={styles.langFlag}>{getCurrentFlag()}</Text>
+          </TouchableOpacity>
+          {/* Notifications */}
+          <TouchableOpacity
+            style={styles.notificationBtn}
+            onPress={() => router.push('/notifications')}
+          >
+            <Ionicons name="notifications-outline" size={24} color={Colors.secondary[800]} />
+            {unreadNotificationCount > 0 && (
+              <View style={styles.notificationBadge}>
+                <Text style={styles.notificationBadgeText}>
+                  {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Search Bar */}
@@ -292,7 +319,7 @@ export default function HomeScreen() {
         <View style={styles.searchIcon}>
           <Ionicons name="search" size={20} color={lightTheme.colors.primary} />
         </View>
-        <Text style={styles.searchPlaceholder}>Rechercher un bien immobilier...</Text>
+        <Text style={styles.searchPlaceholder}>{t('search.placeholder')}</Text>
         <View style={styles.filterIcon}>
           <Ionicons name="options-outline" size={18} color={Colors.neutral[500]} />
         </View>
@@ -306,10 +333,10 @@ export default function HomeScreen() {
       >
         <View style={styles.bannerGradient}>
           <View style={styles.bannerContent}>
-            <Text style={styles.bannerTitle}>Trouvez votre bien ideal</Text>
-            <Text style={styles.bannerSubtitle}>Location & Vente en Guinee</Text>
+            <Text style={styles.bannerTitle}>{t('home.findIdealProperty')}</Text>
+            <Text style={styles.bannerSubtitle}>{t('home.rentalAndSale')}</Text>
             <View style={styles.bannerButton}>
-              <Text style={styles.bannerButtonText}>Explorer</Text>
+              <Text style={styles.bannerButtonText}>{t('home.explore')}</Text>
               <Ionicons name="arrow-forward" size={16} color="#fff" />
             </View>
           </View>
@@ -356,52 +383,93 @@ export default function HomeScreen() {
 
       {/* Section Title */}
       <View style={[styles.sectionHeader, { paddingHorizontal: horizontalPadding }]}>
-        <Text style={styles.sectionTitle}>Annonces récentes</Text>
+        <Text style={styles.sectionTitle}>{t('listings.recentlyAdded')}</Text>
         <TouchableOpacity onPress={() => router.push('/search')}>
-          <Text style={styles.seeAllText}>Voir tout</Text>
+          <Text style={styles.seeAllText}>{t('common.seeAll')}</Text>
         </TouchableOpacity>
       </View>
     </>
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={lightTheme.colors.primary} />
-          <Text style={styles.loadingText}>Chargement...</Text>
-        </View>
-      ) : (
-        <FlatList
-          key={numColumns}
-          data={listings}
-          keyExtractor={(item) => item.id}
-          renderItem={renderListingCard}
-          numColumns={numColumns}
-          ListHeaderComponent={ListHeader}
-          contentContainerStyle={[styles.listContent, { paddingHorizontal: horizontalPadding }]}
-          columnWrapperStyle={numColumns > 1 ? styles.columnWrapper : undefined}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={lightTheme.colors.primary}
-              colors={[lightTheme.colors.primary]}
-            />
-          }
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Ionicons name="home-outline" size={64} color={Colors.neutral[300]} />
-              <Text style={styles.emptyTitle}>Aucune annonce</Text>
-              <Text style={styles.emptyText}>
-                Aucune annonce disponible pour le moment
-              </Text>
-            </View>
-          }
-        />
-      )}
-    </SafeAreaView>
+    <>
+      <SafeAreaView style={styles.container} edges={['top']}>
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={lightTheme.colors.primary} />
+            <Text style={styles.loadingText}>{t('common.loading')}</Text>
+          </View>
+        ) : (
+          <FlatList
+            key={numColumns}
+            data={listings}
+            keyExtractor={(item) => item.id}
+            renderItem={renderListingCard}
+            numColumns={numColumns}
+            ListHeaderComponent={ListHeader}
+            contentContainerStyle={[styles.listContent, { paddingHorizontal: horizontalPadding }]}
+            columnWrapperStyle={numColumns > 1 ? styles.columnWrapper : undefined}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={lightTheme.colors.primary}
+                colors={[lightTheme.colors.primary]}
+              />
+            }
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Ionicons name="home-outline" size={64} color={Colors.neutral[300]} />
+                <Text style={styles.emptyTitle}>{t('listings.noListings')}</Text>
+                <Text style={styles.emptyText}>
+                  {t('common.noResults')}
+                </Text>
+              </View>
+            }
+          />
+        )}
+      </SafeAreaView>
+
+      {/* Language Selection Modal */}
+      <Modal
+        visible={showLanguageModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowLanguageModal(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowLanguageModal(false)}
+        >
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>{t('settings.selectLanguage')}</Text>
+            {LANGUAGES.map((lang) => (
+              <TouchableOpacity
+                key={lang.code}
+                style={[
+                  styles.languageOption,
+                  currentLang === lang.code && styles.languageOptionActive
+                ]}
+                onPress={() => handleLanguageChange(lang.code)}
+              >
+                <Text style={styles.languageFlag}>{lang.flag}</Text>
+                <Text style={[
+                  styles.languageName,
+                  currentLang === lang.code && styles.languageNameActive
+                ]}>
+                  {lang.name}
+                </Text>
+                {currentLang === lang.code && (
+                  <Ionicons name="checkmark" size={20} color={lightTheme.colors.primary} />
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </TouchableOpacity>
+      </Modal>
+    </>
   );
 }
 
@@ -735,5 +803,75 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.neutral[500],
     textAlign: 'center',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  langBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.neutral[100],
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  langFlag: {
+    fontSize: 22,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: Colors.background.primary,
+    borderRadius: 20,
+    padding: 24,
+    width: '100%',
+    maxWidth: 320,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.secondary[800],
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  languageOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginBottom: 8,
+    backgroundColor: Colors.neutral[50],
+  },
+  languageOptionActive: {
+    backgroundColor: Colors.primary[50],
+    borderWidth: 1.5,
+    borderColor: lightTheme.colors.primary,
+  },
+  languageFlag: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  languageName: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '500',
+    color: Colors.secondary[800],
+  },
+  languageNameActive: {
+    color: lightTheme.colors.primary,
+    fontWeight: '600',
   },
 });

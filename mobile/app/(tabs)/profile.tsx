@@ -11,17 +11,9 @@ import {
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/auth/AuthContext';
 import Colors, { lightTheme } from '@/constants/Colors';
-
-const MENU_ITEMS = [
-  { id: 'publish', label: 'Publier une annonce', icon: 'add-circle-outline', route: '/publish', highlight: true },
-  { id: 'my-listings', label: 'Mes annonces', icon: 'home-outline', route: '/my-listings' },
-  { id: 'my-visits', label: 'Mes visites', icon: 'calendar-outline', route: '/my-visits' },
-  { id: 'my-contracts', label: 'Mes contrats', icon: 'document-text-outline', route: '/my-contracts' },
-  { id: 'settings', label: 'Parametres', icon: 'settings-outline', route: '/settings' },
-  { id: 'help', label: 'Aide', icon: 'help-circle-outline', route: '/help' },
-];
 
 const BADGE_COLORS: Record<string, string> = {
   DEBUTANT: Colors.neutral[400],
@@ -30,15 +22,25 @@ const BADGE_COLORS: Record<string, string> = {
   SUPER_PROPRIO: '#8B5CF6',
 };
 
-const BADGE_LABELS: Record<string, string> = {
-  DEBUTANT: 'Debutant',
-  VERIFIE: 'Verifie',
-  PREMIUM: 'Premium',
-  SUPER_PROPRIO: 'Super Proprio',
-};
-
 export default function ProfileScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
+
+  const MENU_ITEMS = [
+    { id: 'publish', label: t('publish.title'), icon: 'add-circle-outline', route: '/publish', highlight: true },
+    { id: 'my-listings', label: t('profile.myListings'), icon: 'home-outline', route: '/my-listings' },
+    { id: 'my-visits', label: t('profile.myVisits'), icon: 'calendar-outline', route: '/my-visits' },
+    { id: 'my-contracts', label: t('profile.myContracts'), icon: 'document-text-outline', route: '/my-contracts' },
+    { id: 'settings', label: t('profile.settings'), icon: 'settings-outline', route: '/settings' },
+    { id: 'help', label: t('profile.help'), icon: 'help-circle-outline', route: '/help' },
+  ];
+
+  const BADGE_LABELS: Record<string, string> = {
+    DEBUTANT: t('profile.badges.beginner'),
+    VERIFIE: t('profile.badges.verified'),
+    PREMIUM: t('profile.badges.premium'),
+    SUPER_PROPRIO: t('profile.badges.superOwner'),
+  };
   const { user, isAuthenticated, logout } = useAuth();
   const { width } = useWindowDimensions();
 
@@ -48,12 +50,12 @@ export default function ProfileScreen() {
 
   const handleLogout = () => {
     Alert.alert(
-      'Deconnexion',
-      'Voulez-vous vraiment vous deconnecter ?',
+      t('auth.logout'),
+      t('alerts.confirmLogout'),
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Deconnecter',
+          text: t('auth.logout'),
           style: 'destructive',
           onPress: () => logout(),
         },
@@ -65,29 +67,29 @@ export default function ProfileScreen() {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={[styles.header, { paddingHorizontal: horizontalPadding }]}>
-          <Text style={styles.headerTitle}>Profil</Text>
+          <Text style={styles.headerTitle}>{t('profile.myProfile')}</Text>
         </View>
         <View style={[styles.authRequired, isTablet && { maxWidth }]}>
           <View style={styles.guestAvatar}>
             <Ionicons name="person-outline" size={48} color={Colors.neutral[400]} />
           </View>
-          <Text style={styles.authTitle}>Bienvenue sur ImmoGuinee</Text>
+          <Text style={styles.authTitle}>{t('profile.welcomeToApp')}</Text>
           <Text style={styles.authText}>
-            Connectez-vous pour acceder a toutes les fonctionnalites
+            {t('profile.loginToAccess')}
           </Text>
           <TouchableOpacity
             style={styles.loginButton}
             onPress={() => router.push('/auth/login')}
             activeOpacity={0.8}
           >
-            <Text style={styles.loginButtonText}>Se connecter</Text>
+            <Text style={styles.loginButtonText}>{t('auth.signIn')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.registerButton}
             onPress={() => router.push('/auth/register')}
             activeOpacity={0.8}
           >
-            <Text style={styles.registerButtonText}>Creer un compte</Text>
+            <Text style={styles.registerButtonText}>{t('auth.createAccount')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -157,13 +159,13 @@ export default function ProfileScreen() {
               />
             </View>
             <View style={styles.accountTypeContent}>
-              <Text style={styles.accountTypeLabel}>Type de compte</Text>
+              <Text style={styles.accountTypeLabel}>{t('auth.accountType')}</Text>
               <Text style={styles.accountTypeValue}>
                 {user?.type_compte === 'AGENCE'
-                  ? 'Agence immobiliere'
+                  ? t('auth.agency')
                   : user?.type_compte === 'PROFESSIONNEL'
-                  ? 'Professionnel'
-                  : 'Particulier'}
+                  ? t('auth.professional')
+                  : t('auth.individual')}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={Colors.neutral[300]} />
@@ -176,7 +178,7 @@ export default function ProfileScreen() {
             activeOpacity={0.8}
           >
             <Ionicons name="add-circle" size={24} color="#fff" />
-            <Text style={styles.publishButtonText}>Publier une annonce</Text>
+            <Text style={styles.publishButtonText}>{t('publish.title')}</Text>
           </TouchableOpacity>
 
           {/* Menu Items */}
@@ -207,11 +209,11 @@ export default function ProfileScreen() {
             activeOpacity={0.8}
           >
             <Ionicons name="log-out-outline" size={22} color="#EF4444" />
-            <Text style={styles.logoutText}>Deconnexion</Text>
+            <Text style={styles.logoutText}>{t('auth.logout')}</Text>
           </TouchableOpacity>
 
           {/* Version */}
-          <Text style={styles.version}>ImmoGuinee v1.0.0</Text>
+          <Text style={styles.version}>{t('settings.version')} 1.0.0</Text>
         </View>
       </ScrollView>
     </SafeAreaView>

@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { api, apiClient } from '@/lib/api/client';
 import { useUser } from '@/lib/auth/useAuth';
+import { useTranslations } from '@/lib/i18n';
 import toast from 'react-hot-toast';
 
 // Types
@@ -50,19 +51,19 @@ interface Visit {
   notes_proprietaire?: string;
 }
 
-// Status configuration
-const statusConfig: Record<VisitStatus, { label: string; color: string; bgColor: string }> = {
-  PENDING: { label: 'En attente', color: 'text-warning-600', bgColor: 'bg-warning-100 dark:bg-warning-500/10' },
-  CONFIRMED: { label: 'Confirmee', color: 'text-primary-600', bgColor: 'bg-primary-100 dark:bg-primary-500/10' },
-  COMPLETED: { label: 'Terminee', color: 'text-success-600', bgColor: 'bg-success-100 dark:bg-success-500/10' },
-  CANCELLED: { label: 'Annulee', color: 'text-error-600', bgColor: 'bg-error-100 dark:bg-error-500/10' },
+// Status configuration (labels will be pulled from translations)
+const statusConfig: Record<VisitStatus, { color: string; bgColor: string }> = {
+  PENDING: { color: 'text-warning-600', bgColor: 'bg-warning-100 dark:bg-warning-500/10' },
+  CONFIRMED: { color: 'text-primary-600', bgColor: 'bg-primary-100 dark:bg-primary-500/10' },
+  COMPLETED: { color: 'text-success-600', bgColor: 'bg-success-100 dark:bg-success-500/10' },
+  CANCELLED: { color: 'text-error-600', bgColor: 'bg-error-100 dark:bg-error-500/10' },
 };
 
-// Calendar helpers
-const DAYS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
-const MONTHS = [
-  'Janvier', 'Fevrier', 'Mars', 'Avril', 'Mai', 'Juin',
-  'Juillet', 'Aout', 'Septembre', 'Octobre', 'Novembre', 'Decembre'
+// Calendar helpers - keys for translations
+const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+const MONTH_KEYS = [
+  'january', 'february', 'march', 'april', 'may', 'june',
+  'july', 'august', 'september', 'october', 'november', 'december'
 ];
 
 function getDaysInMonth(year: number, month: number) {
@@ -93,6 +94,7 @@ function VisitCard({
   onComplete,
   onCancel,
   isLoading,
+  t,
 }: {
   visit: Visit;
   compact?: boolean;
@@ -100,11 +102,13 @@ function VisitCard({
   onComplete?: () => void;
   onCancel?: () => void;
   isLoading?: boolean;
+  t: (key: string, params?: Record<string, any>) => string;
 }) {
   const [showMenu, setShowMenu] = useState(false);
   const status = statusConfig[visit.statut];
-  const propertyTitle = visit.listing?.titre || 'Bien immobilier';
-  const propertyAddress = visit.listing ? `${visit.listing.quartier}, ${visit.listing.commune}` : 'Adresse non disponible';
+  const statusLabel = t(`visits.status.${visit.statut}`);
+  const propertyTitle = visit.listing?.titre || t('visits.card.defaultProperty');
+  const propertyAddress = visit.listing ? `${visit.listing.quartier}, ${visit.listing.commune}` : t('visits.card.addressNotAvailable');
 
   if (compact) {
     return (
@@ -123,7 +127,7 @@ function VisitCard({
       {/* Status Badge */}
       <div className="flex items-start justify-between mb-3">
         <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${status.bgColor} ${status.color}`}>
-          {status.label}
+          {statusLabel}
         </span>
         <div className="relative">
           <button
@@ -151,7 +155,7 @@ function VisitCard({
                     className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50 dark:hover:bg-dark-bg flex items-center gap-2 text-success-600"
                   >
                     <Check className="w-4 h-4" />
-                    Confirmer
+                    {t('visits.actions.confirm')}
                   </button>
                 )}
                 {visit.statut === 'CONFIRMED' && onComplete && (
@@ -160,12 +164,12 @@ function VisitCard({
                     className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50 dark:hover:bg-dark-bg flex items-center gap-2 text-success-600"
                   >
                     <Check className="w-4 h-4" />
-                    Marquer terminee
+                    {t('visits.actions.markComplete')}
                   </button>
                 )}
                 <button className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50 dark:hover:bg-dark-bg flex items-center gap-2">
                   <MessageSquare className="w-4 h-4" />
-                  Message
+                  {t('visits.actions.message')}
                 </button>
                 {(visit.statut === 'PENDING' || visit.statut === 'CONFIRMED') && onCancel && (
                   <button
@@ -173,7 +177,7 @@ function VisitCard({
                     className="w-full px-4 py-2 text-left text-sm text-error-600 hover:bg-error-50 dark:hover:bg-error-500/10 flex items-center gap-2"
                   >
                     <Trash2 className="w-4 h-4" />
-                    Annuler
+                    {t('visits.actions.cancel')}
                   </button>
                 )}
               </motion.div>
@@ -257,11 +261,13 @@ function NewVisitModal({
   onClose,
   onSubmit,
   isSubmitting,
+  t,
 }: {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: any) => void;
   isSubmitting: boolean;
+  t: (key: string, params?: Record<string, any>) => string;
 }) {
   const [formData, setFormData] = useState({
     listing_id: '',
@@ -356,9 +362,9 @@ function NewVisitModal({
     const diffMs = now.getTime() - date.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return "Aujourd'hui";
-    if (diffDays === 1) return 'Hier';
-    if (diffDays < 7) return `Il y a ${diffDays} jours`;
+    if (diffDays === 0) return t('visits.dates.today');
+    if (diffDays === 1) return t('visits.dates.yesterday');
+    if (diffDays < 7) return t('visits.dates.daysAgo', { days: diffDays });
     return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
   };
 
@@ -381,7 +387,7 @@ function NewVisitModal({
       >
         <div className="flex items-center justify-between p-6 border-b border-neutral-200 dark:border-dark-border">
           <h2 className="text-xl font-semibold text-neutral-900 dark:text-white">
-            Planifier une visite
+            {t('visits.modal.title')}
           </h2>
           <button
             onClick={onClose}
@@ -394,7 +400,7 @@ function NewVisitModal({
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
             <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-              Propriete
+              {t('visits.modal.property')}
             </label>
             <select
               value={formData.listing_id}
@@ -402,7 +408,7 @@ function NewVisitModal({
               required
               className="w-full px-4 py-3 bg-neutral-50 dark:bg-dark-bg border border-neutral-200 dark:border-dark-border rounded-xl focus:ring-2 focus:ring-primary-500 dark:text-white"
             >
-              <option value="">Selectionnez une propriete</option>
+              <option value="">{t('visits.modal.selectProperty')}</option>
               {listings.map((listing: any) => (
                 <option key={listing.id} value={listing.id}>
                   {listing.titre}
@@ -415,7 +421,7 @@ function NewVisitModal({
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                Client
+                {t('visits.modal.client')}
               </label>
               {formData.listing_id && (
                 <button
@@ -424,7 +430,7 @@ function NewVisitModal({
                   className="text-xs text-primary-500 hover:text-primary-600 flex items-center gap-1"
                 >
                   <Users className="w-3.5 h-3.5" />
-                  {showContactsList ? 'Saisir manuellement' : 'Contacts de ce bien'}
+                  {showContactsList ? t('visits.modal.enterManually') : t('visits.modal.propertyContacts')}
                 </button>
               )}
             </div>
@@ -433,7 +439,7 @@ function NewVisitModal({
             {isLoadingContacts && formData.listing_id && (
               <div className="flex items-center justify-center py-4 border border-neutral-200 dark:border-dark-border rounded-xl">
                 <Loader2 className="w-5 h-5 text-primary-500 animate-spin mr-2" />
-                <span className="text-sm text-neutral-500">Chargement des contacts...</span>
+                <span className="text-sm text-neutral-500">{t('visits.modal.loadingContacts')}</span>
               </div>
             )}
 
@@ -444,7 +450,7 @@ function NewVisitModal({
                   <div className="px-3 py-2 bg-primary-50 dark:bg-primary-500/10 border-b border-neutral-200 dark:border-dark-border">
                     <p className="text-xs font-medium text-primary-600 dark:text-primary-400 flex items-center gap-1">
                       <MessageSquare className="w-3.5 h-3.5" />
-                      {listingContacts.length} contact(s) ayant discute pour ce bien
+                      {t('visits.modal.contactsCount', { count: listingContacts.length })}
                     </p>
                   </div>
                   {listingContacts.map((contact) => (
@@ -470,7 +476,7 @@ function NewVisitModal({
                           {contact.nom_complet}
                         </p>
                         <div className="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
-                          <span>{contact.telephone || 'Pas de telephone'}</span>
+                          <span>{contact.telephone || t('visits.modal.noPhone')}</span>
                           {contact.last_message_at && (
                             <>
                               <span>•</span>
@@ -492,17 +498,17 @@ function NewVisitModal({
                 <div className="border border-neutral-200 dark:border-dark-border rounded-xl p-4 text-center">
                   <Users className="w-8 h-8 text-neutral-300 dark:text-neutral-600 mx-auto mb-2" />
                   <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                    Aucun contact pour ce bien
+                    {t('visits.modal.noContacts')}
                   </p>
                   <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">
-                    Saisissez les informations manuellement
+                    {t('visits.modal.enterManuallyHint')}
                   </p>
                   <button
                     type="button"
                     onClick={() => setShowContactsList(false)}
                     className="mt-2 text-xs text-primary-500 hover:text-primary-600"
                   >
-                    Saisir manuellement
+                    {t('visits.modal.enterManually')}
                   </button>
                 </div>
               )
@@ -524,7 +530,7 @@ function NewVisitModal({
           {(!showContactsList || (showContactsList && listingContacts.length === 0)) && (
             <div>
               <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                Telephone
+                {t('visits.modal.phone')}
               </label>
               <input
                 type="tel"
@@ -540,7 +546,7 @@ function NewVisitModal({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                Date
+                {t('visits.modal.date')}
               </label>
               <input
                 type="date"
@@ -553,7 +559,7 @@ function NewVisitModal({
             </div>
             <div>
               <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                Heure
+                {t('visits.modal.time')}
               </label>
               <input
                 type="time"
@@ -567,13 +573,13 @@ function NewVisitModal({
 
           <div>
             <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-              Notes (optionnel)
+              {t('visits.modal.notes')}
             </label>
             <textarea
               rows={3}
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              placeholder="Informations supplementaires..."
+              placeholder={t('visits.modal.notesPlaceholder')}
               className="w-full px-4 py-3 bg-neutral-50 dark:bg-dark-bg border border-neutral-200 dark:border-dark-border rounded-xl focus:ring-2 focus:ring-primary-500 dark:text-white resize-none"
             />
           </div>
@@ -589,11 +595,11 @@ function NewVisitModal({
             />
             <label htmlFor="send_notification" className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
               <Bell className="w-4 h-4 text-primary-500" />
-              Envoyer une notification WhatsApp au client
+              {t('visits.modal.sendNotification')}
             </label>
           </div>
           <p className="text-xs text-neutral-500 dark:text-neutral-400 -mt-2 ml-7">
-            Le client recevra un message avec options: confirmer, indisponible, ou proposer une autre date
+            {t('visits.modal.notificationHint')}
           </p>
 
           <div className="flex gap-3 pt-4">
@@ -602,7 +608,7 @@ function NewVisitModal({
               onClick={onClose}
               className="flex-1 px-6 py-3 border border-neutral-200 dark:border-dark-border text-neutral-700 dark:text-neutral-300 rounded-xl hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors font-medium"
             >
-              Annuler
+              {t('visits.modal.cancel')}
             </button>
             <button
               type="submit"
@@ -612,10 +618,10 @@ function NewVisitModal({
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Planification...
+                  {t('visits.modal.scheduling')}
                 </>
               ) : (
-                'Planifier'
+                t('visits.modal.schedule')
               )}
             </button>
           </div>
@@ -626,6 +632,7 @@ function NewVisitModal({
 }
 
 export default function VisitsContent() {
+  const { t } = useTranslations();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
@@ -634,6 +641,10 @@ export default function VisitsContent() {
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
+
+  // Translated day and month names
+  const DAYS = DAY_KEYS.map((key) => t(`visits.days.${key}`));
+  const MONTHS = MONTH_KEYS.map((key) => t(`visits.months.${key}`));
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -661,10 +672,10 @@ export default function VisitsContent() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['visits'] });
       setShowNewVisitModal(false);
-      toast.success('Visite planifiee avec succes');
+      toast.success(t('visits.toast.created'));
     },
     onError: () => {
-      toast.error('Erreur lors de la planification de la visite');
+      toast.error(t('visits.toast.createError'));
     },
   });
 
@@ -673,11 +684,11 @@ export default function VisitsContent() {
     mutationFn: (id: string) => api.visits.confirm(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['visits'] });
-      toast.success('Visite confirmee');
+      toast.success(t('visits.toast.confirmed'));
       setActionLoadingId(null);
     },
     onError: () => {
-      toast.error('Erreur lors de la confirmation');
+      toast.error(t('visits.toast.confirmError'));
       setActionLoadingId(null);
     },
   });
@@ -687,11 +698,11 @@ export default function VisitsContent() {
     mutationFn: (id: string) => api.visits.complete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['visits'] });
-      toast.success('Visite marquee comme terminee');
+      toast.success(t('visits.toast.completed'));
       setActionLoadingId(null);
     },
     onError: () => {
-      toast.error('Erreur lors de la mise a jour');
+      toast.error(t('visits.toast.completeError'));
       setActionLoadingId(null);
     },
   });
@@ -701,11 +712,11 @@ export default function VisitsContent() {
     mutationFn: (id: string) => api.visits.cancel(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['visits'] });
-      toast.success('Visite annulee');
+      toast.success(t('visits.toast.cancelled'));
       setActionLoadingId(null);
     },
     onError: () => {
-      toast.error('Erreur lors de l\'annulation');
+      toast.error(t('visits.toast.cancelError'));
       setActionLoadingId(null);
     },
   });
@@ -769,10 +780,10 @@ export default function VisitsContent() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">
-              Calendrier des visites
+              {t('visits.title')}
             </h1>
             <p className="text-neutral-500 dark:text-neutral-400">
-              Gerez vos rendez-vous de visite
+              {t('visits.subtitle')}
             </p>
           </div>
 
@@ -807,11 +818,11 @@ export default function VisitsContent() {
               onChange={(e) => setStatusFilter(e.target.value as VisitStatus | 'all')}
               className="px-4 py-2 bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-xl text-sm focus:ring-2 focus:ring-primary-500 dark:text-white"
             >
-              <option value="all">Tous les statuts</option>
-              <option value="PENDING">En attente</option>
-              <option value="CONFIRMED">Confirmee</option>
-              <option value="COMPLETED">Terminee</option>
-              <option value="CANCELLED">Annulee</option>
+              <option value="all">{t('visits.status.all')}</option>
+              <option value="PENDING">{t('visits.status.PENDING')}</option>
+              <option value="CONFIRMED">{t('visits.status.CONFIRMED')}</option>
+              <option value="COMPLETED">{t('visits.status.COMPLETED')}</option>
+              <option value="CANCELLED">{t('visits.status.CANCELLED')}</option>
             </select>
 
             {/* New Visit Button */}
@@ -822,7 +833,7 @@ export default function VisitsContent() {
               className="flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-xl hover:bg-primary-600 transition-colors font-medium"
             >
               <Plus className="w-5 h-5" />
-              <span className="hidden sm:inline">Nouvelle visite</span>
+              <span className="hidden sm:inline">{t('visits.newVisit')}</span>
             </motion.button>
           </div>
         </div>
@@ -841,7 +852,7 @@ export default function VisitsContent() {
                     onClick={goToToday}
                     className="px-3 py-1 text-sm text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-500/10 rounded-lg transition-colors"
                   >
-                    Aujourd'hui
+                    {t('visits.today')}
                   </button>
                 </div>
                 <div className="flex items-center gap-2">
@@ -943,7 +954,7 @@ export default function VisitsContent() {
                 {selectedDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
               </h3>
               <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
-                {filteredVisits.length} visite(s) planifiee(s)
+                {t('visits.scheduledVisits', { count: filteredVisits.length })}
               </p>
 
               <div className="space-y-4 max-h-[500px] overflow-y-auto">
@@ -965,19 +976,20 @@ export default function VisitsContent() {
                         setActionLoadingId(visit.id);
                         cancelVisitMutation.mutate(visit.id);
                       }}
+                      t={t}
                     />
                   ))
                 ) : (
                   <div className="text-center py-8">
                     <Calendar className="w-12 h-12 text-neutral-300 dark:text-neutral-600 mx-auto mb-3" />
                     <p className="text-neutral-500 dark:text-neutral-400">
-                      Aucune visite ce jour
+                      {t('visits.noVisitToday')}
                     </p>
                     <button
                       onClick={() => setShowNewVisitModal(true)}
                       className="mt-3 text-primary-600 dark:text-primary-400 text-sm font-medium hover:underline"
                     >
-                      + Planifier une visite
+                      + {t('visits.scheduleVisit')}
                     </button>
                   </div>
                 )}
@@ -989,10 +1001,10 @@ export default function VisitsContent() {
           <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft">
             <div className="p-6 border-b border-neutral-200 dark:border-dark-border">
               <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">
-                Toutes les visites
+                {t('visits.allVisits')}
               </h2>
               <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                {visits.length} visite(s) au total
+                {t('visits.totalVisits', { count: visits.length })}
               </p>
             </div>
 
@@ -1000,8 +1012,9 @@ export default function VisitsContent() {
               {visits.length > 0 ? (
                 visits.map((visit) => {
                   const status = statusConfig[visit.statut];
+                  const statusLabel = t(`visits.status.${visit.statut}`);
                   const visitDate = new Date(visit.date_visite);
-                  const propertyTitle = visit.listing?.titre || 'Bien immobilier';
+                  const propertyTitle = visit.listing?.titre || t('visits.card.defaultProperty');
                   const propertyAddress = visit.listing ? `${visit.listing.quartier}, ${visit.listing.commune}` : '';
 
                   return (
@@ -1029,7 +1042,7 @@ export default function VisitsContent() {
                               {propertyTitle}
                             </h3>
                             <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${status.bgColor} ${status.color}`}>
-                              {status.label}
+                              {statusLabel}
                             </span>
                           </div>
                           <div className="flex items-center gap-4 text-sm text-neutral-500 dark:text-neutral-400">
@@ -1070,13 +1083,13 @@ export default function VisitsContent() {
                 <div className="text-center py-12">
                   <Calendar className="w-16 h-16 text-neutral-300 dark:text-neutral-600 mx-auto mb-4" />
                   <p className="text-neutral-500 dark:text-neutral-400 mb-2">
-                    Aucune visite trouvee
+                    {t('visits.noVisitsFound')}
                   </p>
                   <button
                     onClick={() => setShowNewVisitModal(true)}
                     className="text-primary-600 dark:text-primary-400 font-medium hover:underline"
                   >
-                    + Planifier une visite
+                    + {t('visits.scheduleVisit')}
                   </button>
                 </div>
               )}
@@ -1093,6 +1106,7 @@ export default function VisitsContent() {
             onClose={() => setShowNewVisitModal(false)}
             onSubmit={(data) => createVisitMutation.mutate(data)}
             isSubmitting={createVisitMutation.isPending}
+            t={t}
           />
         )}
       </AnimatePresence>

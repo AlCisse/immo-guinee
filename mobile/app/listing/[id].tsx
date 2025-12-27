@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { Listing } from '@/types';
@@ -41,26 +42,27 @@ const AMENITY_ICONS: Record<string, string> = {
   seg_uniquement: 'flash-outline',
 };
 
-const AMENITY_LABELS: Record<string, string> = {
-  wifi: 'WiFi',
-  parking: 'Parking',
-  piscine: 'Piscine',
-  climatisation: 'Climatisation',
-  gardien: 'Gardien',
-  jardin: 'Jardin',
-  terrasse: 'Terrasse',
-  buanderie: 'Buanderie',
-  ascenseur: 'Ascenseur',
-  gym: 'Salle de sport',
-  balcon: 'Balcon',
-  cuisine: 'Cuisine equipee',
-  forage: 'Forage',
-  seg_uniquement: 'SEG uniquement',
-};
-
 export default function ListingDetailScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+
+  const AMENITY_LABELS: Record<string, string> = {
+    wifi: 'WiFi',
+    parking: 'Parking',
+    piscine: t('listing.amenities.pool'),
+    climatisation: t('listing.amenities.airConditioning'),
+    gardien: t('listing.amenities.security'),
+    jardin: t('listing.amenities.garden'),
+    terrasse: t('listing.amenities.terrace'),
+    buanderie: t('listing.amenities.laundry'),
+    ascenseur: t('listing.amenities.elevator'),
+    gym: t('listing.amenities.gym'),
+    balcon: t('listing.amenities.balcony'),
+    cuisine: t('listing.amenities.kitchen'),
+    forage: t('listing.amenities.borehole'),
+    seg_uniquement: t('listing.amenities.segOnly'),
+  };
   const queryClient = useQueryClient();
   const { isAuthenticated, user } = useAuth();
   const { width } = useWindowDimensions();
@@ -95,7 +97,7 @@ export default function ListingDetailScreen() {
       queryClient.invalidateQueries({ queryKey: ['favorites'] });
     },
     onError: (error: any) => {
-      Alert.alert('Erreur', error?.response?.data?.message || 'Impossible de modifier les favoris');
+      Alert.alert(t('common.error'), error?.response?.data?.message || t('listing.favoriteError'));
     },
   });
 
@@ -129,7 +131,7 @@ export default function ListingDetailScreen() {
   const handleCall = () => {
     const phone = listing?.user?.telephone;
     if (!phone) {
-      Alert.alert('Erreur', 'Numero de telephone non disponible');
+      Alert.alert(t('common.error'), t('listing.phoneNotAvailable'));
       return;
     }
     const formattedPhone = formatPhoneForCall(phone);
@@ -139,7 +141,7 @@ export default function ListingDetailScreen() {
   const handleWhatsApp = () => {
     const phone = listing?.user?.telephone;
     if (!phone) {
-      Alert.alert('Erreur', 'Numero de telephone non disponible');
+      Alert.alert(t('common.error'), t('listing.phoneNotAvailable'));
       return;
     }
     const formattedPhone = formatPhoneForWhatsApp(phone);
@@ -151,9 +153,9 @@ export default function ListingDetailScreen() {
 
   const handleMessage = async () => {
     if (!isAuthenticated) {
-      Alert.alert('Connexion requise', 'Veuillez vous connecter pour envoyer un message', [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Se connecter', onPress: () => router.push('/auth/login') },
+      Alert.alert(t('auth.loginRequired'), t('listing.loginToMessage'), [
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('auth.signIn'), onPress: () => router.push('/auth/login') },
       ]);
       return;
     }
@@ -162,7 +164,7 @@ export default function ListingDetailScreen() {
 
     // Don't allow messaging your own listing
     if (listing.user?.id === user?.id) {
-      Alert.alert('Action impossible', 'Vous ne pouvez pas vous envoyer un message a vous-meme');
+      Alert.alert(t('listing.actionImpossible'), t('listing.cannotMessageSelf'));
       return;
     }
 
@@ -175,10 +177,10 @@ export default function ListingDetailScreen() {
       if (conversation?.id) {
         router.push(`/chat/${conversation.id}` as any);
       } else {
-        Alert.alert('Erreur', 'Impossible de demarrer la conversation');
+        Alert.alert(t('common.error'), t('listing.startConversationFailed'));
       }
     } catch (error: any) {
-      Alert.alert('Erreur', error?.response?.data?.message || 'Impossible de demarrer la conversation');
+      Alert.alert(t('common.error'), error?.response?.data?.message || t('listing.startConversationFailed'));
     } finally {
       setIsStartingChat(false);
     }
@@ -186,9 +188,9 @@ export default function ListingDetailScreen() {
 
   const handleFavorite = () => {
     if (!isAuthenticated) {
-      Alert.alert('Connexion requise', 'Veuillez vous connecter pour ajouter aux favoris', [
-        { text: 'Annuler', style: 'cancel' },
-        { text: 'Se connecter', onPress: () => router.push('/auth/login') },
+      Alert.alert(t('auth.loginRequired'), t('auth.loginToFavorite'), [
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('auth.signIn'), onPress: () => router.push('/auth/login') },
       ]);
       return;
     }
@@ -221,7 +223,7 @@ export default function ListingDetailScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={lightTheme.colors.primary} />
-          <Text style={styles.loadingText}>Chargement...</Text>
+          <Text style={styles.loadingText}>{t('common.loading')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -234,9 +236,9 @@ export default function ListingDetailScreen() {
           <View style={styles.errorIconContainer}>
             <Ionicons name="alert-circle-outline" size={48} color="#EF4444" />
           </View>
-          <Text style={styles.errorText}>Annonce non trouvee</Text>
+          <Text style={styles.errorText}>{t('listing.notFound')}</Text>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>Retour</Text>
+            <Text style={styles.backButtonText}>{t('common.back')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -257,8 +259,8 @@ export default function ListingDetailScreen() {
 
   const getPriceLabel = () => {
     if (listing.type_transaction === 'VENTE') return '';
-    if (listing.type_transaction === 'LOCATION_COURTE') return '/jour';
-    return '/mois';
+    if (listing.type_transaction === 'LOCATION_COURTE') return t('listings.perDay');
+    return t('listings.perMonth');
   };
 
   return (
@@ -335,10 +337,10 @@ export default function ListingDetailScreen() {
           ]}>
             <Text style={styles.transactionBadgeText}>
               {listing.type_transaction === 'VENTE'
-                ? 'Vente'
+                ? t('transactionTypes.VENTE')
                 : listing.type_transaction === 'LOCATION_COURTE'
-                ? 'Courte duree'
-                : 'Location'}
+                ? t('transactionTypes.LOCATION_COURTE')
+                : t('transactionTypes.LOCATION')}
             </Text>
           </View>
         </View>
@@ -371,7 +373,7 @@ export default function ListingDetailScreen() {
                   <Ionicons name="bed-outline" size={22} color={lightTheme.colors.primary} />
                 </View>
                 <Text style={styles.quickInfoValue}>{listing.nombre_chambres}</Text>
-                <Text style={styles.quickInfoLabel}>Chambres</Text>
+                <Text style={styles.quickInfoLabel}>{t('listings.bedrooms')}</Text>
               </View>
             ) : null}
             {listing.nombre_salles_bain ? (
@@ -380,7 +382,7 @@ export default function ListingDetailScreen() {
                   <Ionicons name="water-outline" size={22} color={lightTheme.colors.primary} />
                 </View>
                 <Text style={styles.quickInfoValue}>{listing.nombre_salles_bain}</Text>
-                <Text style={styles.quickInfoLabel}>Salles de bain</Text>
+                <Text style={styles.quickInfoLabel}>{t('listings.bathrooms')}</Text>
               </View>
             ) : null}
             {listing.surface_m2 ? (
@@ -396,34 +398,34 @@ export default function ListingDetailScreen() {
 
           {/* Description */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Description</Text>
+            <Text style={styles.sectionTitle}>{t('listings.description')}</Text>
             <Text style={styles.description}>{listing.description}</Text>
           </View>
 
           {/* Details */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Details</Text>
+            <Text style={styles.sectionTitle}>{t('listing.details')}</Text>
             <View style={styles.detailsGrid}>
               <View style={styles.detailItem}>
-                <Text style={styles.detailLabel}>Type de bien</Text>
+                <Text style={styles.detailLabel}>{t('search.propertyType')}</Text>
                 <Text style={styles.detailValue}>{listing.type_bien}</Text>
               </View>
               {listing.meuble !== undefined && (
                 <View style={styles.detailItem}>
-                  <Text style={styles.detailLabel}>Meuble</Text>
-                  <Text style={styles.detailValue}>{listing.meuble ? 'Oui' : 'Non'}</Text>
+                  <Text style={styles.detailLabel}>{t('search.furnished')}</Text>
+                  <Text style={styles.detailValue}>{listing.meuble ? t('common.yes') : t('common.no')}</Text>
                 </View>
               )}
               {listing.caution ? (
                 <View style={styles.detailItem}>
-                  <Text style={styles.detailLabel}>Caution</Text>
+                  <Text style={styles.detailLabel}>{t('listing.deposit')}</Text>
                   <Text style={styles.detailValue}>{formatPrice(listing.caution)}</Text>
                 </View>
               ) : null}
               {listing.avance ? (
                 <View style={styles.detailItem}>
-                  <Text style={styles.detailLabel}>Avance</Text>
-                  <Text style={styles.detailValue}>{listing.avance} mois</Text>
+                  <Text style={styles.detailLabel}>{t('listing.advance')}</Text>
+                  <Text style={styles.detailValue}>{listing.avance} {t('listing.months')}</Text>
                 </View>
               ) : null}
             </View>
@@ -432,7 +434,7 @@ export default function ListingDetailScreen() {
           {/* Amenities */}
           {listing.commodites && listing.commodites.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Equipements</Text>
+              <Text style={styles.sectionTitle}>{t('listings.amenities')}</Text>
               <View style={styles.amenitiesGrid}>
                 {listing.commodites.map((amenity, index) => (
                   <View key={index} style={styles.amenityItem}>
@@ -453,7 +455,7 @@ export default function ListingDetailScreen() {
           {/* Owner */}
           {listing.user && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Proprietaire</Text>
+              <Text style={styles.sectionTitle}>{t('listing.owner')}</Text>
               <View style={styles.ownerCard}>
                 {listing.user.photo_profil ? (
                   <Image source={{ uri: listing.user.photo_profil }} style={styles.ownerAvatar} />
@@ -468,10 +470,10 @@ export default function ListingDetailScreen() {
                   <Text style={styles.ownerName}>{listing.user.nom_complet}</Text>
                   <Text style={styles.ownerType}>
                     {listing.user.type_compte === 'AGENCE'
-                      ? 'Agence'
+                      ? t('auth.agency')
                       : listing.user.type_compte === 'PROFESSIONNEL'
-                      ? 'Professionnel'
-                      : 'Particulier'}
+                      ? t('auth.professional')
+                      : t('auth.individual')}
                   </Text>
                 </View>
                 <TouchableOpacity style={styles.ownerCallBtn} onPress={handleCall}>
@@ -490,7 +492,7 @@ export default function ListingDetailScreen() {
       <View style={[styles.contactBar, { paddingBottom: Math.max(insets.bottom, 16) }]}>
         <TouchableOpacity style={styles.callButton} onPress={handleCall} activeOpacity={0.8}>
           <Ionicons name="call" size={20} color="#fff" />
-          <Text style={styles.callButtonText}>Appeler</Text>
+          <Text style={styles.callButtonText}>{t('listing.call')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.messageButton}
@@ -503,7 +505,7 @@ export default function ListingDetailScreen() {
           ) : (
             <>
               <Ionicons name="chatbubble" size={20} color="#fff" />
-              <Text style={styles.messageButtonText}>Messages</Text>
+              <Text style={styles.messageButtonText}>{t('messages.title')}</Text>
             </>
           )}
         </TouchableOpacity>
