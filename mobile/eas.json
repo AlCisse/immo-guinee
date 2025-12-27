@@ -1,0 +1,73 @@
+{
+  "cli": {
+    "version": ">= 12.0.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "development",
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleDebug"
+      },
+      "ios": {
+        "simulator": true
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "http://192.168.178.32:8000/api",
+        "EXPO_PUBLIC_APP_VERSION": "1.0.0"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "channel": "preview",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://immoguinee.com/api",
+        "EXPO_PUBLIC_API_HOST": "immoguinee.com",
+        "EXPO_PUBLIC_APP_VERSION": "1.0.0",
+        "EXPO_PUBLIC_REVERB_KEY": "ebcdd63fd56f6db3a8c56ed53802271b",
+        "EXPO_PUBLIC_REVERB_HOST": "immoguinee.com",
+        "EXPO_PUBLIC_REVERB_PORT": "443",
+        "EXPO_PUBLIC_REVERB_SCHEME": "https",
+        "EXPO_PUBLIC_SSL_PIN_PRIMARY": "LOv+QdFaqnOuyIXGtn5hPngBXKLwCylu5Py+5oBPRVo=",
+        "EXPO_PUBLIC_SSL_PIN_BACKUP": "C5+lpZ7tcVwmwQIMcRtPbsQtWLABXhQzejna0wHFr8M="
+      }
+    },
+    "production": {
+      "distribution": "store",
+      "channel": "production",
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://immoguinee.com/api",
+        "EXPO_PUBLIC_API_HOST": "immoguinee.com",
+        "EXPO_PUBLIC_APP_VERSION": "1.0.0",
+        "EXPO_PUBLIC_REVERB_KEY": "ebcdd63fd56f6db3a8c56ed53802271b",
+        "EXPO_PUBLIC_REVERB_HOST": "immoguinee.com",
+        "EXPO_PUBLIC_REVERB_PORT": "443",
+        "EXPO_PUBLIC_REVERB_SCHEME": "https",
+        "EXPO_PUBLIC_SSL_PIN_PRIMARY": "LOv+QdFaqnOuyIXGtn5hPngBXKLwCylu5Py+5oBPRVo=",
+        "EXPO_PUBLIC_SSL_PIN_BACKUP": "C5+lpZ7tcVwmwQIMcRtPbsQtWLABXhQzejna0wHFr8M="
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "./google-service-account.json",
+        "track": "internal"
+      },
+      "ios": {
+        "appleId": "your-apple-id@email.com",
+        "ascAppId": "your-app-store-connect-app-id"
+      }
+    }
+  }
+}

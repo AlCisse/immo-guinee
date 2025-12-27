@@ -18,6 +18,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import Colors, { lightTheme } from '@/constants/Colors';
+import { formatListingPrice } from '@/lib/utils/formatPrice';
 
 export default function FavoritesScreen() {
   const router = useRouter();
@@ -73,11 +74,7 @@ export default function FavoritesScreen() {
   };
 
   const formatPrice = (price: number, type: string) => {
-    const formatted = price >= 1000000
-      ? `${(price / 1000000).toFixed(1)}M`
-      : `${(price / 1000).toFixed(0)}K`;
-    const suffix = type === 'VENTE' ? '' : type === 'LOCATION_COURTE' ? '/jour' : '/mois';
-    return `${formatted} GNF${suffix}`;
+    return formatListingPrice(price, type);
   };
 
   if (!isAuthenticated) {
@@ -155,7 +152,38 @@ export default function FavoritesScreen() {
               {listing.quartier}, {listing.commune}
             </Text>
           </View>
-          <Text style={styles.listItemPrice}>
+          <View style={styles.listItemDetails}>
+            {listing.nombre_chambres ? (
+              <View style={styles.detailItem}>
+                <Ionicons name="bed-outline" size={14} color={Colors.neutral[500]} />
+                <Text style={styles.detailText}>{listing.nombre_chambres}</Text>
+              </View>
+            ) : null}
+            {listing.nombre_salles_bain ? (
+              <View style={styles.detailItem}>
+                <Ionicons name="water-outline" size={14} color={Colors.neutral[500]} />
+                <Text style={styles.detailText}>{listing.nombre_salles_bain}</Text>
+              </View>
+            ) : null}
+            {listing.commodites?.includes('cuisine') ? (
+              <View style={styles.detailItem}>
+                <Ionicons name="restaurant-outline" size={14} color={Colors.neutral[500]} />
+                <Text style={styles.detailText}>1</Text>
+              </View>
+            ) : null}
+            {listing.commodites?.includes('balcon') ? (
+              <View style={styles.detailItem}>
+                <Ionicons name="expand-outline" size={14} color={Colors.neutral[500]} />
+                <Text style={styles.detailText}>1</Text>
+              </View>
+            ) : null}
+          </View>
+          <Text style={[
+            styles.listItemPrice,
+            { color: listing.type_transaction === 'vente' || listing.type_transaction === 'VENTE'
+              ? lightTheme.colors.primary
+              : Colors.accent[500] }
+          ]}>
             {formatPrice(listing.prix || listing.loyer_mensuel, listing.type_transaction)}
           </Text>
         </View>
@@ -313,6 +341,22 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.neutral[500],
     flex: 1,
+  },
+  listItemDetails: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 6,
+  },
+  detailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  detailText: {
+    fontSize: 13,
+    color: Colors.neutral[500],
+    fontWeight: '500',
   },
   listItemPrice: {
     fontSize: 17,

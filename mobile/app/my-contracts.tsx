@@ -23,6 +23,7 @@ import * as Sharing from 'expo-sharing';
 import { api, tokenManager } from '@/lib/api/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import Colors, { lightTheme } from '@/constants/Colors';
+import { formatPrice as formatPriceUtil } from '@/lib/utils/formatPrice';
 
 interface Contract {
   id: string;
@@ -304,11 +305,7 @@ export default function MyContractsScreen() {
   };
 
   const formatPrice = (price?: number) => {
-    if (!price) return '-';
-    if (price >= 1000000) {
-      return `${(price / 1000000).toFixed(1)}M GNF`;
-    }
-    return `${price.toLocaleString()} GNF`;
+    return formatPriceUtil(price);
   };
 
   const calculateProgress = (startDate: string, endDate?: string) => {

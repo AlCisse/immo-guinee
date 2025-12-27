@@ -22,6 +22,7 @@ import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { Listing } from '@/types';
 import Colors, { lightTheme } from '@/constants/Colors';
+import { formatPrice as formatPriceUtil } from '@/lib/utils/formatPrice';
 
 const AMENITY_ICONS: Record<string, string> = {
   wifi: 'wifi-outline',
@@ -251,10 +252,7 @@ export default function ListingDetailScreen() {
   }
 
   const formatPrice = (price: number) => {
-    if (price >= 1000000) {
-      return `${(price / 1000000).toFixed(1)}M GNF`;
-    }
-    return `${price.toLocaleString()} GNF`;
+    return formatPriceUtil(price);
   };
 
   const getPriceLabel = () => {

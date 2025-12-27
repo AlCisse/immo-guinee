@@ -19,6 +19,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api/client';
 import { Listing, ListingFilters } from '@/types';
 import Colors, { lightTheme } from '@/constants/Colors';
+import { formatPrice as formatPriceUtil } from '@/lib/utils/formatPrice';
 
 const PROPERTY_TYPES = [
   { value: '', label: 'Tous' },
@@ -63,8 +64,8 @@ export default function SearchScreen() {
       if (filters.meuble !== undefined) params.meuble = filters.meuble ? '1' : '0';
 
       try {
-        // Use listings endpoint instead of search (both support 'q' parameter)
-        const response = await api.listings.list(params);
+        // Use search endpoint for text search support
+        const response = await api.listings.search(params);
         return response.data?.data?.listings || [];
       } catch (err: any) {
         if (__DEV__) console.error('Search API error:', err?.response?.data || err?.message || err);
@@ -76,11 +77,7 @@ export default function SearchScreen() {
   const listings = data || [];
 
   const formatPrice = (listing: Listing) => {
-    const price = listing.loyer_mensuel;
-    if (price >= 1000000) {
-      return `${(price / 1000000).toFixed(1)}M`;
-    }
-    return `${(price / 1000).toFixed(0)}K`;
+    return formatPriceUtil(listing.loyer_mensuel, { showCurrency: false });
   };
 
   const clearFilters = () => {
@@ -140,6 +137,24 @@ export default function SearchScreen() {
                 <Text style={styles.detailText}>{item.nombre_chambres}</Text>
               </View>
             ) : null}
+            {item.nombre_salles_bain ? (
+              <View style={styles.detailItem}>
+                <Ionicons name="water-outline" size={14} color={Colors.neutral[500]} />
+                <Text style={styles.detailText}>{item.nombre_salles_bain}</Text>
+              </View>
+            ) : null}
+            {item.commodites?.includes('cuisine') ? (
+              <View style={styles.detailItem}>
+                <Ionicons name="restaurant-outline" size={14} color={Colors.neutral[500]} />
+                <Text style={styles.detailText}>1</Text>
+              </View>
+            ) : null}
+            {item.commodites?.includes('balcon') ? (
+              <View style={styles.detailItem}>
+                <Ionicons name="expand-outline" size={14} color={Colors.neutral[500]} />
+                <Text style={styles.detailText}>1</Text>
+              </View>
+            ) : null}
             {item.surface_m2 ? (
               <View style={styles.detailItem}>
                 <Ionicons name="resize-outline" size={14} color={Colors.neutral[500]} />
@@ -147,7 +162,10 @@ export default function SearchScreen() {
               </View>
             ) : null}
           </View>
-          <Text style={styles.listItemPrice}>
+          <Text style={[
+            styles.listItemPrice,
+            { color: item.type_transaction === 'VENTE' ? lightTheme.colors.primary : Colors.accent[500] }
+          ]}>
             {formatPrice(item)} GNF
             <Text style={styles.listItemPriceLabel}>
               {item.type_transaction === 'VENTE' ? '' :
@@ -561,10 +579,10 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   badgeLocation: {
-    backgroundColor: lightTheme.colors.primary,
+    backgroundColor: Colors.accent[500],
   },
   badgeVente: {
-    backgroundColor: Colors.secondary[500],
+    backgroundColor: lightTheme.colors.primary,
   },
   typeBadgeText: {
     color: '#fff',

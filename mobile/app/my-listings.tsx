@@ -23,6 +23,7 @@ import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { Listing } from '@/types';
 import Colors, { lightTheme } from '@/constants/Colors';
+import { formatPrice as formatPriceUtil } from '@/lib/utils/formatPrice';
 
 interface EditFormData {
   titre: string;
@@ -187,11 +188,7 @@ export default function MyListingsScreen() {
   }, [refetch]);
 
   const formatPrice = (listing: Listing) => {
-    const price = listing.loyer_mensuel || 0;
-    if (price >= 1000000) {
-      return `${(price / 1000000).toFixed(1)}M GNF`;
-    }
-    return `${price?.toLocaleString()} GNF`;
+    return formatPriceUtil(listing.loyer_mensuel);
   };
 
   const getStatusBadge = (status: string) => {

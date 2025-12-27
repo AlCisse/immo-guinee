@@ -21,6 +21,7 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { Listing } from '@/types';
 import Colors, { lightTheme } from '@/constants/Colors';
 import Logo from '@/components/Logo';
+import { formatPrice as formatPriceUtil } from '@/lib/utils/formatPrice';
 
 const PROPERTY_TYPES = [
   { value: '', label: 'Tous', icon: 'grid-outline' },
@@ -67,6 +68,19 @@ export default function HomeScreen() {
     },
     enabled: isAuthenticated,
   });
+
+  // Fetch unread notification count
+  const { data: notificationsData } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: async () => {
+      const response = await api.notifications.list();
+      return response.data?.data || { unread_count: 0 };
+    },
+    enabled: isAuthenticated,
+    refetchInterval: 30000, // Refetch every 30 seconds
+  });
+
+  const unreadNotificationCount = notificationsData?.unread_count || 0;
 
   // Update favorites set when data changes
   useEffect(() => {
@@ -122,11 +136,7 @@ export default function HomeScreen() {
   }, [refetch, queryClient]);
 
   const formatPrice = (listing: Listing) => {
-    const price = listing.loyer_mensuel;
-    if (price >= 1000000) {
-      return `${(price / 1000000).toFixed(1)}M GNF`;
-    }
-    return `${price.toLocaleString()} GNF`;
+    return formatPriceUtil(listing.loyer_mensuel);
   };
 
   const getPriceLabel = (listing: Listing) => {
@@ -210,21 +220,37 @@ export default function HomeScreen() {
                 <Text style={styles.detailText}>{item.nombre_chambres}</Text>
               </View>
             ) : null}
+            {item.nombre_salles_bain ? (
+              <View style={styles.detail}>
+                <Ionicons name="water-outline" size={16} color={Colors.neutral[500]} />
+                <Text style={styles.detailText}>{item.nombre_salles_bain}</Text>
+              </View>
+            ) : null}
+            {item.commodites?.includes('cuisine') ? (
+              <View style={styles.detail}>
+                <Ionicons name="restaurant-outline" size={16} color={Colors.neutral[500]} />
+                <Text style={styles.detailText}>1</Text>
+              </View>
+            ) : null}
+            {item.commodites?.includes('balcon') ? (
+              <View style={styles.detail}>
+                <Ionicons name="expand-outline" size={16} color={Colors.neutral[500]} />
+                <Text style={styles.detailText}>1</Text>
+              </View>
+            ) : null}
             {item.surface_m2 ? (
               <View style={styles.detail}>
                 <Ionicons name="resize-outline" size={16} color={Colors.neutral[500]} />
                 <Text style={styles.detailText}>{item.surface_m2} m²</Text>
               </View>
             ) : null}
-            {item.meuble ? (
-              <View style={styles.detailChip}>
-                <Text style={styles.detailChipText}>Meublé</Text>
-              </View>
-            ) : null}
           </View>
 
           <View style={styles.priceRow}>
-            <Text style={styles.price}>
+            <Text style={[
+              styles.price,
+              { color: item.type_transaction === 'VENTE' ? lightTheme.colors.primary : Colors.accent[500] }
+            ]}>
               {formatPrice(item)}
               <Text style={styles.priceLabel}>{getPriceLabel(item)}</Text>
             </Text>
@@ -242,8 +268,18 @@ export default function HomeScreen() {
           <Text style={styles.greeting}>Bienvenue sur</Text>
           <Logo size="large" />
         </View>
-        <TouchableOpacity style={styles.notificationBtn}>
+        <TouchableOpacity
+          style={styles.notificationBtn}
+          onPress={() => router.push('/notifications')}
+        >
           <Ionicons name="notifications-outline" size={24} color={Colors.secondary[800]} />
+          {unreadNotificationCount > 0 && (
+            <View style={styles.notificationBadge}>
+              <Text style={styles.notificationBadgeText}>
+                {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+              </Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -393,6 +429,26 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.neutral[100],
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'relative',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: Colors.error[500],
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: Colors.background.primary,
+  },
+  notificationBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#fff',
   },
   searchBar: {
     flexDirection: 'row',
@@ -580,10 +636,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   badgeLocation: {
-    backgroundColor: lightTheme.colors.primary,
+    backgroundColor: Colors.accent[500],
   },
   badgeVente: {
-    backgroundColor: Colors.secondary[500],
+    backgroundColor: lightTheme.colors.primary,
   },
   badgeText: {
     color: '#fff',

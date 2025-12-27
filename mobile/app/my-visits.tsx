@@ -14,6 +14,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Linking,
 } from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useRouter, Stack } from 'expo-router';
@@ -51,6 +52,9 @@ interface Visit {
   heure_visite: string;
   statut: string;
   notes?: string;
+  client_nom?: string;
+  client_telephone?: string;
+  client_email?: string;
   listing?: {
     id: string;
     titre: string;
@@ -58,6 +62,20 @@ interface Visit {
     commune: string;
     photo_principale?: string;
     main_photo_url?: string;
+  };
+  proprietaire?: {
+    id: string;
+    nom_complet: string;
+    telephone: string;
+    email?: string;
+    photo_profil_url?: string;
+  };
+  visiteur?: {
+    id: string;
+    nom_complet: string;
+    telephone: string;
+    email?: string;
+    photo_profil_url?: string;
   };
 }
 
@@ -67,6 +85,8 @@ export default function MyVisitsScreen() {
   const { isAuthenticated, user } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
   const [showNewVisitModal, setShowNewVisitModal] = useState(false);
+  const [showVisitDetailModal, setShowVisitDetailModal] = useState(false);
+  const [selectedVisit, setSelectedVisit] = useState<Visit | null>(null);
   const [showContactsList, setShowContactsList] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -400,7 +420,10 @@ export default function MyVisitsScreen() {
     return (
       <TouchableOpacity
         style={styles.visitItem}
-        onPress={() => listing && router.push(`/listing/${listing.id}`)}
+        onPress={() => {
+          setSelectedVisit(item);
+          setShowVisitDetailModal(true);
+        }}
         activeOpacity={0.8}
       >
         <View style={styles.visitImage}>
@@ -836,6 +859,227 @@ export default function MyVisitsScreen() {
             <View style={{ height: 40 }} />
           </ScrollView>
         </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Visit Detail Modal */}
+      <Modal
+        visible={showVisitDetailModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowVisitDetailModal(false)}
+      >
+        <View style={styles.detailModalContainer}>
+          <View style={styles.detailModalHeader}>
+            <TouchableOpacity onPress={() => setShowVisitDetailModal(false)}>
+              <Ionicons name="close" size={28} color={Colors.secondary[800]} />
+            </TouchableOpacity>
+            <Text style={styles.detailModalTitle}>Details de la visite</Text>
+            <View style={{ width: 28 }} />
+          </View>
+
+          {selectedVisit && (
+            <ScrollView style={styles.detailModalContent} showsVerticalScrollIndicator={false}>
+              {/* Listing Info */}
+              <View style={styles.detailSection}>
+                <Text style={styles.detailSectionTitle}>Propriete</Text>
+                <TouchableOpacity
+                  style={styles.detailListingCard}
+                  onPress={() => {
+                    setShowVisitDetailModal(false);
+                    if (selectedVisit.listing) {
+                      router.push(`/listing/${selectedVisit.listing.id}`);
+                    }
+                  }}
+                >
+                  {(selectedVisit.listing?.main_photo_url || selectedVisit.listing?.photo_principale) ? (
+                    <Image
+                      source={{ uri: selectedVisit.listing?.main_photo_url || selectedVisit.listing?.photo_principale }}
+                      style={styles.detailListingImage}
+                    />
+                  ) : (
+                    <View style={[styles.detailListingImage, styles.detailListingImagePlaceholder]}>
+                      <Ionicons name="home-outline" size={32} color={Colors.neutral[300]} />
+                    </View>
+                  )}
+                  <View style={styles.detailListingInfo}>
+                    <Text style={styles.detailListingTitle} numberOfLines={2}>
+                      {selectedVisit.listing?.titre || 'Annonce'}
+                    </Text>
+                    <View style={styles.detailListingLocation}>
+                      <Ionicons name="location-outline" size={14} color={lightTheme.colors.primary} />
+                      <Text style={styles.detailListingLocationText}>
+                        {selectedVisit.listing?.quartier}, {selectedVisit.listing?.commune}
+                      </Text>
+                    </View>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color={Colors.neutral[400]} />
+                </TouchableOpacity>
+              </View>
+
+              {/* Date & Time */}
+              <View style={styles.detailSection}>
+                <Text style={styles.detailSectionTitle}>Date et heure</Text>
+                <View style={styles.detailDateTimeRow}>
+                  <View style={styles.detailDateTimeItem}>
+                    <Ionicons name="calendar-outline" size={20} color={lightTheme.colors.primary} />
+                    <Text style={styles.detailDateTimeText}>
+                      {new Date(selectedVisit.date_visite).toLocaleDateString('fr-FR', {
+                        weekday: 'long',
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                      })}
+                    </Text>
+                  </View>
+                  <View style={styles.detailDateTimeItem}>
+                    <Ionicons name="time-outline" size={20} color={lightTheme.colors.primary} />
+                    <Text style={styles.detailDateTimeText}>
+                      {selectedVisit.heure_visite.substring(0, 5)}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Status */}
+              <View style={styles.detailSection}>
+                <Text style={styles.detailSectionTitle}>Statut</Text>
+                <View style={[styles.detailStatusBadge, { backgroundColor: getStatusBadge(selectedVisit.statut).color }]}>
+                  <Ionicons name={getStatusBadge(selectedVisit.statut).icon as any} size={16} color="#fff" />
+                  <Text style={styles.detailStatusText}>{getStatusBadge(selectedVisit.statut).label}</Text>
+                </View>
+              </View>
+
+              {/* Contact Info - Show owner or visitor depending on who is viewing */}
+              <View style={styles.detailSection}>
+                <Text style={styles.detailSectionTitle}>
+                  {user?.id === selectedVisit.proprietaire_id ? 'Visiteur' : 'Proprietaire'}
+                </Text>
+                <View style={styles.detailContactCard}>
+                  <View style={styles.detailContactAvatar}>
+                    {(user?.id === selectedVisit.proprietaire_id
+                      ? selectedVisit.visiteur?.photo_profil_url
+                      : selectedVisit.proprietaire?.photo_profil_url
+                    ) ? (
+                      <Image
+                        source={{
+                          uri: user?.id === selectedVisit.proprietaire_id
+                            ? selectedVisit.visiteur?.photo_profil_url
+                            : selectedVisit.proprietaire?.photo_profil_url
+                        }}
+                        style={styles.detailContactAvatarImage}
+                      />
+                    ) : (
+                      <Text style={styles.detailContactAvatarText}>
+                        {(user?.id === selectedVisit.proprietaire_id
+                          ? (selectedVisit.client_nom || selectedVisit.visiteur?.nom_complet || 'V')
+                          : (selectedVisit.proprietaire?.nom_complet || 'P')
+                        ).charAt(0).toUpperCase()}
+                      </Text>
+                    )}
+                  </View>
+                  <View style={styles.detailContactInfo}>
+                    <Text style={styles.detailContactName}>
+                      {user?.id === selectedVisit.proprietaire_id
+                        ? (selectedVisit.client_nom || selectedVisit.visiteur?.nom_complet || 'Visiteur')
+                        : (selectedVisit.proprietaire?.nom_complet || 'Proprietaire')
+                      }
+                    </Text>
+                    <Text style={styles.detailContactPhone}>
+                      {user?.id === selectedVisit.proprietaire_id
+                        ? (selectedVisit.client_telephone || selectedVisit.visiteur?.telephone || 'Non disponible')
+                        : (selectedVisit.proprietaire?.telephone || 'Non disponible')
+                      }
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Call and Message buttons */}
+                <View style={styles.detailContactActions}>
+                  <TouchableOpacity
+                    style={styles.detailContactActionBtn}
+                    onPress={() => {
+                      const phone = user?.id === selectedVisit.proprietaire_id
+                        ? (selectedVisit.client_telephone || selectedVisit.visiteur?.telephone)
+                        : selectedVisit.proprietaire?.telephone;
+                      if (phone) {
+                        Linking.openURL(`tel:${phone}`);
+                      }
+                    }}
+                  >
+                    <Ionicons name="call-outline" size={20} color="#fff" />
+                    <Text style={styles.detailContactActionText}>Appeler</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.detailContactActionBtn, styles.detailContactActionBtnSecondary]}
+                    onPress={() => {
+                      const phone = user?.id === selectedVisit.proprietaire_id
+                        ? (selectedVisit.client_telephone || selectedVisit.visiteur?.telephone)
+                        : selectedVisit.proprietaire?.telephone;
+                      if (phone) {
+                        Linking.openURL(`https://wa.me/${phone.replace(/[^0-9]/g, '')}`);
+                      }
+                    }}
+                  >
+                    <Ionicons name="logo-whatsapp" size={20} color={lightTheme.colors.primary} />
+                    <Text style={[styles.detailContactActionText, styles.detailContactActionTextSecondary]}>WhatsApp</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Notes */}
+              {selectedVisit.notes && (
+                <View style={styles.detailSection}>
+                  <Text style={styles.detailSectionTitle}>Notes</Text>
+                  <View style={styles.detailNotesCard}>
+                    <Text style={styles.detailNotesText}>{selectedVisit.notes}</Text>
+                  </View>
+                </View>
+              )}
+
+              {/* Action buttons */}
+              <View style={styles.detailActions}>
+                {(selectedVisit.statut === 'EN_ATTENTE' || selectedVisit.statut === 'PENDING') && (
+                  <TouchableOpacity
+                    style={[styles.detailActionBtn, styles.detailActionBtnConfirm]}
+                    onPress={() => {
+                      setShowVisitDetailModal(false);
+                      handleConfirmVisit(selectedVisit.id);
+                    }}
+                  >
+                    <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
+                    <Text style={styles.detailActionBtnText}>Confirmer</Text>
+                  </TouchableOpacity>
+                )}
+                {(selectedVisit.statut === 'EN_ATTENTE' || selectedVisit.statut === 'PENDING' || selectedVisit.statut === 'CONFIRMEE') && (
+                  <TouchableOpacity
+                    style={[styles.detailActionBtn, styles.detailActionBtnCancel]}
+                    onPress={() => {
+                      setShowVisitDetailModal(false);
+                      handleCancelVisit(selectedVisit.id);
+                    }}
+                  >
+                    <Ionicons name="close-circle-outline" size={20} color={Colors.warning[600]} />
+                    <Text style={[styles.detailActionBtnText, { color: Colors.warning[600] }]}>Annuler</Text>
+                  </TouchableOpacity>
+                )}
+                {user?.id === selectedVisit.proprietaire_id && (
+                  <TouchableOpacity
+                    style={[styles.detailActionBtn, styles.detailActionBtnDelete]}
+                    onPress={() => {
+                      setShowVisitDetailModal(false);
+                      handleDeleteVisit(selectedVisit.id);
+                    }}
+                  >
+                    <Ionicons name="trash-outline" size={20} color={Colors.error[500]} />
+                    <Text style={[styles.detailActionBtnText, { color: Colors.error[500] }]}>Supprimer</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              <View style={{ height: 40 }} />
+            </ScrollView>
+          )}
+        </View>
       </Modal>
 
     </>
@@ -1445,5 +1689,216 @@ const styles = StyleSheet.create({
   },
   picker: {
     height: 150,
+  },
+  // Detail Modal Styles
+  detailModalContainer: {
+    flex: 1,
+    backgroundColor: Colors.background.primary,
+  },
+  detailModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border.light,
+  },
+  detailModalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.secondary[800],
+  },
+  detailModalContent: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 20,
+  },
+  detailSection: {
+    marginBottom: 24,
+  },
+  detailSectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.neutral[500],
+    marginBottom: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  detailListingCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.background.secondary,
+    borderRadius: 12,
+    padding: 12,
+    gap: 12,
+  },
+  detailListingImage: {
+    width: 70,
+    height: 70,
+    borderRadius: 10,
+  },
+  detailListingImagePlaceholder: {
+    backgroundColor: Colors.neutral[100],
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  detailListingInfo: {
+    flex: 1,
+  },
+  detailListingTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.secondary[800],
+    marginBottom: 6,
+  },
+  detailListingLocation: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  detailListingLocationText: {
+    fontSize: 13,
+    color: Colors.neutral[500],
+  },
+  detailDateTimeRow: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  detailDateTimeItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: Colors.background.secondary,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 12,
+    flex: 1,
+  },
+  detailDateTimeText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: Colors.secondary[800],
+    flex: 1,
+  },
+  detailStatusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  detailStatusText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  detailContactCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.background.secondary,
+    borderRadius: 12,
+    padding: 14,
+    gap: 14,
+    marginBottom: 12,
+  },
+  detailContactAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: lightTheme.colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  detailContactAvatarImage: {
+    width: '100%',
+    height: '100%',
+  },
+  detailContactAvatarText: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  detailContactInfo: {
+    flex: 1,
+  },
+  detailContactName: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: Colors.secondary[800],
+    marginBottom: 4,
+  },
+  detailContactPhone: {
+    fontSize: 14,
+    color: Colors.neutral[500],
+  },
+  detailContactActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  detailContactActionBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: lightTheme.colors.primary,
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+  detailContactActionBtnSecondary: {
+    backgroundColor: lightTheme.colors.primary + '15',
+  },
+  detailContactActionText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  detailContactActionTextSecondary: {
+    color: lightTheme.colors.primary,
+  },
+  detailNotesCard: {
+    backgroundColor: Colors.background.secondary,
+    borderRadius: 12,
+    padding: 14,
+  },
+  detailNotesText: {
+    fontSize: 14,
+    color: Colors.secondary[700],
+    lineHeight: 22,
+  },
+  detailActions: {
+    gap: 10,
+    marginTop: 8,
+  },
+  detailActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    paddingVertical: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.border.light,
+  },
+  detailActionBtnConfirm: {
+    backgroundColor: Colors.success[500],
+    borderColor: Colors.success[500],
+  },
+  detailActionBtnCancel: {
+    backgroundColor: Colors.warning[50],
+    borderColor: Colors.warning[200],
+  },
+  detailActionBtnDelete: {
+    backgroundColor: Colors.error[50],
+    borderColor: Colors.error[200],
+  },
+  detailActionBtnText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
   },
 });

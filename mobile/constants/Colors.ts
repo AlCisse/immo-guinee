@@ -40,6 +40,19 @@ const Colors = {
     800: '#262626',
     900: '#171717',
   },
+  // Accent Green - Location, Prix, Disponible
+  accent: {
+    50: '#ecfdf5',
+    100: '#d1fae5',
+    200: '#a7f3d0',
+    300: '#6ee7b7',
+    400: '#34d399',
+    500: '#10b981', // Main Emerald Green
+    600: '#059669',
+    700: '#047857',
+    800: '#065f46',
+    900: '#064e3b',
+  },
   // Success Green
   success: {
     50: '#f0fdf4',
@@ -104,6 +117,9 @@ export const lightTheme = {
     primary: Colors.primary[500],
     primaryLight: Colors.primary[100],
     primaryDark: Colors.primary[700],
+    accent: Colors.accent[500],
+    accentLight: Colors.accent[100],
+    accentDark: Colors.accent[700],
     secondary: Colors.secondary[500],
     secondaryDark: Colors.secondary[800],
     background: Colors.background.primary,

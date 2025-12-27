@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { router } from 'expo-router';
 import { api, tokenManager, ApiResponse } from '../api/client';
+import { pushNotifications } from '../services/pushNotifications';
 
 // User type matching backend
 export interface User {
@@ -40,6 +41,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Register push token with backend
+  const registerPushToken = useCallback(async () => {
+    try {
+      await pushNotifications.initialize();
+      await pushNotifications.registerToken();
+      if (__DEV__) console.log('[Auth] Push token registered');
+    } catch (error) {
+      if (__DEV__) console.error('[Auth] Failed to register push token:', error);
+    }
+  }, []);
+
   // Initialize auth state from secure storage
   useEffect(() => {
     const initAuth = async () => {
@@ -57,6 +69,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               const userData = response.data.data.user;
               setUser(userData);
               await tokenManager.setUser(userData);
+              // Register push token for authenticated user
+              registerPushToken();
             }
           } catch (error) {
             // Token is invalid, clear storage
@@ -72,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     initAuth();
-  }, []);
+  }, [registerPushToken]);
 
   const login = useCallback(async (telephone: string, password: string) => {
     try {
@@ -97,6 +111,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await tokenManager.setToken(token);
         await tokenManager.setUser(userData);
         setUser(userData);
+        // Register push token after successful login
+        registerPushToken();
         router.replace('/(tabs)');
       } else {
         throw new Error(data.message || 'Erreur de connexion');
@@ -105,7 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const message = error.response?.data?.message || error.message || 'Erreur de connexion';
       throw new Error(message);
     }
-  }, []);
+  }, [registerPushToken]);
 
   const register = useCallback(async (data: RegisterData) => {
     try {
@@ -155,6 +171,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await tokenManager.setToken(token);
           await tokenManager.setUser(userData);
           setUser(userData);
+          // Register push token after OTP verification
+          registerPushToken();
           router.replace('/(tabs)');
         } else {
           // OTP verified but need to login
@@ -167,7 +185,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const message = error.response?.data?.message || error.message || 'Erreur de verification';
       throw new Error(message);
     }
-  }, []);
+  }, [registerPushToken]);
 
   const resendOtp = useCallback(async (telephone: string) => {
     try {
@@ -184,10 +202,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(async () => {
     try {
+      // Unregister push token before logout
+      await pushNotifications.unregisterToken();
       await api.auth.logout();
     } catch (error) {
       // Ignore logout errors
     } finally {
+      pushNotifications.cleanup();
       await tokenManager.clear();
       setUser(null);
       router.replace('/auth/login');

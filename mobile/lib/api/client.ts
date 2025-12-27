@@ -21,8 +21,22 @@ const ALLOWED_DOMAINS = ['immoguinee.com', 'api.immoguinee.com'];
 const isValidDomain = (url: string): boolean => {
   try {
     const urlObj = new URL(url);
+    const hostname = urlObj.hostname;
+
+    // In development mode, allow localhost and local network IPs
+    if (__DEV__) {
+      // Allow localhost
+      if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return true;
+      }
+      // Allow local network IPs (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
+      if (/^(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/.test(hostname)) {
+        return true;
+      }
+    }
+
     return ALLOWED_DOMAINS.some(domain =>
-      urlObj.hostname === domain || urlObj.hostname.endsWith('.' + domain)
+      hostname === domain || hostname.endsWith('.' + domain)
     );
   } catch {
     return false;

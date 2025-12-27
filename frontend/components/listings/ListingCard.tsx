@@ -101,7 +101,7 @@ function ListingCard({ listing, priority = false }: ListingCardProps) {
     >
       <Link
         href={`/annonces/${listing.id}`}
-        className="group block bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-200 hover:border-green-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+        className="group block bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-200 hover:border-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
       >
       {/* Image Container */}
       <div className="relative aspect-[4/3] bg-gray-200 overflow-hidden">
@@ -119,10 +119,10 @@ function ListingCard({ listing, priority = false }: ListingCardProps) {
           <span
             className={`px-3 py-1 rounded-full text-xs font-semibold text-white ${
               listing.operationType === 'LOCATION' || listing.type_transaction === 'location' || listing.type_transaction === 'LOCATION'
-                ? 'bg-blue-600'
+                ? 'bg-accent-500'
                 : listing.operationType === 'LOCATION_COURTE' || listing.type_transaction === 'location_courte' || listing.type_transaction === 'LOCATION_COURTE'
                 ? 'bg-purple-600'
-                : 'bg-green-600'
+                : 'bg-primary-500'
             }`}
           >
             {listing.operationType === 'LOCATION' || listing.type_transaction === 'location' || listing.type_transaction === 'LOCATION'
@@ -166,7 +166,7 @@ function ListingCard({ listing, priority = false }: ListingCardProps) {
         </div>
 
         {/* Title */}
-        <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-green-700 transition-colors">
+        <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors">
           {listing.titre}
         </h3>
 

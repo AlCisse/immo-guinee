@@ -2,6 +2,7 @@
   "expo": {
     "name": "ImmoGuinee",
     "slug": "immoguinee",
+    "owner": "immoguinee",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -11,11 +12,12 @@
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#000000"
+      "backgroundColor": "#FFFFFF"
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.immoguinee.app",
+      "buildNumber": "1",
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": false,
@@ -35,15 +37,41 @@
         ],
         "NSMicrophoneUsageDescription": "Cette application utilise le microphone pour enregistrer des messages vocaux.",
         "NSPhotoLibraryUsageDescription": "Cette application utilise votre galerie photo pour envoyer des images et vidéos.",
-        "NSCameraUsageDescription": "Cette application utilise la caméra pour prendre des photos et vidéos."
+        "NSCameraUsageDescription": "Cette application utilise la caméra pour prendre des photos et vidéos.",
+        "NSLocationWhenInUseUsageDescription": "Cette application utilise votre position pour localiser les biens immobiliers proches de vous.",
+        "NSFaceIDUsageDescription": "Utilisez Face ID pour securiser l'acces a votre compte."
       }
     },
     "android": {
       "package": "com.immoguinee.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#000000"
+        "backgroundColor": "#FFFFFF"
       },
+      "splash": {
+        "image": "./assets/images/splash-icon.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#FFFFFF"
+      },
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "RECORD_AUDIO",
+        "VIBRATE",
+        "RECEIVE_BOOT_COMPLETED",
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT"
+      ],
+      "blockedPermissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION"
+      ],
+      "googleServicesFile": "./google-services.json",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
@@ -86,6 +114,11 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "immoguinee-app"
+      }
     }
   }
 }
