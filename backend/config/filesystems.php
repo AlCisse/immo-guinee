@@ -184,10 +184,9 @@ return [
         // All files are stored permanently on Spaces with CDN via images.immoguinee.com
         // MinIO is only used as temporary cache (48h) for upload processing
 
-        // Spaces - Listings images (public, CDN)
+        // Spaces - Listings images (public, direct access)
         // Uses SecretHelper to read from Docker secrets (/run/secrets/do_spaces_*)
-        // Note: ACL disabled on bucket, objects inherit bucket-level permissions
-        // Note: 'root' handles the folder prefix, 'url' should be just the CDN base
+        // Note: 'root' handles the folder prefix, 'url' is the direct Spaces URL
         'spaces-listings' => [
             'driver' => 's3',
             'key' => SecretHelper::get('DO_SPACES_ACCESS_KEY'),
@@ -198,13 +197,13 @@ return [
             'url' => env('DO_SPACES_CDN_URL', 'https://images.immoguinee.com'),
             'root' => 'listings',
             'throw' => true,
-            // Don't send ACL header - bucket has ACLs disabled
+            'visibility' => 'public',
             'options' => [
-                'ACL' => '',
+                'ACL' => 'public-read',
             ],
         ],
 
-        // Spaces - User avatars (public, CDN)
+        // Spaces - User avatars (public, direct access)
         'spaces-avatars' => [
             'driver' => 's3',
             'key' => SecretHelper::get('DO_SPACES_ACCESS_KEY'),
@@ -215,8 +214,9 @@ return [
             'url' => env('DO_SPACES_CDN_URL', 'https://images.immoguinee.com'),
             'root' => 'avatars',
             'throw' => true,
+            'visibility' => 'public',
             'options' => [
-                'ACL' => '',
+                'ACL' => 'public-read',
             ],
         ],
 
@@ -292,8 +292,9 @@ return [
             'endpoint' => env('DO_SPACES_ENDPOINT', 'https://fra1.digitaloceanspaces.com'),
             'url' => env('DO_SPACES_CDN_URL', 'https://images.immoguinee.com'),
             'throw' => true,
+            'visibility' => 'public',
             'options' => [
-                'ACL' => '',
+                'ACL' => 'public-read',
             ],
         ],
 
