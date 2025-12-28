@@ -454,6 +454,14 @@ services:
   n8n:
     image: n8nio/n8n:latest
     hostname: n8n
+    secrets:
+      - n8n_api_service_token
+      - n8n_fcm_server_key
+      - n8n_sms_api_key
+      - n8n_twilio_account_sid
+      - n8n_twilio_auth_token
+      - n8n_twilio_phone_number
+      - waha_api_key
     environment:
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_BASIC_AUTH_USER=${N8N_USER:-admin}
@@ -463,8 +471,18 @@ services:
       - N8N_PROTOCOL=${N8N_PROTOCOL:-http}
       - WEBHOOK_URL=${WEBHOOK_URL:-http://localhost:5678/}
       - GENERIC_TIMEZONE=Africa/Conakry
+      # URLs for workflows (accessible via $env() in n8n)
+      - IMMOGUINEE_API_URL=${IMMOGUINEE_API_URL:-https://immoguinee.com}
+      - LARAVEL_API_URL=${LARAVEL_API_URL:-https://immoguinee.com}
+      - FRONTEND_URL=${FRONTEND_URL:-https://immoguinee.com}
+      - N8N_WEBHOOK_URL=${N8N_WEBHOOK_URL:-https://automate.immoguinee.com}
+      - WAHA_URL=${WAHA_URL:-http://waha:3000}
+      - WAHA_API_URL=${WAHA_API_URL:-http://waha:3000}
+      - SMS_GATEWAY_URL=${SMS_GATEWAY_URL:-https://api.orange.gn/sms/v1}
+    entrypoint: ["/bin/sh", "/custom-entrypoint.sh"]
     volumes:
       - n8n-data:/home/node/.n8n
+      - ../n8n/entrypoint.sh:/custom-entrypoint.sh:ro
     networks:
       - backend-network
       - public-network  # Needs webhooks from Traefik

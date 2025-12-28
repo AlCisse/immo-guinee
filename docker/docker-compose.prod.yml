@@ -185,3 +185,16 @@ secrets:
     external: true
   reverb_app_secret:
     external: true
+  # n8n workflow secrets
+  n8n_api_service_token:
+    external: true
+  n8n_fcm_server_key:
+    external: true
+  n8n_sms_api_key:
+    external: true
+  n8n_twilio_account_sid:
+    external: true
+  n8n_twilio_auth_token:
+    external: true
+  n8n_twilio_phone_number:
+    external: true
