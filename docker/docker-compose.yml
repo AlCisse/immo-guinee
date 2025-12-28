@@ -477,6 +477,8 @@ services:
       - N8N_PROTOCOL=${N8N_PROTOCOL:-http}
       - WEBHOOK_URL=${WEBHOOK_URL:-http://localhost:5678/}
       - GENERIC_TIMEZONE=Africa/Conakry
+      # Allow access to env vars in workflows via $env()
+      - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
       # URLs for workflows (accessible via $env() in n8n)
       - IMMOGUINEE_API_URL=${IMMOGUINEE_API_URL:-https://immoguinee.com}
       - LARAVEL_API_URL=${LARAVEL_API_URL:-https://immoguinee.com}
