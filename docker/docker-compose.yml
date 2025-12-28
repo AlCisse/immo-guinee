@@ -802,18 +802,21 @@ services:
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.51.0
     hostname: cadvisor
+    privileged: true
     environment:
       - DOCKER_API_VERSION=1.44
     command:
       - '--docker_only=true'
       - '--store_container_labels=true'
       - '--housekeeping_interval=15s'
+      - '--disable_metrics=referenced_memory,hugetlb'
     volumes:
       - /:/rootfs:ro
-      - /var/run:/var/run:ro
+      - /var/run:/var/run:rw
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
       - /dev/disk/:/dev/disk:ro
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
     networks:
       - infra-network
     deploy:
