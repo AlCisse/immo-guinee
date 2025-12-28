@@ -10,6 +10,7 @@ import {
   Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import Colors, { lightTheme } from '@/constants/Colors';
 
 interface Country {
@@ -117,6 +118,7 @@ export default function PhoneInput({
   placeholder = '6XX XXX XXX',
   defaultCountryCode = 'GN',
 }: PhoneInputProps) {
+  const { t } = useTranslation();
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<Country>(
     COUNTRIES.find(c => c.code === defaultCountryCode) || COUNTRIES[0]
@@ -161,6 +163,8 @@ export default function PhoneInput({
           placeholder={placeholder}
           placeholderTextColor={Colors.neutral[400]}
           keyboardType="phone-pad"
+          textContentType="telephoneNumber"
+          autoComplete="tel"
           value={value}
           onChangeText={onChangeText}
           autoCapitalize="none"
@@ -175,7 +179,7 @@ export default function PhoneInput({
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Choisir un pays</Text>
+            <Text style={styles.modalTitle}>{t('common.selectCountry')}</Text>
             <TouchableOpacity
               style={styles.modalCloseBtn}
               onPress={() => setShowCountryPicker(false)}

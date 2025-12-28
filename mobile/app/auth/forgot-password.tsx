@@ -13,12 +13,14 @@ import {
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { apiClient } from '@/lib/api/client';
 import Colors, { lightTheme } from '@/constants/Colors';
 import PhoneInput, { Country } from '@/components/PhoneInput';
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   // Step management
   const [step, setStep] = useState<'phone' | 'verify'>('phone');
@@ -47,7 +49,7 @@ export default function ForgotPasswordScreen() {
 
   const requestOtp = async () => {
     if (!telephone) {
-      Alert.alert('Erreur', 'Veuillez entrer votre numero de telephone.');
+      Alert.alert(t('common.error'), t('auth.errors.phoneRequired'));
       return;
     }
 
@@ -57,11 +59,11 @@ export default function ForgotPasswordScreen() {
         telephone: getFormattedPhone(),
       });
       setStep('verify');
-      Alert.alert('Code envoye', 'Un code OTP a ete envoye sur votre WhatsApp.');
+      Alert.alert(t('auth.codeSentTitle'), t('auth.codeSentMessage'));
     } catch (error: any) {
       console.error('Request OTP error:', error);
-      const message = error.response?.data?.message || 'Erreur lors de l\'envoi du code OTP.';
-      Alert.alert('Erreur', message);
+      const message = error.response?.data?.message || t('auth.errors.otpSendFailed');
+      Alert.alert(t('common.error'), message);
     } finally {
       setRequestingOtp(false);
     }
@@ -69,17 +71,17 @@ export default function ForgotPasswordScreen() {
 
   const resetPassword = async () => {
     if (!otpCode || otpCode.length !== 6) {
-      Alert.alert('Erreur', 'Veuillez entrer le code OTP a 6 chiffres.');
+      Alert.alert(t('common.error'), t('auth.errors.otpRequired'));
       return;
     }
 
     if (!newPassword || newPassword.length < 6) {
-      Alert.alert('Erreur', 'Le mot de passe doit contenir au moins 6 caracteres.');
+      Alert.alert(t('common.error'), t('auth.errors.passwordMinLength'));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      Alert.alert('Erreur', 'Les mots de passe ne correspondent pas.');
+      Alert.alert(t('common.error'), t('auth.errors.passwordMismatch'));
       return;
     }
 
@@ -93,14 +95,14 @@ export default function ForgotPasswordScreen() {
       });
 
       Alert.alert(
-        'Succes',
-        'Votre mot de passe a ete reinitialise. Vous pouvez maintenant vous connecter.',
+        t('common.success'),
+        t('auth.resetSuccess'),
         [{ text: 'OK', onPress: () => router.replace('/auth/login') }]
       );
     } catch (error: any) {
       console.error('Reset password error:', error);
-      const message = error.response?.data?.message || 'Erreur lors de la reinitialisation.';
-      Alert.alert('Erreur', message);
+      const message = error.response?.data?.message || t('auth.errors.resetFailed');
+      Alert.alert(t('common.error'), message);
     } finally {
       setResetting(false);
     }
@@ -111,7 +113,7 @@ export default function ForgotPasswordScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Mot de passe oublie',
+          title: t('auth.forgotPasswordTitle'),
           headerStyle: { backgroundColor: Colors.background.primary },
           headerShadowVisible: false,
           headerLeft: () => (
@@ -138,12 +140,12 @@ export default function ForgotPasswordScreen() {
               <Ionicons name="key" size={48} color={lightTheme.colors.primary} />
             </View>
             <Text style={styles.title}>
-              {step === 'phone' ? 'Recuperer votre compte' : 'Nouveau mot de passe'}
+              {step === 'phone' ? t('auth.recoverAccount') : t('auth.newPasswordTitle')}
             </Text>
             <Text style={styles.subtitle}>
               {step === 'phone'
-                ? 'Entrez votre numero de telephone pour recevoir un code de verification.'
-                : 'Entrez le code recu et choisissez un nouveau mot de passe.'}
+                ? t('auth.recoverSubtitle')
+                : t('auth.resetSubtitle')}
             </Text>
           </View>
 
@@ -151,7 +153,7 @@ export default function ForgotPasswordScreen() {
             /* Step 1: Enter phone number */
             <View style={styles.formSection}>
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Numero de telephone</Text>
+                <Text style={styles.label}>{t('auth.phone')}</Text>
                 <PhoneInput
                   value={telephone}
                   onChangeText={setTelephone}
@@ -170,7 +172,7 @@ export default function ForgotPasswordScreen() {
                 ) : (
                   <>
                     <Ionicons name="send-outline" size={20} color="#fff" />
-                    <Text style={styles.primaryButtonText}>Envoyer le code</Text>
+                    <Text style={styles.primaryButtonText}>{t('auth.sendCode')}</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -179,7 +181,7 @@ export default function ForgotPasswordScreen() {
                 style={styles.secondaryButton}
                 onPress={() => router.back()}
               >
-                <Text style={styles.secondaryButtonText}>Retour a la connexion</Text>
+                <Text style={styles.secondaryButtonText}>{t('auth.backToLogin')}</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -189,23 +191,25 @@ export default function ForgotPasswordScreen() {
               <View style={styles.infoCard}>
                 <Ionicons name="call-outline" size={24} color={lightTheme.colors.primary} />
                 <View style={styles.infoCardContent}>
-                  <Text style={styles.infoCardLabel}>Code envoye au</Text>
+                  <Text style={styles.infoCardLabel}>{t('auth.codeSentTo')}</Text>
                   <Text style={styles.infoCardValue}>{getFormattedPhone()}</Text>
                 </View>
               </View>
 
               {/* OTP Input */}
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Code OTP</Text>
+                <Text style={styles.label}>{t('auth.otpCode')}</Text>
                 <View style={styles.inputContainer}>
                   <Ionicons name="key-outline" size={20} color={Colors.neutral[400]} style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
                     value={otpCode}
                     onChangeText={setOtpCode}
-                    placeholder="000000"
+                    placeholder={t('auth.otpPlaceholder')}
                     placeholderTextColor={Colors.neutral[400]}
                     keyboardType="number-pad"
+                    textContentType="oneTimeCode"
+                    autoComplete="one-time-code"
                     maxLength={6}
                   />
                 </View>
@@ -213,16 +217,18 @@ export default function ForgotPasswordScreen() {
 
               {/* New Password */}
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Nouveau mot de passe</Text>
+                <Text style={styles.label}>{t('auth.newPassword')}</Text>
                 <View style={styles.inputContainer}>
                   <Ionicons name="lock-closed-outline" size={20} color={Colors.neutral[400]} style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
                     value={newPassword}
                     onChangeText={setNewPassword}
-                    placeholder="Minimum 6 caracteres"
+                    placeholder={t('auth.minChars')}
                     placeholderTextColor={Colors.neutral[400]}
                     secureTextEntry={!showPassword}
+                    textContentType="newPassword"
+                    autoComplete="password-new"
                   />
                   <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                     <Ionicons
@@ -236,16 +242,18 @@ export default function ForgotPasswordScreen() {
 
               {/* Confirm Password */}
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Confirmer le mot de passe</Text>
+                <Text style={styles.label}>{t('auth.confirmPassword')}</Text>
                 <View style={styles.inputContainer}>
                   <Ionicons name="lock-closed-outline" size={20} color={Colors.neutral[400]} style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
-                    placeholder="Retapez le mot de passe"
+                    placeholder={t('auth.retypePassword')}
                     placeholderTextColor={Colors.neutral[400]}
                     secureTextEntry={!showPassword}
+                    textContentType="newPassword"
+                    autoComplete="password-new"
                   />
                 </View>
               </View>
@@ -257,7 +265,7 @@ export default function ForgotPasswordScreen() {
                 disabled={requestingOtp}
               >
                 <Ionicons name="refresh-outline" size={18} color={lightTheme.colors.primary} />
-                <Text style={styles.resendButtonText}>Renvoyer le code</Text>
+                <Text style={styles.resendButtonText}>{t('auth.resendCode')}</Text>
               </TouchableOpacity>
 
               {/* Submit Button */}
@@ -274,7 +282,7 @@ export default function ForgotPasswordScreen() {
                 ) : (
                   <>
                     <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
-                    <Text style={styles.primaryButtonText}>Reinitialiser</Text>
+                    <Text style={styles.primaryButtonText}>{t('auth.reset')}</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -284,7 +292,7 @@ export default function ForgotPasswordScreen() {
                 style={styles.secondaryButton}
                 onPress={() => setStep('phone')}
               >
-                <Text style={styles.secondaryButtonText}>Changer de numero</Text>
+                <Text style={styles.secondaryButtonText}>{t('auth.changeNumber')}</Text>
               </TouchableOpacity>
             </View>
           )}

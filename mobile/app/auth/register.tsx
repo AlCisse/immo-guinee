@@ -120,6 +120,8 @@ export default function RegisterScreen() {
                     style={styles.input}
                     placeholder={t('auth.fullName')}
                     placeholderTextColor={Colors.neutral[400]}
+                    textContentType="name"
+                    autoComplete="name"
                     value={nomComplet}
                     onChangeText={setNomComplet}
                     autoCapitalize="words"
@@ -180,6 +182,8 @@ export default function RegisterScreen() {
                     placeholder={t('errors.passwordTooShort')}
                     placeholderTextColor={Colors.neutral[400]}
                     secureTextEntry={!showPassword}
+                    textContentType="newPassword"
+                    autoComplete="password-new"
                     value={password}
                     onChangeText={setPassword}
                     autoCapitalize="none"
@@ -207,6 +211,8 @@ export default function RegisterScreen() {
                     placeholder={t('auth.confirmPassword')}
                     placeholderTextColor={Colors.neutral[400]}
                     secureTextEntry={!showPassword}
+                    textContentType="newPassword"
+                    autoComplete="password-new"
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
                     autoCapitalize="none"

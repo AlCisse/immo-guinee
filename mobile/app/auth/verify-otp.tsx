@@ -14,6 +14,7 @@ import {
 import { useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/auth/AuthContext';
 import Colors, { lightTheme } from '@/constants/Colors';
 
@@ -23,6 +24,7 @@ export default function VerifyOtpScreen() {
   const { telephone } = useLocalSearchParams<{ telephone: string }>();
   const { verifyOtp, resendOtp } = useAuth();
   const { width } = useWindowDimensions();
+  const { t } = useTranslation();
   const [otp, setOtp] = useState<string[]>(new Array(OTP_LENGTH).fill(''));
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
@@ -67,12 +69,12 @@ export default function VerifyOtpScreen() {
   const handleVerify = async (code?: string) => {
     const otpCode = code || otp.join('');
     if (otpCode.length !== OTP_LENGTH) {
-      Alert.alert('Erreur', 'Veuillez entrer le code complet');
+      Alert.alert(t('common.error'), t('auth.errors.enterCompleteCode'));
       return;
     }
 
     if (!telephone) {
-      Alert.alert('Erreur', 'Numero de telephone manquant');
+      Alert.alert(t('common.error'), t('auth.errors.phoneMissing'));
       return;
     }
 
@@ -80,7 +82,7 @@ export default function VerifyOtpScreen() {
     try {
       await verifyOtp(telephone, otpCode);
     } catch (error: any) {
-      Alert.alert('Erreur', error.message || 'Code invalide');
+      Alert.alert(t('common.error'), error.message || t('auth.errors.invalidCode'));
       setOtp(new Array(OTP_LENGTH).fill(''));
       inputRefs.current[0]?.focus();
     } finally {
@@ -94,13 +96,13 @@ export default function VerifyOtpScreen() {
     setIsResending(true);
     try {
       await resendOtp(telephone);
-      Alert.alert('Succes', 'Un nouveau code a ete envoye');
+      Alert.alert(t('common.success'), t('auth.newCodeSent'));
       setCountdown(60);
       setCanResend(false);
       setOtp(new Array(OTP_LENGTH).fill(''));
       inputRefs.current[0]?.focus();
     } catch (error: any) {
-      Alert.alert('Erreur', error.message || 'Impossible d\'envoyer le code');
+      Alert.alert(t('common.error'), error.message || t('auth.errors.sendCodeFailed'));
     } finally {
       setIsResending(false);
     }
@@ -130,9 +132,9 @@ export default function VerifyOtpScreen() {
                 <Ionicons name="shield-checkmark-outline" size={40} color={lightTheme.colors.primary} />
               </View>
               <Text style={styles.logo}>ImmoGuinee</Text>
-              <Text style={styles.title}>Verification</Text>
+              <Text style={styles.title}>{t('auth.verification')}</Text>
               <Text style={styles.subtitle}>
-                Entrez le code a 6 chiffres envoye au{'\n'}
+                {t('auth.otpSubtitle')}{'\n'}
                 <Text style={styles.phoneNumber}>{formatPhone(telephone || '')}</Text>
               </Text>
             </View>
@@ -151,6 +153,8 @@ export default function VerifyOtpScreen() {
                   onChangeText={(value) => handleOtpChange(value.slice(-1), index)}
                   onKeyPress={(e) => handleKeyPress(e, index)}
                   keyboardType="number-pad"
+                  textContentType="oneTimeCode"
+                  autoComplete="one-time-code"
                   maxLength={1}
                   selectTextOnFocus
                   autoFocus={index === 0}
@@ -168,28 +172,28 @@ export default function VerifyOtpScreen() {
               {isLoading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.verifyButtonText}>Verifier</Text>
+                <Text style={styles.verifyButtonText}>{t('auth.verify')}</Text>
               )}
             </TouchableOpacity>
 
             {/* Resend */}
             <View style={styles.resendContainer}>
               <Text style={styles.resendText}>
-                Vous n'avez pas recu de code ?
+                {t('auth.noCodeReceived')}
               </Text>
               {canResend ? (
                 <TouchableOpacity onPress={handleResend} disabled={isResending}>
                   {isResending ? (
                     <ActivityIndicator size="small" color={lightTheme.colors.primary} />
                   ) : (
-                    <Text style={styles.resendLink}>Renvoyer le code</Text>
+                    <Text style={styles.resendLink}>{t('auth.resendCode')}</Text>
                   )}
                 </TouchableOpacity>
               ) : (
                 <View style={styles.countdownContainer}>
                   <Ionicons name="time-outline" size={16} color={Colors.neutral[400]} />
                   <Text style={styles.countdown}>
-                    Renvoyer dans {countdown}s
+                    {t('auth.resendIn', { seconds: countdown })}
                   </Text>
                 </View>
               )}

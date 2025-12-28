@@ -179,6 +179,8 @@ export default function ChangePasswordScreen() {
                     placeholder="000000"
                     placeholderTextColor={Colors.neutral[400]}
                     keyboardType="number-pad"
+                    textContentType="oneTimeCode"
+                    autoComplete="one-time-code"
                     maxLength={6}
                   />
                 </View>
@@ -196,6 +198,8 @@ export default function ChangePasswordScreen() {
                     placeholder={t('changePassword.minCharacters')}
                     placeholderTextColor={Colors.neutral[400]}
                     secureTextEntry={!showPassword}
+                    textContentType="newPassword"
+                    autoComplete="password-new"
                   />
                   <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                     <Ionicons
@@ -219,6 +223,8 @@ export default function ChangePasswordScreen() {
                     placeholder={t('changePassword.retypePassword')}
                     placeholderTextColor={Colors.neutral[400]}
                     secureTextEntry={!showConfirmPassword}
+                    textContentType="newPassword"
+                    autoComplete="password-new"
                   />
                   <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
                     <Ionicons
