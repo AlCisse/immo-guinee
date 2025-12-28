@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "227587557484",
+    "project_id": "immo-guinee",
+    "storage_bucket": "immo-guinee.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:227587557484:android:c5e37e1087f9ec38e23049",
+        "android_client_info": {
+          "package_name": "com.immoguinee.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAGGouReDSHnQxzwOzXuFxchfz-eP1wlJs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
