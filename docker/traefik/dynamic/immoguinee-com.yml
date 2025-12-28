@@ -46,6 +46,15 @@ http:
       tls: {}
       priority: 50
 
+    # Well-known files (Universal Links / App Links) - HTTPS
+    well-known-secure:
+      rule: "(Host(`immoguinee.com`) || Host(`www.immoguinee.com`)) && PathPrefix(`/.well-known`)"
+      entryPoints:
+        - websecure
+      service: backend
+      tls: {}
+      priority: 100
+
     # HTTP to HTTPS redirect
     http-redirect:
       rule: "Host(`immoguinee.com`) || Host(`www.immoguinee.com`)"
