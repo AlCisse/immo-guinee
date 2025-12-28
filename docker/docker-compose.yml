@@ -806,10 +806,10 @@ services:
     environment:
       - DOCKER_API_VERSION=1.44
     command:
-      - '--docker_only=true'
       - '--store_container_labels=true'
       - '--housekeeping_interval=15s'
       - '--disable_metrics=referenced_memory,hugetlb'
+      - '--raw_cgroup_prefix_whitelist=/system.slice/docker-'
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:rw

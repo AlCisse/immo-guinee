@@ -2,7 +2,7 @@
   "annotations": {
     "list": []
   },
-  "description": "Docker host and container metrics (Note: Per-container breakdown requires Docker versions < 29)",
+  "description": "Docker host and container metrics",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -36,7 +36,7 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "count(container_last_seen{id=~\"/docker/.*\"})",
+          "expr": "count(container_last_seen{id=~\"/system.slice/docker-.*\"})",
           "legendFormat": "Containers",
           "refId": "A"
         }
@@ -71,7 +71,7 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "container_memory_usage_bytes{id=\"/\"}",
+          "expr": "node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes",
           "legendFormat": "Memory Used",
           "refId": "A"
         }
@@ -369,13 +369,13 @@
       "targets": [
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "rate(node_disk_read_bytes_total{device=~\"sd.*\"}[5m])",
+          "expr": "rate(node_disk_read_bytes_total{device=~\"sd.*|vd.*\"}[5m])",
           "legendFormat": "Read - {{device}}",
           "refId": "A"
         },
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "expr": "rate(node_disk_written_bytes_total{device=~\"sd.*\"}[5m])",
+          "expr": "rate(node_disk_written_bytes_total{device=~\"sd.*|vd.*\"}[5m])",
           "legendFormat": "Write - {{device}}",
           "refId": "B"
         }
@@ -387,9 +387,7 @@
       "datasource": {"type": "prometheus", "uid": "prometheus"},
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
+          "color": {"mode": "thresholds"},
           "mappings": [],
           "max": 100,
           "min": 0,
@@ -428,9 +426,7 @@
       "datasource": {"type": "prometheus", "uid": "prometheus"},
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
+          "color": {"mode": "thresholds"},
           "mappings": [],
           "max": 100,
           "min": 0,
@@ -469,9 +465,7 @@
       "datasource": {"type": "prometheus", "uid": "prometheus"},
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
+          "color": {"mode": "thresholds"},
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -500,17 +494,6 @@
       ],
       "title": "System Load (5m)",
       "type": "stat"
-    },
-    {
-      "datasource": {"type": "prometheus", "uid": "prometheus"},
-      "gridPos": {"h": 2, "w": 24, "x": 0, "y": 26},
-      "id": 12,
-      "options": {
-        "code": {"language": "plaintext", "showLineNumbers": false, "showMiniMap": false},
-        "content": "**Note:** Per-container metrics are not available due to Docker 29 using containerd-snapshotter. cAdvisor requires Docker < 29 for per-container breakdown. System-level metrics from node-exporter are shown instead.",
-        "mode": "markdown"
-      },
-      "type": "text"
     }
   ],
   "refresh": "30s",
