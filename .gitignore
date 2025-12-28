@@ -9,6 +9,12 @@
 *.pem
 acme.json
 
+# Firebase config (contains API keys)
+mobile/google-services.json
+mobile/GoogleService-Info.plist
+google-services.json
+GoogleService-Info.plist
+
 # ============================================
 # Docker Volumes & Data
 # ============================================
