@@ -785,7 +785,7 @@ services:
       - db_backup_password
     environment:
       - DATA_SOURCE_NAME=postgresql://immog_backup:PLACEHOLDER@postgres:5432/${DB_DATABASE:-immog_db}?sslmode=disable
-    entrypoint: ["/bin/sh", "-c", "export DATA_SOURCE_NAME=\"postgresql://immog_backup:$$(cat /run/secrets/db_backup_password)@postgres:5432/${DB_DATABASE:-immog_db}?sslmode=disable\" && /bin/postgres_exporter"]
+    entrypoint: ["/bin/sh", "-c", "PASSWORD=$$(cat /run/secrets/db_backup_password | sed 's/\\//%2F/g; s/=/%3D/g; s/+/%2B/g') && export DATA_SOURCE_NAME=\"postgresql://immog_backup:$$PASSWORD@postgres:5432/${DB_DATABASE:-immog_db}?sslmode=disable\" && /bin/postgres_exporter"]
     networks:
       - backend-network
       - infra-network
