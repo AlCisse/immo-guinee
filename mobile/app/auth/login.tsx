@@ -20,6 +20,7 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import Colors, { lightTheme } from '@/constants/Colors';
 import Logo from '@/components/Logo';
 import PhoneInput, { Country } from '@/components/PhoneInput';
+import { haptics } from '@/lib/haptics';
 
 export default function LoginScreen() {
   const { t } = useTranslation();
@@ -37,6 +38,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!telephone || !password) {
+      haptics.warning();
       Alert.alert(t('common.error'), t('errors.requiredField'));
       return;
     }
@@ -47,7 +49,9 @@ export default function LoginScreen() {
     setIsLoading(true);
     try {
       await login(formattedPhone, password);
+      haptics.success();
     } catch (error: any) {
+      haptics.error();
       Alert.alert(t('common.error'), error.message || t('errors.invalidCredentials'));
     } finally {
       setIsLoading(false);

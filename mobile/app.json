@@ -18,6 +18,10 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.immoguinee.app",
       "buildNumber": "1",
+      "associatedDomains": [
+        "applinks:immoguinee.com",
+        "applinks:www.immoguinee.com"
+      ],
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": false,
@@ -73,7 +77,26 @@
       ],
       "googleServicesFile": "./google-services.json",
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "immoguinee.com",
+              "pathPrefix": "/bien"
+            },
+            {
+              "scheme": "https",
+              "host": "www.immoguinee.com",
+              "pathPrefix": "/bien"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -110,7 +133,8 @@
         }
       ],
       "./plugins/withNetworkSecurity.js",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true

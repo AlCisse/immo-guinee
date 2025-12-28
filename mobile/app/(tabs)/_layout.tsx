@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useUnreadMessages } from '@/lib/hooks/useUnreadMessages';
 import Colors, { lightTheme } from '@/constants/Colors';
+import { haptics } from '@/lib/haptics';
 
 export default function TabLayout() {
   const { t } = useTranslation();
@@ -22,6 +23,11 @@ export default function TabLayout() {
 
   return (
     <Tabs
+      screenListeners={{
+        tabPress: () => {
+          haptics.selection();
+        },
+      }}
       screenOptions={{
         tabBarActiveTintColor: lightTheme.colors.primary,
         tabBarInactiveTintColor: lightTheme.colors.tabBarInactive,

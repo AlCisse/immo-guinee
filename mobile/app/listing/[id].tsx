@@ -24,6 +24,7 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { Listing } from '@/types';
 import Colors, { lightTheme } from '@/constants/Colors';
 import { formatPrice as formatPriceUtil } from '@/lib/utils/formatPrice';
+import { haptics } from '@/lib/haptics';
 
 const AMENITY_ICONS: Record<string, string> = {
   wifi: 'wifi-outline',
@@ -145,7 +146,7 @@ export default function ListingDetailScreen() {
       return;
     }
     const formattedPhone = formatPhoneForWhatsApp(phone);
-    const message = encodeURIComponent(`Bonjour, je suis intéressé par votre annonce "${listing?.titre}" sur ImmoGuinée.`);
+    const message = encodeURIComponent(t('listings.whatsappMessage', { title: listing?.titre }));
     Linking.openURL(`https://wa.me/${formattedPhone}?text=${message}`);
   };
 
@@ -188,12 +189,14 @@ export default function ListingDetailScreen() {
 
   const handleFavorite = () => {
     if (!isAuthenticated) {
+      haptics.warning();
       Alert.alert(t('auth.loginRequired'), t('auth.loginToFavorite'), [
         { text: t('common.cancel'), style: 'cancel' },
         { text: t('auth.signIn'), onPress: () => router.push('/auth/login') },
       ]);
       return;
     }
+    haptics.light();
     toggleFavoriteMutation.mutate();
   };
 

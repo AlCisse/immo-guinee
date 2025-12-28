@@ -1,0 +1,20 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "TEAM_ID.com.immoguinee.app",
+        "paths": [
+          "/bien/*",
+          "/annonces/*",
+          "/agent/*"
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": [
+      "TEAM_ID.com.immoguinee.app"
+    ]
+  }
+}
