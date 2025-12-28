@@ -243,6 +243,7 @@ services:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/sites:/etc/nginx/conf.d:ro
       - ../backend/storage/app/public:/var/www/backend/storage/app/public:ro
+      - ../backend/public:/var/www/backend/public:ro
     networks:
       - public-network
       - backend-network  # Needs to reach php-fpm
