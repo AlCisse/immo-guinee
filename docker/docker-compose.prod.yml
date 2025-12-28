@@ -198,3 +198,15 @@ secrets:
     external: true
   n8n_twilio_phone_number:
     external: true
+  n8n_openai_api_key:
+    external: true
+  n8n_telegram_bot_token:
+    external: true
+  n8n_telegram_chat_id:
+    external: true
+  n8n_smtp_host:
+    external: true
+  n8n_smtp_user:
+    external: true
+  n8n_smtp_password:
+    external: true

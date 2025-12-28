@@ -23,6 +23,16 @@ load_secret "n8n_twilio_auth_token" "TWILIO_AUTH_TOKEN"
 load_secret "n8n_twilio_phone_number" "TWILIO_PHONE_NUMBER"
 load_secret "waha_api_key" "WAHA_API_KEY"
 
+# AI & Messaging secrets
+load_secret "n8n_openai_api_key" "OPENAI_API_KEY"
+load_secret "n8n_telegram_bot_token" "TELEGRAM_BOT_TOKEN"
+load_secret "n8n_telegram_chat_id" "TELEGRAM_CHAT_ID"
+
+# Email/SMTP secrets
+load_secret "n8n_smtp_host" "SMTP_HOST"
+load_secret "n8n_smtp_user" "SMTP_USER"
+load_secret "n8n_smtp_password" "SMTP_PASSWORD"
+
 # URLs are set via environment variables in docker-compose
 # These are just defaults if not set
 export IMMOGUINEE_API_URL="${IMMOGUINEE_API_URL:-https://immoguinee.com}"

@@ -462,6 +462,12 @@ services:
       - n8n_twilio_auth_token
       - n8n_twilio_phone_number
       - waha_api_key
+      - n8n_openai_api_key
+      - n8n_telegram_bot_token
+      - n8n_telegram_chat_id
+      - n8n_smtp_host
+      - n8n_smtp_user
+      - n8n_smtp_password
     environment:
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_BASIC_AUTH_USER=${N8N_USER:-admin}
