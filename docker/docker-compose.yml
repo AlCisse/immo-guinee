@@ -701,6 +701,7 @@ services:
     networks:
       - infra-network
       - backend-network  # Read-only access to postgres for dashboards
+      - public-network   # Internet access for plugin downloads
     deploy:
       replicas: 1
       restart_policy:
