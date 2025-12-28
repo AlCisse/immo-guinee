@@ -25,12 +25,11 @@ datasources:
     url: postgres:5432
     uid: postgresql
     orgId: 1
-    user: immog_user
+    user: immog_backup
     isDefault: false
     editable: true
     jsonData:
       database: immog_db
-      user: immog_user
       sslmode: disable
       maxOpenConns: 5
       maxIdleConns: 2

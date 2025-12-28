@@ -1,7 +1,8 @@
 #!/bin/sh
 # Read password from secret file and substitute in datasource config
-if [ -f /run/secrets/db_password ]; then
-    DB_PASSWORD=$(cat /run/secrets/db_password)
+# Using db_backup_password (read-only user) for security
+if [ -f /run/secrets/db_backup_password ]; then
+    DB_PASSWORD=$(cat /run/secrets/db_backup_password)
     export DB_PASSWORD
 
     # Create writable provisioning directory structure
