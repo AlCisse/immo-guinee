@@ -27,23 +27,23 @@ interface Contract {
   locataire_signed_at: string | null;
   delai_retractation_expire: string | null;
   bailleur_id: string;
-  locataire_id: string;
+  locataire_id: string | null;
   proprietaire: {
     id: string;
     nom_complet: string;
     telephone: string;
-  };
+  } | null;
   locataire: {
     id: string;
     nom_complet: string;
     telephone: string;
-  };
+  } | null;
   listing: {
     id: string;
     titre: string;
     quartier: string;
     photos: string[];
-  };
+  } | null;
   bailleur_signature_data?: string;
   locataire_signature_data?: string;
 }
@@ -143,7 +143,7 @@ export default function ContractSignaturePage() {
       if (proprietaireId === currentUserId) {
         setUserRole('proprietaire');
         setHasUserSigned(!!contract.bailleur_signed_at);
-      } else if (locataireId === currentUserId) {
+      } else if (locataireId && locataireId === currentUserId) {
         setUserRole('locataire');
         setHasUserSigned(!!contract.locataire_signed_at);
       }
@@ -160,7 +160,7 @@ export default function ContractSignaturePage() {
   };
 
   const isBothSigned =
-    contract?.bailleur_signed_at && contract?.locataire_signed_at;
+    contract?.bailleur_signed_at && contract?.locataire_signed_at && contract?.locataire;
 
   const getContractTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
@@ -301,7 +301,7 @@ export default function ContractSignaturePage() {
                   )}
                   <div className="ml-3">
                     <p className="font-medium text-gray-900">Propriétaire</p>
-                    <p className="text-sm text-gray-500">{contract.proprietaire.nom_complet}</p>
+                    <p className="text-sm text-gray-500">{contract.proprietaire?.nom_complet || 'Non défini'}</p>
                   </div>
                 </div>
                 {contract.bailleur_signed_at && (
@@ -310,30 +310,46 @@ export default function ContractSignaturePage() {
               </div>
 
               {/* Locataire signature */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  {contract.locataire_signed_at ? (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100">
-                      <svg className="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
+              {contract.locataire ? (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    {contract.locataire_signed_at ? (
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100">
+                        <svg className="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    ) : (
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
+                        <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                    )}
+                    <div className="ml-3">
+                      <p className="font-medium text-gray-900">Locataire</p>
+                      <p className="text-sm text-gray-500">{contract.locataire.nom_complet}</p>
                     </div>
-                  ) : (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
-                      <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
+                  </div>
+                  {contract.locataire_signed_at && (
+                    <span className="text-sm text-green-600">Signé</span>
                   )}
-                  <div className="ml-3">
-                    <p className="font-medium text-gray-900">Locataire</p>
-                    <p className="text-sm text-gray-500">{contract.locataire.nom_complet}</p>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-yellow-100">
+                      <svg className="h-5 w-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <p className="font-medium text-gray-900">Locataire</p>
+                      <p className="text-sm text-yellow-600">En attente d&apos;assignation</p>
+                    </div>
                   </div>
                 </div>
-                {contract.locataire_signed_at && (
-                  <span className="text-sm text-green-600">Signé</span>
-                )}
-              </div>
+              )}
             </div>
           </div>
 
@@ -366,7 +382,7 @@ export default function ContractSignaturePage() {
           </div>
 
           {/* Sign button */}
-          {!hasUserSigned && userRole && (
+          {!hasUserSigned && userRole && contract.locataire && (
             <div className="rounded-lg border border-primary-200 bg-primary-50 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 Prêt à signer ?
@@ -386,8 +402,26 @@ export default function ContractSignaturePage() {
             </div>
           )}
 
+          {/* No locataire assigned - Draft contract */}
+          {!contract.locataire && userRole === 'proprietaire' && (
+            <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Contrat en brouillon
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Ce contrat n&apos;a pas encore de locataire assigné.
+                Vous devez d&apos;abord assigner un locataire avant de pouvoir procéder à la signature.
+              </p>
+              <Link href={`/contrats/generer?contract=${contract.id}`}>
+                <Button variant="outline" className="w-full">
+                  Modifier le contrat
+                </Button>
+              </Link>
+            </div>
+          )}
+
           {/* Already signed message */}
-          {hasUserSigned && (
+          {hasUserSigned && contract.locataire && (
             <div className="rounded-lg border border-green-200 bg-green-50 p-6">
               <div className="flex items-center">
                 <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
