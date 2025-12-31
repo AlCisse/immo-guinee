@@ -660,7 +660,11 @@ export default function ClientHomePage() {
             </div>
             <div className="flex-1 flex justify-center">
               <div className="relative">
-                <div className="w-64 h-[500px] bg-gradient-to-br from-primary-400 to-primary-600 rounded-[3rem] shadow-2xl" />
+                <img
+                  src="/images/app-screenshot.png"
+                  alt="ImmoGuinée Mobile App"
+                  className="w-64 h-auto rounded-[2rem] shadow-2xl"
+                />
               </div>
             </div>
           </div>
