@@ -1003,5 +1003,372 @@
       "cancelled": "Visit cancelled",
       "cancelError": "Error cancelling visit"
     }
+  },
+  "estimate": {
+    "title": "Estimate your property",
+    "subtitle": "Get a free estimate of your property value in a few clicks",
+    "operationType": "Operation type",
+    "rental": "Rental",
+    "sale": "Sale",
+    "propertyType": "Property type",
+    "selectType": "Select a type",
+    "commune": "District",
+    "selectCommune": "Select a district",
+    "quartier": "Neighborhood",
+    "selectQuartier": "Select a neighborhood",
+    "surface": "Surface area (sqm)",
+    "surfacePlaceholder": "Ex: 80",
+    "bedrooms": "Number of bedrooms",
+    "selectBedrooms": "Select",
+    "bedroom": "bedroom",
+    "bedrooms_plural": "bedrooms",
+    "furnished": "Property is furnished",
+    "calculating": "Calculating...",
+    "estimateButton": "Estimate my property",
+    "result": {
+      "title": "Your property estimate",
+      "minPrice": "Minimum price",
+      "estimatedPrice": "Estimated price",
+      "maxPrice": "Maximum price",
+      "pricePerM2": "Price per sqm",
+      "perMonth": "/ month"
+    },
+    "actions": {
+      "publishListing": "Publish my listing",
+      "viewSimilar": "View similar listings"
+    },
+    "features": {
+      "marketData": {
+        "title": "Market data",
+        "description": "Our estimate is based on real market prices in Conakry."
+      },
+      "preciseLocation": {
+        "title": "Precise location",
+        "description": "Prices vary by district and neighborhood. Our tool accounts for this."
+      },
+      "free": {
+        "title": "100% free",
+        "description": "Our estimation service is completely free with no commitment."
+      }
+    }
+  },
+  "contact": {
+    "title": "Contact us",
+    "subtitle": "A question, suggestion or need help? Our team is here for you.",
+    "success": {
+      "title": "Message sent!",
+      "message": "Thank you for contacting us. Our team will respond as soon as possible.",
+      "backHome": "Back to home"
+    },
+    "info": {
+      "phone": {
+        "title": "Phone",
+        "description": "Call us directly"
+      },
+      "whatsapp": {
+        "title": "WhatsApp",
+        "description": "Write to us on WhatsApp",
+        "action": "Start a conversation"
+      },
+      "email": {
+        "title": "Email",
+        "description": "Send us an email"
+      },
+      "address": {
+        "title": "Address"
+      },
+      "hours": {
+        "title": "Hours",
+        "weekdays": "Mon - Fri: 8am - 6pm",
+        "saturday": "Sat: 9am - 2pm"
+      }
+    },
+    "form": {
+      "title": "Send us a message",
+      "fullName": "Full name",
+      "fullNamePlaceholder": "Your name",
+      "email": "Email",
+      "emailPlaceholder": "your@email.com",
+      "phone": "Phone",
+      "phonePlaceholder": "+224 6XX XX XX XX",
+      "subject": "Subject",
+      "selectSubject": "Select a subject",
+      "subjects": {
+        "question": "General question",
+        "technical": "Technical issue",
+        "listing": "About a listing",
+        "partnership": "Partnership",
+        "other": "Other"
+      },
+      "message": "Message",
+      "messagePlaceholder": "Describe your request...",
+      "sending": "Sending...",
+      "send": "Send message"
+    },
+    "faq": {
+      "title": "Frequently asked questions",
+      "questions": {
+        "publishListing": {
+          "q": "How do I publish a listing?",
+          "a": "Create a free account, then click 'Publish a listing' and fill out the form."
+        },
+        "verifiedListings": {
+          "q": "Are listings verified?",
+          "a": "Yes, our team verifies each listing before publication to guarantee quality."
+        },
+        "contactOwner": {
+          "q": "How do I contact an owner?",
+          "a": "You can call them directly, send a message or contact via WhatsApp."
+        },
+        "modifyListing": {
+          "q": "Can I modify my listing?",
+          "a": "Yes, log in to your account and go to 'My listings' to modify it."
+        }
+      }
+    }
+  },
+  "help": {
+    "title": "Help center",
+    "subtitle": "Find answers to all your questions",
+    "searchPlaceholder": "Search for a question...",
+    "noResults": "No results for",
+    "questions": "questions",
+    "categories": {
+      "listings": {
+        "name": "Listings",
+        "questions": {
+          "publish": {
+            "q": "How do I publish a listing?",
+            "a": "To publish a listing, first create a free account. Then click 'Publish a listing', fill out the form with your property details (photos, description, price, location) and submit. Your listing will be verified by our team before publication."
+          },
+          "cost": {
+            "q": "How much does it cost to publish a listing?",
+            "a": "Publishing listings on ImmoGuinee is completely free for individuals. Paid promotion options are available to increase your listing visibility."
+          },
+          "modify": {
+            "q": "How do I modify or delete my listing?",
+            "a": "Log in to your account, go to 'My listings', select the listing and click 'Edit' or 'Delete'. Modifications will be re-verified before publication."
+          },
+          "duration": {
+            "q": "How long does my listing stay online?",
+            "a": "Listings remain active for 60 days. You can renew them for free from your dashboard before expiration."
+          }
+        }
+      },
+      "account": {
+        "name": "Account",
+        "questions": {
+          "create": {
+            "q": "How do I create an account?",
+            "a": "Click 'Sign up', enter your name, email and Guinean phone number. You will receive a verification code by SMS to activate your account."
+          },
+          "forgotPassword": {
+            "q": "I forgot my password, what do I do?",
+            "a": "On the login page, click 'Forgot password'. Enter your phone number and follow the instructions to reset your password."
+          },
+          "delete": {
+            "q": "How do I delete my account?",
+            "a": "Contact our support via the contact form or email at support@immoguinee.com. Deleting your account will delete all your listings."
+          }
+        }
+      },
+      "security": {
+        "name": "Security",
+        "questions": {
+          "scams": {
+            "q": "How do I avoid scams?",
+            "a": "Never pay before visiting the property. Be wary of prices that are too low. Prefer listings with the 'Verified' badge. Always meet the owner in person before any payment."
+          },
+          "report": {
+            "q": "How do I report a fraudulent listing?",
+            "a": "On each listing, click the report icon. Describe the issue and our team will handle your report within 24 hours."
+          },
+          "privacy": {
+            "q": "Is my personal information protected?",
+            "a": "Yes, we use bank-level encryption. Your data is never shared with third parties without your consent."
+          }
+        }
+      },
+      "payments": {
+        "name": "Payments",
+        "questions": {
+          "methods": {
+            "q": "What payment methods do you accept?",
+            "a": "We accept Orange Money, MTN Mobile Money, bank transfers and credit card payments for premium options."
+          },
+          "secure": {
+            "q": "How does secure payment work?",
+            "a": "For premium transactions, we offer an escrow service: money is held securely until the contract is signed and keys are handed over."
+          }
+        }
+      }
+    },
+    "cta": {
+      "title": "Didn't find your answer?",
+      "subtitle": "Our support team is available to help you",
+      "contactUs": "Contact us"
+    }
+  },
+  "contracts": {
+    "title": "My contracts",
+    "subtitle": "Manage all your rental and sale contracts",
+    "newContract": "New contract",
+    "createContract": "Create a contract",
+    "noContracts": "No contracts",
+    "noContractsDesc": "You don't have any contracts yet. Browse listings to create your first contract.",
+    "noContractsFilter": "No contracts match this filter.",
+    "loadError": "Loading error",
+    "loadErrorDesc": "Unable to load your contracts. Please try again.",
+    "downloadError": "Error downloading contract",
+    "contractCreated": "Contract created successfully! The tenant has been notified.",
+    "terminationRequested": "Termination request sent with 3-month notice",
+    "terminationConfirmed": "Termination confirmed",
+    "filters": {
+      "all": "All",
+      "pending": "Pending",
+      "active": "Active",
+      "completed": "Completed",
+      "allRoles": "All roles",
+      "asOwner": "As owner",
+      "asTenant": "As tenant"
+    },
+    "status": {
+      "draft": "Draft",
+      "pendingSignature": "Pending",
+      "pendingTenantSignature": "Awaiting tenant",
+      "partiallySigned": "Partially signed",
+      "signed": "Signed",
+      "inRetraction": "In retraction",
+      "active": "Active",
+      "inNotice": "In notice period",
+      "expired": "Expired",
+      "cancelled": "Cancelled",
+      "terminated": "Terminated"
+    },
+    "types": {
+      "residentialLease": "Residential lease",
+      "commercialLease": "Commercial lease",
+      "salePromise": "Sale promise",
+      "managementMandate": "Management mandate",
+      "depositCertificate": "Deposit certificate"
+    },
+    "card": {
+      "property": "Property",
+      "yourRole": "Your role",
+      "otherParty": "Other party",
+      "owner": "Owner",
+      "tenant": "Tenant",
+      "perMonth": "/month",
+      "viewAndSign": "View and sign",
+      "viewDetails": "View details",
+      "download": "Download",
+      "cancel": "Cancel",
+      "terminate": "Terminate",
+      "confirm": "Confirm"
+    },
+    "signature": {
+      "ownerSigned": "Owner",
+      "tenantSigned": "Tenant",
+      "retractionPossible": "Retraction possible until"
+    },
+    "termination": {
+      "inProgress": "Termination in progress",
+      "effectiveDate": "Effective date",
+      "daysRemaining": "day(s) remaining",
+      "reason": "Reason",
+      "awaitingOtherParty": "Awaiting confirmation from the other party",
+      "awaitingYourConfirmation": "Awaiting your confirmation",
+      "noticeMonths": "months notice"
+    },
+    "modal": {
+      "cancelTitle": "Cancel contract",
+      "cancelConfirm": "Are you sure you want to cancel this contract?",
+      "cancelWarning": "This action is irreversible. The contract will be permanently deleted.",
+      "cancelNo": "No, keep it",
+      "cancelYes": "Yes, cancel",
+      "cancelling": "Cancelling...",
+      "terminateTitle": "Terminate contract",
+      "terminateConfirmTitle": "Confirm termination",
+      "terminateRequest": "Request contract termination?",
+      "terminateNotice": "A 3-month notice period will apply. The other party will be notified and must confirm.",
+      "terminateReasonLabel": "Termination reason (optional)",
+      "terminateReasonPlaceholder": "Ex: Moving, end of rental...",
+      "terminateOtherPartyRequested": "The other party has requested termination of this contract.",
+      "terminateConfirmNotice": "By confirming, you accept the termination with the defined 3-month notice period.",
+      "terminateSend": "Request termination",
+      "terminateConfirmBtn": "Confirm",
+      "terminating": "Sending...",
+      "confirming": "Confirming..."
+    },
+    "pagination": {
+      "page": "Page",
+      "of": "of",
+      "contracts": "contracts",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "pendingBanner": "contract(s) awaiting your signature"
+  },
+  "moderator": {
+    "title": "Moderation",
+    "dashboard": {
+      "title": "Moderation dashboard",
+      "pendingListings": "Pending listings",
+      "pendingReports": "Pending reports",
+      "todayActions": "Actions today",
+      "totalUsers": "Users"
+    },
+    "listings": {
+      "title": "Listing moderation",
+      "subtitle": "Verify and approve submitted listings",
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "all": "All",
+      "noListings": "No listings to moderate",
+      "approve": "Approve",
+      "reject": "Reject",
+      "approving": "Approving...",
+      "rejecting": "Rejecting...",
+      "rejectReason": "Rejection reason",
+      "rejectReasonPlaceholder": "Enter the reason for rejection...",
+      "approvedMsg": "Listing approved",
+      "rejectedMsg": "Listing rejected"
+    },
+    "reports": {
+      "title": "Reports",
+      "subtitle": "Handle user reports",
+      "pending": "Pending",
+      "resolved": "Resolved",
+      "dismissed": "Dismissed",
+      "noReports": "No reports",
+      "resolve": "Resolve",
+      "dismiss": "Dismiss",
+      "viewListing": "View listing",
+      "reportedBy": "Reported by",
+      "reason": "Reason"
+    },
+    "users": {
+      "title": "User management",
+      "subtitle": "Manage user accounts",
+      "search": "Search for a user...",
+      "noUsers": "No users found",
+      "verified": "Verified",
+      "notVerified": "Not verified",
+      "suspend": "Suspend",
+      "activate": "Activate",
+      "viewProfile": "View profile",
+      "memberSince": "Member since",
+      "listingsCount": "listings"
+    },
+    "history": {
+      "title": "Action history",
+      "subtitle": "View moderation history",
+      "noHistory": "No history",
+      "action": "Action",
+      "moderator": "Moderator",
+      "date": "Date",
+      "details": "Details"
+    }
   }
 }

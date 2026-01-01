@@ -1003,5 +1003,372 @@
       "cancelled": "Visite annulee",
       "cancelError": "Erreur lors de l'annulation"
     }
+  },
+  "estimate": {
+    "title": "Estimez votre bien immobilier",
+    "subtitle": "Obtenez une estimation gratuite du prix de votre bien en quelques clics",
+    "operationType": "Type d'operation",
+    "rental": "Location",
+    "sale": "Vente",
+    "propertyType": "Type de bien",
+    "selectType": "Selectionnez un type",
+    "commune": "Commune",
+    "selectCommune": "Selectionnez une commune",
+    "quartier": "Quartier",
+    "selectQuartier": "Selectionnez un quartier",
+    "surface": "Superficie (m2)",
+    "surfacePlaceholder": "Ex: 80",
+    "bedrooms": "Nombre de chambres",
+    "selectBedrooms": "Selectionnez",
+    "bedroom": "chambre",
+    "bedrooms_plural": "chambres",
+    "furnished": "Le bien est meuble",
+    "calculating": "Calcul en cours...",
+    "estimateButton": "Estimer mon bien",
+    "result": {
+      "title": "Estimation de votre bien",
+      "minPrice": "Prix minimum",
+      "estimatedPrice": "Prix estime",
+      "maxPrice": "Prix maximum",
+      "pricePerM2": "Prix au m2",
+      "perMonth": "/ mois"
+    },
+    "actions": {
+      "publishListing": "Publier mon annonce",
+      "viewSimilar": "Voir les annonces similaires"
+    },
+    "features": {
+      "marketData": {
+        "title": "Donnees du marche",
+        "description": "Notre estimation est basee sur les prix reels du marche immobilier a Conakry."
+      },
+      "preciseLocation": {
+        "title": "Localisation precise",
+        "description": "Les prix varient selon la commune et le quartier. Notre outil en tient compte."
+      },
+      "free": {
+        "title": "100% gratuit",
+        "description": "Notre service d'estimation est entierement gratuit et sans engagement."
+      }
+    }
+  },
+  "contact": {
+    "title": "Contactez-nous",
+    "subtitle": "Une question, une suggestion ou besoin d'aide ? Notre equipe est la pour vous.",
+    "success": {
+      "title": "Message envoye !",
+      "message": "Merci de nous avoir contactes. Notre equipe vous repondra dans les plus brefs delais.",
+      "backHome": "Retour a l'accueil"
+    },
+    "info": {
+      "phone": {
+        "title": "Telephone",
+        "description": "Appelez-nous directement"
+      },
+      "whatsapp": {
+        "title": "WhatsApp",
+        "description": "Ecrivez-nous sur WhatsApp",
+        "action": "Demarrer une conversation"
+      },
+      "email": {
+        "title": "Email",
+        "description": "Envoyez-nous un email"
+      },
+      "address": {
+        "title": "Adresse"
+      },
+      "hours": {
+        "title": "Horaires",
+        "weekdays": "Lun - Ven: 8h00 - 18h00",
+        "saturday": "Sam: 9h00 - 14h00"
+      }
+    },
+    "form": {
+      "title": "Envoyez-nous un message",
+      "fullName": "Nom complet",
+      "fullNamePlaceholder": "Votre nom",
+      "email": "Email",
+      "emailPlaceholder": "votre@email.com",
+      "phone": "Telephone",
+      "phonePlaceholder": "+224 6XX XX XX XX",
+      "subject": "Sujet",
+      "selectSubject": "Selectionner un sujet",
+      "subjects": {
+        "question": "Question generale",
+        "technical": "Probleme technique",
+        "listing": "A propos d'une annonce",
+        "partnership": "Partenariat",
+        "other": "Autre"
+      },
+      "message": "Message",
+      "messagePlaceholder": "Decrivez votre demande...",
+      "sending": "Envoi en cours...",
+      "send": "Envoyer le message"
+    },
+    "faq": {
+      "title": "Questions frequentes",
+      "questions": {
+        "publishListing": {
+          "q": "Comment publier une annonce ?",
+          "a": "Creez un compte gratuit, puis cliquez sur 'Publier une annonce' et remplissez le formulaire."
+        },
+        "verifiedListings": {
+          "q": "Les annonces sont-elles verifiees ?",
+          "a": "Oui, notre equipe verifie chaque annonce avant publication pour garantir la qualite."
+        },
+        "contactOwner": {
+          "q": "Comment contacter un proprietaire ?",
+          "a": "Vous pouvez l'appeler directement, lui envoyer un message ou contacter via WhatsApp."
+        },
+        "modifyListing": {
+          "q": "Puis-je modifier mon annonce ?",
+          "a": "Oui, connectez-vous a votre compte et accedez a 'Mes annonces' pour la modifier."
+        }
+      }
+    }
+  },
+  "help": {
+    "title": "Centre d'aide",
+    "subtitle": "Trouvez des reponses a toutes vos questions",
+    "searchPlaceholder": "Rechercher une question...",
+    "noResults": "Aucun resultat pour",
+    "questions": "questions",
+    "categories": {
+      "listings": {
+        "name": "Annonces",
+        "questions": {
+          "publish": {
+            "q": "Comment publier une annonce ?",
+            "a": "Pour publier une annonce, creez d'abord un compte gratuit. Ensuite, cliquez sur 'Publier une annonce', remplissez le formulaire avec les details de votre bien (photos, description, prix, localisation) et soumettez. Votre annonce sera verifiee par notre equipe avant publication."
+          },
+          "cost": {
+            "q": "Combien coute la publication d'une annonce ?",
+            "a": "La publication d'annonces sur ImmoGuinee est entierement gratuite pour les particuliers. Des options de mise en avant payantes sont disponibles pour augmenter la visibilite de votre annonce."
+          },
+          "modify": {
+            "q": "Comment modifier ou supprimer mon annonce ?",
+            "a": "Connectez-vous a votre compte, allez dans 'Mes annonces', selectionnez l'annonce concernee et cliquez sur 'Modifier' ou 'Supprimer'. Les modifications seront reverifiees avant publication."
+          },
+          "duration": {
+            "q": "Combien de temps mon annonce reste-t-elle en ligne ?",
+            "a": "Les annonces restent actives pendant 60 jours. Vous pouvez les renouveler gratuitement depuis votre espace personnel avant expiration."
+          }
+        }
+      },
+      "account": {
+        "name": "Compte",
+        "questions": {
+          "create": {
+            "q": "Comment creer un compte ?",
+            "a": "Cliquez sur 'S'inscrire', entrez votre nom, email et numero de telephone guineen. Vous recevrez un code de verification par SMS pour activer votre compte."
+          },
+          "forgotPassword": {
+            "q": "J'ai oublie mon mot de passe, que faire ?",
+            "a": "Sur la page de connexion, cliquez sur 'Mot de passe oublie'. Entrez votre numero de telephone et suivez les instructions pour reinitialiser votre mot de passe."
+          },
+          "delete": {
+            "q": "Comment supprimer mon compte ?",
+            "a": "Contactez notre support via le formulaire de contact ou par email a support@immoguinee.com. La suppression du compte entraine la suppression de toutes vos annonces."
+          }
+        }
+      },
+      "security": {
+        "name": "Securite",
+        "questions": {
+          "scams": {
+            "q": "Comment eviter les arnaques ?",
+            "a": "Ne payez jamais avant d'avoir visite le bien. Mefiez-vous des prix trop bas. Privilegiez les annonces avec le badge 'Verifie'. Rencontrez toujours le proprietaire en personne avant tout paiement."
+          },
+          "report": {
+            "q": "Comment signaler une annonce frauduleuse ?",
+            "a": "Sur chaque annonce, cliquez sur l'icone de signalement. Decrivez le probleme et notre equipe traitera votre signalement sous 24h."
+          },
+          "privacy": {
+            "q": "Mes informations personnelles sont-elles protegees ?",
+            "a": "Oui, nous utilisons un cryptage de niveau bancaire. Vos donnees ne sont jamais partagees avec des tiers sans votre consentement."
+          }
+        }
+      },
+      "payments": {
+        "name": "Paiements",
+        "questions": {
+          "methods": {
+            "q": "Quels modes de paiement acceptez-vous ?",
+            "a": "Nous acceptons Orange Money, MTN Mobile Money, les virements bancaires et les paiements par carte bancaire pour les options premium."
+          },
+          "secure": {
+            "q": "Comment fonctionne le paiement securise ?",
+            "a": "Pour les transactions premium, nous proposons un service d'escrow : l'argent est conserve en securite jusqu'a la signature du contrat et la remise des cles."
+          }
+        }
+      }
+    },
+    "cta": {
+      "title": "Vous n'avez pas trouve votre reponse ?",
+      "subtitle": "Notre equipe de support est disponible pour vous aider",
+      "contactUs": "Nous contacter"
+    }
+  },
+  "contracts": {
+    "title": "Mes contrats",
+    "subtitle": "Gerez tous vos contrats de location et de vente",
+    "newContract": "Nouveau contrat",
+    "createContract": "Creer un contrat",
+    "noContracts": "Aucun contrat",
+    "noContractsDesc": "Vous n'avez pas encore de contrats. Parcourez les annonces pour creer votre premier contrat.",
+    "noContractsFilter": "Aucun contrat ne correspond a ce filtre.",
+    "loadError": "Erreur de chargement",
+    "loadErrorDesc": "Impossible de charger vos contrats. Veuillez reessayer.",
+    "downloadError": "Erreur lors du telechargement du contrat",
+    "contractCreated": "Contrat cree avec succes ! Le locataire a ete notifie.",
+    "terminationRequested": "Demande de resiliation envoyee avec preavis de 3 mois",
+    "terminationConfirmed": "Resiliation confirmee",
+    "filters": {
+      "all": "Tous",
+      "pending": "En attente",
+      "active": "Actifs",
+      "completed": "Termines",
+      "allRoles": "Tous les roles",
+      "asOwner": "En tant que proprietaire",
+      "asTenant": "En tant que locataire"
+    },
+    "status": {
+      "draft": "Brouillon",
+      "pendingSignature": "En attente",
+      "pendingTenantSignature": "En attente du locataire",
+      "partiallySigned": "Signature partielle",
+      "signed": "Signe",
+      "inRetraction": "En retractation",
+      "active": "Actif",
+      "inNotice": "En preavis",
+      "expired": "Expire",
+      "cancelled": "Annule",
+      "terminated": "Resilie"
+    },
+    "types": {
+      "residentialLease": "Bail residentiel",
+      "commercialLease": "Bail commercial",
+      "salePromise": "Promesse de vente",
+      "managementMandate": "Mandat de gestion",
+      "depositCertificate": "Attestation caution"
+    },
+    "card": {
+      "property": "Bien immobilier",
+      "yourRole": "Votre role",
+      "otherParty": "Autre partie",
+      "owner": "Proprietaire",
+      "tenant": "Locataire",
+      "perMonth": "/mois",
+      "viewAndSign": "Voir et signer",
+      "viewDetails": "Voir les details",
+      "download": "Telecharger",
+      "cancel": "Annuler",
+      "terminate": "Resilier",
+      "confirm": "Confirmer"
+    },
+    "signature": {
+      "ownerSigned": "Proprietaire",
+      "tenantSigned": "Locataire",
+      "retractionPossible": "Retractation possible jusqu'au"
+    },
+    "termination": {
+      "inProgress": "Resiliation en cours",
+      "effectiveDate": "Date effective",
+      "daysRemaining": "jour(s) restant(s)",
+      "reason": "Motif",
+      "awaitingOtherParty": "En attente de confirmation de l'autre partie",
+      "awaitingYourConfirmation": "En attente de votre confirmation",
+      "noticeMonths": "mois de preavis"
+    },
+    "modal": {
+      "cancelTitle": "Annuler le contrat",
+      "cancelConfirm": "Etes-vous sur de vouloir annuler ce contrat ?",
+      "cancelWarning": "Cette action est irreversible. Le contrat sera definitivement supprime.",
+      "cancelNo": "Non, garder",
+      "cancelYes": "Oui, annuler",
+      "cancelling": "Annulation...",
+      "terminateTitle": "Resilier le contrat",
+      "terminateConfirmTitle": "Confirmer la resiliation",
+      "terminateRequest": "Demander la resiliation du contrat ?",
+      "terminateNotice": "Un preavis de 3 mois sera applique. L'autre partie sera notifiee et devra confirmer.",
+      "terminateReasonLabel": "Motif de resiliation (facultatif)",
+      "terminateReasonPlaceholder": "Ex: Demenagement, fin de location...",
+      "terminateOtherPartyRequested": "L'autre partie a demande la resiliation de ce contrat.",
+      "terminateConfirmNotice": "En confirmant, vous acceptez la resiliation avec le preavis de 3 mois defini.",
+      "terminateSend": "Demander la resiliation",
+      "terminateConfirmBtn": "Confirmer",
+      "terminating": "Envoi...",
+      "confirming": "Confirmation..."
+    },
+    "pagination": {
+      "page": "Page",
+      "of": "sur",
+      "contracts": "contrats",
+      "previous": "Precedent",
+      "next": "Suivant"
+    },
+    "pendingBanner": "contrat(s) en attente de votre signature"
+  },
+  "moderator": {
+    "title": "Moderation",
+    "dashboard": {
+      "title": "Tableau de bord moderation",
+      "pendingListings": "Annonces en attente",
+      "pendingReports": "Signalements en attente",
+      "todayActions": "Actions aujourd'hui",
+      "totalUsers": "Utilisateurs"
+    },
+    "listings": {
+      "title": "Moderation des annonces",
+      "subtitle": "Verifiez et approuvez les annonces soumises",
+      "pending": "En attente",
+      "approved": "Approuvees",
+      "rejected": "Rejetees",
+      "all": "Toutes",
+      "noListings": "Aucune annonce a moderer",
+      "approve": "Approuver",
+      "reject": "Rejeter",
+      "approving": "Approbation...",
+      "rejecting": "Rejet...",
+      "rejectReason": "Motif du rejet",
+      "rejectReasonPlaceholder": "Indiquez la raison du rejet...",
+      "approved": "Annonce approuvee",
+      "rejected": "Annonce rejetee"
+    },
+    "reports": {
+      "title": "Signalements",
+      "subtitle": "Traitez les signalements des utilisateurs",
+      "pending": "En attente",
+      "resolved": "Resolus",
+      "dismissed": "Rejetes",
+      "noReports": "Aucun signalement",
+      "resolve": "Resoudre",
+      "dismiss": "Rejeter",
+      "viewListing": "Voir l'annonce",
+      "reportedBy": "Signale par",
+      "reason": "Motif"
+    },
+    "users": {
+      "title": "Gestion des utilisateurs",
+      "subtitle": "Gerez les comptes utilisateurs",
+      "search": "Rechercher un utilisateur...",
+      "noUsers": "Aucun utilisateur trouve",
+      "verified": "Verifie",
+      "notVerified": "Non verifie",
+      "suspend": "Suspendre",
+      "activate": "Activer",
+      "viewProfile": "Voir le profil",
+      "memberSince": "Membre depuis",
+      "listingsCount": "annonces"
+    },
+    "history": {
+      "title": "Historique des actions",
+      "subtitle": "Consultez l'historique de moderation",
+      "noHistory": "Aucun historique",
+      "action": "Action",
+      "moderator": "Moderateur",
+      "date": "Date",
+      "details": "Details"
+    }
   }
 }
