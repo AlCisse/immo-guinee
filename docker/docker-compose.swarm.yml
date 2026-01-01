@@ -34,18 +34,18 @@ services:
   # TRAEFIK - Reverse Proxy + SSL
   # ==============================================
   traefik:
-    image: traefik:v2.10
+    image: traefik:v2.11
     command:
       - "--api.dashboard=true"
       - "--providers.docker=true"
       - "--providers.docker.swarmMode=true"
       - "--providers.docker.exposedbydefault=false"
-      - "--providers.docker.network=immog-network"
+      - "--providers.docker.network=immog_immog-network"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
-      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.email=admin@immoguinee.com"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
       - "--log.level=WARN"
@@ -71,7 +71,7 @@ services:
           - node.role == manager
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.dashboard.rule=Host(`traefik.${DOMAIN}`)"
+        - "traefik.http.routers.dashboard.rule=Host(`traefik.immoguinee.com`)"
         - "traefik.http.routers.dashboard.entrypoints=websecure"
         - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
         - "traefik.http.routers.dashboard.service=api@internal"
@@ -104,7 +104,7 @@ services:
         max_attempts: 3
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.frontend.rule=Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`)"
+        - "traefik.http.routers.frontend.rule=Host(`immoguinee.com`) || Host(`www.immoguinee.com`)"
         - "traefik.http.routers.frontend.entrypoints=websecure"
         - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
         - "traefik.http.routers.frontend.priority=1"
@@ -142,13 +142,19 @@ services:
         condition: on-failure
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.api.rule=Host(`api.${DOMAIN}`) || (Host(`${DOMAIN}`) && PathPrefix(`/api`))"
+        - "traefik.http.routers.api.rule=Host(`api.immoguinee.com`) || (Host(`immoguinee.com`) && PathPrefix(`/api`))"
         - "traefik.http.routers.api.entrypoints=websecure"
         - "traefik.http.routers.api.tls.certresolver=letsencrypt"
         - "traefik.http.routers.api.priority=100"
         - "traefik.http.services.api.loadbalancer.server.port=80"
+        # RSS feed route
+        - "traefik.http.routers.rss.rule=Host(`immoguinee.com`) && PathPrefix(`/rss`)"
+        - "traefik.http.routers.rss.entrypoints=websecure"
+        - "traefik.http.routers.rss.tls.certresolver=letsencrypt"
+        - "traefik.http.routers.rss.priority=100"
+        - "traefik.http.routers.rss.service=api"
         # Storage route
-        - "traefik.http.routers.storage.rule=Host(`storage.${DOMAIN}`) || (Host(`${DOMAIN}`) && PathPrefix(`/storage`))"
+        - "traefik.http.routers.storage.rule=Host(`storage.immoguinee.com`) || (Host(`immoguinee.com`) && PathPrefix(`/storage`))"
         - "traefik.http.routers.storage.entrypoints=websecure"
         - "traefik.http.routers.storage.tls.certresolver=letsencrypt"
         - "traefik.http.routers.storage.priority=50"
@@ -163,31 +169,43 @@ services:
       dockerfile: ../docker/php/Dockerfile
     volumes:
       - ../backend:/var/www/backend
+    secrets:
+      - db_password
+      - redis_password
+      - minio_password
+      - app_key
+      - passport_private_key
+      - passport_public_key
     networks:
       - immog-network
     environment:
       - APP_ENV=production
       - APP_DEBUG=false
-      - APP_URL=https://${DOMAIN}
+      - APP_URL=https://immoguinee.com
+      - FRONTEND_URL=https://immoguinee.com
       - DB_CONNECTION=pgsql
       - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_DATABASE=${DB_DATABASE}
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DATABASE=immog_db
+      - DB_USERNAME=immog_app
+      # Secrets are read from /run/secrets/ - set in entrypoint
+      - DB_PASSWORD_FILE=/run/secrets/db_password
       - REDIS_HOST=redis
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_PASSWORD_FILE=/run/secrets/redis_password
       - REDIS_PORT=6379
       - CACHE_DRIVER=redis
       - SESSION_DRIVER=redis
       - QUEUE_CONNECTION=redis
       - FILESYSTEM_DISK=minio
       - AWS_ENDPOINT=http://minio:9000
-      - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER}
-      - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
+      - AWS_ACCESS_KEY_ID=immoguinee
+      - AWS_SECRET_ACCESS_KEY_FILE=/run/secrets/minio_password
       - AWS_DEFAULT_REGION=us-east-1
       - AWS_BUCKET=listings
-      - AWS_URL=https://storage.${DOMAIN}
+      - AWS_URL=https://storage.immoguinee.com
+      - APP_KEY_FILE=/run/secrets/app_key
+      - PASSPORT_PRIVATE_KEY_FILE=/run/secrets/passport_private_key
+      - PASSPORT_PUBLIC_KEY_FILE=/run/secrets/passport_public_key
     deploy:
       mode: replicated
       replicas: 2
@@ -213,16 +231,20 @@ services:
     command: php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
     volumes:
       - ../backend:/var/www/backend
+    secrets:
+      - db_password
+      - redis_password
     networks:
       - immog-network
     environment:
       - APP_ENV=production
+      - APP_URL=https://immoguinee.com
       - DB_HOST=postgres
-      - DB_DATABASE=${DB_DATABASE}
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DATABASE=immog_db
+      - DB_USERNAME=immog_app
+      - DB_PASSWORD_FILE=/run/secrets/db_password
       - REDIS_HOST=redis
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_PASSWORD_FILE=/run/secrets/redis_password
     deploy:
       mode: replicated
       replicas: 3
@@ -241,12 +263,20 @@ services:
     command: sh -c "while true; do php artisan schedule:run --verbose --no-interaction; sleep 60; done"
     volumes:
       - ../backend:/var/www/backend
+    secrets:
+      - db_password
+      - redis_password
     networks:
       - immog-network
     environment:
       - APP_ENV=production
+      - APP_URL=https://immoguinee.com
       - DB_HOST=postgres
+      - DB_DATABASE=immog_db
+      - DB_USERNAME=immog_app
+      - DB_PASSWORD_FILE=/run/secrets/db_password
       - REDIS_HOST=redis
+      - REDIS_PASSWORD_FILE=/run/secrets/redis_password
     deploy:
       mode: replicated
       replicas: 1
@@ -259,9 +289,12 @@ services:
   postgres:
     image: postgis/postgis:15-3.4
     environment:
-      POSTGRES_DB: ${DB_DATABASE}
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: immog_db
+      POSTGRES_USER: immog_app
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      PGDATA: /var/lib/postgresql/data/pgdata
+    secrets:
+      - db_password
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
@@ -280,7 +313,7 @@ services:
         reservations:
           memory: 512M
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
+      test: ["CMD-SHELL", "pg_isready -U immog_app -d immog_db"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -290,7 +323,9 @@ services:
   # ==============================================
   redis:
     image: redis:7-alpine
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    command: sh -c 'redis-server --appendonly yes --requirepass "$$(cat /run/secrets/redis_password)"'
+    secrets:
+      - redis_password
     volumes:
       - redis-data:/data
     networks:
@@ -316,8 +351,10 @@ services:
     image: minio/minio:latest
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_ROOT_USER: immoguinee
+      MINIO_ROOT_PASSWORD_FILE: /run/secrets/minio_password
+    secrets:
+      - minio_password
     volumes:
       - minio-data:/data
     networks:
@@ -329,14 +366,14 @@ services:
         condition: on-failure
       labels:
         - "traefik.enable=true"
-        # MinIO API (storage.domain.com)
-        - "traefik.http.routers.minio-api.rule=Host(`storage.${DOMAIN}`)"
+        # MinIO API (storage.immoguinee.com)
+        - "traefik.http.routers.minio-api.rule=Host(`storage.immoguinee.com`)"
         - "traefik.http.routers.minio-api.entrypoints=websecure"
         - "traefik.http.routers.minio-api.tls.certresolver=letsencrypt"
         - "traefik.http.routers.minio-api.service=minio-api"
         - "traefik.http.services.minio-api.loadbalancer.server.port=9000"
-        # MinIO Console (minio.domain.com)
-        - "traefik.http.routers.minio-console.rule=Host(`minio.${DOMAIN}`)"
+        # MinIO Console (minio.immoguinee.com)
+        - "traefik.http.routers.minio-console.rule=Host(`minio.immoguinee.com`)"
         - "traefik.http.routers.minio-console.entrypoints=websecure"
         - "traefik.http.routers.minio-console.tls.certresolver=letsencrypt"
         - "traefik.http.routers.minio-console.service=minio-console"
@@ -364,7 +401,7 @@ services:
         condition: on-failure
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.echo.rule=Host(`ws.${DOMAIN}`)"
+        - "traefik.http.routers.echo.rule=Host(`ws.immoguinee.com`)"
         - "traefik.http.routers.echo.entrypoints=websecure"
         - "traefik.http.routers.echo.tls.certresolver=letsencrypt"
         - "traefik.http.services.echo.loadbalancer.server.port=6001"
@@ -376,13 +413,16 @@ services:
     image: n8nio/n8n:latest
     environment:
       - N8N_BASIC_AUTH_ACTIVE=true
-      - N8N_BASIC_AUTH_USER=${N8N_USER}
-      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD}
-      - N8N_HOST=${N8N_HOST}
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD_FILE=/run/secrets/n8n_password
+      - N8N_HOST=automate.immoguinee.com
       - N8N_PORT=5678
       - N8N_PROTOCOL=https
-      - WEBHOOK_URL=https://${N8N_HOST}/
+      - N8N_EDITOR_BASE_URL=https://automate.immoguinee.com
+      - WEBHOOK_URL=https://automate.immoguinee.com/
       - GENERIC_TIMEZONE=Africa/Conakry
+    secrets:
+      - n8n_password
     volumes:
       - n8n-data:/home/node/.n8n
     networks:
@@ -394,7 +434,7 @@ services:
         condition: on-failure
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.n8n.rule=Host(`n8n.${DOMAIN}`)"
+        - "traefik.http.routers.n8n.rule=Host(`automate.immoguinee.com`)"
         - "traefik.http.routers.n8n.entrypoints=websecure"
         - "traefik.http.routers.n8n.tls.certresolver=letsencrypt"
         - "traefik.http.services.n8n.loadbalancer.server.port=5678"
@@ -409,16 +449,19 @@ services:
       - WHATSAPP_RESTART_ALL_SESSIONS=true
       - WHATSAPP_START_SESSION=default
       - WAHA_PRINT_QR=false
-      # Webhook configuration
-      - WHATSAPP_HOOK_URL=http://nginx/api/webhooks/waha
+      # Webhook configuration - Use external URL (WAHA doesn't accept internal docker names)
+      - WHATSAPP_HOOK_URL=https://immoguinee.com/api/webhooks/waha
       - WHATSAPP_HOOK_EVENTS=message,message.any,message.ack,session.status
       # Dashboard configuration
       - WAHA_DASHBOARD_ENABLED=true
       - WAHA_DASHBOARD_USERNAME=admin
-      - WAHA_DASHBOARD_PASSWORD=${WAHA_PASSWORD:-admin123}
-      # API configuration
-      - WAHA_API_KEY=${WAHA_API_KEY}
-      - WHATSAPP_API_KEY=${WAHA_API_KEY}
+      - WAHA_DASHBOARD_PASSWORD_FILE=/run/secrets/waha_password
+      # API configuration - Persistent key from secrets
+      - WAHA_API_KEY_FILE=/run/secrets/waha_api_key
+      - WHATSAPP_API_KEY_FILE=/run/secrets/waha_api_key
+    secrets:
+      - waha_password
+      - waha_api_key
     volumes:
       - waha-sessions:/app/.sessions
     networks:
@@ -432,10 +475,9 @@ services:
         max_attempts: 5
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.waha.rule=Host(`waha.${DOMAIN}`)"
+        - "traefik.http.routers.waha.rule=Host(`waha.immoguinee.com`)"
         - "traefik.http.routers.waha.entrypoints=websecure"
         - "traefik.http.routers.waha.tls.certresolver=letsencrypt"
-        - "traefik.http.routers.waha.middlewares=admin-auth@file"
         - "traefik.http.services.waha.loadbalancer.server.port=3000"
 
   # ==============================================
@@ -465,10 +507,12 @@ services:
   grafana:
     image: grafana/grafana:latest
     environment:
-      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana_password
       - GF_INSTALL_PLUGINS=redis-datasource
-      - GF_SERVER_ROOT_URL=https://grafana.${DOMAIN}
+      - GF_SERVER_ROOT_URL=https://monitoring.immoguinee.com
+    secrets:
+      - grafana_password
     volumes:
       - grafana-data:/var/lib/grafana
     networks:
@@ -480,7 +524,7 @@ services:
         condition: on-failure
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.grafana.rule=Host(`grafana.${DOMAIN}`)"
+        - "traefik.http.routers.grafana.rule=Host(`monitoring.immoguinee.com`)"
         - "traefik.http.routers.grafana.entrypoints=websecure"
         - "traefik.http.routers.grafana.tls.certresolver=letsencrypt"
         - "traefik.http.services.grafana.loadbalancer.server.port=3000"
@@ -491,8 +535,10 @@ services:
   pgadmin:
     image: dpage/pgadmin4:latest
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@immoguinee.gn}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      PGADMIN_DEFAULT_EMAIL: admin@immoguinee.com
+      PGADMIN_DEFAULT_PASSWORD_FILE: /run/secrets/pgadmin_password
+    secrets:
+      - pgadmin_password
     networks:
       - immog-network
     deploy:
@@ -502,7 +548,7 @@ services:
         condition: on-failure
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.pgadmin.rule=Host(`pgadmin.${DOMAIN}`)"
+        - "traefik.http.routers.pgadmin.rule=Host(`pgadmin.immoguinee.com`)"
         - "traefik.http.routers.pgadmin.entrypoints=websecure"
         - "traefik.http.routers.pgadmin.tls.certresolver=letsencrypt"
         - "traefik.http.services.pgadmin.loadbalancer.server.port=80"
@@ -519,3 +565,32 @@ configs:
     file: ./laravel-echo/laravel-echo-server.json
   prometheus_config:
     file: ../monitoring/prometheus/prometheus.yml
+
+# ==============================================
+# SECRETS - 32-char passwords stored securely
+# ==============================================
+secrets:
+  db_password:
+    file: ./secrets/db_password
+  db_app_password:
+    file: ./secrets/db_app_password
+  redis_password:
+    file: ./secrets/redis_password
+  minio_password:
+    file: ./secrets/minio_password
+  grafana_password:
+    file: ./secrets/grafana_password
+  pgadmin_password:
+    file: ./secrets/pgadmin_password
+  waha_api_key:
+    file: ./secrets/waha_api_key
+  waha_password:
+    file: ./secrets/waha_password
+  n8n_password:
+    file: ./secrets/n8n_password
+  app_key:
+    file: ./secrets/app_key
+  passport_private_key:
+    file: ./secrets/passport_private_key
+  passport_public_key:
+    file: ./secrets/passport_public_key
