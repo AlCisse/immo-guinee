@@ -153,8 +153,8 @@ services:
         - "traefik.http.routers.rss.tls.certresolver=letsencrypt"
         - "traefik.http.routers.rss.priority=100"
         - "traefik.http.routers.rss.service=api"
-        # Storage route
-        - "traefik.http.routers.storage.rule=Host(`storage.immoguinee.com`) || (Host(`immoguinee.com`) && PathPrefix(`/storage`))"
+        # Storage route (only for /storage path, storage.immoguinee.com goes to MinIO)
+        - "traefik.http.routers.storage.rule=Host(`immoguinee.com`) && PathPrefix(`/storage`)"
         - "traefik.http.routers.storage.entrypoints=websecure"
         - "traefik.http.routers.storage.tls.certresolver=letsencrypt"
         - "traefik.http.routers.storage.priority=50"
