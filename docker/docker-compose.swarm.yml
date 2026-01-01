@@ -443,6 +443,7 @@ services:
   # ==============================================
   waha:
     image: devlikeapro/waha:latest
+    entrypoint: /bin/sh -c 'export WAHA_API_KEY=$$(cat /run/secrets/waha_api_key) && export WAHA_DASHBOARD_PASSWORD=$$(cat /run/secrets/waha_password) && /usr/bin/tini -- /entrypoint.sh'
     environment:
       # Session persistence - CRITICAL for auto-restart
       - WHATSAPP_RESTART_ALL_SESSIONS=true
@@ -454,10 +455,6 @@ services:
       # Dashboard configuration
       - WAHA_DASHBOARD_ENABLED=true
       - WAHA_DASHBOARD_USERNAME=admin
-      - WAHA_DASHBOARD_PASSWORD_FILE=/run/secrets/waha_password
-      # API configuration - Persistent key from secrets
-      - WAHA_API_KEY_FILE=/run/secrets/waha_api_key
-      - WHATSAPP_API_KEY_FILE=/run/secrets/waha_api_key
     secrets:
       - waha_password
       - waha_api_key
