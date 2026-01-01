@@ -447,15 +447,9 @@ services:
     image: devlikeapro/waha:latest
     entrypoint: /bin/sh -c 'export WAHA_API_KEY=$$(cat /run/secrets/waha_api_key) && export WAHA_DASHBOARD_PASSWORD=$$(cat /run/secrets/waha_password) && /usr/bin/tini -- /entrypoint.sh'
     environment:
-      # Session persistence - CRITICAL for auto-restart
-      - WHATSAPP_RESTART_ALL_SESSIONS=true
-      - WHATSAPP_START_SESSION=default
+      # WEBJS engine - Create session manually via API or dashboard
       - WAHA_PRINT_QR=false
-      # Session storage configuration
-      - WAHA_WORKER_RESTART_TIMEOUT=60000
-      - WHATSAPP_SESSIONS_START_RETRY_DELAY=10
-      - WHATSAPP_SESSIONS_START_RETRY_ATTEMPTS=5
-      # Webhook configuration - Use external URL (WAHA doesn't accept internal docker names)
+      # Webhook configuration
       - WHATSAPP_HOOK_URL=https://immoguinee.com/api/webhooks/waha
       - WHATSAPP_HOOK_EVENTS=message,message.any,message.ack,session.status
       # Dashboard configuration
