@@ -28,6 +28,8 @@ volumes:
     driver: local
   waha-sessions:
     driver: local
+  waha-data:
+    driver: local
 
 services:
   # ==============================================
@@ -449,6 +451,10 @@ services:
       - WHATSAPP_RESTART_ALL_SESSIONS=true
       - WHATSAPP_START_SESSION=default
       - WAHA_PRINT_QR=false
+      # Session storage configuration
+      - WAHA_WORKER_RESTART_TIMEOUT=60000
+      - WHATSAPP_SESSIONS_START_RETRY_DELAY=10
+      - WHATSAPP_SESSIONS_START_RETRY_ATTEMPTS=5
       # Webhook configuration - Use external URL (WAHA doesn't accept internal docker names)
       - WHATSAPP_HOOK_URL=https://immoguinee.com/api/webhooks/waha
       - WHATSAPP_HOOK_EVENTS=message,message.any,message.ack,session.status
@@ -460,6 +466,7 @@ services:
       - waha_api_key
     volumes:
       - waha-sessions:/app/.sessions
+      - waha-data:/app/.waha
     networks:
       - immog-network
     deploy:
