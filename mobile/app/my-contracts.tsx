@@ -323,8 +323,8 @@ export default function MyContractsScreen() {
     return Math.round(((now - start) / (end - start)) * 100);
   };
 
-  const getDaysRemaining = (endDate?: string) => {
-    if (!endDate) return null;
+  const getDaysRemaining = (endDate?: string): number | undefined => {
+    if (!endDate) return undefined;
     const end = new Date(endDate).getTime();
     const now = Date.now();
     const days = Math.ceil((end - now) / (1000 * 60 * 60 * 24));

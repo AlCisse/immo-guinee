@@ -441,7 +441,7 @@ export default function MyVisitsScreen() {
         </View>
         <View style={styles.visitContent}>
           <Text style={styles.visitTitle} numberOfLines={1}>
-            {listing?.titre || 'Annonce'}
+            {listing?.titre || t('visits.listing')}
           </Text>
           <View style={styles.visitLocation}>
             <Ionicons name="location-outline" size={12} color={lightTheme.colors.primary} />
@@ -725,7 +725,7 @@ export default function MyVisitsScreen() {
                     style={styles.formInput}
                     value={newVisitForm.client_nom}
                     onChangeText={(text) => setNewVisitForm({ ...newVisitForm, client_nom: text })}
-                    placeholder="Ex: Mamadou Diallo"
+                    placeholder={t('visits.namePlaceholder')}
                     placeholderTextColor={Colors.neutral[400]}
                   />
                   <View style={[styles.formGroup, { marginTop: 12 }]}>
@@ -907,7 +907,7 @@ export default function MyVisitsScreen() {
                   )}
                   <View style={styles.detailListingInfo}>
                     <Text style={styles.detailListingTitle} numberOfLines={2}>
-                      {selectedVisit.listing?.titre || 'Annonce'}
+                      {selectedVisit.listing?.titre || t('visits.listing')}
                     </Text>
                     <View style={styles.detailListingLocation}>
                       <Ionicons name="location-outline" size={14} color={lightTheme.colors.primary} />
@@ -1894,11 +1894,11 @@ const styles = StyleSheet.create({
   },
   detailActionBtnCancel: {
     backgroundColor: Colors.warning[50],
-    borderColor: Colors.warning[200],
+    borderColor: Colors.warning[100],
   },
   detailActionBtnDelete: {
     backgroundColor: Colors.error[50],
-    borderColor: Colors.error[200],
+    borderColor: Colors.error[100],
   },
   detailActionBtnText: {
     fontSize: 16,

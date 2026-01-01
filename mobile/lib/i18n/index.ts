@@ -1,72 +1,77 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import { getLocales } from 'expo-localization';
+import * as Localization from 'expo-localization';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import fr from './locales/fr.json';
 import en from './locales/en.json';
 
-const LANGUAGE_KEY = 'immoguinee-language';
+const LANGUAGE_KEY = '@immoguinee_language';
 
-// Get saved language or detect from device
-const getInitialLanguage = async (): Promise<string> => {
+// Get stored language or device language
+const getStoredLanguage = async (): Promise<string> => {
   try {
-    const savedLanguage = await AsyncStorage.getItem(LANGUAGE_KEY);
-    if (savedLanguage) {
-      return savedLanguage;
+    const storedLang = await AsyncStorage.getItem(LANGUAGE_KEY);
+    if (storedLang) {
+      return storedLang;
     }
   } catch (error) {
-    console.warn('Error reading language from storage:', error);
+    console.warn('Failed to get stored language:', error);
   }
 
-  // Detect device locale - if French use French, otherwise default to English
-  const locales = getLocales();
-  const deviceLocale = locales[0]?.languageCode || 'en';
-  return deviceLocale === 'fr' ? 'fr' : 'en';
+  // Default to device language, fallback to French
+  const deviceLang = Localization.getLocales()[0]?.languageCode || 'fr';
+  return deviceLang === 'en' ? 'en' : 'fr';
 };
 
-// Initialize i18n
-i18n
-  .use(initReactI18next)
-  .init({
-    resources: {
-      fr: { translation: fr },
-      en: { translation: en },
-    },
-    lng: 'fr', // Default, will be updated
-    fallbackLng: 'fr',
-    interpolation: {
-      escapeValue: false,
-    },
-    react: {
-      useSuspense: false,
-    },
-  });
-
-// Initialize language asynchronously
-getInitialLanguage().then((lng) => {
-  i18n.changeLanguage(lng);
-});
-
-// Helper function to change language and persist
-export const changeLanguage = async (lng: string): Promise<void> => {
-  await i18n.changeLanguage(lng);
+// Save language preference
+export const setLanguage = async (lang: string): Promise<void> => {
   try {
-    await AsyncStorage.setItem(LANGUAGE_KEY, lng);
+    await AsyncStorage.setItem(LANGUAGE_KEY, lang);
+    await i18n.changeLanguage(lang);
   } catch (error) {
-    console.warn('Error saving language to storage:', error);
+    console.warn('Failed to save language:', error);
   }
 };
 
-// Helper to get current language
+// Get current language
 export const getCurrentLanguage = (): string => {
   return i18n.language || 'fr';
 };
 
 // Available languages
-export const LANGUAGES = [
-  { code: 'fr', name: 'Français', flag: '🇫🇷' },
+export const languages = [
+  { code: 'fr', name: 'Français', flag: '🇬🇳' },
   { code: 'en', name: 'English', flag: '🇬🇧' },
 ];
+
+// Aliases for backwards compatibility
+export const LANGUAGES = languages;
+export const changeLanguage = setLanguage;
+
+// Initialize i18n
+const initI18n = async () => {
+  const lng = await getStoredLanguage();
+
+  await i18n
+    .use(initReactI18next)
+    .init({
+      resources: {
+        fr: { translation: fr },
+        en: { translation: en },
+      },
+      lng,
+      fallbackLng: 'fr',
+      interpolation: {
+        escapeValue: false, // React already escapes values
+      },
+      react: {
+        useSuspense: false, // Disable suspense for React Native
+      },
+    });
+};
+
+// Initialize immediately
+initI18n();
 
 export default i18n;

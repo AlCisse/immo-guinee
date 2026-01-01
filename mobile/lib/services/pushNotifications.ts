@@ -86,6 +86,12 @@ class PushNotificationService {
     }
 
     try {
+      // Ensure Notifications is available
+      if (!Notifications) {
+        if (__DEV__) console.log('[Push] Notifications module not available');
+        return null;
+      }
+
       // Request permission
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;

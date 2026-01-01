@@ -96,3 +96,20 @@ Schedule::command('media:cleanup-encrypted --include-downloaded')
     ->withoutOverlapping()
     ->onSuccess(fn () => \Log::info('[MEDIA] Encrypted media cleanup completed'))
     ->onFailure(fn () => \Log::error('[MEDIA] Encrypted media cleanup failed'));
+
+/*
+|--------------------------------------------------------------------------
+| Visit Reminders
+|--------------------------------------------------------------------------
+|
+| Send reminders 24h and 12h before scheduled visits
+|
+*/
+
+// Send visit reminders every hour (checks for visits 24h and 12h away)
+Schedule::command('visits:send-reminders')
+    ->hourly()
+    ->timezone('Africa/Conakry')
+    ->withoutOverlapping()
+    ->onSuccess(fn () => \Log::info('[VISITS] Reminders sent successfully'))
+    ->onFailure(fn () => \Log::error('[VISITS] Failed to send reminders'));

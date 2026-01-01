@@ -9,6 +9,7 @@ export interface User {
   nom_complet: string;
   telephone: string;
   email?: string;
+  adresse?: string;
   type_compte: 'PARTICULIER' | 'PROFESSIONNEL' | 'AGENCE';
   photo_profil?: string;
   badge?: string;

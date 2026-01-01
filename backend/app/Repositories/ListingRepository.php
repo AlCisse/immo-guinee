@@ -101,14 +101,6 @@ class ListingRepository
             $query->where('type_transaction', strtoupper($filters['type_transaction']));
         }
 
-        if (isset($filters['prix_min'])) {
-            $query->where('prix', '>=', $filters['prix_min']);
-        }
-
-        if (isset($filters['prix_max'])) {
-            $query->where('prix', '<=', $filters['prix_max']);
-        }
-
         if (isset($filters['nb_chambres'])) {
             $query->where('nb_chambres', '>=', $filters['nb_chambres']);
         }

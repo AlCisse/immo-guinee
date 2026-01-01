@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Audio } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 interface VoiceRecorderProps {
   onRecordingComplete: (uri: string, duration: number) => void;
@@ -24,6 +25,7 @@ export function VoiceRecorder({
   maxDuration = 300, // 5 minutes default
   primaryColor = '#10B981',
 }: VoiceRecorderProps) {
+  const { t } = useTranslation();
   const [isRecording, setIsRecording] = useState(false);
   const [duration, setDuration] = useState(0);
   const [permissionGranted, setPermissionGranted] = useState(false);
@@ -47,9 +49,9 @@ export function VoiceRecorder({
         setPermissionGranted(granted);
         if (!granted) {
           Alert.alert(
-            'Permission requise',
-            'L\'accès au microphone est nécessaire pour enregistrer des messages vocaux.',
-            [{ text: 'OK', onPress: onCancel }]
+            t('chat.voiceRecording.permissionRequired'),
+            t('chat.voiceRecording.microphoneAccess'),
+            [{ text: t('common.ok'), onPress: onCancel }]
           );
         }
       } catch (error) {
@@ -63,7 +65,7 @@ export function VoiceRecorder({
     return () => {
       stopRecording(true);
     };
-  }, []);
+  }, [t, onCancel]);
 
   // Pulse animation for recording indicator
   useEffect(() => {
@@ -169,7 +171,7 @@ export function VoiceRecorder({
       }, 1000);
     } catch (error) {
       if (__DEV__) console.error('Error starting recording:', error);
-      Alert.alert('Erreur', 'Impossible de démarrer l\'enregistrement.');
+      Alert.alert(t('common.error'), t('chat.errors.startRecording'));
     }
   }, [permissionGranted, maxDuration]);
 

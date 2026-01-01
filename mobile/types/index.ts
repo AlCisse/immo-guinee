@@ -5,6 +5,7 @@ export interface User {
   nom_complet: string;
   telephone: string;
   email?: string;
+  adresse?: string;
   type_compte: 'PARTICULIER' | 'PROFESSIONNEL' | 'AGENCE';
   photo_profil?: string;
   badge?: 'DEBUTANT' | 'VERIFIE' | 'PREMIUM' | 'SUPER_PROPRIO';
@@ -75,7 +76,7 @@ export interface Message {
   conversation_id: string;
   sender_id: string;
   sender?: User;
-  type_message: 'TEXT' | 'VOCAL' | 'PHOTO' | 'IMAGE' | 'DOCUMENT';
+  type_message: 'TEXT' | 'VOCAL' | 'PHOTO' | 'IMAGE' | 'VIDEO' | 'DOCUMENT';
   contenu?: string;
   media_url?: string;
   media_mime_type?: string;

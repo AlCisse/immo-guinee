@@ -3,6 +3,7 @@
     "loading": "Chargement...",
     "error": "Erreur",
     "success": "Succès",
+    "selectCountry": "Choisir un pays",
     "retry": "Réessayer",
     "save": "Enregistrer",
     "cancel": "Annuler",
@@ -25,6 +26,9 @@
     "seeAll": "Voir tout",
     "seeMore": "Voir plus",
     "noResults": "Aucun résultat",
+    "oops": "Oups!",
+    "screenNotFound": "Cette page n'existe pas.",
+    "goHome": "Retour à l'accueil",
     "refresh": "Actualiser",
     "or": "ou",
     "and": "et",
@@ -71,7 +75,43 @@
     "welcomeBack": "Content de vous revoir",
     "createYourAccount": "Créez votre compte",
     "loginRequired": "Connexion requise",
-    "loginToFavorite": "Veuillez vous connecter pour ajouter aux favoris"
+    "loginToFavorite": "Veuillez vous connecter pour ajouter aux favoris",
+    "forgotPasswordTitle": "Mot de passe oublié",
+    "recoverAccount": "Récupérer votre compte",
+    "newPasswordTitle": "Nouveau mot de passe",
+    "recoverSubtitle": "Entrez votre numéro de téléphone pour recevoir un code de vérification.",
+    "resetSubtitle": "Entrez le code reçu et choisissez un nouveau mot de passe.",
+    "sendCode": "Envoyer le code",
+    "backToLogin": "Retour à la connexion",
+    "codeSentTo": "Code envoyé au",
+    "otpCode": "Code OTP",
+    "otpPlaceholder": "000000",
+    "minChars": "Minimum 6 caractères",
+    "retypePassword": "Retapez le mot de passe",
+    "resendCode": "Renvoyer le code",
+    "reset": "Réinitialiser",
+    "changeNumber": "Changer de numéro",
+    "verification": "Vérification",
+    "verify": "Vérifier",
+    "codeSentTitle": "Code envoyé",
+    "codeSentMessage": "Un code OTP a été envoyé sur votre WhatsApp.",
+    "resetSuccess": "Votre mot de passe a été réinitialisé. Vous pouvez maintenant vous connecter.",
+    "errors": {
+      "phoneRequired": "Veuillez entrer votre numéro de téléphone.",
+      "otpRequired": "Veuillez entrer le code OTP à 6 chiffres.",
+      "passwordMinLength": "Le mot de passe doit contenir au moins 6 caractères.",
+      "passwordMismatch": "Les mots de passe ne correspondent pas.",
+      "otpSendFailed": "Erreur lors de l'envoi du code OTP.",
+      "resetFailed": "Erreur lors de la réinitialisation.",
+      "enterCompleteCode": "Veuillez entrer le code complet",
+      "phoneMissing": "Numéro de téléphone manquant",
+      "invalidCode": "Code invalide",
+      "sendCodeFailed": "Impossible d'envoyer le code"
+    },
+    "otpSubtitle": "Entrez le code à 6 chiffres envoyé au",
+    "noCodeReceived": "Vous n'avez pas reçu de code ?",
+    "resendIn": "Renvoyer dans {{seconds}}s",
+    "newCodeSent": "Un nouveau code a été envoyé"
   },
   "home": {
     "findIdealProperty": "Trouvez votre bien idéal",
@@ -98,6 +138,7 @@
     "share": "Partager",
     "report": "Signaler",
     "similar": "Annonces similaires",
+    "whatsappMessage": "Bonjour, je suis intéressé par votre annonce \"{{title}}\" sur ImmoGuinée.",
     "recentlyAdded": "Récemment ajoutées",
     "featured": "À la une",
     "nearby": "À proximité",
@@ -134,25 +175,67 @@
     "step3": "Détails",
     "step4": "Photos",
     "step5": "Prix",
+    "operationType": "Type d'opération",
+    "propertyType": "Type de bien",
+    "residential": "Résidentiel",
+    "commercial": "Commercial",
     "selectType": "Sélectionnez le type de bien",
     "selectTransaction": "Type de transaction",
     "selectLocation": "Sélectionnez la localisation",
+    "locationTitle": "Localisation du bien",
+    "locationSubtitle": "Indiquez l'emplacement précis de votre propriété",
     "commune": "Commune",
     "quartier": "Quartier",
+    "quartierRequired": "Quartier *",
+    "selectQuartier": "Sélectionnez un quartier",
+    "detectingLocation": "Détection en cours...",
+    "detectLocation": "Détecter ma position",
+    "locationDetected": "Position détectée",
+    "nearbyLandmarks": "Points de repère à proximité",
     "address": "Adresse",
+    "addressDescription": "Adresse / Description du lieu",
+    "addressPlaceholder": "Ex: À 200m de la mosquée centrale, après le carrefour...",
+    "nearbyReference": "Repère proche (optionnel)",
+    "referencePlaceholder": "Ex: En face de la station Total",
+    "listingDetails": "Détails de l'annonce",
+    "listingTitleLabel": "Titre de l'annonce *",
     "addPhotos": "Ajouter des photos",
     "mainPhoto": "Photo principale",
     "setPrice": "Définir le prix",
+    "priceLabel": "Prix",
+    "priceMonthly": "(mensuel)",
+    "priceDaily": "(par jour)",
+    "pricePlaceholder": "Ex: 2 500 000",
     "monthlyRent": "Loyer mensuel",
     "salePrice": "Prix de vente",
     "dailyRate": "Tarif journalier",
     "minDays": "Durée minimum (jours)",
+    "areaLabel": "Superficie *",
+    "areaPlaceholder": "Ex: 500",
+    "bedrooms": "Chambres",
+    "bathrooms": "Salles de bain",
+    "furnished": "Meublé",
+    "depositMonths": "Caution (mois)",
+    "advanceMonths": "Avance (mois)",
+    "commission": "Commission ImmoGuinée",
+    "commissionRentMonths": "{{count}} mois de loyer",
+    "commissionPercent": "{{percent}}% du montant",
+    "commissionSalePercent": "{{percent}}% du prix de vente",
+    "commissionNote": "Payable uniquement après conclusion de la transaction",
+    "amenities": "Équipements",
+    "photosTitle": "Photos",
+    "photosSubtitle": "Ajoutez au moins 3 photos de votre bien",
+    "photoCount": "{{current}}/{{max}} photos",
+    "photoMinRequired": "(minimum 3)",
+    "mainPhotoLabel": "Principale",
     "publishNow": "Publier maintenant",
     "saveDraft": "Enregistrer le brouillon",
     "preview": "Aperçu",
     "success": "Votre annonce a été créée avec succès !",
     "listingTitle": "Titre de l'annonce",
     "titlePlaceholder": "Ex: Appartement 3 chambres à Kaloum",
+    "descriptionLabel": "Description *",
+    "descriptionPlaceholder": "Décrivez votre bien en détail...",
     "loginRequired": "Vous devez être connecté pour publier une annonce",
     "permissionDenied": "Permission refusée",
     "enableLocation": "Activez la localisation pour continuer",
@@ -164,7 +247,95 @@
     "back": "Retour",
     "publish": "Publier",
     "gallery": "Galerie",
-    "camera": "Caméra"
+    "camera": "Caméra",
+    "searchQuartier": "Rechercher un quartier...",
+    "popularQuartiers": "Quartiers populaires",
+    "noQuartierFound": "Aucun quartier trouvé",
+    "errors": {
+      "selectOperationAndType": "Sélectionnez le type d'opération et de bien",
+      "selectQuartier": "Sélectionnez un quartier",
+      "titleMinLength": "Le titre doit contenir au moins 15 caractères",
+      "descriptionMinLength": "La description doit contenir au moins 50 caractères",
+      "invalidPrice": "Entrez un prix valide",
+      "areaRequired": "La superficie est requise pour un terrain",
+      "photosMinRequired": "Ajoutez au moins 3 photos"
+    },
+    "landmarks": {
+      "mosque": "Mosquée",
+      "school": "École",
+      "hospital": "Hôpital",
+      "bank": "Banque",
+      "restaurant": "Restaurant",
+      "shop": "Commerce",
+      "road": "Route"
+    },
+    "operations": {
+      "LOCATION": {
+        "label": "Louer",
+        "description": "Location longue durée"
+      },
+      "LOCATION_COURTE": {
+        "label": "Location courte",
+        "description": "Meublé, à partir de 1 jour"
+      },
+      "VENTE": {
+        "label": "Vendre",
+        "description": "Mettre en vente"
+      }
+    },
+    "propertyTypeLabels": {
+      "STUDIO": {
+        "label": "Studio",
+        "description": "Espace unique avec coin cuisine"
+      },
+      "CHAMBRE_SALON": {
+        "label": "Chambre-Salon",
+        "description": "1 chambre avec salon"
+      },
+      "APPARTEMENT_2CH": {
+        "label": "Appart. 2CH",
+        "description": "2 chambres + salon"
+      },
+      "APPARTEMENT_3CH": {
+        "label": "Appart. 3+CH",
+        "description": "3 chambres ou plus"
+      },
+      "VILLA": {
+        "label": "Villa",
+        "description": "Maison individuelle"
+      },
+      "DUPLEX": {
+        "label": "Duplex",
+        "description": "Sur 2 niveaux"
+      },
+      "TERRAIN": {
+        "label": "Terrain",
+        "description": "Terrain à bâtir"
+      },
+      "BUREAU": {
+        "label": "Bureau",
+        "description": "Espace professionnel"
+      },
+      "MAGASIN": {
+        "label": "Boutique",
+        "description": "Local commercial"
+      },
+      "ENTREPOT": {
+        "label": "Entrepôt",
+        "description": "Espace de stockage"
+      }
+    },
+    "amenityLabels": {
+      "parking": "Parking",
+      "wifi": "Wifi",
+      "ac": "Climatisation",
+      "security": "Sécurité 24h",
+      "pool": "Piscine",
+      "generator": "Groupe électrogène",
+      "balcony": "Balcon",
+      "kitchen": "Cuisine équipée",
+      "well": "Forage"
+    }
   },
   "profile": {
     "myProfile": "Mon profil",
@@ -412,11 +583,25 @@
       "startConversation": "Impossible de démarrer la conversation",
       "conversationNotFound": "Conversation non trouvée",
       "sendMessage": "Impossible d'envoyer le message"
+    },
+    "deleteMessage": {
+      "title": "Supprimer le message",
+      "deleteForMe": "Supprimer pour moi",
+      "deleteForMeDesc": "Ce message sera supprimé de votre appareil uniquement",
+      "deleteForEveryone": "Supprimer pour tous",
+      "deleteForEveryoneDesc": "Ce message sera supprimé pour tous les participants",
+      "timeLimit": "Vous ne pouvez supprimer un message pour tous que dans l'heure suivant son envoi"
+    },
+    "voiceRecording": {
+      "permissionRequired": "Permission requise",
+      "microphoneAccess": "L'accès au microphone est nécessaire pour enregistrer des messages vocaux."
     }
   },
   "visits": {
     "title": "Visites",
     "myVisits": "Mes visites",
+    "listing": "Annonce",
+    "namePlaceholder": "Ex: Mamadou Diallo",
     "schedule": "Planifier une visite",
     "reschedule": "Reprogrammer",
     "cancel": "Annuler la visite",
@@ -615,7 +800,8 @@
     "uploadFailed": "Échec de l'envoi",
     "fileTooLarge": "Fichier trop volumineux",
     "invalidFileType": "Type de fichier non supporté",
-    "removeFavoriteFailed": "Impossible de retirer le favori"
+    "removeFavoriteFailed": "Impossible de retirer le favori",
+    "networkError": "Impossible de se connecter au serveur. Vérifiez votre connexion internet."
   },
   "alerts": {
     "confirmDelete": "Êtes-vous sûr de vouloir supprimer ?",
@@ -716,6 +902,39 @@
     "rentedElsewhere": "Loué ailleurs",
     "noLongerAvailable": "Plus disponible",
     "otherReason": "Autre raison",
+    "editListing": "Modifier l'annonce",
+    "save": "Enregistrer",
+    "generalInfo": "Informations générales",
+    "title": "Titre",
+    "titlePlaceholder": "Titre de l'annonce",
+    "description": "Description",
+    "descriptionPlaceholder": "Description de l'annonce",
+    "priceConditions": "Prix et conditions",
+    "monthlyRent": "Loyer mensuel (GNF)",
+    "rentPlaceholder": "Ex: 2500000",
+    "deposit": "Caution (GNF)",
+    "advance": "Avance (GNF)",
+    "characteristics": "Caractéristiques",
+    "bedrooms": "Chambres",
+    "bathrooms": "Salles de bain",
+    "area": "Surface (m²)",
+    "areaPlaceholder": "Ex: 120",
+    "location": "Localisation",
+    "commune": "Commune",
+    "communePlaceholder": "Ex: Ratoma",
+    "quartier": "Quartier",
+    "quartierPlaceholder": "Ex: Nongo",
+    "fullAddress": "Adresse complète",
+    "addressPlaceholder": "Ex: Carrefour Nongo, face à...",
+    "options": "Options",
+    "furnished": "Meublé",
+    "furnishedHint": "Le bien est-il meublé?",
+    "available": "Disponible",
+    "availableHint": "Le bien est-il disponible?",
+    "deleteListing": "Supprimer l'annonce ?",
+    "deleteReason": "Pourquoi souhaitez-vous supprimer ?",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
     "status": {
       "published": "Publié",
       "pending": "En attente",

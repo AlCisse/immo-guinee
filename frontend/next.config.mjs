@@ -44,8 +44,8 @@ const nextConfig = {
 
   // Environment variables exposed to the browser
   env: {
-    // Use relative path for browser-side API calls (same-origin)
-    NEXT_PUBLIC_API_URL: '/api',
+    // Use env variable (dev: http://localhost:8000/api, prod: /api via proxy)
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || '/api',
     NEXT_PUBLIC_ECHO_HOST: process.env.NEXT_PUBLIC_ECHO_HOST || 'localhost',
     NEXT_PUBLIC_ECHO_PORT: process.env.NEXT_PUBLIC_ECHO_PORT || '6001',
   },

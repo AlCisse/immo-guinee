@@ -52,8 +52,9 @@ const apiClient: AxiosInstance = axios.create({
     'X-Requested-With': 'XMLHttpRequest',
     'X-App-Version': process.env.EXPO_PUBLIC_APP_VERSION || '1.0.0',
   },
-  timeout: 60000, // 60 seconds timeout for mobile networks
+  timeout: 90000, // 90 seconds timeout for slow mobile networks
 });
+
 
 // Token management with SecureStore
 export const tokenManager = {
@@ -104,7 +105,7 @@ apiClient.interceptors.request.use(
     // Security: Validate request URL domain
     const fullUrl = config.baseURL ? `${config.baseURL}${config.url}` : config.url || '';
     if (fullUrl && !isValidDomain(fullUrl)) {
-      if (__DEV__) console.error('Security: Blocked request to untrusted domain:', fullUrl);
+      if (__DEV__) console.error('[API] Security: Blocked request to untrusted domain:', fullUrl);
       return Promise.reject(new Error('Untrusted domain'));
     }
 
@@ -126,9 +127,7 @@ apiClient.interceptors.request.use(
 
 // Response interceptor - Handle errors globally
 apiClient.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
 
@@ -136,7 +135,6 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       await tokenManager.clear();
-      // The auth context will handle navigation
     }
 
     return Promise.reject(error);

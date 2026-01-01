@@ -377,37 +377,37 @@ export default function PublishScreen() {
     switch (step) {
       case 1:
         if (!formData.operationType || !formData.propertyType) {
-          Alert.alert('Erreur', 'Selectionnez le type d\'operation et de bien');
+          Alert.alert(t('common.error'), t('publish.errors.selectOperationAndType'));
           return false;
         }
         return true;
       case 2:
         if (!formData.quartier) {
-          Alert.alert('Erreur', 'Selectionnez un quartier');
+          Alert.alert(t('common.error'), t('publish.errors.selectQuartier'));
           return false;
         }
         return true;
       case 3:
         if (!formData.titre || formData.titre.length < 15) {
-          Alert.alert('Erreur', 'Le titre doit contenir au moins 15 caracteres');
+          Alert.alert(t('common.error'), t('publish.errors.titleMinLength'));
           return false;
         }
         if (!formData.description || formData.description.length < 50) {
-          Alert.alert('Erreur', 'La description doit contenir au moins 50 caracteres');
+          Alert.alert(t('common.error'), t('publish.errors.descriptionMinLength'));
           return false;
         }
         if (!formData.prix || parseInt(formData.prix.replace(/\s/g, '')) <= 0) {
-          Alert.alert('Erreur', 'Entrez un prix valide');
+          Alert.alert(t('common.error'), t('publish.errors.invalidPrice'));
           return false;
         }
         if (requiresSuperficie(formData.propertyType!) && !formData.superficie) {
-          Alert.alert('Erreur', 'La superficie est requise pour un terrain');
+          Alert.alert(t('common.error'), t('publish.errors.areaRequired'));
           return false;
         }
         return true;
       case 4:
         if (formData.photos.length < 3) {
-          Alert.alert('Erreur', 'Ajoutez au moins 3 photos');
+          Alert.alert(t('common.error'), t('publish.errors.photosMinRequired'));
           return false;
         }
         return true;
@@ -455,7 +455,7 @@ export default function PublishScreen() {
   // Render Step 1: Type selection
   const renderStep1 = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.sectionTitle}>Type d'operation</Text>
+      <Text style={styles.sectionTitle}>{t('publish.operationType')}</Text>
       <View style={styles.optionsGrid}>
         {OPERATION_TYPES.map(op => (
           <TouchableOpacity
@@ -475,16 +475,16 @@ export default function PublishScreen() {
               styles.optionLabel,
               formData.operationType === op.value && styles.optionLabelSelected,
             ]}>
-              {op.label}
+              {t(`publish.operations.${op.value}.label`)}
             </Text>
-            <Text style={styles.optionDescription}>{op.description}</Text>
+            <Text style={styles.optionDescription}>{t(`publish.operations.${op.value}.description`)}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Type de bien</Text>
+      <Text style={[styles.sectionTitle, { marginTop: 24 }]}>{t('publish.propertyType')}</Text>
 
-      <Text style={styles.categoryLabel}>Residentiel</Text>
+      <Text style={styles.categoryLabel}>{t('publish.residential')}</Text>
       <View style={styles.propertyGrid}>
         {PROPERTY_TYPES.filter(p => p.category === 'residential').map(pt => (
           <TouchableOpacity
@@ -500,13 +500,13 @@ export default function PublishScreen() {
               styles.propertyLabel,
               formData.propertyType === pt.value && styles.propertyLabelSelected,
             ]}>
-              {pt.label}
+              {t(`publish.propertyTypeLabels.${pt.value}.label`)}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      <Text style={styles.categoryLabel}>Commercial</Text>
+      <Text style={styles.categoryLabel}>{t('publish.commercial')}</Text>
       <View style={styles.propertyGrid}>
         {PROPERTY_TYPES.filter(p => p.category === 'commercial').map(pt => (
           <TouchableOpacity
@@ -522,7 +522,7 @@ export default function PublishScreen() {
               styles.propertyLabel,
               formData.propertyType === pt.value && styles.propertyLabelSelected,
             ]}>
-              {pt.label}
+              {t(`publish.propertyTypeLabels.${pt.value}.label`)}
             </Text>
           </TouchableOpacity>
         ))}
@@ -533,11 +533,11 @@ export default function PublishScreen() {
   // Render Step 2: Location
   const renderStep2 = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.sectionTitle}>Localisation du bien</Text>
-      <Text style={styles.sectionSubtitle}>Indiquez l'emplacement precis de votre propriete</Text>
+      <Text style={styles.sectionTitle}>{t('publish.locationTitle')}</Text>
+      <Text style={styles.sectionSubtitle}>{t('publish.locationSubtitle')}</Text>
 
       {/* Quartier Selection */}
-      <Text style={styles.inputLabel}>Quartier *</Text>
+      <Text style={styles.inputLabel}>{t('publish.quartierRequired')}</Text>
       <TouchableOpacity
         style={styles.selectButton}
         onPress={() => setShowQuartierModal(true)}
@@ -547,14 +547,14 @@ export default function PublishScreen() {
           styles.selectButtonText,
           !formData.quartier && styles.selectButtonPlaceholder,
         ]}>
-          {formData.quartier || 'Selectionnez un quartier'}
+          {formData.quartier || t('publish.selectQuartier')}
         </Text>
         <Ionicons name="chevron-down" size={20} color={Colors.neutral[400]} />
       </TouchableOpacity>
 
       {formData.commune && (
         <View style={styles.communeTag}>
-          <Text style={styles.communeTagText}>Commune: {formData.commune}</Text>
+          <Text style={styles.communeTagText}>{t('publish.commune')}: {formData.commune}</Text>
         </View>
       )}
 
@@ -570,21 +570,21 @@ export default function PublishScreen() {
           <Ionicons name="navigate" size={20} color={lightTheme.colors.primary} />
         )}
         <Text style={styles.gpsButtonText}>
-          {isLocating ? 'Detection en cours...' : 'Detecter ma position'}
+          {isLocating ? t('publish.detectingLocation') : t('publish.detectLocation')}
         </Text>
       </TouchableOpacity>
 
       {formData.latitude && formData.longitude && (
         <View style={styles.coordinatesBox}>
           <Ionicons name="checkmark-circle" size={16} color={Colors.success[500]} />
-          <Text style={styles.coordinatesText}>Position detectee</Text>
+          <Text style={styles.coordinatesText}>{t('publish.locationDetected')}</Text>
         </View>
       )}
 
       {/* Nearby Landmarks */}
       {nearbyLandmarks.length > 0 && (
         <View style={styles.landmarksSection}>
-          <Text style={styles.landmarksTitle}>Points de repere a proximite</Text>
+          <Text style={styles.landmarksTitle}>{t('publish.nearbyLandmarks')}</Text>
           {nearbyLandmarks.map((landmark, index) => (
             <TouchableOpacity
               key={index}
@@ -603,10 +603,10 @@ export default function PublishScreen() {
       )}
 
       {/* Manual Address */}
-      <Text style={[styles.inputLabel, { marginTop: 20 }]}>Adresse / Description du lieu</Text>
+      <Text style={[styles.inputLabel, { marginTop: 20 }]}>{t('publish.addressDescription')}</Text>
       <TextInput
         style={[styles.input, styles.textArea]}
-        placeholder="Ex: A 200m de la mosquee centrale, apres le carrefour..."
+        placeholder={t('publish.addressPlaceholder')}
         value={formData.adresse}
         onChangeText={text => setFormData(prev => ({ ...prev, adresse: text }))}
         multiline
@@ -615,10 +615,10 @@ export default function PublishScreen() {
       />
 
       {/* Repere proche */}
-      <Text style={styles.inputLabel}>Repere proche (optionnel)</Text>
+      <Text style={styles.inputLabel}>{t('publish.nearbyReference')}</Text>
       <TextInput
         style={styles.input}
-        placeholder="Ex: En face de la station Total"
+        placeholder={t('publish.referencePlaceholder')}
         value={formData.repereProche}
         onChangeText={text => setFormData(prev => ({ ...prev, repereProche: text }))}
         placeholderTextColor={Colors.neutral[400]}
@@ -629,13 +629,13 @@ export default function PublishScreen() {
   // Render Step 3: Details
   const renderStep3 = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.sectionTitle}>Details de l'annonce</Text>
+      <Text style={styles.sectionTitle}>{t('publish.listingDetails')}</Text>
 
       {/* Title */}
-      <Text style={styles.inputLabel}>Titre de l'annonce *</Text>
+      <Text style={styles.inputLabel}>{t('publish.listingTitleLabel')}</Text>
       <TextInput
         style={styles.input}
-        placeholder="Ex: Belle villa moderne a Kipe"
+        placeholder={t('publish.titlePlaceholder')}
         value={formData.titre}
         onChangeText={text => setFormData(prev => ({ ...prev, titre: text }))}
         maxLength={100}
@@ -644,10 +644,10 @@ export default function PublishScreen() {
       <Text style={styles.charCount}>{formData.titre.length}/100</Text>
 
       {/* Description */}
-      <Text style={styles.inputLabel}>Description *</Text>
+      <Text style={styles.inputLabel}>{t('publish.descriptionLabel')}</Text>
       <TextInput
         style={[styles.input, styles.textAreaLarge]}
-        placeholder="Decrivez votre bien en detail..."
+        placeholder={t('publish.descriptionPlaceholder')}
         value={formData.description}
         onChangeText={text => setFormData(prev => ({ ...prev, description: text }))}
         multiline
@@ -659,12 +659,12 @@ export default function PublishScreen() {
 
       {/* Price */}
       <Text style={styles.inputLabel}>
-        Prix {formData.operationType === 'LOCATION' ? '(mensuel)' : formData.operationType === 'LOCATION_COURTE' ? '(par jour)' : ''} *
+        {t('publish.priceLabel')} {formData.operationType === 'LOCATION' ? t('publish.priceMonthly') : formData.operationType === 'LOCATION_COURTE' ? t('publish.priceDaily') : ''} *
       </Text>
       <View style={styles.priceInput}>
         <TextInput
           style={[styles.input, { flex: 1, marginBottom: 0 }]}
-          placeholder="Ex: 2 500 000"
+          placeholder={t('publish.pricePlaceholder')}
           value={formData.prix}
           onChangeText={text => setFormData(prev => ({ ...prev, prix: formatPrice(text) }))}
           keyboardType="numeric"
@@ -676,11 +676,11 @@ export default function PublishScreen() {
       {/* Superficie (for terrain or always shown) */}
       {(requiresSuperficie(formData.propertyType!) || formData.propertyType === 'TERRAIN') && (
         <>
-          <Text style={styles.inputLabel}>Superficie *</Text>
+          <Text style={styles.inputLabel}>{t('publish.areaLabel')}</Text>
           <View style={styles.priceInput}>
             <TextInput
               style={[styles.input, { flex: 1, marginBottom: 0 }]}
-              placeholder="Ex: 500"
+              placeholder={t('publish.areaPlaceholder')}
               value={formData.superficie}
               onChangeText={text => setFormData(prev => ({ ...prev, superficie: text.replace(/\D/g, '') }))}
               keyboardType="numeric"
@@ -696,7 +696,7 @@ export default function PublishScreen() {
         <>
           <View style={styles.rowInputs}>
             <View style={styles.halfInput}>
-              <Text style={styles.inputLabel}>Chambres</Text>
+              <Text style={styles.inputLabel}>{t('publish.bedrooms')}</Text>
               <View style={styles.counterInput}>
                 <TouchableOpacity
                   style={styles.counterButton}
@@ -721,7 +721,7 @@ export default function PublishScreen() {
             </View>
 
             <View style={styles.halfInput}>
-              <Text style={styles.inputLabel}>Salles de bain</Text>
+              <Text style={styles.inputLabel}>{t('publish.bathrooms')}</Text>
               <View style={styles.counterInput}>
                 <TouchableOpacity
                   style={styles.counterButton}
@@ -753,7 +753,7 @@ export default function PublishScreen() {
         style={styles.switchRow}
         onPress={() => setFormData(prev => ({ ...prev, meuble: !prev.meuble }))}
       >
-        <Text style={styles.switchLabel}>Meuble</Text>
+        <Text style={styles.switchLabel}>{t('publish.furnished')}</Text>
         <View style={[styles.switchTrack, formData.meuble && styles.switchTrackActive]}>
           <View style={[styles.switchThumb, formData.meuble && styles.switchThumbActive]} />
         </View>
@@ -764,7 +764,7 @@ export default function PublishScreen() {
         <>
           <View style={styles.rowInputs}>
             <View style={styles.halfInput}>
-              <Text style={styles.inputLabel}>Caution (mois)</Text>
+              <Text style={styles.inputLabel}>{t('publish.depositMonths')}</Text>
               <View style={styles.counterInput}>
                 <TouchableOpacity
                   style={styles.counterButton}
@@ -789,7 +789,7 @@ export default function PublishScreen() {
             </View>
 
             <View style={styles.halfInput}>
-              <Text style={styles.inputLabel}>Avance (mois)</Text>
+              <Text style={styles.inputLabel}>{t('publish.advanceMonths')}</Text>
               <View style={styles.counterInput}>
                 <TouchableOpacity
                   style={styles.counterButton}
@@ -823,27 +823,27 @@ export default function PublishScreen() {
             <Ionicons name="information-circle" size={20} color={lightTheme.colors.primary} />
           </View>
           <View style={styles.commissionTextContainer}>
-            <Text style={styles.commissionLabel}>Commission ImmoGuinee</Text>
+            <Text style={styles.commissionLabel}>{t('publish.commission')}</Text>
             <Text style={styles.commissionValue}>
               {formData.operationType === 'LOCATION' && (
-                `${commissions?.location?.mois || 1} mois de loyer`
+                t('publish.commissionRentMonths', { count: commissions?.location?.mois || 1 })
               )}
               {formData.operationType === 'LOCATION_COURTE' && (
-                `${commissions?.location_courte?.taux_pourcentage || 10}% du montant`
+                t('publish.commissionPercent', { percent: commissions?.location_courte?.taux_pourcentage || 10 })
               )}
               {formData.operationType === 'VENTE' && (
-                `${commissions?.vente?.taux_pourcentage || 3}% du prix de vente`
+                t('publish.commissionSalePercent', { percent: commissions?.vente?.taux_pourcentage || 3 })
               )}
             </Text>
             <Text style={styles.commissionNote}>
-              Payable uniquement apres conclusion de la transaction
+              {t('publish.commissionNote')}
             </Text>
           </View>
         </View>
       )}
 
       {/* Amenities */}
-      <Text style={[styles.sectionTitle, { marginTop: 24 }]}>Equipements</Text>
+      <Text style={[styles.sectionTitle, { marginTop: 24 }]}>{t('publish.amenities')}</Text>
       <View style={styles.amenitiesGrid}>
         {AMENITIES.map(amenity => (
           <TouchableOpacity
@@ -870,7 +870,7 @@ export default function PublishScreen() {
               styles.amenityChipText,
               formData.equipements.includes(amenity.backendKey) && styles.amenityChipTextSelected,
             ]}>
-              {amenity.label}
+              {t(`publish.amenityLabels.${amenity.id}`)}
             </Text>
           </TouchableOpacity>
         ))}
@@ -881,22 +881,22 @@ export default function PublishScreen() {
   // Render Step 4: Photos
   const renderStep4 = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.sectionTitle}>Photos</Text>
-      <Text style={styles.sectionSubtitle}>Ajoutez au moins 3 photos de votre bien</Text>
+      <Text style={styles.sectionTitle}>{t('publish.photosTitle')}</Text>
+      <Text style={styles.sectionSubtitle}>{t('publish.photosSubtitle')}</Text>
 
       <View style={styles.photoActions}>
         <TouchableOpacity style={styles.photoActionButton} onPress={pickImages}>
           <Ionicons name="images-outline" size={24} color={lightTheme.colors.primary} />
-          <Text style={styles.photoActionText}>Galerie</Text>
+          <Text style={styles.photoActionText}>{t('publish.gallery')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.photoActionButton} onPress={takePhoto}>
           <Ionicons name="camera-outline" size={24} color={lightTheme.colors.primary} />
-          <Text style={styles.photoActionText}>Camera</Text>
+          <Text style={styles.photoActionText}>{t('publish.camera')}</Text>
         </TouchableOpacity>
       </View>
 
       <Text style={styles.photoCount}>
-        {formData.photos.length}/10 photos {formData.photos.length < 3 && '(minimum 3)'}
+        {t('publish.photoCount', { current: formData.photos.length, max: 10 })} {formData.photos.length < 3 && t('publish.photoMinRequired')}
       </Text>
 
       <View style={styles.photosGrid}>
@@ -911,7 +911,7 @@ export default function PublishScreen() {
             </TouchableOpacity>
             {index === 0 && (
               <View style={styles.mainPhotoBadge}>
-                <Text style={styles.mainPhotoBadgeText}>Principale</Text>
+                <Text style={styles.mainPhotoBadgeText}>{t('publish.mainPhotoLabel')}</Text>
               </View>
             )}
           </View>
@@ -934,7 +934,6 @@ export default function PublishScreen() {
           headerTitle: t('publish.title'),
           headerBackVisible: false,
           headerBackTitle: '',
-          headerBackTitleVisible: false,
           headerStyle: { backgroundColor: Colors.background.primary },
           headerTitleStyle: { fontSize: 18, fontWeight: '600' },
           headerShadowVisible: true,
@@ -999,7 +998,7 @@ export default function PublishScreen() {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Selectionnez un quartier</Text>
+            <Text style={styles.modalTitle}>{t('publish.selectQuartier')}</Text>
             <TouchableOpacity onPress={() => setShowQuartierModal(false)}>
               <Ionicons name="close" size={24} color={Colors.secondary[800]} />
             </TouchableOpacity>
@@ -1009,7 +1008,7 @@ export default function PublishScreen() {
             <Ionicons name="search" size={20} color={Colors.neutral[400]} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Rechercher un quartier..."
+              placeholder={t('publish.searchQuartier')}
               value={quartierSearch}
               onChangeText={setQuartierSearch}
               placeholderTextColor={Colors.neutral[400]}
@@ -1018,7 +1017,7 @@ export default function PublishScreen() {
 
           {!quartierSearch && (
             <View style={styles.popularSection}>
-              <Text style={styles.popularTitle}>Quartiers populaires</Text>
+              <Text style={styles.popularTitle}>{t('publish.popularQuartiers')}</Text>
               <View style={styles.popularGrid}>
                 {POPULAR_QUARTIERS.map(name => (
                   <TouchableOpacity
@@ -1052,7 +1051,7 @@ export default function PublishScreen() {
               </TouchableOpacity>
             )}
             ListEmptyComponent={
-              <Text style={styles.emptyText}>Aucun quartier trouve</Text>
+              <Text style={styles.emptyText}>{t('publish.noQuartierFound')}</Text>
             }
           />
         </View>

@@ -66,7 +66,7 @@ export default function HomeScreen() {
   const horizontalPadding = isTablet ? 24 : 16;
   const cardGap = isTablet ? 16 : 12;
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['listings', 'home', selectedType],
     queryFn: async () => {
       const params: Record<string, any> = { limit: 20 };
@@ -74,6 +74,8 @@ export default function HomeScreen() {
       const response = await api.listings.list(params);
       return response.data?.data?.listings || [];
     },
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   // Fetch user's favorites to show correct heart state
@@ -399,6 +401,17 @@ export default function HomeScreen() {
             <ActivityIndicator size="large" color={lightTheme.colors.primary} />
             <Text style={styles.loadingText}>{t('common.loading')}</Text>
           </View>
+        ) : isError ? (
+          <View style={styles.loadingContainer}>
+            <Ionicons name="cloud-offline-outline" size={64} color={Colors.error[400]} />
+            <Text style={styles.errorTitle}>{t('common.error')}</Text>
+            <Text style={styles.errorText}>
+              {error?.message || t('errors.networkError')}
+            </Text>
+            <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
+              <Text style={styles.retryButtonText}>{t('common.retry')}</Text>
+            </TouchableOpacity>
+          </View>
         ) : (
           <FlatList
             key={numColumns}
@@ -663,6 +676,30 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 14,
     color: Colors.neutral[500],
+  },
+  errorTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.neutral[800],
+    marginTop: 16,
+  },
+  errorText: {
+    fontSize: 14,
+    color: Colors.neutral[500],
+    textAlign: 'center',
+    paddingHorizontal: 32,
+  },
+  retryButton: {
+    marginTop: 16,
+    backgroundColor: lightTheme.colors.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
   },
   listContent: {
     paddingBottom: 100,

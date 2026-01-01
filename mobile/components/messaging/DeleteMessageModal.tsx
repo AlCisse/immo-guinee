@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 interface DeleteMessageModalProps {
   visible: boolean;
@@ -26,6 +27,7 @@ export function DeleteMessageModal({
   canDeleteForEveryone,
   messagePreview,
 }: DeleteMessageModalProps) {
+  const { t } = useTranslation();
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteType, setDeleteType] = useState<'me' | 'everyone' | null>(null);
 
@@ -73,7 +75,7 @@ export function DeleteMessageModal({
         <View style={styles.container}>
           <View style={styles.header}>
             <Ionicons name="trash-outline" size={24} color="#EF4444" />
-            <Text style={styles.title}>Supprimer le message</Text>
+            <Text style={styles.title}>{t('chat.deleteMessage.title')}</Text>
           </View>
 
           {messagePreview && (
@@ -93,9 +95,9 @@ export function DeleteMessageModal({
               <View style={styles.optionContent}>
                 <Ionicons name="person-outline" size={20} color="#374151" />
                 <View style={styles.optionText}>
-                  <Text style={styles.optionTitle}>Supprimer pour moi</Text>
+                  <Text style={styles.optionTitle}>{t('chat.deleteMessage.deleteForMe')}</Text>
                   <Text style={styles.optionDescription}>
-                    Ce message sera supprimé de votre appareil uniquement
+                    {t('chat.deleteMessage.deleteForMeDesc')}
                   </Text>
                 </View>
               </View>
@@ -113,9 +115,9 @@ export function DeleteMessageModal({
                 <View style={styles.optionContent}>
                   <Ionicons name="people-outline" size={20} color="#374151" />
                   <View style={styles.optionText}>
-                    <Text style={styles.optionTitle}>Supprimer pour tous</Text>
+                    <Text style={styles.optionTitle}>{t('chat.deleteMessage.deleteForEveryone')}</Text>
                     <Text style={styles.optionDescription}>
-                      Ce message sera supprimé pour tous les participants
+                      {t('chat.deleteMessage.deleteForEveryoneDesc')}
                     </Text>
                   </View>
                 </View>
@@ -129,7 +131,7 @@ export function DeleteMessageModal({
               <View style={styles.infoBox}>
                 <Ionicons name="information-circle-outline" size={16} color="#6B7280" />
                 <Text style={styles.infoText}>
-                  Vous ne pouvez supprimer un message pour tous que dans l'heure suivant son envoi
+                  {t('chat.deleteMessage.timeLimit')}
                 </Text>
               </View>
             )}
@@ -140,7 +142,7 @@ export function DeleteMessageModal({
             onPress={onClose}
             disabled={isDeleting}
           >
-            <Text style={styles.cancelButtonText}>Annuler</Text>
+            <Text style={styles.cancelButtonText}>{t('common.cancel')}</Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>

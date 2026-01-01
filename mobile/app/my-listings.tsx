@@ -320,38 +320,38 @@ export default function MyListingsScreen() {
             <TouchableOpacity onPress={() => setEditModalVisible(false)}>
               <Ionicons name="close" size={28} color={Colors.secondary[800]} />
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>Modifier l'annonce</Text>
+            <Text style={styles.modalTitle}>{t('myListings.editListing')}</Text>
             <TouchableOpacity onPress={handleSaveEdit} disabled={updateMutation.isPending}>
               {updateMutation.isPending ? (
                 <ActivityIndicator size="small" color={lightTheme.colors.primary} />
               ) : (
-                <Text style={styles.modalSaveText}>Enregistrer</Text>
+                <Text style={styles.modalSaveText}>{t('myListings.save')}</Text>
               )}
             </TouchableOpacity>
           </View>
 
           <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
             {/* Section: Informations generales */}
-            <Text style={styles.sectionTitle}>Informations generales</Text>
+            <Text style={styles.sectionTitle}>{t('myListings.generalInfo')}</Text>
 
             <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>Titre *</Text>
+              <Text style={styles.formLabel}>{t('myListings.title')} *</Text>
               <TextInput
                 style={styles.formInput}
                 value={editForm.titre}
                 onChangeText={(text) => setEditForm({ ...editForm, titre: text })}
-                placeholder="Titre de l'annonce"
+                placeholder={t('myListings.titlePlaceholder')}
                 placeholderTextColor={Colors.neutral[400]}
               />
             </View>
 
             <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>Description</Text>
+              <Text style={styles.formLabel}>{t('myListings.description')}</Text>
               <TextInput
                 style={[styles.formInput, styles.formTextArea]}
                 value={editForm.description}
                 onChangeText={(text) => setEditForm({ ...editForm, description: text })}
-                placeholder="Description de l'annonce"
+                placeholder={t('myListings.descriptionPlaceholder')}
                 placeholderTextColor={Colors.neutral[400]}
                 multiline
                 numberOfLines={4}
@@ -360,15 +360,15 @@ export default function MyListingsScreen() {
             </View>
 
             {/* Section: Prix */}
-            <Text style={styles.sectionTitle}>Prix et conditions</Text>
+            <Text style={styles.sectionTitle}>{t('myListings.priceConditions')}</Text>
 
             <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>Loyer mensuel (GNF) *</Text>
+              <Text style={styles.formLabel}>{t('myListings.monthlyRent')} *</Text>
               <TextInput
                 style={styles.formInput}
                 value={editForm.loyer_mensuel}
                 onChangeText={(text) => setEditForm({ ...editForm, loyer_mensuel: text.replace(/[^0-9]/g, '') })}
-                placeholder="Ex: 2500000"
+                placeholder={t('myListings.rentPlaceholder')}
                 placeholderTextColor={Colors.neutral[400]}
                 keyboardType="numeric"
               />
@@ -376,7 +376,7 @@ export default function MyListingsScreen() {
 
             <View style={styles.formRow}>
               <View style={[styles.formGroup, { flex: 1 }]}>
-                <Text style={styles.formLabel}>Caution (GNF)</Text>
+                <Text style={styles.formLabel}>{t('myListings.deposit')}</Text>
                 <TextInput
                   style={styles.formInput}
                   value={editForm.caution}
@@ -387,7 +387,7 @@ export default function MyListingsScreen() {
                 />
               </View>
               <View style={[styles.formGroup, { flex: 1 }]}>
-                <Text style={styles.formLabel}>Avance (GNF)</Text>
+                <Text style={styles.formLabel}>{t('myListings.advance')}</Text>
                 <TextInput
                   style={styles.formInput}
                   value={editForm.avance}
@@ -400,11 +400,11 @@ export default function MyListingsScreen() {
             </View>
 
             {/* Section: Caracteristiques */}
-            <Text style={styles.sectionTitle}>Caracteristiques</Text>
+            <Text style={styles.sectionTitle}>{t('myListings.characteristics')}</Text>
 
             <View style={styles.formRow}>
               <View style={[styles.formGroup, { flex: 1 }]}>
-                <Text style={styles.formLabel}>Chambres</Text>
+                <Text style={styles.formLabel}>{t('myListings.bedrooms')}</Text>
                 <TextInput
                   style={styles.formInput}
                   value={editForm.nombre_chambres}
@@ -415,7 +415,7 @@ export default function MyListingsScreen() {
                 />
               </View>
               <View style={[styles.formGroup, { flex: 1 }]}>
-                <Text style={styles.formLabel}>Salles de bain</Text>
+                <Text style={styles.formLabel}>{t('myListings.bathrooms')}</Text>
                 <TextInput
                   style={styles.formInput}
                   value={editForm.nombre_salles_bain}
@@ -428,61 +428,61 @@ export default function MyListingsScreen() {
             </View>
 
             <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>Surface (m²)</Text>
+              <Text style={styles.formLabel}>{t('myListings.area')}</Text>
               <TextInput
                 style={styles.formInput}
                 value={editForm.surface_m2}
                 onChangeText={(text) => setEditForm({ ...editForm, surface_m2: text.replace(/[^0-9]/g, '') })}
-                placeholder="Ex: 120"
+                placeholder={t('myListings.areaPlaceholder')}
                 placeholderTextColor={Colors.neutral[400]}
                 keyboardType="numeric"
               />
             </View>
 
             {/* Section: Localisation */}
-            <Text style={styles.sectionTitle}>Localisation</Text>
+            <Text style={styles.sectionTitle}>{t('myListings.location')}</Text>
 
             <View style={styles.formRow}>
               <View style={[styles.formGroup, { flex: 1 }]}>
-                <Text style={styles.formLabel}>Commune</Text>
+                <Text style={styles.formLabel}>{t('myListings.commune')}</Text>
                 <TextInput
                   style={styles.formInput}
                   value={editForm.commune}
                   onChangeText={(text) => setEditForm({ ...editForm, commune: text })}
-                  placeholder="Ex: Ratoma"
+                  placeholder={t('myListings.communePlaceholder')}
                   placeholderTextColor={Colors.neutral[400]}
                 />
               </View>
               <View style={[styles.formGroup, { flex: 1 }]}>
-                <Text style={styles.formLabel}>Quartier</Text>
+                <Text style={styles.formLabel}>{t('myListings.quartier')}</Text>
                 <TextInput
                   style={styles.formInput}
                   value={editForm.quartier}
                   onChangeText={(text) => setEditForm({ ...editForm, quartier: text })}
-                  placeholder="Ex: Nongo"
+                  placeholder={t('myListings.quartierPlaceholder')}
                   placeholderTextColor={Colors.neutral[400]}
                 />
               </View>
             </View>
 
             <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>Adresse complete</Text>
+              <Text style={styles.formLabel}>{t('myListings.fullAddress')}</Text>
               <TextInput
                 style={styles.formInput}
                 value={editForm.adresse_complete}
                 onChangeText={(text) => setEditForm({ ...editForm, adresse_complete: text })}
-                placeholder="Ex: Carrefour Nongo, face a..."
+                placeholder={t('myListings.addressPlaceholder')}
                 placeholderTextColor={Colors.neutral[400]}
               />
             </View>
 
             {/* Section: Options */}
-            <Text style={styles.sectionTitle}>Options</Text>
+            <Text style={styles.sectionTitle}>{t('myListings.options')}</Text>
 
             <View style={styles.formSwitchRow}>
               <View>
-                <Text style={styles.formLabel}>Meuble</Text>
-                <Text style={styles.formHint}>Le bien est-il meuble?</Text>
+                <Text style={styles.formLabel}>{t('myListings.furnished')}</Text>
+                <Text style={styles.formHint}>{t('myListings.furnishedHint')}</Text>
               </View>
               <Switch
                 value={editForm.meuble}
@@ -494,8 +494,8 @@ export default function MyListingsScreen() {
 
             <View style={styles.formSwitchRow}>
               <View>
-                <Text style={styles.formLabel}>Disponible</Text>
-                <Text style={styles.formHint}>Le bien est-il disponible?</Text>
+                <Text style={styles.formLabel}>{t('myListings.available')}</Text>
+                <Text style={styles.formHint}>{t('myListings.availableHint')}</Text>
               </View>
               <Switch
                 value={editForm.disponible}
@@ -519,8 +519,8 @@ export default function MyListingsScreen() {
       >
         <View style={styles.deleteModalOverlay}>
           <View style={styles.deleteModalContent}>
-            <Text style={styles.deleteModalTitle}>Supprimer l'annonce ?</Text>
-            <Text style={styles.deleteModalSubtitle}>Pourquoi souhaitez-vous supprimer ?</Text>
+            <Text style={styles.deleteModalTitle}>{t('myListings.deleteListing')}</Text>
+            <Text style={styles.deleteModalSubtitle}>{t('myListings.deleteReason')}</Text>
 
             {deleteReasons.map((reason) => (
               <TouchableOpacity
@@ -555,7 +555,7 @@ export default function MyListingsScreen() {
                 style={styles.deleteModalCancel}
                 onPress={() => setDeleteModalVisible(false)}
               >
-                <Text style={styles.deleteModalCancelText}>Annuler</Text>
+                <Text style={styles.deleteModalCancelText}>{t('myListings.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
@@ -568,7 +568,7 @@ export default function MyListingsScreen() {
                 {deleteMutation.isPending ? (
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
-                  <Text style={styles.deleteModalConfirmText}>Supprimer</Text>
+                  <Text style={styles.deleteModalConfirmText}>{t('myListings.delete')}</Text>
                 )}
               </TouchableOpacity>
             </View>

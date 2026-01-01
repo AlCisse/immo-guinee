@@ -10,6 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { VoiceRecorder } from './VoiceRecorder';
 
 interface MessageInputProps {
@@ -31,6 +32,7 @@ export function MessageInput({
   disabled = false,
   primaryColor = '#10B981',
 }: MessageInputProps) {
+  const { t } = useTranslation();
   const [text, setText] = useState('');
   const [inputMode, setInputMode] = useState<InputMode>('text');
   const [isSending, setIsSending] = useState(false);
@@ -83,7 +85,7 @@ export function MessageInput({
       if (__DEV__) console.error('Error sending text message:', error);
       // Restore text on error
       setText(trimmedText);
-      Alert.alert('Erreur', 'Impossible d\'envoyer le message. Veuillez réessayer.');
+      Alert.alert(t('common.error'), t('chat.errors.sendMessage'));
     } finally {
       setIsSending(false);
     }
@@ -99,7 +101,7 @@ export function MessageInput({
         await onSendVoice(uri, duration);
       } catch (error) {
         if (__DEV__) console.error('Error sending voice message:', error);
-        Alert.alert('Erreur', 'Impossible d\'envoyer le message vocal. Veuillez réessayer.');
+        Alert.alert(t('common.error'), t('chat.errors.sendVoice'));
       } finally {
         setIsSending(false);
       }

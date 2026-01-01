@@ -49,6 +49,8 @@ class Visit extends Model
         'response_token',
         'notification_sent',
         'notification_sent_at',
+        'reminder_24h_sent',
+        'reminder_12h_sent',
     ];
 
     /**
