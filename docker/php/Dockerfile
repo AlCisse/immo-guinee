@@ -78,6 +78,11 @@ RUN mkdir -p /var/www/backend/storage/framework/sessions \
 RUN chown -R www-data:www-data /var/www/backend \
     && chmod -R 755 /var/www/backend
 
+# Copy entrypoint script (from backend/ build context)
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Expose port 9000 and start php-fpm server
 EXPOSE 9000
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["php-fpm"]

@@ -178,6 +178,10 @@ services:
       - app_key
       - passport_private_key
       - passport_public_key
+      - jwt_secret
+      - passport_client_secret
+      - reverb_app_key
+      - reverb_app_secret
     networks:
       - immog-network
     environment:
@@ -192,7 +196,7 @@ services:
       - DB_USERNAME=immog_app
       # Secrets are read from /run/secrets/ - set in entrypoint
       - DB_PASSWORD_FILE=/run/secrets/db_password
-      - REDIS_HOST=redis
+      - REDIS_HOST=tasks.redis
       - REDIS_PASSWORD_FILE=/run/secrets/redis_password
       - REDIS_PORT=6379
       - CACHE_DRIVER=redis
@@ -206,6 +210,10 @@ services:
       - AWS_BUCKET=listings
       - AWS_URL=https://storage.immoguinee.com
       - APP_KEY_FILE=/run/secrets/app_key
+      - JWT_SECRET_FILE=/run/secrets/jwt_secret
+      - PASSPORT_PERSONAL_ACCESS_CLIENT_SECRET_FILE=/run/secrets/passport_client_secret
+      - REVERB_APP_KEY_FILE=/run/secrets/reverb_app_key
+      - REVERB_APP_SECRET_FILE=/run/secrets/reverb_app_secret
       - PASSPORT_PRIVATE_KEY_FILE=/run/secrets/passport_private_key
       - PASSPORT_PUBLIC_KEY_FILE=/run/secrets/passport_public_key
     deploy:
@@ -245,7 +253,7 @@ services:
       - DB_DATABASE=immog_db
       - DB_USERNAME=immog_app
       - DB_PASSWORD_FILE=/run/secrets/db_password
-      - REDIS_HOST=redis
+      - REDIS_HOST=tasks.redis
       - REDIS_PASSWORD_FILE=/run/secrets/redis_password
     deploy:
       mode: replicated
@@ -277,7 +285,7 @@ services:
       - DB_DATABASE=immog_db
       - DB_USERNAME=immog_app
       - DB_PASSWORD_FILE=/run/secrets/db_password
-      - REDIS_HOST=redis
+      - REDIS_HOST=tasks.redis
       - REDIS_PASSWORD_FILE=/run/secrets/redis_password
     deploy:
       mode: replicated
@@ -591,3 +599,11 @@ secrets:
     file: ./secrets/passport_private_key
   passport_public_key:
     file: ./secrets/passport_public_key
+  jwt_secret:
+    file: ./secrets/jwt_secret
+  passport_client_secret:
+    file: ./secrets/passport_client_secret
+  reverb_app_key:
+    file: ./secrets/reverb_app_key
+  reverb_app_secret:
+    file: ./secrets/reverb_app_secret
