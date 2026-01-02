@@ -14,6 +14,9 @@ load_secret() {
     fi
 }
 
+# Load n8n authentication from secret
+load_secret "n8n_password" "N8N_BASIC_AUTH_PASSWORD"
+
 # Load all n8n workflow secrets
 load_secret "n8n_api_service_token" "API_SERVICE_TOKEN"
 load_secret "n8n_fcm_server_key" "FCM_SERVER_KEY"

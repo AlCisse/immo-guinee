@@ -456,6 +456,7 @@ services:
     image: n8nio/n8n:latest
     hostname: n8n
     secrets:
+      - n8n_password
       - n8n_api_service_token
       - n8n_fcm_server_key
       - n8n_sms_api_key
@@ -472,7 +473,8 @@ services:
     environment:
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_BASIC_AUTH_USER=${N8N_USER:-admin}
-      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD:?N8N_PASSWORD must be set}
+      # Password read from Docker secret in entrypoint
+      - N8N_BASIC_AUTH_PASSWORD_FILE=/run/secrets/n8n_password
       - N8N_HOST=${N8N_HOST:-localhost}
       - N8N_PORT=5678
       - N8N_PROTOCOL=${N8N_PROTOCOL:-http}

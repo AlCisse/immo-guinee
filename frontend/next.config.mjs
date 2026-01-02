@@ -6,14 +6,18 @@ const nextConfig = {
   reactStrictMode: true,
   output: 'standalone', // Enable standalone mode for Docker
 
-  // Disable TypeScript errors during builds (fix issues separately)
+  // TODO: Fix TypeScript errors progressively (currently ~50 errors)
+  // Main issues: params possibly null, missing type properties, type mismatches
+  // Run `npx tsc --noEmit` to see current errors
+  // Priority: Fix type definitions in lib/types/, then component props
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: process.env.NODE_ENV === 'production',
   },
 
-  // Disable ESLint errors during builds (fix issues separately)
+  // TODO: Fix ESLint errors progressively
+  // Run `npm run lint` to see current issues
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: process.env.NODE_ENV === 'production',
   },
 
   // Image optimization

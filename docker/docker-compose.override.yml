@@ -266,6 +266,28 @@ secrets:
     file: ./secrets/n8n_password
   n8n_api_service_token:
     file: ./secrets/n8n_api_service_token
+  n8n_fcm_server_key:
+    file: ./secrets/n8n_fcm_server_key
+  n8n_sms_api_key:
+    file: ./secrets/n8n_sms_api_key
+  n8n_twilio_account_sid:
+    file: ./secrets/n8n_twilio_account_sid
+  n8n_twilio_auth_token:
+    file: ./secrets/n8n_twilio_auth_token
+  n8n_twilio_phone_number:
+    file: ./secrets/n8n_twilio_phone_number
+  n8n_openai_api_key:
+    file: ./secrets/n8n_openai_api_key
+  n8n_telegram_bot_token:
+    file: ./secrets/n8n_telegram_bot_token
+  n8n_telegram_chat_id:
+    file: ./secrets/n8n_telegram_chat_id
+  n8n_smtp_host:
+    file: ./secrets/n8n_smtp_host
+  n8n_smtp_user:
+    file: ./secrets/n8n_smtp_user
+  n8n_smtp_password:
+    file: ./secrets/n8n_smtp_password
   reverb_app_key:
     file: ./secrets/reverb_app_key
   reverb_app_secret:
