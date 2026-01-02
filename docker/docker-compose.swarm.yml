@@ -130,8 +130,8 @@ services:
     configs:
       - source: nginx_config
         target: /etc/nginx/nginx.conf
-      - source: nginx_site
-        target: /etc/nginx/conf.d/default.conf
+      - source: nginx_backend
+        target: /etc/nginx/conf.d/backend.conf
     networks:
       - immog-network
     deploy:
@@ -598,8 +598,8 @@ services:
 configs:
   nginx_config:
     file: ./nginx/nginx.conf
-  nginx_site:
-    file: ./nginx/sites/default.conf
+  nginx_backend:
+    file: ./nginx/sites/backend.conf
   echo_config:
     file: ./laravel-echo/laravel-echo-server.json
   prometheus_config:
