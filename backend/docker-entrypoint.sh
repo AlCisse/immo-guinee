@@ -24,11 +24,20 @@ read_secret() {
 # Read all secrets from files
 echo "[entrypoint] Loading secrets from files..."
 
+# Debug: Check if DB_PASSWORD_FILE is set
+echo "[entrypoint] DB_PASSWORD_FILE=$DB_PASSWORD_FILE"
+if [ -f "$DB_PASSWORD_FILE" ]; then
+    echo "[entrypoint] File exists: $DB_PASSWORD_FILE"
+else
+    echo "[entrypoint] File NOT found: $DB_PASSWORD_FILE"
+fi
+
 read_secret "DB_PASSWORD"
 read_secret "REDIS_PASSWORD"
 read_secret "AWS_SECRET_ACCESS_KEY"
 read_secret "APP_KEY"
 read_secret "JWT_SECRET"
+read_secret "PASSPORT_PERSONAL_ACCESS_CLIENT_ID"
 read_secret "PASSPORT_PERSONAL_ACCESS_CLIENT_SECRET"
 read_secret "REVERB_APP_KEY"
 read_secret "REVERB_APP_SECRET"
@@ -45,6 +54,35 @@ if [ -f "/run/secrets/passport_public_key" ]; then
 fi
 
 echo "[entrypoint] Secrets loaded successfully"
+
+# Copy Passport keys to storage (Laravel Passport reads from these files)
+if [ -f "/run/secrets/passport_private_key" ]; then
+    cp /run/secrets/passport_private_key /var/www/backend/storage/oauth-private.key
+    chmod 600 /var/www/backend/storage/oauth-private.key
+    echo "[entrypoint] Copied oauth-private.key"
+fi
+
+if [ -f "/run/secrets/passport_public_key" ]; then
+    cp /run/secrets/passport_public_key /var/www/backend/storage/oauth-public.key
+    chmod 600 /var/www/backend/storage/oauth-public.key
+    echo "[entrypoint] Copied oauth-public.key"
+fi
+
+# Configure PHP-FPM to pass environment variables
+PHP_FPM_CONF="/usr/local/etc/php-fpm.d/www.conf"
+if [ -f "$PHP_FPM_CONF" ]; then
+    # Enable clear_env = no so PHP-FPM inherits environment variables
+    # Use temp file to avoid "Device or resource busy" error
+    if grep -q "clear_env = no" "$PHP_FPM_CONF"; then
+        echo "[entrypoint] PHP-FPM already configured"
+    else
+        cp "$PHP_FPM_CONF" /tmp/www.conf.tmp
+        sed 's/;*clear_env = .*/clear_env = no/' /tmp/www.conf.tmp > /tmp/www.conf.new
+        cat /tmp/www.conf.new > "$PHP_FPM_CONF"
+        rm -f /tmp/www.conf.tmp /tmp/www.conf.new
+        echo "[entrypoint] PHP-FPM configured to inherit env vars"
+    fi
+fi
 
 # Execute the main command
 exec "$@"

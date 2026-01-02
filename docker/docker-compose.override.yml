@@ -45,6 +45,8 @@ services:
     image: immoguinee/php:dev
     volumes:
       - ../backend:/var/www/backend
+    secrets:
+      - db_password
     environment:
       - APP_ENV=local
       - APP_DEBUG=true
@@ -71,6 +73,8 @@ services:
     image: immoguinee/php:dev
     volumes:
       - ../backend:/var/www/backend
+    secrets:
+      - db_password
     environment:
       - APP_ENV=local
       - DB_USERNAME=${DB_USERNAME:-immog_user}
@@ -84,6 +88,8 @@ services:
     image: immoguinee/php:dev
     volumes:
       - ../backend:/var/www/backend
+    secrets:
+      - db_password
     environment:
       - APP_ENV=local
       - DB_USERNAME=${DB_USERNAME:-immog_user}

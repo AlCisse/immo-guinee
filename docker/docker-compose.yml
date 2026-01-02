@@ -168,10 +168,13 @@ services:
     image: ${PHP_IMAGE:-immoguinee/php:latest}
     hostname: php
     working_dir: /var/www/backend
+    entrypoint: ["/bin/sh", "/docker-entrypoint.sh"]
+    command: ["php-fpm"]
     volumes:
       - ./php/php.ini:/usr/local/etc/php/php.ini:ro
       - ./php/www.conf:/usr/local/etc/php-fpm.d/www.conf:ro
       - ../backend/storage:/var/www/backend/storage
+      - ../backend/docker-entrypoint.sh:/docker-entrypoint.sh:ro
     secrets:
       - app_key
       - passport_private_key
