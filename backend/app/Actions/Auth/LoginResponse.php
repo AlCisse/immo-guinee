@@ -31,8 +31,38 @@ class LoginResponse
         // Update last login timestamp
         $user->update(['last_login_at' => now()]);
 
+        // Check if user is admin
+        $isAdmin = $user->hasRole('admin');
+
         // Check if user has 2FA enabled and confirmed
-        $requires2fa = !empty($user->two_factor_secret) && !empty($user->two_factor_confirmed_at);
+        $has2faConfigured = !empty($user->two_factor_secret) && !empty($user->two_factor_confirmed_at);
+
+        // SECURITY: Admin without 2FA must configure it before getting full access
+        if ($isAdmin && !$has2faConfigured) {
+            // Create a temporary token for 2FA setup
+            // Note: Using regular token - scope validation will be done in 2FA middleware
+            $setupToken = $user->createToken('2fa-setup-token')->accessToken;
+
+            // Create response with httpOnly cookie for 2FA setup
+            $cookie = AuthenticateFromCookie::createTokenCookie($setupToken, 30); // 30 minutes for setup
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Configuration 2FA requise',
+                'data' => [
+                    'user' => $this->formatUser($user),
+                    'requires_2fa_setup' => true,
+                    'setup_token' => $setupToken,
+                    'redirect' => [
+                        'redirect_url' => config('app.frontend_url', 'https://immoguinee.com') . '/auth/verify-2fa',
+                        'dashboard_path' => '/auth/verify-2fa',
+                    ],
+                ],
+            ])->withCookie($cookie);
+        }
+
+        // Check if 2FA verification is required (2FA is configured but not yet verified this session)
+        $requires2faVerification = $has2faConfigured;
 
         $responseData = [
             'user' => $this->formatUser($user),
@@ -43,8 +73,8 @@ class LoginResponse
             'redirect' => $redirectData,
         ];
 
-        // If 2FA is required, modify the redirect to go to verify-2fa page
-        if ($requires2fa) {
+        // If 2FA verification is required, modify the redirect to go to verify-2fa page
+        if ($requires2faVerification) {
             $responseData['requires_2fa'] = true;
             $responseData['redirect']['redirect_url'] = config('app.frontend_url', 'https://immoguinee.com') . '/auth/verify-2fa';
             $responseData['redirect']['dashboard_path'] = '/auth/verify-2fa';

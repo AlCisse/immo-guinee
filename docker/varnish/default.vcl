@@ -1,8 +1,8 @@
 vcl 4.1;
 
-# Backend definition (Nginx) - Use service name for Docker Compose/Swarm
+# Backend definition (Nginx) - Use full service name for Docker Swarm
 backend default {
-    .host = "nginx";
+    .host = "immog_nginx";
     .port = "80";
     .connect_timeout = 5s;
     .first_byte_timeout = 60s;
@@ -14,7 +14,7 @@ acl purge {
     "localhost";
     "127.0.0.1";
     "::1";
-    "nginx";
+    "immog_nginx";
     "10.0.0.0"/8;
 }
 

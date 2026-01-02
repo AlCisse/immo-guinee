@@ -576,4 +576,17 @@ class Listing extends Model
     {
         return number_format($this->loyer_mensuel, 0, ',', ' ') . ' GNF';
     }
+
+    // ==================== BOOT ====================
+
+    protected static function booted(): void
+    {
+        // Delete photos from storage when listing is deleted (soft or force)
+        static::deleting(function (Listing $listing) {
+            // Delete all photos - this triggers ListingPhoto::deleting which removes from storage
+            $listing->listingPhotos()->each(function (ListingPhoto $photo) {
+                $photo->delete();
+            });
+        });
+    }
 }

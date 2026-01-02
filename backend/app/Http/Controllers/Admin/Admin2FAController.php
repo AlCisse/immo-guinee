@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\AuthenticateFromCookie;
+use App\Services\RoleRedirectService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -14,10 +15,12 @@ use PragmaRX\Google2FA\Google2FA;
 class Admin2FAController extends Controller
 {
     protected Google2FA $google2fa;
+    protected RoleRedirectService $roleRedirectService;
 
-    public function __construct()
+    public function __construct(RoleRedirectService $roleRedirectService)
     {
         $this->google2fa = new Google2FA();
+        $this->roleRedirectService = $roleRedirectService;
     }
 
     /**
@@ -120,6 +123,53 @@ class Admin2FAController extends Controller
             'ip' => $request->ip(),
         ]);
 
+        // Check if this is an initial 2FA setup during login
+        // Detect setup flow by checking if the token name is '2fa-setup-token'
+        $currentToken = $user->token();
+        $isSetupFlow = $currentToken && $currentToken->name === '2fa-setup-token';
+
+        if ($isSetupFlow) {
+            // Revoke the temporary setup token
+            $currentToken->revoke();
+
+            // Generate new full-access token
+            $newToken = $user->createToken('Personal Access Token')->accessToken;
+
+            // Get redirect data
+            $redirectData = $this->roleRedirectService->buildLoginResponseData($user);
+
+            // Set 2FA verified in cache
+            $sessionKey = "2fa_verified:{$user->id}";
+            Cache::put($sessionKey, true, now()->addHours(8));
+
+            // Create httpOnly cookie for web clients
+            $cookie = AuthenticateFromCookie::createTokenCookie($newToken, 1440);
+
+            Log::info('Full access token generated after 2FA setup', [
+                'user_id' => $user->id,
+                'ip' => $request->ip(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Authentification a deux facteurs activee avec succes.',
+                'data' => [
+                    'token' => $newToken,
+                    'token_type' => 'Bearer',
+                    'user' => [
+                        'id' => $user->id,
+                        'nom_complet' => $user->nom_complet,
+                        'telephone' => $user->telephone,
+                        'email' => $user->email,
+                        'type_compte' => $user->type_compte,
+                        'roles' => $user->getRoleNames()->toArray(),
+                    ],
+                    'redirect' => $redirectData,
+                ],
+            ])->withCookie($cookie);
+        }
+
+        // Normal 2FA enable flow (not during login)
         return response()->json([
             'success' => true,
             'message' => 'Authentification a deux facteurs activee avec succes.',

@@ -33,7 +33,7 @@ apiClient.interceptors.response.use(
   },
   async (error: AxiosError) => {
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
-    const responseData = error.response?.data as { requires_2fa?: boolean; message?: string } | undefined;
+    const responseData = error.response?.data as { requires_2fa?: boolean; requires_2fa_setup?: boolean; message?: string } | undefined;
 
     // Handle 401 Unauthorized or 404 Not Found on auth endpoints
     const status = error.response?.status;
@@ -56,10 +56,21 @@ apiClient.interceptors.response.use(
       }
     }
 
-    // Handle 403 with 2FA required
+    // Handle 403 with 2FA required (verification needed)
     if (error.response?.status === 403 && responseData?.requires_2fa) {
       if (typeof window !== 'undefined') {
         // Store the current path to redirect back after 2FA
+        sessionStorage.setItem('2fa_redirect', window.location.pathname);
+        window.location.href = '/auth/verify-2fa';
+      }
+      return Promise.reject(error);
+    }
+
+    // Handle 403 with 2FA setup required (not configured yet)
+    if (error.response?.status === 403 && responseData?.requires_2fa_setup) {
+      if (typeof window !== 'undefined') {
+        // Store that we need setup, not verification
+        sessionStorage.setItem('2fa_needs_setup', 'true');
         sessionStorage.setItem('2fa_redirect', window.location.pathname);
         window.location.href = '/auth/verify-2fa';
       }

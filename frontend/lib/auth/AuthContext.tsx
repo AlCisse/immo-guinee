@@ -114,6 +114,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         redirect: RedirectData;
         action?: string;
         requires_2fa?: boolean;
+        requires_2fa_setup?: boolean;
+        setup_token?: string;
       }> = response.data;
 
       console.log('Login response:', data);
@@ -125,6 +127,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const user = responseData.user || (data as any).user;
       const redirect = responseData.redirect || (data as any).redirect;
       const requires2fa = responseData.requires_2fa || (data as any).requires_2fa;
+      const requires2faSetup = responseData.requires_2fa_setup || (data as any).requires_2fa_setup;
+      const setupToken = responseData.setup_token || (data as any).setup_token;
 
       // Check if user needs to verify OTP (unverified phone)
       if (data.success && action === 'verify_otp') {
@@ -134,6 +138,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           icon: '📱',
         });
         router.push(`/auth/verify-otp?telephone=${encodeURIComponent(userPhone)}`);
+        return;
+      }
+
+      // SECURITY: Admin needs to setup 2FA before getting access
+      if (data.success && requires2faSetup && setupToken) {
+        // Store the temporary setup token for 2FA configuration
+        sessionStorage.setItem('2fa_setup_token', setupToken);
+        sessionStorage.setItem('2fa_needs_setup', 'true');
+        sessionStorage.setItem('pending_2fa_user', JSON.stringify(user));
+        // Mark that 2FA is pending - this prevents access to protected routes
+        sessionStorage.setItem('pending_2fa', 'true');
+        // Store the original intended destination for after 2FA setup
+        sessionStorage.setItem('2fa_redirect', '/admin');
+
+        toast('Configuration 2FA requise pour les administrateurs', {
+          duration: 4000,
+          icon: '🔐',
+        });
+        router.push('/auth/verify-2fa');
         return;
       }
 
@@ -297,6 +320,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         sessionStorage.removeItem('pending_2fa_user');
         sessionStorage.removeItem('pending_2fa_redirect');
         sessionStorage.removeItem('2fa_redirect');
+        sessionStorage.removeItem('2fa_needs_setup');
+        sessionStorage.removeItem('2fa_setup_token');
       }
 
       setUser(null);

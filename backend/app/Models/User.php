@@ -480,6 +480,22 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Visits where user is the property owner.
+     */
+    public function visitsAsProprietaire()
+    {
+        return $this->hasMany(Visit::class, 'proprietaire_id');
+    }
+
+    /**
+     * Visits where user is the visitor.
+     */
+    public function visitsAsVisiteur()
+    {
+        return $this->hasMany(Visit::class, 'visiteur_id');
+    }
+
+    /**
      * Check if user is a moderator.
      */
     public function isModerator(): bool
@@ -577,5 +593,102 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         return 'Vu ' . $this->last_seen_at->diffForHumans();
+    }
+
+    // ==================== BOOT - CASCADE DELETE ====================
+
+    protected static function booted(): void
+    {
+        // Cascade delete all related data when user is force deleted
+        static::forceDeleting(function (User $user) {
+            \Log::info('Force deleting user and all related data', ['user_id' => $user->id]);
+
+            // Delete listings (which cascades to photos, contracts on listing, conversations, etc.)
+            $user->listings()->each(function ($listing) {
+                $listing->forceDelete();
+            });
+
+            // Delete contracts where user is bailleur or locataire
+            $user->contractsAsBailleur()->forceDelete();
+            $user->contractsAsLocataire()->forceDelete();
+
+            // Delete payments made or received
+            $user->paymentsMade()->forceDelete();
+            $user->paymentsReceived()->forceDelete();
+
+            // Delete certification documents
+            $user->certificationDocuments()->each(function ($doc) {
+                $doc->forceDelete();
+            });
+
+            // Delete conversations (which should cascade to messages)
+            $user->conversationsInitiated()->each(function ($conv) {
+                $conv->messages()->delete();
+                $conv->forceDelete();
+            });
+            $user->conversationsAsParticipant()->each(function ($conv) {
+                $conv->messages()->delete();
+                $conv->forceDelete();
+            });
+
+            // Delete messages sent by user
+            $user->messages()->delete();
+
+            // Delete disputes
+            $user->disputesFiled()->forceDelete();
+            $user->disputesAgainst()->forceDelete();
+            // For mediated disputes, just remove the mediator reference
+            Dispute::where('mediateur_id', $user->id)->update(['mediateur_id' => null]);
+
+            // Delete transactions
+            $user->transactionsAsBailleur()->forceDelete();
+            $user->transactionsAsLocataire()->forceDelete();
+
+            // Delete ratings
+            $user->ratingsGiven()->delete();
+            $user->ratingsReceived()->delete();
+
+            // Delete insurances
+            $user->insurances()->forceDelete();
+
+            // Delete favorites (pivot table)
+            $user->favorites()->detach();
+
+            // Delete WhatsApp messages
+            $user->whatsappMessages()->delete();
+
+            // Delete reports
+            $user->reportsMade()->delete();
+            $user->reportsReceived()->delete();
+
+            // For moderation actions, just remove the moderator reference
+            ModerationLog::where('moderator_id', $user->id)->update(['moderator_id' => null]);
+
+            // Delete visits (as owner or visitor)
+            $user->visitsAsProprietaire()->forceDelete();
+            $user->visitsAsVisiteur()->forceDelete();
+
+            // Note: OAuth tokens deletion is handled separately due to UUID compatibility issues
+            // Tokens will be invalidated when user is deleted (no valid user = invalid token)
+
+            \Log::info('User and all related data deleted', ['user_id' => $user->id]);
+        });
+
+        // For soft delete, also handle some cleanup
+        static::deleting(function (User $user) {
+            if (!$user->isForceDeleting()) {
+                \Log::info('Soft deleting user', ['user_id' => $user->id]);
+
+                // Soft delete listings
+                $user->listings()->delete();
+
+                // Soft delete visits
+                $user->visitsAsProprietaire()->delete();
+                $user->visitsAsVisiteur()->delete();
+
+                // Note: OAuth tokens are not deleted on soft delete
+                // The user can still be restored, and tokens will work again
+            }
+        });
     }
 }
