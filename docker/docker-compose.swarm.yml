@@ -575,35 +575,85 @@ configs:
 # SECRETS - 32-char passwords stored securely
 # ==============================================
 secrets:
+  # Database secrets
   db_password:
     file: ./secrets/db_password
   db_app_password:
     file: ./secrets/db_app_password
-  redis_password:
-    file: ./secrets/redis_password
-  minio_password:
-    file: ./secrets/minio_password
-  grafana_password:
-    file: ./secrets/grafana_password
-  pgadmin_password:
-    file: ./secrets/pgadmin_password
-  waha_api_key:
-    file: ./secrets/waha_api_key
-  waha_password:
-    file: ./secrets/waha_password
-  n8n_password:
-    file: ./secrets/n8n_password
+  db_backup_password:
+    file: ./secrets/db_backup_password
+  # Application secrets
   app_key:
     file: ./secrets/app_key
   passport_private_key:
     file: ./secrets/passport_private_key
   passport_public_key:
     file: ./secrets/passport_public_key
+  passport_personal_access_client_id:
+    file: ./secrets/passport_personal_access_client_id
+  passport_personal_access_client_secret:
+    file: ./secrets/passport_personal_access_client_secret
   jwt_secret:
     file: ./secrets/jwt_secret
   passport_client_secret:
     file: ./secrets/passport_client_secret
+  # Redis
+  redis_password:
+    file: ./secrets/redis_password
+  # Storage
+  minio_access_key:
+    file: ./secrets/minio_access_key
+  minio_password:
+    file: ./secrets/minio_password
+  do_spaces_access_key:
+    file: ./secrets/do_spaces_access_key
+  do_spaces_secret_key:
+    file: ./secrets/do_spaces_secret_key
+  # Elasticsearch
+  elasticsearch_password:
+    file: ./secrets/elasticsearch_password
+  # Monitoring
+  grafana_password:
+    file: ./secrets/grafana_password
+  pgadmin_password:
+    file: ./secrets/pgadmin_password
+  # WhatsApp (WAHA)
+  waha_api_key:
+    file: ./secrets/waha_api_key
+  waha_password:
+    file: ./secrets/waha_password
+  # n8n Workflow
+  n8n_password:
+    file: ./secrets/n8n_password
+  n8n_api_service_token:
+    file: ./secrets/n8n_api_service_token
+  n8n_fcm_server_key:
+    file: ./secrets/n8n_fcm_server_key
+  n8n_sms_api_key:
+    file: ./secrets/n8n_sms_api_key
+  n8n_twilio_account_sid:
+    file: ./secrets/n8n_twilio_account_sid
+  n8n_twilio_auth_token:
+    file: ./secrets/n8n_twilio_auth_token
+  n8n_twilio_phone_number:
+    file: ./secrets/n8n_twilio_phone_number
+  n8n_openai_api_key:
+    file: ./secrets/n8n_openai_api_key
+  n8n_telegram_bot_token:
+    file: ./secrets/n8n_telegram_bot_token
+  n8n_telegram_chat_id:
+    file: ./secrets/n8n_telegram_chat_id
+  n8n_smtp_host:
+    file: ./secrets/n8n_smtp_host
+  n8n_smtp_user:
+    file: ./secrets/n8n_smtp_user
+  n8n_smtp_password:
+    file: ./secrets/n8n_smtp_password
+  # Laravel Reverb
   reverb_app_key:
     file: ./secrets/reverb_app_key
   reverb_app_secret:
     file: ./secrets/reverb_app_secret
+  # Backup
+  backup_encryption_key:
+    file: ./secrets/backup_encryption_key

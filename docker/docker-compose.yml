@@ -106,14 +106,18 @@ services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.17.0
     hostname: elasticsearch
+    secrets:
+      - elasticsearch_password
+    entrypoint: ["/bin/bash", "/custom-entrypoint.sh"]
+    command: ["eswrapper"]
     environment:
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       - xpack.security.enabled=${ES_SECURITY_ENABLED:-false}
       - xpack.security.enrollment.enabled=${ES_SECURITY_ENABLED:-false}
-      - ELASTIC_PASSWORD_FILE=/run/secrets/elasticsearch_password
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
+      - ./elasticsearch/entrypoint.sh:/custom-entrypoint.sh:ro
     networks:
       - backend-network
     deploy:
@@ -435,14 +439,14 @@ services:
   minio:
     image: minio/minio:RELEASE.2024-12-13T22-19-12Z
     hostname: minio
-    command: server /data --console-address ":9001"
+    entrypoint: ["/bin/sh", "/custom-entrypoint.sh"]
+    command: ["server", "/data", "--console-address", ":9001"]
     secrets:
+      - minio_access_key
       - minio_password
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-immog_minio}
-      MINIO_ROOT_PASSWORD_FILE: /run/secrets/minio_password
     volumes:
       - minio-data:/data
+      - ./minio/entrypoint.sh:/custom-entrypoint.sh:ro
     networks:
       - backend-network
     deploy:
@@ -544,8 +548,15 @@ services:
   laravel-echo:
     image: oanhnn/laravel-echo-server:latest
     hostname: laravel-echo
+    entrypoint: ["/bin/sh", "/custom-entrypoint.sh"]
+    command: []
+    secrets:
+      - redis_password
+      - reverb_app_key
+      - reverb_app_secret
     volumes:
       - ./laravel-echo/laravel-echo-server.json:/app/laravel-echo-server.json:ro
+      - ./laravel-echo/entrypoint.sh:/custom-entrypoint.sh:ro
     networks:
       - backend-network
       - public-network  # WebSocket connections from clients
@@ -561,10 +572,12 @@ services:
     image: ${PHP_IMAGE:-immoguinee/php:latest}
     hostname: reverb
     working_dir: /var/www/backend
-    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    entrypoint: ["/bin/sh", "/custom-entrypoint.sh"]
+    command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=8080"]
     volumes:
       - ./php/php.ini:/usr/local/etc/php/php.ini:ro
       - ../backend/storage:/var/www/backend/storage
+      - ./reverb/entrypoint.sh:/custom-entrypoint.sh:ro
     secrets:
       - app_key
       - db_app_password
@@ -573,19 +586,13 @@ services:
       - reverb_app_secret
     environment:
       - APP_ENV=${APP_ENV:-production}
-      - APP_KEY_FILE=/run/secrets/app_key
       - DB_CONNECTION=pgsql
       - DB_HOST=postgres
       - DB_DATABASE=${DB_DATABASE:-immog_db}
       - DB_USERNAME=${DB_APP_USERNAME:-immog_app}
-      - DB_PASSWORD_FILE=/run/secrets/db_app_password
-      - REDIS_HOST=redis
-      - REDIS_PASSWORD_FILE=/run/secrets/redis_password
-      # Reverb configuration (secrets)
+      # Reverb configuration
       - BROADCAST_CONNECTION=reverb
       - REVERB_APP_ID=immoguinee
-      - REVERB_APP_KEY_FILE=/run/secrets/reverb_app_key
-      - REVERB_APP_SECRET_FILE=/run/secrets/reverb_app_secret
       - REVERB_HOST=0.0.0.0
       - REVERB_PORT=8080
       - REVERB_SCHEME=http
@@ -995,3 +1002,88 @@ services:
       resources:
         limits:
           memory: 256M
+
+# ============================================
+# Docker Secrets Configuration
+# ============================================
+# In Swarm mode, these are created via 'docker secret create'
+# In local dev, override file uses file-based secrets
+secrets:
+  # Database secrets
+  db_password:
+    external: true
+  db_app_password:
+    external: true
+  db_backup_password:
+    external: true
+  # Application secrets
+  app_key:
+    external: true
+  passport_private_key:
+    external: true
+  passport_public_key:
+    external: true
+  passport_personal_access_client_id:
+    external: true
+  passport_personal_access_client_secret:
+    external: true
+  # Redis & Cache
+  redis_password:
+    external: true
+  # Storage
+  minio_access_key:
+    external: true
+  minio_password:
+    external: true
+  do_spaces_access_key:
+    external: true
+  do_spaces_secret_key:
+    external: true
+  # Elasticsearch
+  elasticsearch_password:
+    external: true
+  # Monitoring
+  grafana_password:
+    external: true
+  pgadmin_password:
+    external: true
+  # WhatsApp (WAHA)
+  waha_api_key:
+    external: true
+  waha_password:
+    external: true
+  # n8n Workflow Automation
+  n8n_password:
+    external: true
+  n8n_api_service_token:
+    external: true
+  n8n_fcm_server_key:
+    external: true
+  n8n_sms_api_key:
+    external: true
+  n8n_twilio_account_sid:
+    external: true
+  n8n_twilio_auth_token:
+    external: true
+  n8n_twilio_phone_number:
+    external: true
+  n8n_openai_api_key:
+    external: true
+  n8n_telegram_bot_token:
+    external: true
+  n8n_telegram_chat_id:
+    external: true
+  n8n_smtp_host:
+    external: true
+  n8n_smtp_user:
+    external: true
+  n8n_smtp_password:
+    external: true
+  # Laravel Reverb WebSocket
+  reverb_app_key:
+    external: true
+  reverb_app_secret:
+    external: true
+  # Backup encryption
+  backup_encryption_key:
+    external: true

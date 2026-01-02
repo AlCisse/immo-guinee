@@ -260,6 +260,8 @@ secrets:
     file: ./secrets/minio_password
   minio_access_key:
     file: ./secrets/minio_access_key
+  elasticsearch_password:
+    file: ./secrets/elasticsearch_password
   grafana_password:
     file: ./secrets/grafana_password
   pgadmin_password:
