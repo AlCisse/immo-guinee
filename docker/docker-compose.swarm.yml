@@ -457,6 +457,9 @@ services:
     environment:
       # WEBJS engine - Create session manually via API or dashboard
       - WAHA_PRINT_QR=false
+      # Session persistence - restart all sessions on container start
+      - WHATSAPP_RESTART_ALL_SESSIONS=true
+      - WAHA_WORKER_TIMEOUT=60
       # Webhook configuration
       - WHATSAPP_HOOK_URL=https://immoguinee.com/api/webhooks/waha
       - WHATSAPP_HOOK_EVENTS=message,message.any,message.ack,session.status
