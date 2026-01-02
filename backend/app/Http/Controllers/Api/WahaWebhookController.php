@@ -26,12 +26,23 @@ class WahaWebhookController extends Controller
      */
     public function handle(Request $request): JsonResponse
     {
+        // Verify webhook authenticity
+        if (!$this->verifyWebhookSignature($request)) {
+            Log::warning('WAHA webhook: Invalid signature', [
+                'ip' => $request->ip(),
+                'headers' => $request->headers->all(),
+            ]);
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
         $payload = $request->all();
         $event = $payload['event'] ?? null;
 
+        // Sanitize payload before logging (remove sensitive data)
+        $safePayload = $this->sanitizePayloadForLogging($payload);
         Log::info('WAHA webhook received', [
             'event' => $event,
-            'payload' => $payload,
+            'payload' => $safePayload,
         ]);
 
         try {
@@ -544,5 +555,137 @@ class WahaWebhookController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Verify WAHA webhook signature/API key.
+     *
+     * WAHA sends webhooks with X-Api-Key header matching the configured API key.
+     * We also allow requests from internal Docker network (WAHA container).
+     *
+     * @param Request $request
+     * @return bool
+     */
+    protected function verifyWebhookSignature(Request $request): bool
+    {
+        // Get expected API key from config/secrets
+        $expectedKey = $this->getWahaApiKey();
+
+        // Skip verification in local/testing if no key configured
+        if (!$expectedKey && !app()->isProduction()) {
+            return true;
+        }
+
+        // Check X-Api-Key header (WAHA standard)
+        $providedKey = $request->header('X-Api-Key');
+        if ($providedKey && hash_equals($expectedKey, $providedKey)) {
+            return true;
+        }
+
+        // Check Authorization header as fallback
+        $authHeader = $request->header('Authorization');
+        if ($authHeader) {
+            $token = str_replace('Bearer ', '', $authHeader);
+            if (hash_equals($expectedKey, $token)) {
+                return true;
+            }
+        }
+
+        // Allow from internal Docker network (waha service)
+        $clientIp = $request->ip();
+        if ($this->isInternalDockerNetwork($clientIp)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if request is from internal Docker network.
+     *
+     * @param string|null $ip
+     * @return bool
+     */
+    protected function isInternalDockerNetwork(?string $ip): bool
+    {
+        if (!$ip) {
+            return false;
+        }
+
+        // Docker internal networks typically use these ranges
+        $dockerRanges = [
+            '172.16.0.0/12',  // Docker default bridge
+            '10.0.0.0/8',     // Docker Swarm overlay
+            '192.168.0.0/16', // Docker compose
+        ];
+
+        foreach ($dockerRanges as $range) {
+            if ($this->ipInRange($ip, $range)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if IP is in CIDR range.
+     *
+     * @param string $ip
+     * @param string $range
+     * @return bool
+     */
+    protected function ipInRange(string $ip, string $range): bool
+    {
+        [$subnet, $bits] = explode('/', $range);
+        $ipLong = ip2long($ip);
+        $subnetLong = ip2long($subnet);
+        $mask = -1 << (32 - (int) $bits);
+
+        return ($ipLong & $mask) === ($subnetLong & $mask);
+    }
+
+    /**
+     * Get WAHA API key from Docker secrets or env.
+     *
+     * @return string|null
+     */
+    protected function getWahaApiKey(): ?string
+    {
+        // Try Docker secret first
+        $secretPath = '/run/secrets/waha_api_key';
+        if (file_exists($secretPath)) {
+            return trim(file_get_contents($secretPath));
+        }
+
+        // Fallback to env
+        return config('services.waha.api_key') ?: env('WAHA_API_KEY');
+    }
+
+    /**
+     * Sanitize payload for safe logging.
+     *
+     * @param array $payload
+     * @return array
+     */
+    protected function sanitizePayloadForLogging(array $payload): array
+    {
+        $sensitiveKeys = ['body', 'caption', 'text', 'message'];
+        $maxLength = 200;
+
+        array_walk_recursive($payload, function (&$value, $key) use ($sensitiveKeys, $maxLength) {
+            if (is_string($value)) {
+                // Truncate long values
+                if (strlen($value) > $maxLength) {
+                    $value = substr($value, 0, $maxLength) . '...[truncated]';
+                }
+                // Mask potential phone numbers (keep first 3 and last 2 digits)
+                if (preg_match('/^\d{10,15}$/', $value)) {
+                    $value = substr($value, 0, 3) . str_repeat('*', strlen($value) - 5) . substr($value, -2);
+                }
+            }
+        });
+
+        return $payload;
     }
 }

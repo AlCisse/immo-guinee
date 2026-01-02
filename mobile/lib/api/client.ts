@@ -7,12 +7,28 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://immoguinee.com/api';
 
 // Security: Expected SSL certificate public key hash (SHA-256)
 // Update this when renewing SSL certificate
+// Note: True SSL pinning requires native module (expo-ssl-pinning)
+// These pins are used for runtime validation warnings
 const EXPECTED_SSL_PINS = [
   // Primary certificate pin (Let's Encrypt)
   process.env.EXPO_PUBLIC_SSL_PIN_PRIMARY || '',
   // Backup certificate pin
   process.env.EXPO_PUBLIC_SSL_PIN_BACKUP || '',
-];
+].filter(pin => pin.length > 0);
+
+// Validate SSL pins are configured in production
+const validateSSLPinsConfigured = (): void => {
+  if (!__DEV__ && EXPECTED_SSL_PINS.length === 0) {
+    console.warn(
+      '[Security] SSL pins not configured for production. ' +
+      'Set EXPO_PUBLIC_SSL_PIN_PRIMARY and EXPO_PUBLIC_SSL_PIN_BACKUP ' +
+      'environment variables for certificate pinning.'
+    );
+  }
+};
+
+// Run validation on module load
+validateSSLPinsConfigured();
 
 // Security: Allowed API domains
 const ALLOWED_DOMAINS = ['immoguinee.com', 'api.immoguinee.com'];

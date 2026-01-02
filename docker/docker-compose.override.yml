@@ -147,27 +147,31 @@ services:
   n8n:
     ports:
       - "127.0.0.1:5678:5678"
+    secrets:
+      - n8n_password
     environment:
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_BASIC_AUTH_USER=${N8N_USER:-admin}
-      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD:-Imm0G@2024!}
+    entrypoint: ["/bin/sh", "-c", "export N8N_BASIC_AUTH_PASSWORD=$$(cat /run/secrets/n8n_password) && /docker-entrypoint.sh"]
 
   waha:
     ports:
       - "127.0.0.1:3000:3000"
+    secrets:
+      - waha_api_key
+      - waha_password
     environment:
-      - WHATSAPP_API_KEY=${WAHA_API_KEY:-immog2024}
-      - WAHA_API_KEY=${WAHA_API_KEY:-immog2024}
-      # Dashboard enabled only for local development
       - WAHA_DASHBOARD_ENABLED=true
       - WAHA_DASHBOARD_USERNAME=admin
-      - WAHA_DASHBOARD_PASSWORD=${WAHA_PASSWORD:-immog2024}
+    entrypoint: ["/bin/sh", "-c", "export WHATSAPP_API_KEY=$$(cat /run/secrets/waha_api_key) && export WAHA_API_KEY=$$(cat /run/secrets/waha_api_key) && export WAHA_DASHBOARD_PASSWORD=$$(cat /run/secrets/waha_password) && /app/entrypoint.sh"]
 
   laravel-echo:
     ports:
       - "127.0.0.1:6001:6001"
+    secrets:
+      - redis_password
     environment:
-      - REDIS_PASSWORD=REDACTED_DB_PASSWORD_2024
+      - REDIS_PASSWORD_FILE=/run/secrets/redis_password
 
   traefik:
     command:
@@ -234,6 +238,10 @@ secrets:
     file: ./secrets/passport_private_key
   passport_public_key:
     file: ./secrets/passport_public_key
+  passport_personal_access_client_id:
+    file: ./secrets/passport_personal_access_client_id
+  passport_personal_access_client_secret:
+    file: ./secrets/passport_personal_access_client_secret
   db_password:
     file: ./secrets/db_password
   db_app_password:
@@ -254,6 +262,14 @@ secrets:
     file: ./secrets/waha_password
   waha_api_key:
     file: ./secrets/waha_api_key
+  n8n_password:
+    file: ./secrets/n8n_password
+  n8n_api_service_token:
+    file: ./secrets/n8n_api_service_token
+  reverb_app_key:
+    file: ./secrets/reverb_app_key
+  reverb_app_secret:
+    file: ./secrets/reverb_app_secret
   do_spaces_access_key:
     file: ./secrets/do_spaces_access_key
   do_spaces_secret_key:

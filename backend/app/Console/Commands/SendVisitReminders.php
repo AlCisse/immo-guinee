@@ -8,6 +8,7 @@ use App\Services\WhatsAppService;
 use App\Services\ExpoPushService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class SendVisitReminders extends Command
@@ -33,37 +34,49 @@ class SendVisitReminders extends Command
     {
         $this->info('Checking for visits needing reminders...');
 
-        $now = Carbon::now();
+        $now = Carbon::now(config('app.timezone', 'Africa/Conakry'));
+
+        // Use standardized English status values (as per Visit model scopes)
+        $activeStatuses = ['CONFIRMED', 'PENDING'];
 
         // Get visits in the next 24-25 hours that haven't received 24h reminder
+        // Using date + time::interval for proper PostgreSQL datetime arithmetic
         $visits24h = Visit::with(['listing', 'proprietaire', 'visiteur'])
-            ->whereIn('statut', ['CONFIRMED', 'CONFIRMEE', 'PENDING', 'EN_ATTENTE'])
+            ->whereIn('statut', $activeStatuses)
             ->where('reminder_24h_sent', false)
-            ->whereRaw("CONCAT(date_visite, ' ', heure_visite) BETWEEN ? AND ?", [
+            ->whereRaw("(date_visite + heure_visite::time) BETWEEN ? AND ?", [
                 $now->copy()->addHours(23)->format('Y-m-d H:i:s'),
                 $now->copy()->addHours(25)->format('Y-m-d H:i:s'),
             ])
+            ->lockForUpdate()
             ->get();
 
         // Get visits in the next 11-13 hours that haven't received 12h reminder
         $visits12h = Visit::with(['listing', 'proprietaire', 'visiteur'])
-            ->whereIn('statut', ['CONFIRMED', 'CONFIRMEE', 'PENDING', 'EN_ATTENTE'])
+            ->whereIn('statut', $activeStatuses)
             ->where('reminder_12h_sent', false)
-            ->whereRaw("CONCAT(date_visite, ' ', heure_visite) BETWEEN ? AND ?", [
+            ->whereRaw("(date_visite + heure_visite::time) BETWEEN ? AND ?", [
                 $now->copy()->addHours(11)->format('Y-m-d H:i:s'),
                 $now->copy()->addHours(13)->format('Y-m-d H:i:s'),
             ])
+            ->lockForUpdate()
             ->get();
 
         $sent24h = 0;
         $sent12h = 0;
 
-        // Send 24h reminders
+        // Send 24h reminders with transaction to prevent race conditions
         foreach ($visits24h as $visit) {
             try {
-                $this->sendReminder($visit, '24h');
-                $visit->update(['reminder_24h_sent' => true]);
-                $sent24h++;
+                DB::transaction(function () use ($visit, &$sent24h) {
+                    // Double-check flag within transaction
+                    $freshVisit = Visit::lockForUpdate()->find($visit->id);
+                    if ($freshVisit && !$freshVisit->reminder_24h_sent) {
+                        $freshVisit->update(['reminder_24h_sent' => true]);
+                        $this->sendReminder($visit, '24h');
+                        $sent24h++;
+                    }
+                });
             } catch (\Exception $e) {
                 Log::error('[VISIT_REMINDER] Failed to send 24h reminder', [
                     'visit_id' => $visit->id,
@@ -72,12 +85,17 @@ class SendVisitReminders extends Command
             }
         }
 
-        // Send 12h reminders
+        // Send 12h reminders with transaction
         foreach ($visits12h as $visit) {
             try {
-                $this->sendReminder($visit, '12h');
-                $visit->update(['reminder_12h_sent' => true]);
-                $sent12h++;
+                DB::transaction(function () use ($visit, &$sent12h) {
+                    $freshVisit = Visit::lockForUpdate()->find($visit->id);
+                    if ($freshVisit && !$freshVisit->reminder_12h_sent) {
+                        $freshVisit->update(['reminder_12h_sent' => true]);
+                        $this->sendReminder($visit, '12h');
+                        $sent12h++;
+                    }
+                });
             } catch (\Exception $e) {
                 Log::error('[VISIT_REMINDER] Failed to send 12h reminder', [
                     'visit_id' => $visit->id,

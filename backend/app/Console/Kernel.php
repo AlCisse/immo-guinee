@@ -195,6 +195,23 @@ class Kernel extends ConsoleKernel
             });
 
         // ============================================
+        // Visit Reminders
+        // ============================================
+
+        // Send visit reminders (24h and 12h before) - every 30 minutes
+        $schedule->command('visits:send-reminders')
+            ->everyThirtyMinutes()
+            ->timezone('Africa/Conakry')
+            ->withoutOverlapping(10) // Lock expires after 10 minutes max
+            ->runInBackground()
+            ->onSuccess(function () {
+                \Log::info('[VISITS] Visit reminders check completed');
+            })
+            ->onFailure(function () {
+                \Log::error('[VISITS] Visit reminders check failed');
+            });
+
+        // ============================================
         // Encrypted Media Management
         // ============================================
 

@@ -32,9 +32,9 @@ return [
 
         'reverb' => [
             'driver' => 'reverb',
-            // Use placeholder values for CI/CD environments where secrets aren't available
-            'key' => $readSecret('REVERB_APP_KEY') ?: 'placeholder-key',
-            'secret' => $readSecret('REVERB_APP_SECRET') ?: 'placeholder-secret',
+            // Read from Docker secrets with production validation
+            'key' => $readSecret('REVERB_APP_KEY') ?: (env('APP_ENV') === 'production' ? null : 'dev-placeholder-key'),
+            'secret' => $readSecret('REVERB_APP_SECRET') ?: (env('APP_ENV') === 'production' ? null : 'dev-placeholder-secret'),
             'app_id' => env('REVERB_APP_ID', 'immoguinee'),
             'options' => [
                 'host' => env('REVERB_HOST', 'reverb'),

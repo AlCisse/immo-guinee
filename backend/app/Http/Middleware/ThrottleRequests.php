@@ -79,21 +79,85 @@ class ThrottleRequests
 
     /**
      * Resolve the client IP address, considering proxies.
+     *
+     * Priority: CF-Connecting-IP (Cloudflare) > X-Real-IP (Nginx) > X-Forwarded-For > Direct IP
+     * Only trusts headers if request comes from known proxy ranges.
      */
     protected function resolveRequestIp(Request $request): string
     {
-        // Trust Cloudflare and common proxy headers
-        $headers = ['CF-Connecting-IP', 'X-Forwarded-For', 'X-Real-IP'];
+        $directIp = $request->ip() ?? '0.0.0.0';
 
-        foreach ($headers as $header) {
-            if ($request->hasHeader($header)) {
-                $ips = explode(',', $request->header($header) ?? '');
+        // In production, only trust headers if from Cloudflare/Traefik
+        if (app()->isProduction() && !$this->isFromTrustedProxy($directIp)) {
+            return $directIp;
+        }
 
-                return trim($ips[0]);
+        // CF-Connecting-IP is the most reliable (set by Cloudflare)
+        if ($request->hasHeader('CF-Connecting-IP')) {
+            $cfIp = $request->header('CF-Connecting-IP');
+            if ($cfIp && filter_var($cfIp, FILTER_VALIDATE_IP)) {
+                return $cfIp;
             }
         }
 
-        return $request->ip() ?? '0.0.0.0';
+        // X-Real-IP (set by Nginx)
+        if ($request->hasHeader('X-Real-IP')) {
+            $realIp = $request->header('X-Real-IP');
+            if ($realIp && filter_var($realIp, FILTER_VALIDATE_IP)) {
+                return $realIp;
+            }
+        }
+
+        // X-Forwarded-For (take first valid IP)
+        if ($request->hasHeader('X-Forwarded-For')) {
+            $ips = explode(',', $request->header('X-Forwarded-For') ?? '');
+            foreach ($ips as $ip) {
+                $ip = trim($ip);
+                if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                    return $ip;
+                }
+            }
+        }
+
+        return $directIp;
+    }
+
+    /**
+     * Check if request comes from a trusted proxy.
+     */
+    protected function isFromTrustedProxy(string $ip): bool
+    {
+        // Docker/Traefik internal networks
+        $trustedRanges = [
+            '10.0.0.0/8',
+            '172.16.0.0/12',
+            '192.168.0.0/16',
+            '127.0.0.0/8',
+        ];
+
+        foreach ($trustedRanges as $range) {
+            if ($this->ipInRange($ip, $range)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if IP is in CIDR range.
+     */
+    protected function ipInRange(string $ip, string $range): bool
+    {
+        [$subnet, $bits] = explode('/', $range);
+        $ipLong = ip2long($ip);
+        $subnetLong = ip2long($subnet);
+        if ($ipLong === false || $subnetLong === false) {
+            return false;
+        }
+        $mask = -1 << (32 - (int) $bits);
+
+        return ($ipLong & $mask) === ($subnetLong & $mask);
     }
 
     /**

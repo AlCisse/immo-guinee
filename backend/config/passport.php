@@ -52,7 +52,7 @@ return [
     |
     */
 
-    'client_uuids' => true,
+    'client_uuids' => false,
 
     /*
     |--------------------------------------------------------------------------
@@ -66,8 +66,8 @@ return [
     */
 
     'personal_access_client' => [
-        'id' => env('PASSPORT_PERSONAL_ACCESS_CLIENT_ID'),
-        'secret' => env('PASSPORT_PERSONAL_ACCESS_CLIENT_SECRET'),
+        'id' => $getKey('/run/secrets/passport_personal_access_client_id', 'PASSPORT_PERSONAL_ACCESS_CLIENT_ID'),
+        'secret' => $getKey('/run/secrets/passport_personal_access_client_secret', 'PASSPORT_PERSONAL_ACCESS_CLIENT_SECRET'),
     ],
 
     /*
@@ -100,8 +100,8 @@ return [
 
     'expiration' => [
         'access_token' => env('PASSPORT_ACCESS_TOKEN_EXPIRE', 86400), // 24 hours
-        'refresh_token' => env('PASSPORT_REFRESH_TOKEN_EXPIRE', 2592000), // 30 days
-        'personal_access_token' => env('PASSPORT_PERSONAL_ACCESS_TOKEN_EXPIRE', 31536000), // 1 year
+        'refresh_token' => env('PASSPORT_REFRESH_TOKEN_EXPIRE', 604800), // 7 days (was 30)
+        'personal_access_token' => env('PASSPORT_PERSONAL_ACCESS_TOKEN_EXPIRE', 7776000), // 90 days (was 1 year)
     ],
 
 ];

@@ -71,6 +71,8 @@ class Visit extends Model
             'client_responded_at' => 'datetime',
             'notification_sent' => 'boolean',
             'notification_sent_at' => 'datetime',
+            'reminder_24h_sent' => 'boolean',
+            'reminder_12h_sent' => 'boolean',
         ];
     }
 

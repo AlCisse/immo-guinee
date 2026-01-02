@@ -20,6 +20,10 @@ secrets:
     file: ./secrets/passport_private_key
   passport_public_key:
     file: ./secrets/passport_public_key
+  passport_client_id:
+    file: ./secrets/passport_personal_access_client_id
+  passport_client_secret:
+    file: ./secrets/passport_personal_access_client_secret
   db_password:
     file: ./secrets/db_password
   redis_password:
@@ -83,6 +87,8 @@ services:
       - app_key
       - passport_private_key
       - passport_public_key
+      - passport_client_id
+      - passport_client_secret
       - db_password
       - redis_password
     environment:
@@ -103,6 +109,8 @@ services:
       - QUEUE_CONNECTION=redis
       - SCOUT_DRIVER=collection
       - STORAGE_STRATEGY=local
+      - PASSPORT_PERSONAL_ACCESS_CLIENT_ID_FILE=/run/secrets/passport_client_id
+      - PASSPORT_PERSONAL_ACCESS_CLIENT_SECRET_FILE=/run/secrets/passport_client_secret
     networks:
       - dev-network
     depends_on:

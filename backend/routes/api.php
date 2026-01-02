@@ -25,13 +25,43 @@ use App\Http\Controllers\Api\ConfigController;
 |
 */
 
+// Health check endpoints for container orchestration
 Route::get('/health', function () {
+    $checks = [
+        'database' => false,
+        'redis' => false,
+    ];
+
+    // Check database connection
+    try {
+        \DB::connection()->getPdo();
+        $checks['database'] = true;
+    } catch (\Exception $e) {
+        \Log::error('Health check: Database failed', ['error' => $e->getMessage()]);
+    }
+
+    // Check Redis connection
+    try {
+        \Illuminate\Support\Facades\Redis::connection()->ping();
+        $checks['redis'] = true;
+    } catch (\Exception $e) {
+        \Log::error('Health check: Redis failed', ['error' => $e->getMessage()]);
+    }
+
+    $allHealthy = !in_array(false, $checks, true);
+
     return response()->json([
-        'status' => 'ok',
+        'status' => $allHealthy ? 'ok' : 'degraded',
         'service' => 'ImmoGuinée API',
-        'version' => '1.0.0',
+        'version' => config('app.version', '1.0.0'),
         'timestamp' => now()->toIso8601String(),
-    ]);
+        'checks' => $checks,
+    ], $allHealthy ? 200 : 503);
+});
+
+// Simple liveness probe (no dependencies)
+Route::get('/health/live', function () {
+    return response()->json(['status' => 'ok'], 200);
 });
 
 // Broadcasting authentication for WebSocket (mobile uses /api/broadcasting/auth)

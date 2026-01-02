@@ -231,7 +231,7 @@ return [
             'root' => 'documents',
             'throw' => true,
             'options' => [
-                'ACL' => '',
+                'ACL' => 'private',
             ],
         ],
 
@@ -246,7 +246,7 @@ return [
             'root' => 'contracts',
             'throw' => true,
             'options' => [
-                'ACL' => '',
+                'ACL' => 'private',
             ],
         ],
 
@@ -261,7 +261,7 @@ return [
             'root' => 'certificates',
             'throw' => true,
             'options' => [
-                'ACL' => '',
+                'ACL' => 'private',
             ],
         ],
 
@@ -309,7 +309,7 @@ return [
             'root' => 'backups',
             'throw' => true,
             'options' => [
-                'ACL' => '',
+                'ACL' => 'private',
             ],
         ],
 
@@ -331,7 +331,7 @@ return [
             'throw' => true,
             'visibility' => 'private',
             'options' => [
-                'ACL' => '', // Private - no public access
+                'ACL' => 'private',
             ],
         ],
 

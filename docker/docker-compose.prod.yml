@@ -210,3 +210,11 @@ secrets:
     external: true
   n8n_smtp_password:
     external: true
+  n8n_password:
+    external: true
+  elasticsearch_password:
+    external: true
+  passport_personal_access_client_id:
+    external: true
+  passport_personal_access_client_secret:
+    external: true
