@@ -453,7 +453,7 @@ services:
   # ==============================================
   waha:
     image: devlikeapro/waha:latest
-    entrypoint: /bin/sh -c 'export WAHA_API_KEY=$$(cat /run/secrets/waha_api_key) && export WAHA_DASHBOARD_PASSWORD=$$(cat /run/secrets/waha_password) && /usr/bin/tini -- /entrypoint.sh'
+    entrypoint: /bin/sh -c 'export WAHA_API_KEY=$$(cat /run/secrets/waha_api_key) && export WAHA_DASHBOARD_PASSWORD=$$(cat /run/secrets/waha_password) && (sleep 15 && /start-session.sh &) && /usr/bin/tini -- /entrypoint.sh'
     environment:
       # WEBJS engine - Create session manually via API or dashboard
       - WAHA_PRINT_QR=false
@@ -472,6 +472,10 @@ services:
     volumes:
       - waha-sessions:/app/.sessions
       - waha-data:/app/.waha
+    configs:
+      - source: waha_start_session
+        target: /start-session.sh
+        mode: 0755
     networks:
       - immog-network
     deploy:
@@ -573,6 +577,8 @@ configs:
     file: ./laravel-echo/laravel-echo-server.json
   prometheus_config:
     file: ../monitoring/prometheus/prometheus.yml
+  waha_start_session:
+    file: ./waha/start-session.sh
 
 # ==============================================
 # SECRETS - 32-char passwords stored securely
