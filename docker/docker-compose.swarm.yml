@@ -453,7 +453,38 @@ services:
   # ==============================================
   waha:
     image: devlikeapro/waha:latest
-    entrypoint: /bin/sh -c 'export WAHA_API_KEY=$$(cat /run/secrets/waha_api_key) && export WAHA_DASHBOARD_PASSWORD=$$(cat /run/secrets/waha_password) && (sleep 15 && /start-session.sh &) && /usr/bin/tini -- /entrypoint.sh'
+    entrypoint: >
+      /bin/sh -c '
+        export WAHA_API_KEY=$$(cat /run/secrets/waha_api_key)
+        export WAHA_DASHBOARD_PASSWORD=$$(cat /run/secrets/waha_password)
+
+        # Start session auto-starter in background
+        (
+          sleep 20
+          echo "[waha-session] Starting auto-session..."
+          for i in 1 2 3 4 5 6 7 8 9 10; do
+            HEALTH=$$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/health 2>/dev/null)
+            if [ "$$HEALTH" = "200" ] || [ "$$HEALTH" = "401" ]; then
+              SESSIONS=$$(curl -s -X GET "http://localhost:3000/api/sessions" -H "X-Api-Key: $$WAHA_API_KEY")
+              if echo "$$SESSIONS" | grep -q "default"; then
+                echo "[waha-session] Session default already exists"
+              else
+                echo "[waha-session] Creating session default..."
+                curl -s -X POST "http://localhost:3000/api/sessions/start" \
+                  -H "X-Api-Key: $$WAHA_API_KEY" \
+                  -H "Content-Type: application/json" \
+                  -d "{\"name\": \"default\"}"
+                echo "[waha-session] Session created"
+              fi
+              break
+            fi
+            echo "[waha-session] Waiting for WAHA... ($$i/10)"
+            sleep 3
+          done
+        ) &
+
+        /usr/bin/tini -- /entrypoint.sh
+      '
     environment:
       # WEBJS engine - Create session manually via API or dashboard
       - WAHA_PRINT_QR=false
@@ -472,10 +503,6 @@ services:
     volumes:
       - waha-sessions:/app/.sessions
       - waha-data:/app/.waha
-    configs:
-      - source: waha_start_session
-        target: /start-session.sh
-        mode: 0755
     networks:
       - immog-network
     deploy:
@@ -577,8 +604,6 @@ configs:
     file: ./laravel-echo/laravel-echo-server.json
   prometheus_config:
     file: ../monitoring/prometheus/prometheus.yml
-  waha_start_session:
-    file: ./waha/start-session.sh
 
 # ==============================================
 # SECRETS - 32-char passwords stored securely
