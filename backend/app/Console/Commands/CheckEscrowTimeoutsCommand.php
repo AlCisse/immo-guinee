@@ -31,7 +31,7 @@ class CheckEscrowTimeoutsCommand extends Command
 
         // Find all payments in escrow status
         $escrowPayments = Payment::where('statut', 'EN_ESCROW')
-            ->where('date_confirmation', '<=', now()->subHours(48))
+            ->where('escrow_started_at', '<=', now()->subHours(48))
             ->get();
 
         $this->info("Found {$escrowPayments->count()} payments in escrow exceeding 48h.");

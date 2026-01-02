@@ -49,10 +49,10 @@ Schedule::command('db:backup --compress')->dailyAt('03:00');
 Schedule::command('listings:expire')->daily();
 
 // Clean up expired OTP codes
-Schedule::command('otp:cleanup')->hourly();
+// Removed: otp:cleanup command does not exist
 
 // Sync Elasticsearch index
-Schedule::command('scout:import')->hourly();
+Schedule::command('scout:import', ['model' => 'App\Models\Listing'])->hourly();
 
 // Generate monthly reports
 Schedule::command('reports:generate')->monthlyOn(1, '00:00');

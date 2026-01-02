@@ -15,6 +15,7 @@ http:
       tls: {}
       middlewares:
         - compress
+        - security-headers
       priority: 1
 
     # Backend API - HTTPS
@@ -26,6 +27,7 @@ http:
       tls: {}
       middlewares:
         - api-ratelimit
+        - security-headers
       priority: 100
 
     # WebSocket (Laravel Reverb) - HTTPS
