@@ -470,10 +470,10 @@ services:
                 echo "[waha-session] Session default already exists"
               else
                 echo "[waha-session] Creating session default..."
-                curl -s -X POST "http://localhost:3000/api/sessions/start" \
+                curl -s -X POST "http://localhost:3000/api/sessions" \
                   -H "X-Api-Key: $$WAHA_API_KEY" \
                   -H "Content-Type: application/json" \
-                  -d "{\"name\": \"default\"}"
+                  -d "{\"name\": \"default\", \"start\": true, \"config\": {\"webjs\": {}}}"
                 echo "[waha-session] Session created"
               fi
               break
