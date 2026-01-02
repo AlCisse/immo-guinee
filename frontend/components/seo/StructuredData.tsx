@@ -49,7 +49,7 @@ export function OrganizationStructuredData() {
     name: 'ImmoGuinée',
     description: 'La plus grande plateforme immobilière de Guinée',
     url: 'https://immoguinee.com',
-    logo: 'https://immoguinee.com/logo.png',
+    logo: 'https://immoguinee.com/images/logo.png',
     contactPoint: {
       '@type': 'ContactPoint',
       telephone: '+224-XXX-XXX-XXX',

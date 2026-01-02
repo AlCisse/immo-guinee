@@ -3,6 +3,7 @@ import { Inter, Poppins } from 'next/font/google';
 import './globals.css';
 import 'leaflet/dist/leaflet.css';
 import { Providers } from './providers';
+import { OrganizationStructuredData } from '@/components/seo/StructuredData';
 
 // Force dynamic rendering for all pages to avoid SSG issues with client hooks
 export const dynamic = 'force-dynamic';
@@ -64,17 +65,17 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'fr_GN',
-    url: 'https://immog.gn',
+    url: 'https://immoguinee.com',
     siteName: 'ImmoGuinée',
     title: 'ImmoGuinée - Plateforme Immobilière en Guinée',
     description:
       'Trouvez votre logement idéal en Guinée. Location de maisons, appartements et terrains.',
     images: [
       {
-        url: '/og-image.jpg',
+        url: 'https://immoguinee.com/images/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'ImmoGuinée',
+        alt: 'ImmoGuinée - Plateforme Immobilière en Guinée',
       },
     ],
   },
@@ -82,7 +83,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'ImmoGuinée - Plateforme Immobilière en Guinée',
     description: 'Trouvez votre logement idéal en Guinée.',
-    images: ['/twitter-image.jpg'],
+    images: ['https://immoguinee.com/images/og-image.png'],
   },
   robots: {
     index: true,
@@ -104,6 +105,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" suppressHydrationWarning>
+      <head>
+        <OrganizationStructuredData />
+      </head>
       <body
         className={`${inter.variable} ${poppins.variable} font-sans antialiased`}
         suppressHydrationWarning
