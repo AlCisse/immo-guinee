@@ -182,6 +182,9 @@ services:
       - passport_client_secret
       - reverb_app_key
       - reverb_app_secret
+      - waha_api_key
+      - do_spaces_access_key
+      - do_spaces_secret_key
     networks:
       - immog-network
     environment:
@@ -216,6 +219,7 @@ services:
       - REVERB_APP_SECRET_FILE=/run/secrets/reverb_app_secret
       - PASSPORT_PRIVATE_KEY_FILE=/run/secrets/passport_private_key
       - PASSPORT_PUBLIC_KEY_FILE=/run/secrets/passport_public_key
+      - WAHA_API_KEY_FILE=/run/secrets/waha_api_key
     deploy:
       mode: replicated
       replicas: 2
@@ -244,6 +248,11 @@ services:
     secrets:
       - db_password
       - redis_password
+      - waha_api_key
+      - jwt_secret
+      - passport_client_secret
+      - reverb_app_key
+      - reverb_app_secret
     networks:
       - immog-network
     environment:
@@ -255,6 +264,11 @@ services:
       - DB_PASSWORD_FILE=/run/secrets/db_password
       - REDIS_HOST=tasks.redis
       - REDIS_PASSWORD_FILE=/run/secrets/redis_password
+      - WAHA_API_KEY_FILE=/run/secrets/waha_api_key
+      - JWT_SECRET_FILE=/run/secrets/jwt_secret
+      - PASSPORT_PERSONAL_ACCESS_CLIENT_SECRET_FILE=/run/secrets/passport_client_secret
+      - REVERB_APP_KEY_FILE=/run/secrets/reverb_app_key
+      - REVERB_APP_SECRET_FILE=/run/secrets/reverb_app_secret
     deploy:
       mode: replicated
       replicas: 3
@@ -276,6 +290,11 @@ services:
     secrets:
       - db_password
       - redis_password
+      - waha_api_key
+      - jwt_secret
+      - passport_client_secret
+      - reverb_app_key
+      - reverb_app_secret
     networks:
       - immog-network
     environment:
@@ -287,6 +306,11 @@ services:
       - DB_PASSWORD_FILE=/run/secrets/db_password
       - REDIS_HOST=tasks.redis
       - REDIS_PASSWORD_FILE=/run/secrets/redis_password
+      - WAHA_API_KEY_FILE=/run/secrets/waha_api_key
+      - JWT_SECRET_FILE=/run/secrets/jwt_secret
+      - PASSPORT_PERSONAL_ACCESS_CLIENT_SECRET_FILE=/run/secrets/passport_client_secret
+      - REVERB_APP_KEY_FILE=/run/secrets/reverb_app_key
+      - REVERB_APP_SECRET_FILE=/run/secrets/reverb_app_secret
     deploy:
       mode: replicated
       replicas: 1
