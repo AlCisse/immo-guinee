@@ -72,7 +72,7 @@ export const metadata: Metadata = {
       'Trouvez votre logement idéal en Guinée. Location de maisons, appartements et terrains.',
     images: [
       {
-        url: 'https://immoguinee.com/images/og-image.png',
+        url: 'https://immoguinee.com/images/banner-hero.jpg',
         width: 1200,
         height: 630,
         alt: 'ImmoGuinée - Plateforme Immobilière en Guinée',
@@ -83,7 +83,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'ImmoGuinée - Plateforme Immobilière en Guinée',
     description: 'Trouvez votre logement idéal en Guinée.',
-    images: ['https://immoguinee.com/images/og-image.png'],
+    images: ['https://immoguinee.com/images/banner-hero.jpg'],
   },
   robots: {
     index: true,
