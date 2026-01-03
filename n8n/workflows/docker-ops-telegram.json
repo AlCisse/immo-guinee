@@ -660,8 +660,5 @@
     "saveExecutionProgress": true,
     "saveManualExecutions": true
   },
-  "tags": [{"name": "monitoring"}, {"name": "telegram"}, {"name": "docker"}, {"name": "ops"}],
-  "active": false,
-  "versionId": "1",
-  "id": "docker-ops-telegram"
+  "tags": [{"name": "monitoring"}, {"name": "telegram"}, {"name": "docker"}, {"name": "ops"}]
 }
