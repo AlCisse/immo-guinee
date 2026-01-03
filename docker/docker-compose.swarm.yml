@@ -459,6 +459,10 @@ services:
       - EXECUTIONS_DATA_PRUNE=true
       # Activer Execute Command et LocalFileTrigger (bloques par defaut)
       - NODES_EXCLUDE=[]
+      # Task runner pour les nodes Code
+      - N8N_RUNNERS_ENABLED=true
+      - N8N_RUNNERS_MODE=internal
+      - N8N_RUNNERS_TASK_REQUEST_TIMEOUT=120
     secrets:
       - n8n_password
       - n8n_ssh_private_key
