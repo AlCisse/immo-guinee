@@ -463,6 +463,9 @@ services:
       - N8N_RUNNERS_ENABLED=true
       - N8N_RUNNERS_MODE=internal
       - N8N_RUNNERS_TASK_REQUEST_TIMEOUT=120
+      # WAHA WhatsApp API
+      - WAHA_URL=http://immog_waha:3000
+      - WAHA_API_KEY=K8542BSk38QRQcrmzpMhsfQep79d3qiA
     secrets:
       - n8n_password
       - n8n_ssh_private_key
