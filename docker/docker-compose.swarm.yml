@@ -93,6 +93,9 @@ services:
       - immog-network
     environment:
       - NODE_ENV=production
+      # Internal API URL for server-side rendering (SSR)
+      # This allows the frontend to fetch data from the API during SSR
+      - INTERNAL_API_URL=http://nginx:80/api
       # WebSocket configuration for Laravel Echo
       - NEXT_PUBLIC_WEBSOCKET_HOST=ws.immoguinee.com
       - NEXT_PUBLIC_WEBSOCKET_PORT=443

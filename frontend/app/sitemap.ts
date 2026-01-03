@@ -7,24 +7,33 @@ interface ListingForSitemap {
 }
 
 async function fetchAllListings(): Promise<ListingForSitemap[]> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://immoguinee.com/api';
+  // For SSR, use internal Docker network URL or public URL as fallback
+  const internalApiUrl = process.env.INTERNAL_API_URL || 'http://nginx:80/api';
+  const publicApiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://immoguinee.com/api';
 
-  try {
-    const response = await fetch(`${apiUrl}/annonces?statut=ACTIVE&limit=1000`, {
-      next: { revalidate: 3600 }, // Revalidate every hour
-    });
+  const apiUrls = [internalApiUrl, publicApiUrl];
 
-    if (!response.ok) {
-      console.error('Failed to fetch listings for sitemap:', response.status);
-      return [];
+  for (const apiUrl of apiUrls) {
+    try {
+      const response = await fetch(`${apiUrl}/annonces?statut=ACTIVE&limit=1000`, {
+        next: { revalidate: 3600 }, // Revalidate every hour
+        headers: {
+          Accept: 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.data || [];
+      }
+    } catch (error) {
+      // Try next URL
+      continue;
     }
-
-    const data = await response.json();
-    return data.data || [];
-  } catch (error) {
-    console.error('Error fetching listings for sitemap:', error);
-    return [];
   }
+
+  console.error('Failed to fetch listings for sitemap from all API URLs');
+  return [];
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

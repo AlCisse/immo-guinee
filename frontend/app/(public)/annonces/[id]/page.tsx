@@ -26,23 +26,35 @@ interface ListingData {
 }
 
 async function fetchListing(id: string): Promise<ListingData | null> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://immoguinee.com/api';
+  // For SSR, use internal Docker network URL or public URL as fallback
+  // INTERNAL_API_URL is set in Docker for internal service-to-service communication
+  const internalApiUrl = process.env.INTERNAL_API_URL || 'http://nginx:80/api';
+  const publicApiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://immoguinee.com/api';
 
-  try {
-    const response = await fetch(`${apiUrl}/annonces/${id}`, {
-      next: { revalidate: 300 }, // Cache for 5 minutes
-    });
+  // Try internal URL first (for Docker), fallback to public URL
+  const apiUrls = [internalApiUrl, publicApiUrl];
 
-    if (!response.ok) {
-      return null;
+  for (const apiUrl of apiUrls) {
+    try {
+      const response = await fetch(`${apiUrl}/annonces/${id}`, {
+        next: { revalidate: 300 }, // Cache for 5 minutes
+        headers: {
+          Accept: 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.data || data;
+      }
+    } catch (error) {
+      // Try next URL
+      continue;
     }
-
-    const data = await response.json();
-    return data.data || data;
-  } catch (error) {
-    console.error('Error fetching listing for SEO:', error);
-    return null;
   }
+
+  console.error('Failed to fetch listing from all API URLs');
+  return null;
 }
 
 function formatPrice(price: number): string {
