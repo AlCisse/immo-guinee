@@ -18,6 +18,9 @@ class SecurityHeaders
     {
         $response = $next($request);
 
+        // Remove PHP version exposure
+        $response->headers->remove('X-Powered-By');
+
         // Prevent clickjacking attacks
         $response->headers->set('X-Frame-Options', 'DENY');
 
@@ -27,8 +30,8 @@ class SecurityHeaders
         // Enable XSS filter
         $response->headers->set('X-XSS-Protection', '1; mode=block');
 
-        // Enforce HTTPS
-        $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+        // Enforce HTTPS with preload
+        $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
 
         // Content Security Policy - Strict mode for production
         // Note: If you need inline scripts, use nonce-based CSP instead

@@ -56,6 +56,12 @@ RUN pecl install redis \
 RUN pecl install imagick \
     && docker-php-ext-enable imagick
 
+# PHP Security Configuration
+RUN echo "expose_php = Off" > /usr/local/etc/php/conf.d/security.ini \
+    && echo "display_errors = Off" >> /usr/local/etc/php/conf.d/security.ini \
+    && echo "log_errors = On" >> /usr/local/etc/php/conf.d/security.ini \
+    && echo "error_log = /var/log/php_errors.log" >> /usr/local/etc/php/conf.d/security.ini
+
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
