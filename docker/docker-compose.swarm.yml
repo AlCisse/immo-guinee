@@ -457,9 +457,8 @@ services:
       - GENERIC_TIMEZONE=Africa/Conakry
       # Enable Execute Command node (disabled by default since n8n 2.0)
       - EXECUTIONS_DATA_PRUNE=true
-      # Activer le node Execute Command (bloque par defaut pour securite)
-      - N8N_REINSTALL_MISSING_PACKAGES=true
-      - NODES_EXCLUDE=
+      # Activer Execute Command et LocalFileTrigger (bloques par defaut)
+      - NODES_EXCLUDE=[]
     secrets:
       - n8n_password
       - n8n_ssh_private_key
