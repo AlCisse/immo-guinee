@@ -3,7 +3,7 @@ import { Inter, Poppins } from 'next/font/google';
 import './globals.css';
 import 'leaflet/dist/leaflet.css';
 import { Providers } from './providers';
-import { OrganizationStructuredData } from '@/components/seo/StructuredData';
+import { OrganizationStructuredData, WebSiteStructuredData, LocalBusinessStructuredData } from '@/components/seo/StructuredData';
 
 // Force dynamic rendering for all pages to avoid SSG issues with client hooks
 export const dynamic = 'force-dynamic';
@@ -107,6 +107,8 @@ export default function RootLayout({
     <html lang="fr" suppressHydrationWarning>
       <head>
         <OrganizationStructuredData />
+        <WebSiteStructuredData />
+        <LocalBusinessStructuredData />
       </head>
       <body
         className={`${inter.variable} ${poppins.variable} font-sans antialiased`}

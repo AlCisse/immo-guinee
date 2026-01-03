@@ -47,20 +47,32 @@ export function OrganizationStructuredData() {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: 'ImmoGuinée',
-    description: 'La plus grande plateforme immobilière de Guinée',
+    description: 'La plus grande plateforme immobilière de Guinée. Trouvez des maisons, appartements et terrains à louer ou à vendre à Conakry et partout en Guinée.',
     url: 'https://immoguinee.com',
     logo: 'https://immoguinee.com/images/logo.png',
+    image: 'https://immoguinee.com/images/banner-hero.jpg',
+    foundingDate: '2024',
+    areaServed: {
+      '@type': 'Country',
+      name: 'Guinée',
+    },
     contactPoint: {
       '@type': 'ContactPoint',
-      telephone: '+224-XXX-XXX-XXX',
+      telephone: '+224-664-09-64-62',
       contactType: 'customer service',
       availableLanguage: ['fr', 'en'],
+      areaServed: 'GN',
     },
     sameAs: [
       'https://facebook.com/immoguinee',
       'https://twitter.com/immoguinee',
       'https://instagram.com/immoguinee',
     ],
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: 'Conakry',
+      addressCountry: 'GN',
+    },
   };
 
   return (
@@ -81,6 +93,78 @@ export function BreadcrumbStructuredData({ items }: { items: Array<{ name: strin
       name: item.name,
       item: item.url,
     })),
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+    />
+  );
+}
+
+export function WebSiteStructuredData() {
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'ImmoGuinée',
+    alternateName: 'Immo Guinée',
+    url: 'https://immoguinee.com',
+    description: 'La plateforme immobilière de référence en Guinée',
+    inLanguage: 'fr-GN',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: 'https://immoguinee.com/recherche?q={search_term_string}',
+      },
+      'query-input': 'required name=search_term_string',
+    },
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+    />
+  );
+}
+
+export function LocalBusinessStructuredData() {
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'RealEstateAgent',
+    name: 'ImmoGuinée',
+    description: 'Agence immobilière en ligne - Location et vente de biens immobiliers en Guinée',
+    url: 'https://immoguinee.com',
+    logo: 'https://immoguinee.com/images/logo.png',
+    image: 'https://immoguinee.com/images/banner-hero.jpg',
+    telephone: '+224-664-09-64-62',
+    priceRange: 'GNF',
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: 'Conakry',
+      addressCountry: 'GN',
+    },
+    geo: {
+      '@type': 'GeoCoordinates',
+      latitude: 9.6412,
+      longitude: -13.5784,
+    },
+    areaServed: [
+      { '@type': 'City', name: 'Conakry' },
+      { '@type': 'AdministrativeArea', name: 'Kaloum' },
+      { '@type': 'AdministrativeArea', name: 'Dixinn' },
+      { '@type': 'AdministrativeArea', name: 'Matam' },
+      { '@type': 'AdministrativeArea', name: 'Ratoma' },
+      { '@type': 'AdministrativeArea', name: 'Matoto' },
+    ],
+    openingHoursSpecification: {
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+      opens: '08:00',
+      closes: '18:00',
+    },
   };
 
   return (
