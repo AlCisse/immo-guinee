@@ -1,34 +1,24 @@
 # Stage 1: Build SSH tools from Alpine
 FROM alpine:3.19 AS builder
 
-RUN apk add --no-cache \
-    openssh-client \
-    curl \
-    jq
+RUN apk add --no-cache openssh-client jq
+
+# Create a tarball of SSH and all its dependencies
+RUN mkdir -p /export/usr/bin /export/lib /export/usr/lib /export/etc/ssh && \
+    cp /usr/bin/ssh /usr/bin/ssh-keygen /usr/bin/scp /usr/bin/jq /export/usr/bin/ && \
+    cp /lib/ld-musl-*.so.1 /export/lib/ && \
+    for lib in $(ldd /usr/bin/ssh 2>/dev/null | grep -oE '/[^ ]+'); do \
+        cp "$lib" /export"$lib" 2>/dev/null || true; \
+    done && \
+    cp /etc/ssh/ssh_config /export/etc/ssh/ 2>/dev/null || true
 
 # Stage 2: Copy tools to n8n image
 FROM docker.n8n.io/n8nio/n8n:latest
 
 USER root
 
-# Copy SSH client and dependencies from Alpine
-COPY --from=builder /usr/bin/ssh /usr/bin/ssh
-COPY --from=builder /usr/bin/ssh-keygen /usr/bin/ssh-keygen
-COPY --from=builder /usr/bin/scp /usr/bin/scp
-COPY --from=builder /usr/bin/curl /usr/bin/curl
-COPY --from=builder /usr/bin/jq /usr/bin/jq
-
-# Copy required libraries
-COPY --from=builder /lib/ld-musl-x86_64.so.1 /lib/ld-musl-x86_64.so.1
-COPY --from=builder /usr/lib/libcrypto.so.3 /usr/lib/libcrypto.so.3
-COPY --from=builder /usr/lib/libssl.so.3 /usr/lib/libssl.so.3
-COPY --from=builder /usr/lib/libcurl.so.4 /usr/lib/libcurl.so.4
-COPY --from=builder /usr/lib/libnghttp2.so.14 /usr/lib/libnghttp2.so.14
-COPY --from=builder /usr/lib/libbrotlidec.so.1 /usr/lib/libbrotlidec.so.1
-COPY --from=builder /usr/lib/libbrotlicommon.so.1 /usr/lib/libbrotlicommon.so.1
-COPY --from=builder /usr/lib/libz.so.1 /usr/lib/libz.so.1
-COPY --from=builder /usr/lib/libjq.so.1 /usr/lib/libjq.so.1
-COPY --from=builder /usr/lib/libonig.so.5 /usr/lib/libonig.so.5
+# Copy all SSH binaries and libraries
+COPY --from=builder /export/ /
 
 # Create .ssh directory
 RUN mkdir -p /home/node/.ssh && \
