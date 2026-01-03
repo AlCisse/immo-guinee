@@ -173,3 +173,8 @@ docker/secrets/
 nul
 .claude/settings.local.json
 Estate Agency Logo-3/
+
+# SSH Keys
+n8n/n8n-ssh-key
+n8n/n8n-ssh-key.pub
+n8n/*.key

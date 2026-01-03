@@ -1,0 +1,664 @@
+{
+  "name": "ImmoGuinee - Docker Ops & Monitoring",
+  "nodes": [
+    {
+      "id": "webhook-uptime",
+      "name": "Uptime Kuma Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [-336, -848],
+      "parameters": {
+        "path": "uptime-kuma-alerts",
+        "options": {},
+        "httpMethod": "POST"
+      },
+      "typeVersion": 2.1
+    },
+    {
+      "id": "telegram-trigger",
+      "name": "Telegram Commands",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "position": [-304, -336],
+      "parameters": {
+        "updates": ["message"],
+        "additionalFields": {}
+      },
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot",
+          "name": "ImmoGuinee Bot"
+        }
+      }
+    },
+    {
+      "id": "switch-webhook",
+      "name": "Check Heartbeat Status",
+      "type": "n8n-nodes-base.switch",
+      "position": [-112, -848],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "status-ok",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.body.heartbeat.msg }}",
+                    "rightValue": "running"
+                  }
+                ]
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "status-error",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    },
+                    "leftValue": "={{ $json.body.heartbeat.msg }}",
+                    "rightValue": "running"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "typeVersion": 3.3
+    },
+    {
+      "id": "switch-commands",
+      "name": "Route Commands",
+      "type": "n8n-nodes-base.switch",
+      "position": [16, 80],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "logs-cmd",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "leftValue": "={{ $json.message.text.toLowerCase() }}",
+                    "rightValue": "logs"
+                  }
+                ]
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "restart-cmd",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "leftValue": "={{ $json.message.text.toLowerCase() }}",
+                    "rightValue": "restart"
+                  }
+                ]
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "status-cmd",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.message.text.toLowerCase() }}",
+                    "rightValue": "status"
+                  }
+                ]
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "deploy-cmd",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.message.text.toLowerCase() }}",
+                    "rightValue": "deploy"
+                  }
+                ]
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "help-cmd",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.message.text.toLowerCase() }}",
+                    "rightValue": "/help"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "typeVersion": 3.3
+    },
+    {
+      "id": "extract-service",
+      "name": "Extract Service Name",
+      "type": "n8n-nodes-base.code",
+      "position": [400, -368],
+      "parameters": {
+        "language": "python",
+        "pythonCode": "# Services ImmoGuinee disponibles\nSERVICES = {\n    'frontend': 'immog_frontend',\n    'nginx': 'immog_nginx',\n    'php': 'immog_php',\n    'worker': 'immog_queue-worker',\n    'queue': 'immog_queue-worker',\n    'scheduler': 'immog_scheduler',\n    'redis': 'immog_redis',\n    'postgres': 'immog_postgres',\n    'db': 'immog_postgres',\n    'traefik': 'immog_traefik',\n    'reverb': 'immog_laravel-echo',\n    'echo': 'immog_laravel-echo',\n    'websocket': 'immog_laravel-echo',\n    'waha': 'immog_waha',\n    'whatsapp': 'immog_waha',\n    'minio': 'immog_minio',\n    'n8n': 'immog_n8n',\n    'grafana': 'immog_grafana',\n    'prometheus': 'immog_prometheus',\n    'pgadmin': 'immog_pgadmin'\n}\n\ndef extract_service_name(message):\n    parts = message.lower().split()\n    for part in parts:\n        if part.startswith('immog_'):\n            return part\n        clean_part = part.replace('_', '').replace('-', '')\n        if clean_part in SERVICES:\n            return SERVICES[clean_part]\n        for key, value in SERVICES.items():\n            if key in clean_part or clean_part in key:\n                return value\n    return None\n\nmessage = _input.first().json.message.text\nservice_name = extract_service_name(message)\n\nreturn {\n    \"service_name\": service_name,\n    \"original_message\": message,\n    \"valid_service\": service_name is not None\n}"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "merge-logs",
+      "name": "Merge Logs Request",
+      "type": "n8n-nodes-base.merge",
+      "position": [640, -368],
+      "parameters": {
+        "mode": "combine",
+        "options": {},
+        "combineBy": "combineByPosition"
+      },
+      "typeVersion": 3.2
+    },
+    {
+      "id": "merge-restart",
+      "name": "Merge Restart Request",
+      "type": "n8n-nodes-base.merge",
+      "position": [640, 0],
+      "parameters": {
+        "mode": "combine",
+        "options": {},
+        "combineBy": "combineByPosition"
+      },
+      "typeVersion": 3.2
+    },
+    {
+      "id": "get-logs",
+      "name": "Get Service Logs",
+      "type": "n8n-nodes-base.executeCommand",
+      "position": [864, -368],
+      "parameters": {
+        "command": "=ssh -i /run/secrets/n8n_ssh_private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@172.17.0.1 \"docker service logs --tail 100 --no-trunc {{ $json.service_name }} 2>&1 | tail -100\""
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "analyzing-msg",
+      "name": "Send Analyzing Message",
+      "type": "n8n-nodes-base.telegram",
+      "position": [1088, -368],
+      "parameters": {
+        "text": "=Analyse des logs de **{{ $('Merge Logs Request').item.json.service_name }}** en cours...",
+        "chatId": "5781849188",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "appendAttribution": false
+        }
+      },
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot",
+          "name": "ImmoGuinee Bot"
+        }
+      }
+    },
+    {
+      "id": "analyze-logs-ai",
+      "name": "AI Log Analysis",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [1312, -368],
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "options": {},
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Tu es un expert DevOps senior specialise dans Docker Swarm, Laravel, Next.js et PostgreSQL.\n\nContexte: Tu analyses les logs du projet ImmoGuinee, une plateforme immobiliere en Guinee.\nStack: Next.js 14, Laravel 11, PHP 8.3, PostgreSQL 16, Redis 7, Traefik, MinIO.\n\nFormat de reponse OBLIGATOIRE:\n\n**Resume** - Une phrase.\n**Cause Probable** - Une phrase claire.\n**Impact** - Fonctionnalite cassee, limitee ou non affectee.\n**Severite** (1-5) - Justifie en une ligne.\n**Actions Recommandees** - 2-3 bullets.\n**A Surveiller** - Un element.\n\nSois concis. Pas d'essais."
+            },
+            {
+              "content": "={{ $('Get Service Logs').item.json.stdout }}"
+            }
+          ]
+        }
+      },
+      "typeVersion": 1,
+      "credentials": {
+        "openAiApi": {
+          "id": "openai-credentials",
+          "name": "OpenAI API"
+        }
+      }
+    },
+    {
+      "id": "send-analysis",
+      "name": "Send Log Analysis",
+      "type": "n8n-nodes-base.telegram",
+      "position": [1664, -368],
+      "parameters": {
+        "text": "={{ $json.message.content }}",
+        "chatId": "5781849188",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "appendAttribution": false
+        }
+      },
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot",
+          "name": "ImmoGuinee Bot"
+        }
+      }
+    },
+    {
+      "id": "restart-msg",
+      "name": "Send Restart Message",
+      "type": "n8n-nodes-base.telegram",
+      "position": [864, 0],
+      "parameters": {
+        "text": "=Redemarrage de **{{ $json.service_name }}** en cours...",
+        "chatId": "5781849188",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "appendAttribution": false
+        }
+      },
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot",
+          "name": "ImmoGuinee Bot"
+        }
+      }
+    },
+    {
+      "id": "restart-service",
+      "name": "Restart Service (Swarm)",
+      "type": "n8n-nodes-base.executeCommand",
+      "position": [1088, 0],
+      "parameters": {
+        "command": "=ssh -i /run/secrets/n8n_ssh_private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@172.17.0.1 \"docker service update --force {{ $('Merge Restart Request').item.json.service_name }} 2>&1\""
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "check-restart",
+      "name": "Check Restart Result",
+      "type": "n8n-nodes-base.if",
+      "position": [1376, 0],
+      "parameters": {
+        "options": {},
+        "conditions": {
+          "options": {
+            "version": 2,
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "restart-success",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              },
+              "leftValue": "={{ $json.stdout }}",
+              "rightValue": "verify: Service"
+            }
+          ]
+        }
+      },
+      "typeVersion": 2.2
+    },
+    {
+      "id": "restart-success",
+      "name": "Restart Success",
+      "type": "n8n-nodes-base.telegram",
+      "position": [1664, -96],
+      "parameters": {
+        "text": "=Service **{{ $('Merge Restart Request').item.json.service_name }}** redemarre avec succes!",
+        "chatId": "5781849188",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "appendAttribution": false
+        }
+      },
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot",
+          "name": "ImmoGuinee Bot"
+        }
+      }
+    },
+    {
+      "id": "restart-failed",
+      "name": "Restart Failed",
+      "type": "n8n-nodes-base.telegram",
+      "position": [1664, 96],
+      "parameters": {
+        "text": "=Echec du redemarrage\n\n```\n{{ $('Restart Service (Swarm)').item.json.stderr || $('Restart Service (Swarm)').item.json.stdout }}\n```",
+        "chatId": "5781849188",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "appendAttribution": false
+        }
+      },
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot",
+          "name": "ImmoGuinee Bot"
+        }
+      }
+    },
+    {
+      "id": "get-status",
+      "name": "Get Swarm Status",
+      "type": "n8n-nodes-base.executeCommand",
+      "position": [448, 448],
+      "parameters": {
+        "command": "ssh -i /run/secrets/n8n_ssh_private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@172.17.0.1 \"docker service ls --format 'table {{.Name}}\\t{{.Replicas}}' | grep immog\""
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "format-status",
+      "name": "Format Status",
+      "type": "n8n-nodes-base.code",
+      "position": [672, 448],
+      "parameters": {
+        "language": "python",
+        "pythonCode": "stdout = _input.first().json.stdout\nlines = stdout.strip().split('\\n')\n\nformatted = \"**Status des Services ImmoGuinee**\\n\\n```\\n\"\n\nfor line in lines:\n    parts = line.split()\n    if len(parts) >= 2:\n        service = parts[0].replace('immog_', '')\n        replicas = parts[1] if len(parts) > 1 else 'N/A'\n        if '/' in replicas:\n            current, target = replicas.split('/')\n            emoji = '' if current == target else '' if current == '0' else ''\n        else:\n            emoji = ''\n        formatted += f\"{emoji} {service}: {replicas}\\n\"\n\nformatted += \"```\"\nreturn {\"formatted_status\": formatted}"
+      },
+      "typeVersion": 2
+    },
+    {
+      "id": "send-status",
+      "name": "Send Status",
+      "type": "n8n-nodes-base.telegram",
+      "position": [896, 448],
+      "parameters": {
+        "text": "={{ $json.formatted_status }}",
+        "chatId": "5781849188",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "appendAttribution": false
+        }
+      },
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot",
+          "name": "ImmoGuinee Bot"
+        }
+      }
+    },
+    {
+      "id": "deploy-msg",
+      "name": "Deploy Message",
+      "type": "n8n-nodes-base.telegram",
+      "position": [400, 700],
+      "parameters": {
+        "text": "Deploiement en cours... Cela peut prendre quelques minutes.",
+        "chatId": "5781849188",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot",
+          "name": "ImmoGuinee Bot"
+        }
+      }
+    },
+    {
+      "id": "run-deploy",
+      "name": "Run Deploy Script",
+      "type": "n8n-nodes-base.executeCommand",
+      "position": [624, 700],
+      "parameters": {
+        "command": "ssh -i /run/secrets/n8n_ssh_private_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@172.17.0.1 \"cd /home/ubuntu/immoguinee && git pull origin main && ./scripts/deploy-swarm.sh 2>&1 | tail -50\""
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "deploy-result",
+      "name": "Send Deploy Result",
+      "type": "n8n-nodes-base.telegram",
+      "position": [848, 700],
+      "parameters": {
+        "text": "=**Deploiement termine**\n\n```\n{{ $json.stdout.slice(-1500) }}\n```",
+        "chatId": "5781849188",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "appendAttribution": false
+        }
+      },
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot",
+          "name": "ImmoGuinee Bot"
+        }
+      }
+    },
+    {
+      "id": "send-help",
+      "name": "Send Help",
+      "type": "n8n-nodes-base.telegram",
+      "position": [400, 960],
+      "parameters": {
+        "text": "**Commandes ImmoGuinee Bot**\n\n`status` - Voir l'etat des services\n`logs <service>` - Analyser les logs\n`restart <service>` - Redemarrer un service\n`deploy` - Deployer les modifications\n`/help` - Afficher ce message\n\n**Services:** frontend, nginx, php, worker, scheduler, redis, postgres, traefik, waha, minio, reverb, n8n",
+        "chatId": "5781849188",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "appendAttribution": false
+        }
+      },
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot",
+          "name": "ImmoGuinee Bot"
+        }
+      }
+    },
+    {
+      "id": "ok-message",
+      "name": "OK Notification",
+      "type": "n8n-nodes-base.telegram",
+      "position": [112, -944],
+      "parameters": {
+        "text": "={{ $json.body.msg }}",
+        "chatId": "5781849188",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot",
+          "name": "ImmoGuinee Bot"
+        }
+      }
+    },
+    {
+      "id": "error-message",
+      "name": "Error Notification",
+      "type": "n8n-nodes-base.telegram",
+      "position": [112, -752],
+      "parameters": {
+        "text": "=**ALERTE** - Service en erreur!\n\nService: `{{ $json.body.monitor.name || $json.body.monitor.docker_container }}`\nStatus: {{ $json.body.heartbeat.msg }}\nHeure: {{ $json.body.heartbeat.time }}",
+        "chatId": "5781849188",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "appendAttribution": false
+        }
+      },
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot",
+          "name": "ImmoGuinee Bot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Uptime Kuma Webhook": {
+      "main": [[{"node": "Check Heartbeat Status", "type": "main", "index": 0}]]
+    },
+    "Check Heartbeat Status": {
+      "main": [
+        [{"node": "OK Notification", "type": "main", "index": 0}],
+        [{"node": "Error Notification", "type": "main", "index": 0}]
+      ]
+    },
+    "Telegram Commands": {
+      "main": [[
+        {"node": "Route Commands", "type": "main", "index": 0},
+        {"node": "Extract Service Name", "type": "main", "index": 0}
+      ]]
+    },
+    "Route Commands": {
+      "main": [
+        [{"node": "Merge Logs Request", "type": "main", "index": 0}],
+        [{"node": "Merge Restart Request", "type": "main", "index": 0}],
+        [{"node": "Get Swarm Status", "type": "main", "index": 0}],
+        [{"node": "Deploy Message", "type": "main", "index": 0}],
+        [{"node": "Send Help", "type": "main", "index": 0}]
+      ]
+    },
+    "Extract Service Name": {
+      "main": [[
+        {"node": "Merge Logs Request", "type": "main", "index": 1},
+        {"node": "Merge Restart Request", "type": "main", "index": 1}
+      ]]
+    },
+    "Merge Logs Request": {
+      "main": [[{"node": "Get Service Logs", "type": "main", "index": 0}]]
+    },
+    "Get Service Logs": {
+      "main": [[{"node": "Send Analyzing Message", "type": "main", "index": 0}]]
+    },
+    "Send Analyzing Message": {
+      "main": [[{"node": "AI Log Analysis", "type": "main", "index": 0}]]
+    },
+    "AI Log Analysis": {
+      "main": [[{"node": "Send Log Analysis", "type": "main", "index": 0}]]
+    },
+    "Merge Restart Request": {
+      "main": [[{"node": "Send Restart Message", "type": "main", "index": 0}]]
+    },
+    "Send Restart Message": {
+      "main": [[{"node": "Restart Service (Swarm)", "type": "main", "index": 0}]]
+    },
+    "Restart Service (Swarm)": {
+      "main": [[{"node": "Check Restart Result", "type": "main", "index": 0}]]
+    },
+    "Check Restart Result": {
+      "main": [
+        [{"node": "Restart Success", "type": "main", "index": 0}],
+        [{"node": "Restart Failed", "type": "main", "index": 0}]
+      ]
+    },
+    "Get Swarm Status": {
+      "main": [[{"node": "Format Status", "type": "main", "index": 0}]]
+    },
+    "Format Status": {
+      "main": [[{"node": "Send Status", "type": "main", "index": 0}]]
+    },
+    "Deploy Message": {
+      "main": [[{"node": "Run Deploy Script", "type": "main", "index": 0}]]
+    },
+    "Run Deploy Script": {
+      "main": [[{"node": "Send Deploy Result", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Africa/Conakry",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true
+  },
+  "tags": [{"name": "monitoring"}, {"name": "telegram"}, {"name": "docker"}, {"name": "ops"}]
+}
