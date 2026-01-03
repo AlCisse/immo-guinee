@@ -16,6 +16,14 @@ import {
   MessageSquare,
   FileText,
   Phone,
+  BookOpen,
+  Camera,
+  MapPin,
+  DollarSign,
+  CheckCircle,
+  Lightbulb,
+  AlertTriangle,
+  Sparkles,
 } from 'lucide-react';
 
 const faqCategories = [
@@ -101,10 +109,138 @@ const faqCategories = [
   },
 ];
 
+// Tutorial Steps Data
+const tutorialSteps = [
+  {
+    step: 1,
+    title: "Type d'opération et Type de bien",
+    icon: Home,
+    color: 'from-primary-500 to-orange-500',
+    content: [
+      {
+        subtitle: "Choisir le type d'opération",
+        items: [
+          { label: 'Louer', desc: 'Location longue durée - Prix mensuel' },
+          { label: 'Louer courte durée', desc: 'Location meublée temporaire - Prix par jour' },
+          { label: 'Vendre', desc: 'Mise en vente - Prix total' },
+        ],
+      },
+      {
+        subtitle: 'Choisir le type de bien',
+        items: [
+          { label: 'Résidentiel', desc: 'Studio, Chambre-Salon, Appartement, Villa, Duplex' },
+          { label: 'Commercial', desc: 'Bureau, Boutique, Entrepôt, Terrain' },
+        ],
+      },
+    ],
+  },
+  {
+    step: 2,
+    title: 'Détails et Prix',
+    icon: DollarSign,
+    color: 'from-blue-500 to-cyan-500',
+    content: [
+      {
+        subtitle: 'Titre de l\'annonce',
+        tips: [
+          '15 à 100 caractères',
+          'Soyez descriptif et attractif',
+          'Exemple: "Villa 4 chambres avec piscine à Kipé"',
+        ],
+        avoid: ['Titres vagues comme "Belle maison"', 'MAJUSCULES ou "URGENT!!!"'],
+      },
+      {
+        subtitle: 'Description',
+        tips: [
+          '50 à 2000 caractères',
+          'Structure: Accroche → Caractéristiques → Localisation → Appel à l\'action',
+          'Mentionnez les équipements clés',
+        ],
+      },
+      {
+        subtitle: 'Prix et caractéristiques',
+        tips: [
+          'Prix en GNF selon le type (mensuel/jour/total)',
+          'Superficie obligatoire pour tous les biens',
+          'Chambres requises pour les biens résidentiels',
+        ],
+      },
+      {
+        subtitle: 'Optimisation IA',
+        tips: [
+          'Cliquez sur "Optimiser avec l\'IA" pour améliorer votre texte',
+          'Corrige les fautes et améliore le référencement',
+        ],
+      },
+    ],
+  },
+  {
+    step: 3,
+    title: 'Localisation',
+    icon: MapPin,
+    color: 'from-emerald-500 to-teal-500',
+    content: [
+      {
+        subtitle: 'Sélectionner l\'emplacement',
+        tips: [
+          'Choisissez la région (Conakry par défaut)',
+          'Sélectionnez la commune (Kaloum, Dixinn, Matam, Ratoma, Matoto)',
+          'Indiquez le quartier précis',
+        ],
+      },
+      {
+        subtitle: 'Quartiers populaires',
+        items: [
+          { label: 'Ratoma', desc: 'Kipé, Nongo, Taouyah' },
+          { label: 'Matam', desc: 'Madina, Hamdallaye' },
+          { label: 'Kaloum', desc: 'Almamya, Boulbinet, Centre-ville' },
+        ],
+      },
+    ],
+  },
+  {
+    step: 4,
+    title: 'Photos',
+    icon: Camera,
+    color: 'from-purple-500 to-pink-500',
+    content: [
+      {
+        subtitle: 'Exigences',
+        tips: [
+          'Minimum 3 photos, maximum 10',
+          'Formats: JPG, PNG, WebP',
+          'Taille max: 10 MB par photo',
+        ],
+      },
+      {
+        subtitle: 'Conseils pour de bonnes photos',
+        tips: [
+          'Photographiez en journée avec lumière naturelle',
+          'Rangez et nettoyez avant de photographier',
+          'Montrez toutes les pièces principales',
+          'La première photo = couverture de l\'annonce',
+        ],
+      },
+      {
+        subtitle: 'Ordre recommandé',
+        items: [
+          { label: '1', desc: 'Vue extérieure / Façade' },
+          { label: '2', desc: 'Salon' },
+          { label: '3', desc: 'Cuisine' },
+          { label: '4', desc: 'Chambres' },
+          { label: '5', desc: 'Salle de bain, Extérieur' },
+        ],
+      },
+    ],
+  },
+];
+
 export default function AidePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [openQuestion, setOpenQuestion] = useState<string | null>(null);
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [activeStep, setActiveStep] = useState(1);
 
   const filteredCategories = searchQuery
     ? faqCategories.map(cat => ({
@@ -212,6 +348,196 @@ export default function AidePage() {
               </button>
             );
           })}
+        </motion.div>
+
+        {/* Tutorial Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="mb-8"
+        >
+          <button
+            onClick={() => setShowTutorial(!showTutorial)}
+            className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl p-6 text-left hover:from-emerald-600 hover:to-teal-600 transition-all shadow-lg"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center">
+                  <BookOpen className="w-7 h-7 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">
+                    Guide : Comment créer une annonce ?
+                  </h2>
+                  <p className="text-white/80 text-sm">
+                    Tutoriel complet en 4 étapes simples
+                  </p>
+                </div>
+              </div>
+              <ChevronDown className={`w-6 h-6 text-white transition-transform ${showTutorial ? 'rotate-180' : ''}`} />
+            </div>
+          </button>
+
+          <AnimatePresence>
+            {showTutorial && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-hidden"
+              >
+                <div className="bg-white dark:bg-dark-card rounded-b-2xl shadow-soft border-t-0 p-6">
+                  {/* Step Indicators */}
+                  <div className="flex items-center justify-between mb-8 overflow-x-auto pb-2">
+                    {tutorialSteps.map((step, index) => {
+                      const Icon = step.icon;
+                      const isActive = activeStep === step.step;
+                      const isPast = activeStep > step.step;
+
+                      return (
+                        <button
+                          key={step.step}
+                          onClick={() => setActiveStep(step.step)}
+                          className="flex flex-col items-center min-w-[80px]"
+                        >
+                          <div className={`
+                            w-12 h-12 rounded-full flex items-center justify-center mb-2 transition-all
+                            ${isActive
+                              ? `bg-gradient-to-br ${step.color} shadow-lg`
+                              : isPast
+                                ? 'bg-emerald-500'
+                                : 'bg-neutral-200 dark:bg-dark-border'
+                            }
+                          `}>
+                            {isPast ? (
+                              <CheckCircle className="w-6 h-6 text-white" />
+                            ) : (
+                              <Icon className={`w-6 h-6 ${isActive ? 'text-white' : 'text-neutral-400'}`} />
+                            )}
+                          </div>
+                          <span className={`text-xs font-medium text-center ${isActive ? 'text-neutral-900 dark:text-white' : 'text-neutral-500'}`}>
+                            Étape {step.step}
+                          </span>
+                          {index < tutorialSteps.length - 1 && (
+                            <div className={`hidden md:block absolute h-0.5 w-full max-w-[60px] top-6 left-1/2 ml-6 ${isPast ? 'bg-emerald-500' : 'bg-neutral-200 dark:bg-dark-border'}`} />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Active Step Content */}
+                  {tutorialSteps.map((step) => {
+                    if (step.step !== activeStep) return null;
+                    const Icon = step.icon;
+
+                    return (
+                      <motion.div
+                        key={step.step}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <div className="flex items-center gap-3 mb-6">
+                          <div className={`w-10 h-10 bg-gradient-to-br ${step.color} rounded-xl flex items-center justify-center`}>
+                            <Icon className="w-5 h-5 text-white" />
+                          </div>
+                          <h3 className="text-lg font-bold text-neutral-900 dark:text-white">
+                            Étape {step.step} : {step.title}
+                          </h3>
+                        </div>
+
+                        <div className="space-y-6">
+                          {step.content.map((section, sIdx) => (
+                            <div key={sIdx} className="bg-neutral-50 dark:bg-dark-bg rounded-xl p-4">
+                              <h4 className="font-semibold text-neutral-900 dark:text-white mb-3 flex items-center gap-2">
+                                <Sparkles className="w-4 h-4 text-primary-500" />
+                                {section.subtitle}
+                              </h4>
+
+                              {section.items && (
+                                <div className="space-y-2">
+                                  {section.items.map((item, iIdx) => (
+                                    <div key={iIdx} className="flex items-start gap-3 p-2 bg-white dark:bg-dark-card rounded-lg">
+                                      <div className="w-8 h-8 bg-primary-100 dark:bg-primary-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <span className="text-sm font-bold text-primary-600 dark:text-primary-400">{item.label.length <= 2 ? item.label : item.label[0]}</span>
+                                      </div>
+                                      <div>
+                                        {item.label.length > 2 && <p className="font-medium text-neutral-900 dark:text-white text-sm">{item.label}</p>}
+                                        <p className="text-neutral-600 dark:text-neutral-400 text-sm">{item.desc}</p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {section.tips && (
+                                <ul className="space-y-2">
+                                  {section.tips.map((tip, tIdx) => (
+                                    <li key={tIdx} className="flex items-start gap-2 text-sm">
+                                      <Lightbulb className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                                      <span className="text-neutral-700 dark:text-neutral-300">{tip}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+
+                              {section.avoid && (
+                                <div className="mt-3 p-3 bg-red-50 dark:bg-red-500/10 rounded-lg">
+                                  <p className="text-sm font-medium text-red-700 dark:text-red-400 mb-2 flex items-center gap-2">
+                                    <AlertTriangle className="w-4 h-4" />
+                                    À éviter
+                                  </p>
+                                  <ul className="space-y-1">
+                                    {section.avoid.map((item, aIdx) => (
+                                      <li key={aIdx} className="text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
+                                        <span className="w-1 h-1 bg-red-500 rounded-full" />
+                                        {item}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Navigation */}
+                        <div className="flex items-center justify-between mt-6 pt-6 border-t border-neutral-200 dark:border-dark-border">
+                          <button
+                            onClick={() => setActiveStep(Math.max(1, activeStep - 1))}
+                            disabled={activeStep === 1}
+                            className="px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            ← Précédent
+                          </button>
+
+                          {activeStep < 4 ? (
+                            <button
+                              onClick={() => setActiveStep(Math.min(4, activeStep + 1))}
+                              className="px-6 py-2.5 bg-gradient-to-r from-primary-500 to-orange-500 text-white font-medium rounded-xl hover:from-primary-600 hover:to-orange-600 transition-all"
+                            >
+                              Suivant →
+                            </button>
+                          ) : (
+                            <Link
+                              href="/publier"
+                              className="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-medium rounded-xl hover:from-emerald-600 hover:to-teal-600 transition-all flex items-center gap-2"
+                            >
+                              <CheckCircle className="w-5 h-5" />
+                              Créer mon annonce
+                            </Link>
+                          )}
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
 
         {/* FAQ List */}
