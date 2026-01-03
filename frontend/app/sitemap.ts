@@ -1,5 +1,8 @@
 import { MetadataRoute } from 'next';
 
+// Force dynamic rendering - sitemap will be generated at request time
+export const dynamic = 'force-dynamic';
+
 interface ListingForSitemap {
   id: string;
   updated_at: string;
