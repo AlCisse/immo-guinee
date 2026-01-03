@@ -70,6 +70,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     },
     {
+      url: `${baseUrl}/location-courte-duree`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.9, // High priority for short-term rental landing page
+    },
+    {
       url: `${baseUrl}/estimer`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
@@ -111,6 +117,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
+  // Search pages by transaction type (high priority for SEO)
+  const transactionTypes = [
+    { type: 'LOCATION', priority: 0.85 },
+    { type: 'LOCATION_COURTE', priority: 0.85 }, // Short-term rental - high priority
+    { type: 'VENTE', priority: 0.85 },
+  ];
+  const transactionPages: MetadataRoute.Sitemap = transactionTypes.map(({ type, priority }) => ({
+    url: `${baseUrl}/recherche?type_transaction=${type}`,
+    lastModified: new Date(),
+    changeFrequency: 'daily' as const,
+    priority,
+  }));
+
   // Search pages by commune (for SEO targeting local searches)
   const communes = ['Kaloum', 'Dixinn', 'Matam', 'Ratoma', 'Matoto'];
   const communePages: MetadataRoute.Sitemap = communes.map((commune) => ({
@@ -118,6 +137,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: new Date(),
     changeFrequency: 'daily' as const,
     priority: 0.6,
+  }));
+
+  // Location courte durée by commune (high value SEO pages)
+  const shortTermByCommune: MetadataRoute.Sitemap = communes.map((commune) => ({
+    url: `${baseUrl}/recherche?type_transaction=LOCATION_COURTE&commune=${commune}`,
+    lastModified: new Date(),
+    changeFrequency: 'daily' as const,
+    priority: 0.75,
   }));
 
   // Search pages by property type
@@ -129,5 +156,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticPages, ...listingPages, ...communePages, ...propertyTypePages];
+  // Short-term rental by property type (meublé apartments, villas)
+  const shortTermPropertyTypes = ['APPARTEMENT', 'VILLA', 'STUDIO'];
+  const shortTermByType: MetadataRoute.Sitemap = shortTermPropertyTypes.map((type) => ({
+    url: `${baseUrl}/recherche?type_transaction=LOCATION_COURTE&type_bien=${type}`,
+    lastModified: new Date(),
+    changeFrequency: 'daily' as const,
+    priority: 0.7,
+  }));
+
+  return [
+    ...staticPages,
+    ...listingPages,
+    ...transactionPages,
+    ...communePages,
+    ...shortTermByCommune,
+    ...propertyTypePages,
+    ...shortTermByType,
+  ];
 }

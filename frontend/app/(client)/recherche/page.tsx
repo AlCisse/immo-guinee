@@ -430,7 +430,7 @@ function SearchContent() {
 
   // Initialize state from URL params
   const typeBienParam = searchParams.get('type_bien') || 'Tous';
-  const typeTransactionParam = searchParams.get('type_transaction') as 'LOCATION' | 'VENTE' | null;
+  const typeTransactionParam = searchParams.get('type_transaction') as 'LOCATION' | 'LOCATION_COURTE' | 'VENTE' | null;
 
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -441,7 +441,7 @@ function SearchContent() {
   const [selectedCommune, setSelectedCommune] = useState(searchParams.get('commune') || 'Tous');
   const [selectedPriceRange, setSelectedPriceRange] = useState(0);
   const [selectedSort, setSelectedSort] = useState('recent');
-  const [transactionType, setTransactionType] = useState<'all' | 'LOCATION' | 'VENTE'>(
+  const [transactionType, setTransactionType] = useState<'all' | 'LOCATION' | 'LOCATION_COURTE' | 'VENTE'>(
     typeTransactionParam || 'all'
   );
   const [currentPage, setCurrentPage] = useState(1);
@@ -558,7 +558,7 @@ function SearchContent() {
     if (type) setSelectedType(type);
     if (quartier) setSelectedQuartier(quartier);
     if (commune) setSelectedCommune(commune);
-    if (transaction) setTransactionType(transaction as 'LOCATION' | 'VENTE');
+    if (transaction) setTransactionType(transaction as 'LOCATION' | 'LOCATION_COURTE' | 'VENTE');
 
     // Check if 'q' matches a known quartier - if so, use it as quartier filter
     if (q && !quartier) {
@@ -711,11 +711,12 @@ function SearchContent() {
           </div>
 
           {/* Transaction Type Toggle */}
-          <div className="flex gap-2 mb-4">
+          <div className="flex gap-2 mb-4 overflow-x-auto scrollbar-hide">
             {[
-              { value: 'all', label: 'Tous' },
-              { value: 'LOCATION', label: 'Location' },
-              { value: 'VENTE', label: 'Vente' },
+              { value: 'all', label: 'Tous', color: 'primary' },
+              { value: 'LOCATION', label: 'Location', color: 'blue' },
+              { value: 'LOCATION_COURTE', label: 'Courte durée', color: 'purple' },
+              { value: 'VENTE', label: 'Vente', color: 'green' },
             ].map((option) => (
               <button
                 key={option.value}
@@ -723,10 +724,16 @@ function SearchContent() {
                   setTransactionType(option.value as typeof transactionType);
                   updateURL({ type_transaction: option.value === 'all' ? null : option.value });
                 }}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
                   transactionType === option.value
-                    ? 'bg-primary-500 text-white'
-                    : 'bg-neutral-100 dark:bg-dark-bg text-neutral-700 dark:text-neutral-300'
+                    ? option.color === 'purple'
+                      ? 'bg-purple-500 text-white'
+                      : option.color === 'blue'
+                      ? 'bg-blue-500 text-white'
+                      : option.color === 'green'
+                      ? 'bg-green-500 text-white'
+                      : 'bg-primary-500 text-white'
+                    : 'bg-neutral-100 dark:bg-dark-bg text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-dark-border'
                 }`}
               >
                 {option.label}

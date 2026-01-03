@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Home, Building, Building2, Store, Warehouse, Castle, Check, Trees, LandPlot } from 'lucide-react';
 
@@ -134,11 +134,24 @@ export default function TypeBienSelector({
 }: TypeBienSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedType, setSelectedType] = useState<TypeBien | undefined>(value);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const handleSelect = (type: TypeBien) => {
     setSelectedType(type);
     onChange(type);
     setIsOpen(false);
+    // Scroll to center the selector in the viewport after selection
+    setTimeout(() => {
+      containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  };
+
+  // Handle backdrop click - scroll to selector
+  const handleBackdropClick = () => {
+    setIsOpen(false);
+    setTimeout(() => {
+      containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
   };
 
   const selectedOption = TYPE_BIEN_OPTIONS.find(opt => opt.value === selectedType);
@@ -146,7 +159,7 @@ export default function TypeBienSelector({
   const commercialOptions = TYPE_BIEN_OPTIONS.filter(opt => opt.category === 'commercial');
 
   return (
-    <div className="w-full relative">
+    <div ref={containerRef} className="w-full relative">
       {/* Dropdown Button */}
       <motion.button
         type="button"
@@ -204,7 +217,7 @@ export default function TypeBienSelector({
             {/* Backdrop */}
             <div
               className="fixed inset-0 z-40"
-              onClick={() => setIsOpen(false)}
+              onClick={handleBackdropClick}
             />
 
             <motion.div

@@ -131,6 +131,29 @@ const AMENITIES = [
   { id: 'seg_uniquement', label: 'SEG uniquement', icon: Droplets },
 ];
 
+// Property types that don't need bedroom/bathroom counts
+const PROPERTY_TYPES_NO_ROOMS = ['TERRAIN', 'ENTREPOT', 'MAGASIN'];
+const PROPERTY_TYPES_NO_BATHROOMS = ['TERRAIN'];
+const PROPERTY_TYPES_NO_AMENITIES = ['TERRAIN'];
+const PROPERTY_TYPES_NO_FURNISHED = ['TERRAIN', 'ENTREPOT', 'MAGASIN'];
+
+// Helper to check if property type needs rooms
+const needsRooms = (typeBien?: TypeBien): boolean => {
+  return !typeBien || !PROPERTY_TYPES_NO_ROOMS.includes(typeBien);
+};
+
+const needsBathrooms = (typeBien?: TypeBien): boolean => {
+  return !typeBien || !PROPERTY_TYPES_NO_BATHROOMS.includes(typeBien);
+};
+
+const needsAmenities = (typeBien?: TypeBien): boolean => {
+  return !typeBien || !PROPERTY_TYPES_NO_AMENITIES.includes(typeBien);
+};
+
+const needsFurnished = (typeBien?: TypeBien): boolean => {
+  return !typeBien || !PROPERTY_TYPES_NO_FURNISHED.includes(typeBien);
+};
+
 const TENANT_TYPES = [
   { value: 'tous', label: 'Tous les profils' },
   { value: 'couple', label: 'Couple' },
@@ -162,6 +185,9 @@ export default function ListingFormStepper({
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [optimizeError, setOptimizeError] = useState<string | null>(null);
   const [showSeoGuide, setShowSeoGuide] = useState(false);
+
+  // Refs for step containers to enable smooth scrolling
+  const formContainerRef = useRef<HTMLDivElement>(null);
 
   // Fetch commissions from API
   const { data: commissions } = useQuery({
@@ -220,7 +246,8 @@ export default function ListingFormStepper({
         newErrors.superficie = 'La superficie est requise';
       }
 
-      if (!formData.nombreChambres.trim()) {
+      // Only require chambres for residential property types
+      if (needsRooms(formData.typeBien) && !formData.nombreChambres.trim()) {
         newErrors.nombreChambres = 'Le nombre de chambres est requis';
       }
     }
@@ -241,11 +268,28 @@ export default function ListingFormStepper({
     return Object.keys(newErrors).length === 0;
   }, [currentStep, formData]);
 
+  // Scroll to form container with offset for better UX
+  const scrollToFormTop = () => {
+    setTimeout(() => {
+      if (formContainerRef.current) {
+        // Get the element's position and scroll with offset
+        const yOffset = -20; // Small offset from top
+        const element = formContainerRef.current;
+        const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      } else {
+        // Fallback to scrolling to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }, 50); // Small delay to allow animation to start
+  };
+
   // Handle next step
   const handleNext = () => {
     if (validateCurrentStep()) {
       if (currentStep < totalSteps) {
         onStepChange(currentStep + 1);
+        scrollToFormTop();
       }
     }
   };
@@ -254,6 +298,7 @@ export default function ListingFormStepper({
   const handlePrevious = () => {
     if (currentStep > 1) {
       onStepChange(currentStep - 1);
+      scrollToFormTop();
     }
   };
 
@@ -536,7 +581,7 @@ export default function ListingFormStepper({
   };
 
   return (
-    <div className="w-full">
+    <div ref={formContainerRef} className="w-full">
       <AnimatePresence mode="wait" custom={currentStep}>
         {/* Step 1: Type d'opération et Type de bien */}
         {currentStep === 1 && (
@@ -1125,13 +1170,19 @@ export default function ListingFormStepper({
               </div>
 
               {/* Caractéristiques */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className={`grid gap-4 ${
+                needsRooms(formData.typeBien)
+                  ? 'grid-cols-2 md:grid-cols-4'
+                  : needsBathrooms(formData.typeBien)
+                    ? 'grid-cols-2 md:grid-cols-3'
+                    : 'grid-cols-1 md:grid-cols-2'
+              }`}>
                 {[
-                  { id: 'superficie', label: 'Superficie', icon: Ruler, unit: 'm²', required: true },
-                  { id: 'nombreChambres', label: 'Chambres', icon: BedDouble, required: true },
-                  { id: 'nombreSallesDeBain', label: 'Salles de bain', icon: Bath },
-                  { id: 'nombreSalons', label: 'Salons', icon: Sofa },
-                ].map((field) => (
+                  { id: 'superficie', label: 'Superficie', icon: Ruler, unit: 'm²', required: true, show: true },
+                  { id: 'nombreChambres', label: 'Chambres', icon: BedDouble, required: true, show: needsRooms(formData.typeBien) },
+                  { id: 'nombreSallesDeBain', label: 'Salles de bain', icon: Bath, required: false, show: needsBathrooms(formData.typeBien) },
+                  { id: 'nombreSalons', label: 'Salons', icon: Sofa, required: false, show: needsRooms(formData.typeBien) },
+                ].filter(field => field.show).map((field) => (
                   <div key={field.id}>
                     <label className="flex items-center gap-2 text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
                       <field.icon className="w-4 h-4 text-primary-500" />
@@ -1165,51 +1216,64 @@ export default function ListingFormStepper({
                   </div>
                 ))}
               </div>
-            </div>
 
-            {/* Équipements */}
-            <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-lg border border-neutral-100 dark:border-dark-border">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-gradient-to-br from-orange-500 to-amber-500 rounded-xl shadow-lg shadow-orange-500/30">
-                  <Wifi className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white">
-                    Équipements
-                  </h3>
-                  <p className="text-sm text-neutral-500">
-                    Sélectionnez les équipements disponibles
+              {/* Info for terrain/commercial types */}
+              {!needsRooms(formData.typeBien) && (
+                <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-500/10 rounded-xl border border-blue-200 dark:border-blue-500/20">
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    {formData.typeBien === 'TERRAIN'
+                      ? 'Pour un terrain, seule la superficie est nécessaire.'
+                      : 'Pour ce type de bien commercial, les chambres et salons ne sont pas applicables.'}
                   </p>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {AMENITIES.map((amenity) => (
-                  <motion.button
-                    key={amenity.id}
-                    type="button"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => toggleAmenity(amenity.id)}
-                    className={`
-                      flex items-center gap-3 p-4 rounded-xl border-2 transition-all
-                      ${formData.amenities.includes(amenity.id)
-                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-500/10'
-                        : 'border-neutral-200 dark:border-dark-border hover:border-primary-300'
-                      }
-                    `}
-                  >
-                    <amenity.icon className={`w-5 h-5 ${formData.amenities.includes(amenity.id) ? 'text-primary-500' : 'text-neutral-400'}`} />
-                    <span className={`text-sm font-medium ${formData.amenities.includes(amenity.id) ? 'text-primary-700 dark:text-primary-400' : 'text-neutral-600 dark:text-neutral-300'}`}>
-                      {amenity.label}
-                    </span>
-                    {formData.amenities.includes(amenity.id) && (
-                      <CheckCircle className="w-4 h-4 text-primary-500 ml-auto" />
-                    )}
-                  </motion.button>
-                ))}
-              </div>
+              )}
             </div>
+
+            {/* Équipements - Only show for property types that need it */}
+            {needsAmenities(formData.typeBien) && (
+              <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-lg border border-neutral-100 dark:border-dark-border">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 bg-gradient-to-br from-orange-500 to-amber-500 rounded-xl shadow-lg shadow-orange-500/30">
+                    <Wifi className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-neutral-900 dark:text-white">
+                      Équipements
+                    </h3>
+                    <p className="text-sm text-neutral-500">
+                      Sélectionnez les équipements disponibles
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {AMENITIES.map((amenity) => (
+                    <motion.button
+                      key={amenity.id}
+                      type="button"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => toggleAmenity(amenity.id)}
+                      className={`
+                        flex items-center gap-3 p-4 rounded-xl border-2 transition-all
+                        ${formData.amenities.includes(amenity.id)
+                          ? 'border-primary-500 bg-primary-50 dark:bg-primary-500/10'
+                          : 'border-neutral-200 dark:border-dark-border hover:border-primary-300'
+                        }
+                      `}
+                    >
+                      <amenity.icon className={`w-5 h-5 ${formData.amenities.includes(amenity.id) ? 'text-primary-500' : 'text-neutral-400'}`} />
+                      <span className={`text-sm font-medium ${formData.amenities.includes(amenity.id) ? 'text-primary-700 dark:text-primary-400' : 'text-neutral-600 dark:text-neutral-300'}`}>
+                        {amenity.label}
+                      </span>
+                      {formData.amenities.includes(amenity.id) && (
+                        <CheckCircle className="w-4 h-4 text-primary-500 ml-auto" />
+                      )}
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+            )}
           </motion.div>
         )}
 

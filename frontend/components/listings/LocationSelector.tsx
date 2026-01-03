@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, ChevronDown, Search, X, Check } from 'lucide-react';
 import {
@@ -43,6 +43,14 @@ export default function LocationSelector({
   const [selectedQuartier, setSelectedQuartier] = useState<string>(quartier || DEFAULT_LOCATION.quartier);
   const [searchQuery, setSearchQuery] = useState('');
   const [isQuartierDropdownOpen, setIsQuartierDropdownOpen] = useState(false);
+  const quartierSelectorRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to quartier selector when dropdown closes
+  const scrollToQuartierSelector = () => {
+    setTimeout(() => {
+      quartierSelectorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  };
 
   // Trigger initial callbacks on mount
   useEffect(() => {
@@ -136,6 +144,13 @@ export default function LocationSelector({
     onQuartierChange(quartierName);
     setIsQuartierDropdownOpen(false);
     setSearchQuery('');
+    scrollToQuartierSelector();
+  };
+
+  // Handle dropdown backdrop click
+  const handleQuartierBackdropClick = () => {
+    setIsQuartierDropdownOpen(false);
+    scrollToQuartierSelector();
   };
 
   // Get display names
@@ -220,7 +235,7 @@ export default function LocationSelector({
         </div>
 
         {/* Quartier Dropdown with Search */}
-        <div className="relative">
+        <div ref={quartierSelectorRef} className="relative">
           <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
             Quartier
           </label>
@@ -355,7 +370,7 @@ export default function LocationSelector({
       {isQuartierDropdownOpen && (
         <div
           className="fixed inset-0 z-40"
-          onClick={() => setIsQuartierDropdownOpen(false)}
+          onClick={handleQuartierBackdropClick}
         />
       )}
     </div>
