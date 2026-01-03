@@ -1370,5 +1370,420 @@
       "date": "Date",
       "details": "Details"
     }
+  },
+  "admin": {
+    "title": "Administration",
+    "sidebar": {
+      "dashboard": "Tableau de bord",
+      "listings": "Annonces",
+      "users": "Utilisateurs",
+      "contracts": "Contrats",
+      "payments": "Paiements",
+      "visits": "Visites",
+      "messages": "Messages",
+      "notifications": "Notifications",
+      "moderation": "Moderation",
+      "certifications": "Certifications",
+      "insurance": "Assurances",
+      "disputes": "Litiges",
+      "ratings": "Notations",
+      "statistics": "Statistiques",
+      "settings": "Parametres",
+      "documentation": "Documentation"
+    },
+    "dashboard": {
+      "title": "Tableau de bord administrateur",
+      "overview": "Vue d'ensemble",
+      "totalListings": "Total annonces",
+      "activeUsers": "Utilisateurs actifs",
+      "pendingModeration": "En attente de moderation",
+      "revenue": "Revenus",
+      "recentActivity": "Activite recente"
+    },
+    "users": {
+      "title": "Gestion des utilisateurs",
+      "subtitle": "Gerez tous les comptes utilisateurs",
+      "search": "Rechercher un utilisateur...",
+      "filters": {
+        "all": "Tous",
+        "verified": "Verifies",
+        "pending": "En attente",
+        "suspended": "Suspendus"
+      },
+      "actions": {
+        "view": "Voir",
+        "edit": "Modifier",
+        "suspend": "Suspendre",
+        "activate": "Activer",
+        "delete": "Supprimer"
+      }
+    },
+    "settings": {
+      "title": "Parametres systeme",
+      "general": "General",
+      "security": "Securite",
+      "notifications": "Notifications",
+      "integrations": "Integrations"
+    }
+  },
+  "legal": {
+    "title": "Informations legales",
+    "termsOfUse": {
+      "title": "Conditions Generales d'Utilisation",
+      "lastUpdate": "Derniere mise a jour",
+      "sections": {
+        "acceptance": "Acceptation des conditions",
+        "services": "Description des services",
+        "registration": "Inscription et compte",
+        "obligations": "Obligations des utilisateurs",
+        "content": "Contenu utilisateur",
+        "intellectualProperty": "Propriete intellectuelle",
+        "liability": "Limitation de responsabilite",
+        "termination": "Resiliation",
+        "modifications": "Modifications des conditions",
+        "contact": "Contact"
+      }
+    },
+    "privacy": {
+      "title": "Politique de Confidentialite",
+      "lastUpdate": "Derniere mise a jour",
+      "sections": {
+        "dataCollection": "Collecte des donnees",
+        "dataUse": "Utilisation des donnees",
+        "dataSharing": "Partage des donnees",
+        "dataSecurity": "Securite des donnees",
+        "cookies": "Cookies",
+        "rights": "Vos droits",
+        "retention": "Conservation des donnees",
+        "contact": "Contact"
+      }
+    },
+    "backToHome": "Retour a l'accueil"
+  },
+  "insurance": {
+    "title": "Assurance immobiliere",
+    "subtitle": "Protegez votre bien et vos locataires",
+    "subscribe": {
+      "title": "Souscrire une assurance",
+      "selectProperty": "Selectionnez un bien",
+      "selectPlan": "Choisissez votre formule",
+      "plans": {
+        "basic": {
+          "name": "Essentielle",
+          "description": "Protection de base pour votre bien"
+        },
+        "standard": {
+          "name": "Standard",
+          "description": "Protection complete recommandee"
+        },
+        "premium": {
+          "name": "Premium",
+          "description": "Protection maximale tout inclus"
+        }
+      },
+      "coverage": "Couverture",
+      "price": "Prix mensuel",
+      "subscribe": "Souscrire",
+      "subscribing": "Souscription en cours..."
+    },
+    "claims": {
+      "title": "Mes reclamations",
+      "newClaim": "Nouvelle reclamation",
+      "noClaims": "Aucune reclamation",
+      "status": {
+        "pending": "En cours de traitement",
+        "approved": "Approuvee",
+        "rejected": "Rejetee",
+        "paid": "Indemnisee"
+      },
+      "form": {
+        "type": "Type de sinistre",
+        "description": "Description",
+        "amount": "Montant estime",
+        "documents": "Documents justificatifs",
+        "submit": "Soumettre la reclamation"
+      }
+    }
+  },
+  "disputes": {
+    "title": "Mes litiges",
+    "subtitle": "Gerez vos litiges avec les locataires ou proprietaires",
+    "newDispute": "Nouveau litige",
+    "noDisputes": "Aucun litige",
+    "status": {
+      "open": "Ouvert",
+      "inProgress": "En cours",
+      "resolved": "Resolu",
+      "closed": "Ferme"
+    },
+    "create": {
+      "title": "Signaler un litige",
+      "selectContract": "Selectionnez le contrat concerne",
+      "type": "Type de litige",
+      "types": {
+        "payment": "Probleme de paiement",
+        "damage": "Degats / Dommages",
+        "breach": "Non-respect du contrat",
+        "other": "Autre"
+      },
+      "description": "Description du probleme",
+      "evidence": "Pieces justificatives",
+      "submit": "Soumettre le litige",
+      "submitting": "Envoi en cours..."
+    },
+    "details": {
+      "timeline": "Historique",
+      "messages": "Messages",
+      "resolution": "Resolution",
+      "addMessage": "Ajouter un message"
+    }
+  },
+  "ratings": {
+    "title": "Notations",
+    "subtitle": "Evaluez votre experience",
+    "rate": "Noter",
+    "yourRating": "Votre note",
+    "averageRating": "Note moyenne",
+    "reviews": "avis",
+    "form": {
+      "overall": "Note globale",
+      "communication": "Communication",
+      "cleanliness": "Proprete",
+      "accuracy": "Exactitude de l'annonce",
+      "value": "Rapport qualite-prix",
+      "comment": "Commentaire",
+      "commentPlaceholder": "Partagez votre experience...",
+      "submit": "Publier l'avis",
+      "submitting": "Publication..."
+    },
+    "success": "Merci pour votre avis !",
+    "error": "Erreur lors de l'envoi de l'avis"
+  },
+  "shortTermRental": {
+    "title": "Location courte duree a Conakry",
+    "subtitle": "Appartements et villas meubles pour vos sejours",
+    "hero": {
+      "title": "Location courte duree",
+      "highlight": "a Conakry",
+      "subtitle": "Trouvez l'hebergement ideal pour vos voyages d'affaires, vacances ou sejours temporaires en Guinee"
+    },
+    "features": {
+      "furnished": {
+        "title": "Entierement meuble",
+        "description": "Tous nos biens sont equipes et prets a l'emploi"
+      },
+      "flexible": {
+        "title": "Duree flexible",
+        "description": "De quelques jours a plusieurs mois"
+      },
+      "services": {
+        "title": "Services inclus",
+        "description": "Wifi, menage, securite 24h/24"
+      },
+      "location": {
+        "title": "Quartiers premium",
+        "description": "Kipe, Nongo, Taouyah et plus"
+      }
+    },
+    "cta": {
+      "search": "Rechercher",
+      "viewAll": "Voir toutes les annonces"
+    },
+    "targetAudience": {
+      "title": "Ideal pour",
+      "expatriates": "Expatries",
+      "business": "Voyages d'affaires",
+      "tourists": "Touristes",
+      "professionals": "Professionnels en mission"
+    }
+  },
+  "certification": {
+    "title": "Certification proprietaire",
+    "subtitle": "Faites verifier votre identite pour plus de confiance",
+    "status": {
+      "notVerified": "Non certifie",
+      "pending": "En cours de verification",
+      "verified": "Certifie"
+    },
+    "steps": {
+      "identity": "Piece d'identite",
+      "address": "Justificatif de domicile",
+      "ownership": "Titre de propriete"
+    },
+    "upload": {
+      "title": "Telecharger vos documents",
+      "dropzone": "Glissez-deposez ou cliquez pour telecharger",
+      "formats": "Formats acceptes: PDF, JPG, PNG",
+      "maxSize": "Taille max: 10 MB"
+    },
+    "submit": "Soumettre pour verification",
+    "submitting": "Envoi en cours...",
+    "success": "Documents soumis avec succes",
+    "benefits": {
+      "title": "Avantages de la certification",
+      "trust": "Badge de confiance sur vos annonces",
+      "visibility": "Meilleure visibilite dans les recherches",
+      "priority": "Traitement prioritaire par notre equipe"
+    }
+  },
+  "payments": {
+    "title": "Mes paiements",
+    "subtitle": "Historique de vos transactions",
+    "noPayments": "Aucun paiement",
+    "status": {
+      "pending": "En attente",
+      "completed": "Complete",
+      "failed": "Echoue",
+      "refunded": "Rembourse"
+    },
+    "type": {
+      "rent": "Loyer",
+      "deposit": "Caution",
+      "premium": "Premium",
+      "insurance": "Assurance"
+    },
+    "methods": {
+      "title": "Modes de paiement",
+      "orangeMoney": "Orange Money",
+      "mtnMoney": "MTN Mobile Money",
+      "card": "Carte bancaire",
+      "transfer": "Virement bancaire"
+    },
+    "receipt": "Telecharger le recu"
+  },
+  "ownerStats": {
+    "title": "Statistiques proprietaire",
+    "subtitle": "Analysez les performances de vos annonces",
+    "period": {
+      "week": "Cette semaine",
+      "month": "Ce mois",
+      "year": "Cette annee"
+    },
+    "metrics": {
+      "views": "Vues totales",
+      "contacts": "Contacts recus",
+      "favorites": "Ajouts aux favoris",
+      "conversionRate": "Taux de conversion"
+    },
+    "charts": {
+      "viewsOverTime": "Evolution des vues",
+      "topListings": "Meilleures annonces",
+      "sourceOfTraffic": "Sources de trafic"
+    }
+  },
+  "seo": {
+    "home": {
+      "title": "ImmoGuinee - Location & Vente Immobilier a Conakry, Guinee",
+      "description": "Plateforme immobiliere N1 en Guinee. Location appartement meuble, villa, maison a Conakry. Vente terrain avec titre foncier. Annonces gratuites Kipe, Ratoma, Kaloum, Dixinn, Matam, Matoto.",
+      "h1": "Trouvez votre logement ideal en Guinee",
+      "h2Services": "Services immobiliers a Conakry",
+      "h2Quartiers": "Explorez les quartiers populaires de Conakry",
+      "h2Why": "Pourquoi choisir ImmoGuinee ?",
+      "contentIntro": "ImmoGuinee est la premiere plateforme immobiliere en Guinee. Que vous cherchiez un appartement a louer a Kipe, une villa a Ratoma, ou un terrain a vendre a Matoto, nous avons l'annonce qu'il vous faut.",
+      "contentServices": "Nous proposons la location longue duree, la location courte duree pour expatries, et la vente de biens immobiliers avec titre foncier dans toutes les communes de Conakry."
+    },
+    "search": {
+      "title": "Recherche Immobilier Conakry - Appartements, Maisons, Terrains",
+      "description": "Recherchez parmi des milliers d'annonces immobilieres en Guinee. Filtrez par quartier, type de bien, prix. Location et vente a Conakry.",
+      "h1": "Annonces immobilieres en Guinee",
+      "noResultsTitle": "Aucun resultat pour votre recherche",
+      "noResultsHint": "Essayez d'elargir vos criteres ou explorez d'autres quartiers de Conakry"
+    },
+    "shortTermRental": {
+      "title": "Location Courte Duree Conakry - Appartements Meubles",
+      "description": "Location meublee courte duree a Conakry pour expatries, voyageurs d'affaires, touristes. Appartements et villas tout equipes a Kipe, Nongo, Taouyah.",
+      "h1": "Location courte duree a Conakry",
+      "h2Features": "Avantages de la location meublee",
+      "h2Quartiers": "Quartiers populaires pour la courte duree",
+      "h2Audience": "Pour qui ?",
+      "contentIntro": "La location courte duree a Conakry est la solution ideale pour les expatries, voyageurs d'affaires et touristes. Nos appartements meubles offrent confort et flexibilite.",
+      "contentFeatures": "Wifi inclus, securite 24h/24, cuisine equipee, climatisation, groupe electrogene. Reservation flexible de 1 jour a plusieurs mois."
+    },
+    "publish": {
+      "title": "Publier une Annonce Immobiliere Gratuite",
+      "description": "Publiez gratuitement votre annonce immobiliere en Guinee. Location ou vente, touchez des milliers d'acheteurs et locataires potentiels a Conakry.",
+      "h1": "Publiez votre annonce gratuitement",
+      "h2Steps": "Comment publier votre annonce ?",
+      "h2Benefits": "Avantages de publier sur ImmoGuinee",
+      "contentIntro": "Deposez votre annonce immobiliere gratuitement sur ImmoGuinee. Que vous souhaitiez louer ou vendre, notre plateforme vous connecte avec des milliers de clients potentiels en Guinee.",
+      "stepType": "Choisissez le type de bien et de transaction",
+      "stepDetails": "Ajoutez les details : titre, description, prix, caracteristiques",
+      "stepLocation": "Indiquez la localisation exacte a Conakry",
+      "stepPhotos": "Ajoutez des photos de qualite (minimum 3)"
+    },
+    "estimate": {
+      "title": "Estimation Immobiliere Gratuite Conakry - Prix au m2",
+      "description": "Estimez gratuitement la valeur de votre bien immobilier a Conakry. Prix au m2 par quartier, estimation precise pour location et vente.",
+      "h1": "Estimez la valeur de votre bien",
+      "h2How": "Comment fonctionne l'estimation ?",
+      "h2Factors": "Facteurs influencant le prix",
+      "contentIntro": "Notre outil d'estimation immobiliere analyse les prix du marche a Conakry pour vous donner une estimation fiable de votre bien.",
+      "factors": "Localisation (quartier, commune), superficie, type de bien, equipements (climatisation, piscine, groupe electrogene), etat general du bien."
+    },
+    "contact": {
+      "title": "Contactez ImmoGuinee - Support Immobilier Conakry",
+      "description": "Contactez l'equipe ImmoGuinee pour toute question sur vos annonces, location ou vente immobiliere en Guinee. Support par WhatsApp, email, telephone.",
+      "h1": "Contactez-nous",
+      "h2Form": "Envoyez-nous un message",
+      "h2Info": "Nos coordonnees",
+      "h2Faq": "Questions frequentes"
+    },
+    "help": {
+      "title": "Centre d'Aide ImmoGuinee - FAQ Immobilier Guinee",
+      "description": "Trouvez des reponses a toutes vos questions sur ImmoGuinee. Comment publier une annonce, eviter les arnaques, contacter un proprietaire.",
+      "h1": "Centre d'aide",
+      "h2Tutorial": "Guide : Comment creer une annonce ?",
+      "h2Categories": "Categories de questions",
+      "h2Contact": "Besoin d'aide supplementaire ?"
+    },
+    "listing": {
+      "titleTemplate": "{type} {transaction} a {location} - {price}",
+      "descriptionTemplate": "{type} {transaction} a {location}. {features}. Contactez le proprietaire sur ImmoGuinee.",
+      "h1Template": "{type} a {transaction} - {location}",
+      "h2Description": "Description du bien",
+      "h2Amenities": "Equipements",
+      "h2Location": "Localisation",
+      "h2Contact": "Contacter le proprietaire",
+      "h2Similar": "Annonces similaires"
+    },
+    "locations": {
+      "conakry": "Conakry, capitale de la Guinee",
+      "kaloum": "Kaloum - Centre-ville, ministeres, ambassades",
+      "dixinn": "Dixinn - Quartier universitaire et residentiel",
+      "matam": "Matam - Madina, Hamdallaye, quartier commercial",
+      "ratoma": "Ratoma - Kipe, Nongo, Taouyah, quartiers modernes",
+      "matoto": "Matoto - Proche aeroport, zones industrielles"
+    },
+    "propertyTypes": {
+      "appartement": "Appartement a louer/vendre Conakry",
+      "villa": "Villa de luxe Conakry Guinee",
+      "maison": "Maison familiale Conakry",
+      "studio": "Studio meuble Conakry",
+      "terrain": "Terrain avec titre foncier Guinee",
+      "bureau": "Bureau a louer Kaloum Conakry",
+      "magasin": "Local commercial Conakry"
+    },
+    "keywords": {
+      "primary": [
+        "immobilier Guinee",
+        "immobilier Conakry",
+        "location appartement Conakry",
+        "maison a vendre Guinee",
+        "terrain a vendre Conakry"
+      ],
+      "secondary": [
+        "villa Kipe",
+        "appartement Ratoma",
+        "location meublee Conakry",
+        "airbnb Conakry",
+        "expatrie Guinee logement"
+      ],
+      "longTail": [
+        "appartement 3 chambres a louer Kipe",
+        "villa avec piscine Conakry",
+        "terrain titre foncier Ratoma",
+        "location courte duree expatrie Guinee"
+      ]
+    }
   }
 }

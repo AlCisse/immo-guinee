@@ -1370,5 +1370,420 @@
       "date": "Date",
       "details": "Details"
     }
+  },
+  "admin": {
+    "title": "Administration",
+    "sidebar": {
+      "dashboard": "Dashboard",
+      "listings": "Listings",
+      "users": "Users",
+      "contracts": "Contracts",
+      "payments": "Payments",
+      "visits": "Visits",
+      "messages": "Messages",
+      "notifications": "Notifications",
+      "moderation": "Moderation",
+      "certifications": "Certifications",
+      "insurance": "Insurance",
+      "disputes": "Disputes",
+      "ratings": "Ratings",
+      "statistics": "Statistics",
+      "settings": "Settings",
+      "documentation": "Documentation"
+    },
+    "dashboard": {
+      "title": "Admin dashboard",
+      "overview": "Overview",
+      "totalListings": "Total listings",
+      "activeUsers": "Active users",
+      "pendingModeration": "Pending moderation",
+      "revenue": "Revenue",
+      "recentActivity": "Recent activity"
+    },
+    "users": {
+      "title": "User management",
+      "subtitle": "Manage all user accounts",
+      "search": "Search for a user...",
+      "filters": {
+        "all": "All",
+        "verified": "Verified",
+        "pending": "Pending",
+        "suspended": "Suspended"
+      },
+      "actions": {
+        "view": "View",
+        "edit": "Edit",
+        "suspend": "Suspend",
+        "activate": "Activate",
+        "delete": "Delete"
+      }
+    },
+    "settings": {
+      "title": "System settings",
+      "general": "General",
+      "security": "Security",
+      "notifications": "Notifications",
+      "integrations": "Integrations"
+    }
+  },
+  "legal": {
+    "title": "Legal information",
+    "termsOfUse": {
+      "title": "Terms of Use",
+      "lastUpdate": "Last update",
+      "sections": {
+        "acceptance": "Acceptance of terms",
+        "services": "Description of services",
+        "registration": "Registration and account",
+        "obligations": "User obligations",
+        "content": "User content",
+        "intellectualProperty": "Intellectual property",
+        "liability": "Limitation of liability",
+        "termination": "Termination",
+        "modifications": "Modifications to terms",
+        "contact": "Contact"
+      }
+    },
+    "privacy": {
+      "title": "Privacy Policy",
+      "lastUpdate": "Last update",
+      "sections": {
+        "dataCollection": "Data collection",
+        "dataUse": "Use of data",
+        "dataSharing": "Data sharing",
+        "dataSecurity": "Data security",
+        "cookies": "Cookies",
+        "rights": "Your rights",
+        "retention": "Data retention",
+        "contact": "Contact"
+      }
+    },
+    "backToHome": "Back to home"
+  },
+  "insurance": {
+    "title": "Property insurance",
+    "subtitle": "Protect your property and tenants",
+    "subscribe": {
+      "title": "Subscribe to insurance",
+      "selectProperty": "Select a property",
+      "selectPlan": "Choose your plan",
+      "plans": {
+        "basic": {
+          "name": "Basic",
+          "description": "Basic protection for your property"
+        },
+        "standard": {
+          "name": "Standard",
+          "description": "Recommended complete protection"
+        },
+        "premium": {
+          "name": "Premium",
+          "description": "Maximum all-inclusive protection"
+        }
+      },
+      "coverage": "Coverage",
+      "price": "Monthly price",
+      "subscribe": "Subscribe",
+      "subscribing": "Subscribing..."
+    },
+    "claims": {
+      "title": "My claims",
+      "newClaim": "New claim",
+      "noClaims": "No claims",
+      "status": {
+        "pending": "Processing",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "paid": "Paid"
+      },
+      "form": {
+        "type": "Type of claim",
+        "description": "Description",
+        "amount": "Estimated amount",
+        "documents": "Supporting documents",
+        "submit": "Submit claim"
+      }
+    }
+  },
+  "disputes": {
+    "title": "My disputes",
+    "subtitle": "Manage your disputes with tenants or landlords",
+    "newDispute": "New dispute",
+    "noDisputes": "No disputes",
+    "status": {
+      "open": "Open",
+      "inProgress": "In progress",
+      "resolved": "Resolved",
+      "closed": "Closed"
+    },
+    "create": {
+      "title": "Report a dispute",
+      "selectContract": "Select the relevant contract",
+      "type": "Type of dispute",
+      "types": {
+        "payment": "Payment issue",
+        "damage": "Damage",
+        "breach": "Contract breach",
+        "other": "Other"
+      },
+      "description": "Problem description",
+      "evidence": "Supporting evidence",
+      "submit": "Submit dispute",
+      "submitting": "Submitting..."
+    },
+    "details": {
+      "timeline": "Timeline",
+      "messages": "Messages",
+      "resolution": "Resolution",
+      "addMessage": "Add a message"
+    }
+  },
+  "ratings": {
+    "title": "Ratings",
+    "subtitle": "Rate your experience",
+    "rate": "Rate",
+    "yourRating": "Your rating",
+    "averageRating": "Average rating",
+    "reviews": "reviews",
+    "form": {
+      "overall": "Overall rating",
+      "communication": "Communication",
+      "cleanliness": "Cleanliness",
+      "accuracy": "Listing accuracy",
+      "value": "Value for money",
+      "comment": "Comment",
+      "commentPlaceholder": "Share your experience...",
+      "submit": "Post review",
+      "submitting": "Posting..."
+    },
+    "success": "Thank you for your review!",
+    "error": "Error submitting review"
+  },
+  "shortTermRental": {
+    "title": "Short-term rental in Conakry",
+    "subtitle": "Furnished apartments and villas for your stays",
+    "hero": {
+      "title": "Short-term rental",
+      "highlight": "in Conakry",
+      "subtitle": "Find the ideal accommodation for your business trips, vacations, or temporary stays in Guinea"
+    },
+    "features": {
+      "furnished": {
+        "title": "Fully furnished",
+        "description": "All our properties are equipped and ready to use"
+      },
+      "flexible": {
+        "title": "Flexible duration",
+        "description": "From a few days to several months"
+      },
+      "services": {
+        "title": "Included services",
+        "description": "WiFi, cleaning, 24/7 security"
+      },
+      "location": {
+        "title": "Premium neighborhoods",
+        "description": "Kipe, Nongo, Taouyah and more"
+      }
+    },
+    "cta": {
+      "search": "Search",
+      "viewAll": "View all listings"
+    },
+    "targetAudience": {
+      "title": "Ideal for",
+      "expatriates": "Expatriates",
+      "business": "Business trips",
+      "tourists": "Tourists",
+      "professionals": "Professionals on assignment"
+    }
+  },
+  "certification": {
+    "title": "Owner certification",
+    "subtitle": "Verify your identity for more trust",
+    "status": {
+      "notVerified": "Not certified",
+      "pending": "Verification in progress",
+      "verified": "Certified"
+    },
+    "steps": {
+      "identity": "ID document",
+      "address": "Proof of address",
+      "ownership": "Property title"
+    },
+    "upload": {
+      "title": "Upload your documents",
+      "dropzone": "Drag and drop or click to upload",
+      "formats": "Accepted formats: PDF, JPG, PNG",
+      "maxSize": "Max size: 10 MB"
+    },
+    "submit": "Submit for verification",
+    "submitting": "Submitting...",
+    "success": "Documents submitted successfully",
+    "benefits": {
+      "title": "Benefits of certification",
+      "trust": "Trust badge on your listings",
+      "visibility": "Better visibility in search results",
+      "priority": "Priority processing by our team"
+    }
+  },
+  "payments": {
+    "title": "My payments",
+    "subtitle": "Transaction history",
+    "noPayments": "No payments",
+    "status": {
+      "pending": "Pending",
+      "completed": "Completed",
+      "failed": "Failed",
+      "refunded": "Refunded"
+    },
+    "type": {
+      "rent": "Rent",
+      "deposit": "Deposit",
+      "premium": "Premium",
+      "insurance": "Insurance"
+    },
+    "methods": {
+      "title": "Payment methods",
+      "orangeMoney": "Orange Money",
+      "mtnMoney": "MTN Mobile Money",
+      "card": "Credit card",
+      "transfer": "Bank transfer"
+    },
+    "receipt": "Download receipt"
+  },
+  "ownerStats": {
+    "title": "Owner statistics",
+    "subtitle": "Analyze your listings performance",
+    "period": {
+      "week": "This week",
+      "month": "This month",
+      "year": "This year"
+    },
+    "metrics": {
+      "views": "Total views",
+      "contacts": "Contacts received",
+      "favorites": "Added to favorites",
+      "conversionRate": "Conversion rate"
+    },
+    "charts": {
+      "viewsOverTime": "Views over time",
+      "topListings": "Top listings",
+      "sourceOfTraffic": "Traffic sources"
+    }
+  },
+  "seo": {
+    "home": {
+      "title": "ImmoGuinee - Real Estate Rental & Sale in Conakry, Guinea",
+      "description": "Guinea's #1 real estate platform. Furnished apartments, villas, houses for rent in Conakry. Land for sale with title deed. Free listings in Kipe, Ratoma, Kaloum, Dixinn, Matam, Matoto.",
+      "h1": "Find your ideal home in Guinea",
+      "h2Services": "Real estate services in Conakry",
+      "h2Quartiers": "Explore popular neighborhoods in Conakry",
+      "h2Why": "Why choose ImmoGuinee?",
+      "contentIntro": "ImmoGuinee is the leading real estate platform in Guinea. Whether you're looking for an apartment to rent in Kipe, a villa in Ratoma, or land for sale in Matoto, we have the listing you need.",
+      "contentServices": "We offer long-term rentals, short-term furnished rentals for expats, and property sales with title deeds in all communes of Conakry."
+    },
+    "search": {
+      "title": "Real Estate Search Conakry - Apartments, Houses, Land",
+      "description": "Browse thousands of real estate listings in Guinea. Filter by neighborhood, property type, price. Rental and sale in Conakry.",
+      "h1": "Real estate listings in Guinea",
+      "noResultsTitle": "No results for your search",
+      "noResultsHint": "Try expanding your criteria or explore other neighborhoods in Conakry"
+    },
+    "shortTermRental": {
+      "title": "Short-Term Rental Conakry - Furnished Apartments",
+      "description": "Furnished short-term rentals in Conakry for expats, business travelers, tourists. Fully equipped apartments and villas in Kipe, Nongo, Taouyah.",
+      "h1": "Short-term rental in Conakry",
+      "h2Features": "Benefits of furnished rental",
+      "h2Quartiers": "Popular neighborhoods for short stays",
+      "h2Audience": "Who is it for?",
+      "contentIntro": "Short-term rental in Conakry is the ideal solution for expats, business travelers and tourists. Our furnished apartments offer comfort and flexibility.",
+      "contentFeatures": "WiFi included, 24/7 security, equipped kitchen, air conditioning, generator. Flexible booking from 1 day to several months."
+    },
+    "publish": {
+      "title": "Post Free Real Estate Listing",
+      "description": "Post your real estate listing for free in Guinea. Rental or sale, reach thousands of potential buyers and tenants in Conakry.",
+      "h1": "Post your listing for free",
+      "h2Steps": "How to post your listing?",
+      "h2Benefits": "Benefits of posting on ImmoGuinee",
+      "contentIntro": "Post your real estate listing for free on ImmoGuinee. Whether you want to rent or sell, our platform connects you with thousands of potential clients in Guinea.",
+      "stepType": "Choose the property type and transaction",
+      "stepDetails": "Add details: title, description, price, features",
+      "stepLocation": "Indicate the exact location in Conakry",
+      "stepPhotos": "Add quality photos (minimum 3)"
+    },
+    "estimate": {
+      "title": "Free Property Valuation Conakry - Price per m2",
+      "description": "Get a free property valuation in Conakry. Price per m2 by neighborhood, accurate estimates for rental and sale.",
+      "h1": "Estimate your property value",
+      "h2How": "How does the estimation work?",
+      "h2Factors": "Factors affecting the price",
+      "contentIntro": "Our property valuation tool analyzes Conakry market prices to give you a reliable estimate of your property.",
+      "factors": "Location (neighborhood, commune), area, property type, amenities (air conditioning, pool, generator), overall condition."
+    },
+    "contact": {
+      "title": "Contact ImmoGuinee - Real Estate Support Conakry",
+      "description": "Contact the ImmoGuinee team for any questions about your listings, rental or sale in Guinea. Support via WhatsApp, email, phone.",
+      "h1": "Contact us",
+      "h2Form": "Send us a message",
+      "h2Info": "Our contact details",
+      "h2Faq": "Frequently asked questions"
+    },
+    "help": {
+      "title": "ImmoGuinee Help Center - Real Estate FAQ Guinea",
+      "description": "Find answers to all your questions about ImmoGuinee. How to post a listing, avoid scams, contact an owner.",
+      "h1": "Help center",
+      "h2Tutorial": "Guide: How to create a listing?",
+      "h2Categories": "Question categories",
+      "h2Contact": "Need more help?"
+    },
+    "listing": {
+      "titleTemplate": "{type} {transaction} in {location} - {price}",
+      "descriptionTemplate": "{type} {transaction} in {location}. {features}. Contact the owner on ImmoGuinee.",
+      "h1Template": "{type} {transaction} - {location}",
+      "h2Description": "Property description",
+      "h2Amenities": "Amenities",
+      "h2Location": "Location",
+      "h2Contact": "Contact the owner",
+      "h2Similar": "Similar listings"
+    },
+    "locations": {
+      "conakry": "Conakry, capital of Guinea",
+      "kaloum": "Kaloum - Downtown, ministries, embassies",
+      "dixinn": "Dixinn - University and residential area",
+      "matam": "Matam - Madina, Hamdallaye, commercial district",
+      "ratoma": "Ratoma - Kipe, Nongo, Taouyah, modern neighborhoods",
+      "matoto": "Matoto - Near airport, industrial zones"
+    },
+    "propertyTypes": {
+      "appartement": "Apartment for rent/sale Conakry",
+      "villa": "Luxury villa Conakry Guinea",
+      "maison": "Family house Conakry",
+      "studio": "Furnished studio Conakry",
+      "terrain": "Land with title deed Guinea",
+      "bureau": "Office for rent Kaloum Conakry",
+      "magasin": "Commercial space Conakry"
+    },
+    "keywords": {
+      "primary": [
+        "real estate Guinea",
+        "property Conakry",
+        "apartment for rent Conakry",
+        "house for sale Guinea",
+        "land for sale Conakry"
+      ],
+      "secondary": [
+        "villa Kipe",
+        "apartment Ratoma",
+        "furnished rental Conakry",
+        "airbnb Conakry",
+        "expat housing Guinea"
+      ],
+      "longTail": [
+        "3 bedroom apartment for rent Kipe",
+        "villa with pool Conakry",
+        "land title deed Ratoma",
+        "short-term rental expat Guinea"
+      ]
+    }
   }
 }
