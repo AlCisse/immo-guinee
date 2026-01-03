@@ -46,7 +46,8 @@ async function fetchListing(id: string): Promise<ListingData | null> {
 
       if (response.ok) {
         const data = await response.json();
-        return data.data || data;
+        // API returns { success: true, data: { listing: {...} } }
+        return data.data?.listing || data.data || data;
       }
     } catch (error) {
       // Try next URL
