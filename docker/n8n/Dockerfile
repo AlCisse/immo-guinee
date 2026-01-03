@@ -2,11 +2,12 @@ FROM docker.n8n.io/n8nio/n8n:latest
 
 USER root
 
-# Install SSH client and required tools
-RUN apk --no-cache add \
+# Install SSH client and required tools (Debian-based image)
+RUN apt-get update && apt-get install -y --no-install-recommends \
     openssh-client \
     curl \
-    jq
+    jq \
+    && rm -rf /var/lib/apt/lists/*
 
 # Create .ssh directory for host key caching
 RUN mkdir -p /home/node/.ssh && \
