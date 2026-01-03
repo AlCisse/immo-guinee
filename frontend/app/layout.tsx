@@ -32,18 +32,60 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'ImmoGuinée - Plateforme Immobilière en Guinée',
+  title: {
+    default: 'ImmoGuinée - Location & Vente Immobilier à Conakry, Guinée',
+    template: '%s | ImmoGuinée',
+  },
   description:
-    'Trouvez votre logement idéal en Guinée. Location de maisons, appartements et terrains à Conakry et dans toute la Guinée.',
+    'Plateforme immobilière N°1 en Guinée. Location appartement meublé, villa, maison à Conakry. Vente terrain, parcelle avec titre foncier. Annonces gratuites Kipé, Ratoma, Kaloum, Dixinn, Matam, Matoto.',
   keywords: [
-    'immobilier',
-    'guinée',
-    'conakry',
-    'location',
-    'appartement',
-    'maison',
-    'terrain',
-    'immog',
+    // Termes principaux
+    'immobilier Guinée',
+    'immobilier Conakry',
+    'annonces immobilières Guinée',
+    'agence immobilière Conakry',
+    // Location
+    'location appartement Conakry',
+    'appartement à louer Conakry',
+    'location maison Guinée',
+    'villa à louer Conakry',
+    'studio meublé Conakry',
+    'location meublée Conakry',
+    'chambre salon à louer',
+    'appartement meublé Guinée',
+    // Vente
+    'maison à vendre Conakry',
+    'terrain à vendre Guinée',
+    'parcelle à vendre Conakry',
+    'achat immobilier Guinée',
+    'investissement immobilier Conakry',
+    'terrain avec titre foncier',
+    // Courte durée
+    'location courte durée Conakry',
+    'airbnb Conakry Guinée',
+    'logement expatrié Guinée',
+    'court séjour Conakry',
+    'hébergement Conakry',
+    // Quartiers Conakry
+    'immobilier Kipé',
+    'appartement Ratoma',
+    'location Kaloum',
+    'villa Dixinn',
+    'maison Matam',
+    'terrain Matoto',
+    'logement Nongo',
+    'location Taouyah',
+    'appartement Lambanyi',
+    // Équipements
+    'appartement climatisé',
+    'groupe électrogène',
+    'villa avec piscine',
+    'logement sécurisé',
+    // Types
+    'villa standing',
+    'duplex Conakry',
+    'bureau à louer',
+    'local commercial',
   ],
   authors: [{ name: 'ImmoGuinée' }],
   creator: 'ImmoGuinée',
@@ -67,23 +109,26 @@ export const metadata: Metadata = {
     locale: 'fr_GN',
     url: 'https://immoguinee.com',
     siteName: 'ImmoGuinée',
-    title: 'ImmoGuinée - Plateforme Immobilière en Guinée',
+    title: 'ImmoGuinée - Location & Vente Immobilier à Conakry, Guinée',
     description:
-      'Trouvez votre logement idéal en Guinée. Location de maisons, appartements et terrains.',
+      'Plateforme immobilière N°1 en Guinée. Location appartement meublé, villa, maison à Conakry. Vente terrain, parcelle. Annonces gratuites à Kipé, Ratoma, Kaloum.',
     images: [
       {
         url: 'https://immoguinee.com/images/banner-hero.jpg',
         width: 1200,
         height: 630,
-        alt: 'ImmoGuinée - Plateforme Immobilière en Guinée',
+        alt: 'ImmoGuinée - Location et Vente Immobilier Conakry Guinée',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ImmoGuinée - Plateforme Immobilière en Guinée',
-    description: 'Trouvez votre logement idéal en Guinée.',
+    title: 'ImmoGuinée - Immobilier Conakry Guinée',
+    description: 'Location appartement, villa, maison à Conakry. Vente terrain avec titre foncier. Annonces gratuites en Guinée.',
     images: ['https://immoguinee.com/images/banner-hero.jpg'],
+  },
+  alternates: {
+    canonical: 'https://immoguinee.com',
   },
   robots: {
     index: true,

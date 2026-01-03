@@ -130,13 +130,37 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority,
   }));
 
-  // Search pages by commune (for SEO targeting local searches)
+  // Communes de Conakry
   const communes = ['Kaloum', 'Dixinn', 'Matam', 'Ratoma', 'Matoto'];
+
+  // Quartiers populaires par commune (très important pour le SEO local)
+  const quartiersPopulaires = [
+    // Ratoma
+    'Kipé', 'Nongo', 'Taouyah', 'Kaporo', 'Lambanyi', 'Cosa', 'Sonfonia', 'Koloma',
+    // Kaloum
+    'Almamya', 'Boulbinet', 'Coronthie', 'Tombo', 'Sandervalia',
+    // Dixinn
+    'Belle-Vue', 'Cameroun', 'Landréah', 'Minière', 'Université',
+    // Matam
+    'Madina', 'Hamdallaye', 'Bonfi', 'Hermakono', 'Matam-marché',
+    // Matoto
+    'Sangoyah', 'Dabompa', 'Yimbaya', 'Enta', 'Cité-de-lair',
+  ];
+
+  // Search pages by commune
   const communePages: MetadataRoute.Sitemap = communes.map((commune) => ({
     url: `${baseUrl}/recherche?commune=${commune}`,
     lastModified: new Date(),
     changeFrequency: 'daily' as const,
-    priority: 0.6,
+    priority: 0.7,
+  }));
+
+  // Search pages by quartier populaire (high priority for local SEO)
+  const quartierPages: MetadataRoute.Sitemap = quartiersPopulaires.map((quartier) => ({
+    url: `${baseUrl}/recherche?quartier=${quartier}`,
+    lastModified: new Date(),
+    changeFrequency: 'daily' as const,
+    priority: 0.65,
   }));
 
   // Location courte durée by commune (high value SEO pages)
@@ -147,8 +171,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.75,
   }));
 
+  // Types de biens
+  const propertyTypes = ['APPARTEMENT', 'MAISON', 'VILLA', 'STUDIO', 'DUPLEX', 'BUREAU', 'MAGASIN', 'TERRAIN', 'CHAMBRE_SALON'];
+
   // Search pages by property type
-  const propertyTypes = ['APPARTEMENT', 'MAISON', 'VILLA', 'BUREAU', 'MAGASIN', 'TERRAIN'];
   const propertyTypePages: MetadataRoute.Sitemap = propertyTypes.map((type) => ({
     url: `${baseUrl}/recherche?type_bien=${type}`,
     lastModified: new Date(),
@@ -156,10 +182,61 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
+  // Location longue durée by property type
+  const locationByType: MetadataRoute.Sitemap = propertyTypes.filter(t => t !== 'TERRAIN').map((type) => ({
+    url: `${baseUrl}/recherche?type_transaction=LOCATION&type_bien=${type}`,
+    lastModified: new Date(),
+    changeFrequency: 'daily' as const,
+    priority: 0.65,
+  }));
+
+  // Vente by property type
+  const venteByType: MetadataRoute.Sitemap = propertyTypes.map((type) => ({
+    url: `${baseUrl}/recherche?type_transaction=VENTE&type_bien=${type}`,
+    lastModified: new Date(),
+    changeFrequency: 'daily' as const,
+    priority: 0.65,
+  }));
+
   // Short-term rental by property type (meublé apartments, villas)
-  const shortTermPropertyTypes = ['APPARTEMENT', 'VILLA', 'STUDIO'];
+  const shortTermPropertyTypes = ['APPARTEMENT', 'VILLA', 'STUDIO', 'CHAMBRE_SALON'];
   const shortTermByType: MetadataRoute.Sitemap = shortTermPropertyTypes.map((type) => ({
     url: `${baseUrl}/recherche?type_transaction=LOCATION_COURTE&type_bien=${type}`,
+    lastModified: new Date(),
+    changeFrequency: 'daily' as const,
+    priority: 0.7,
+  }));
+
+  // Combinaisons populaires: Type de bien + Commune (high value for SEO)
+  const popularCombinations: MetadataRoute.Sitemap = [];
+  const mainTypes = ['APPARTEMENT', 'VILLA', 'MAISON', 'TERRAIN'];
+  const mainTransactions = ['LOCATION', 'VENTE'];
+
+  for (const type of mainTypes) {
+    for (const commune of communes) {
+      // Location par type et commune
+      if (type !== 'TERRAIN') {
+        popularCombinations.push({
+          url: `${baseUrl}/recherche?type_transaction=LOCATION&type_bien=${type}&commune=${commune}`,
+          lastModified: new Date(),
+          changeFrequency: 'daily' as const,
+          priority: 0.6,
+        });
+      }
+      // Vente par type et commune
+      popularCombinations.push({
+        url: `${baseUrl}/recherche?type_transaction=VENTE&type_bien=${type}&commune=${commune}`,
+        lastModified: new Date(),
+        changeFrequency: 'daily' as const,
+        priority: 0.6,
+      });
+    }
+  }
+
+  // Location meublée dans quartiers premium
+  const premiumQuartiers = ['Kipé', 'Nongo', 'Taouyah', 'Lambanyi', 'Almamya'];
+  const shortTermPremiumQuartiers: MetadataRoute.Sitemap = premiumQuartiers.map((quartier) => ({
+    url: `${baseUrl}/recherche?type_transaction=LOCATION_COURTE&quartier=${quartier}`,
     lastModified: new Date(),
     changeFrequency: 'daily' as const,
     priority: 0.7,
@@ -170,8 +247,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...listingPages,
     ...transactionPages,
     ...communePages,
+    ...quartierPages,
     ...shortTermByCommune,
     ...propertyTypePages,
+    ...locationByType,
+    ...venteByType,
     ...shortTermByType,
+    ...popularCombinations,
+    ...shortTermPremiumQuartiers,
   ];
 }

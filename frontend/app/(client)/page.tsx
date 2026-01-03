@@ -670,6 +670,67 @@ export default function ClientHomePage() {
           </div>
         </div>
       </section>
+
+      {/* SEO Content Section */}
+      <section className="bg-neutral-100 dark:bg-dark-card py-12 border-t border-neutral-200 dark:border-dark-border">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="prose prose-neutral dark:prose-invert max-w-none text-sm">
+            <h2 className="text-xl font-bold text-neutral-800 dark:text-neutral-200 mb-4">
+              ImmoGuinée : Votre plateforme immobilière de référence en Guinée
+            </h2>
+
+            <div className="grid md:grid-cols-2 gap-8 text-neutral-600 dark:text-neutral-400">
+              <div>
+                <h3 className="text-base font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
+                  Location d'appartements et villas à Conakry
+                </h3>
+                <p className="text-sm leading-relaxed mb-4">
+                  Trouvez votre <strong>appartement à louer à Conakry</strong> dans les meilleurs quartiers :
+                  <strong> Kipé</strong>, <strong>Nongo</strong>, <strong>Taouyah</strong>, <strong>Lambanyi</strong> (Ratoma),
+                  <strong> Almamya</strong>, <strong>Boulbinet</strong> (Kaloum), <strong>Madina</strong>, <strong>Hamdallaye</strong> (Matam).
+                  Appartements meublés et non meublés, studios, chambres-salon, villas avec piscine, duplex de standing.
+                </p>
+
+                <h3 className="text-base font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
+                  Location courte durée pour expatriés
+                </h3>
+                <p className="text-sm leading-relaxed">
+                  <strong>Location meublée à Conakry</strong> pour expatriés, professionnels en mission et voyageurs d'affaires.
+                  Appartements équipés avec <strong>climatisation</strong>, <strong>groupe électrogène</strong>, <strong>wifi</strong>,
+                  <strong> gardien 24h/24</strong>. Réservation flexible à partir de 1 jour.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-base font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
+                  Vente de terrains et maisons en Guinée
+                </h3>
+                <p className="text-sm leading-relaxed mb-4">
+                  <strong>Terrain à vendre à Conakry</strong> avec <strong>titre foncier</strong>. Parcelles constructibles à
+                  Ratoma, Matoto, Dixinn. Investissement immobilier en Guinée : terrains, maisons, villas, immeubles.
+                  <strong> Achat immobilier</strong> sécurisé avec accompagnement.
+                </p>
+
+                <h3 className="text-base font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
+                  Publiez gratuitement votre annonce
+                </h3>
+                <p className="text-sm leading-relaxed">
+                  <strong>Annonces immobilières gratuites</strong> pour particuliers et professionnels.
+                  Publiez votre bien en quelques minutes : appartement, maison, villa, terrain, bureau, local commercial.
+                  Touchez des milliers d'acheteurs et locataires potentiels à Conakry et dans toute la Guinée.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-neutral-200 dark:border-dark-border">
+              <p className="text-xs text-neutral-500 dark:text-neutral-500">
+                ImmoGuinée couvre toutes les communes de Conakry : Kaloum, Dixinn, Matam, Ratoma, Matoto.
+                Quartiers populaires : Kipé, Nongo, Taouyah, Kaporo, Lambanyi, Sonfonia, Almamya, Madina, Hamdallaye, Bonfi, Sangoyah.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

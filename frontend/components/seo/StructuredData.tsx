@@ -47,15 +47,26 @@ export function OrganizationStructuredData() {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: 'ImmoGuinée',
-    description: 'La plus grande plateforme immobilière de Guinée. Trouvez des maisons, appartements et terrains à louer ou à vendre à Conakry et partout en Guinée.',
+    alternateName: ['Immo Guinée', 'ImmoGuinee', 'Immobilier Guinée'],
+    description: 'Plateforme immobilière N°1 en Guinée. Location appartement meublé, villa, maison à Conakry. Vente terrain avec titre foncier. Annonces gratuites à Kipé, Ratoma, Kaloum, Dixinn, Matam, Matoto. Location courte durée pour expatriés.',
     url: 'https://immoguinee.com',
     logo: 'https://immoguinee.com/images/logo.png',
     image: 'https://immoguinee.com/images/banner-hero.jpg',
     foundingDate: '2024',
-    areaServed: {
-      '@type': 'Country',
-      name: 'Guinée',
-    },
+    slogan: 'Trouvez votre logement idéal en Guinée',
+    knowsAbout: [
+      'Location appartement Conakry',
+      'Vente terrain Guinée',
+      'Location meublée Conakry',
+      'Immobilier Kipé',
+      'Villa à louer Ratoma',
+      'Terrain avec titre foncier',
+      'Location courte durée expatrié',
+    ],
+    areaServed: [
+      { '@type': 'Country', name: 'Guinée' },
+      { '@type': 'City', name: 'Conakry' },
+    ],
     contactPoint: {
       '@type': 'ContactPoint',
       telephone: '+224-664-09-64-62',
@@ -135,15 +146,19 @@ export function LocalBusinessStructuredData() {
     '@context': 'https://schema.org',
     '@type': 'RealEstateAgent',
     name: 'ImmoGuinée',
-    description: 'Agence immobilière en ligne - Location et vente de biens immobiliers en Guinée',
+    alternateName: 'Immobilier Guinée Conakry',
+    description: 'Plateforme immobilière N°1 en Guinée. Location appartement meublé, villa, maison. Vente terrain avec titre foncier. Location courte durée pour expatriés et professionnels. Annonces gratuites à Conakry.',
     url: 'https://immoguinee.com',
     logo: 'https://immoguinee.com/images/logo.png',
     image: 'https://immoguinee.com/images/banner-hero.jpg',
     telephone: '+224-664-09-64-62',
     priceRange: 'GNF',
+    currenciesAccepted: 'GNF, USD, EUR',
+    paymentAccepted: 'Cash, Mobile Money, Virement bancaire',
     address: {
       '@type': 'PostalAddress',
       addressLocality: 'Conakry',
+      addressRegion: 'Conakry',
       addressCountry: 'GN',
     },
     geo: {
@@ -158,7 +173,52 @@ export function LocalBusinessStructuredData() {
       { '@type': 'AdministrativeArea', name: 'Matam' },
       { '@type': 'AdministrativeArea', name: 'Ratoma' },
       { '@type': 'AdministrativeArea', name: 'Matoto' },
+      // Quartiers populaires
+      { '@type': 'Place', name: 'Kipé' },
+      { '@type': 'Place', name: 'Nongo' },
+      { '@type': 'Place', name: 'Taouyah' },
+      { '@type': 'Place', name: 'Lambanyi' },
+      { '@type': 'Place', name: 'Almamya' },
+      { '@type': 'Place', name: 'Madina' },
     ],
+    hasOfferCatalog: {
+      '@type': 'OfferCatalog',
+      name: 'Services immobiliers',
+      itemListElement: [
+        {
+          '@type': 'Offer',
+          itemOffered: {
+            '@type': 'Service',
+            name: 'Location longue durée',
+            description: 'Location appartement, villa, maison à Conakry',
+          },
+        },
+        {
+          '@type': 'Offer',
+          itemOffered: {
+            '@type': 'Service',
+            name: 'Location courte durée',
+            description: 'Location meublée pour expatriés et professionnels',
+          },
+        },
+        {
+          '@type': 'Offer',
+          itemOffered: {
+            '@type': 'Service',
+            name: 'Vente immobilière',
+            description: 'Vente terrain, parcelle, maison, villa avec titre foncier',
+          },
+        },
+        {
+          '@type': 'Offer',
+          itemOffered: {
+            '@type': 'Service',
+            name: 'Annonces gratuites',
+            description: 'Publication gratuite d\'annonces immobilières en Guinée',
+          },
+        },
+      ],
+    },
     openingHoursSpecification: {
       '@type': 'OpeningHoursSpecification',
       dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
