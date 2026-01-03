@@ -37,6 +37,12 @@ import {
   Waves,
   Users,
   Percent,
+  HelpCircle,
+  ChevronDown,
+  ChevronUp,
+  Lightbulb,
+  Target,
+  FileText,
 } from 'lucide-react';
 import TypeBienSelector, { type TypeBien } from './TypeBienSelector';
 import LocationSelector from './LocationSelector';
@@ -155,6 +161,7 @@ export default function ListingFormStepper({
   const submissionInProgress = useRef(false); // Prevent duplicate submissions
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [optimizeError, setOptimizeError] = useState<string | null>(null);
+  const [showSeoGuide, setShowSeoGuide] = useState(false);
 
   // Fetch commissions from API
   const { data: commissions } = useQuery({
@@ -741,6 +748,136 @@ export default function ListingFormStepper({
                   {optimizeError}
                 </div>
               )}
+
+              {/* SEO Writing Guide - Collapsible */}
+              <div className="mb-6">
+                <motion.button
+                  type="button"
+                  onClick={() => setShowSeoGuide(!showSeoGuide)}
+                  className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-500/10 dark:to-teal-500/10 rounded-xl border border-emerald-200 dark:border-emerald-500/20 hover:from-emerald-100 hover:to-teal-100 dark:hover:from-emerald-500/20 dark:hover:to-teal-500/20 transition-all"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-emerald-500 rounded-lg">
+                      <Lightbulb className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-semibold text-emerald-800 dark:text-emerald-200">
+                        Guide SEO : Comment bien rédiger ?
+                      </p>
+                      <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                        Conseils pour un meilleur référencement Google
+                      </p>
+                    </div>
+                  </div>
+                  {showSeoGuide ? (
+                    <ChevronUp className="w-5 h-5 text-emerald-600" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-emerald-600" />
+                  )}
+                </motion.button>
+
+                <AnimatePresence>
+                  {showSeoGuide && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="mt-4 p-5 bg-white dark:bg-dark-card rounded-xl border border-neutral-200 dark:border-dark-border space-y-5">
+                        {/* Title Tips */}
+                        <div>
+                          <div className="flex items-center gap-2 mb-3">
+                            <Target className="w-5 h-5 text-primary-500" />
+                            <h4 className="font-bold text-neutral-900 dark:text-white">
+                              Titre (60-70 caractères max)
+                            </h4>
+                          </div>
+                          <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3">
+                            <strong>Structure :</strong> [Type de bien] [Caractéristique clé] à [Action] à [Quartier]
+                          </p>
+                          <div className="space-y-2">
+                            <div className="flex items-start gap-2 text-sm">
+                              <XCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                              <span className="text-red-600 dark:text-red-400">Belle maison à louer</span>
+                            </div>
+                            <div className="flex items-start gap-2 text-sm">
+                              <CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
+                              <span className="text-emerald-600 dark:text-emerald-400">Villa 4 chambres avec piscine à louer à Kipé</span>
+                            </div>
+                            <div className="flex items-start gap-2 text-sm">
+                              <CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
+                              <span className="text-emerald-600 dark:text-emerald-400">Appartement meublé 2 chambres à Kaloum centre</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Description Tips */}
+                        <div>
+                          <div className="flex items-center gap-2 mb-3">
+                            <FileText className="w-5 h-5 text-primary-500" />
+                            <h4 className="font-bold text-neutral-900 dark:text-white">
+                              Description (150-300 mots)
+                            </h4>
+                          </div>
+                          <div className="bg-neutral-50 dark:bg-dark-bg rounded-lg p-4 text-sm space-y-3">
+                            <div>
+                              <span className="font-semibold text-primary-600">1. Accroche</span>
+                              <span className="text-neutral-600 dark:text-neutral-400"> - Résumé attractif du bien</span>
+                            </div>
+                            <div>
+                              <span className="font-semibold text-primary-600">2. Caractéristiques</span>
+                              <span className="text-neutral-600 dark:text-neutral-400"> - Chambres, équipements, état</span>
+                            </div>
+                            <div>
+                              <span className="font-semibold text-primary-600">3. Localisation</span>
+                              <span className="text-neutral-600 dark:text-neutral-400"> - Quartier, proximité services</span>
+                            </div>
+                            <div>
+                              <span className="font-semibold text-primary-600">4. Appel à l'action</span>
+                              <span className="text-neutral-600 dark:text-neutral-400"> - Inviter à contacter</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Keywords */}
+                        <div>
+                          <div className="flex items-center gap-2 mb-3">
+                            <HelpCircle className="w-5 h-5 text-primary-500" />
+                            <h4 className="font-bold text-neutral-900 dark:text-white">
+                              Mots-clés à inclure
+                            </h4>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {['villa', 'appartement', 'maison', 'à louer', 'à vendre', 'Conakry', 'Kipé', 'Ratoma', 'meublé', 'climatisé', 'sécurisé', 'standing', 'expatriés'].map((keyword) => (
+                              <span
+                                key={keyword}
+                                className="px-3 py-1 bg-primary-50 dark:bg-primary-500/10 text-primary-700 dark:text-primary-300 rounded-full text-xs font-medium"
+                              >
+                                {keyword}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* What to Avoid */}
+                        <div className="p-3 bg-red-50 dark:bg-red-500/10 rounded-lg border border-red-200 dark:border-red-500/20">
+                          <p className="font-semibold text-red-700 dark:text-red-300 text-sm mb-2">
+                            À éviter :
+                          </p>
+                          <ul className="text-xs text-red-600 dark:text-red-400 space-y-1">
+                            <li>• Titres en MAJUSCULES</li>
+                            <li>• "Urgent!!!" ou "Bonne affaire!!!"</li>
+                            <li>• Descriptions trop courtes (&lt; 50 mots)</li>
+                            <li>• Copier-coller la même description</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
               <div className="space-y-5">
                 {/* Titre */}
