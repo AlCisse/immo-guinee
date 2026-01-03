@@ -39,7 +39,7 @@ class PaymentConfirmedNotification extends Notification implements ShouldQueue
 
         return (new MailMessage)
             ->subject('Paiement confirmé')
-            ->greeting("Bonjour {$notifiable->prenom} !")
+            ->greeting("Bonjour " . explode(' ', $notifiable->nom_complet ?? 'Utilisateur')[0] . " !")
             ->line("Votre paiement a été confirmé avec succès.")
             ->line("Référence: {$this->payment->reference_paiement}")
             ->line("Montant: {$montantTotal} GNF")

@@ -65,7 +65,7 @@ class CheckExpiredListingsCommand extends Command
                     return [
                         $listing->id,
                         substr($listing->titre, 0, 40),
-                        $listing->proprietaire->prenom . ' ' . $listing->proprietaire->nom,
+                        $listing->proprietaire->nom_complet ?? 'Inconnu',
                         $listing->created_at->format('Y-m-d'),
                         $listing->created_at->diffInDays(Carbon::now()),
                     ];

@@ -97,7 +97,7 @@ class ContractSentForSignatureNotification extends Notification implements Shoul
 
         $mail = (new MailMessage)
             ->subject('Contrat à signer - ' . $this->contract->reference)
-            ->greeting("Bonjour {$notifiable->prenom} !")
+            ->greeting("Bonjour " . explode(' ', $notifiable->nom_complet ?? 'Utilisateur')[0] . " !")
             ->line("Vous avez reçu un contrat de location à signer de la part de {$proprietaire->nom_complet}.");
 
         if ($listing) {
@@ -146,7 +146,7 @@ class ContractSentForSignatureNotification extends Notification implements Shoul
         $proprietaire = $this->contract->proprietaire;
 
         $message = "*ImmoGuinée - Contrat à signer*\n\n";
-        $message .= "Bonjour {$notifiable->prenom},\n\n";
+        $message .= "Bonjour " . explode(' ', $notifiable->nom_complet ?? 'Utilisateur')[0] . ",\n\n";
         $message .= "Vous avez reçu un contrat de location à signer:\n\n";
         $message .= "*Référence:* {$this->contract->reference}\n";
         $message .= "*Type:* " . $this->getContractTypeLabel() . "\n";

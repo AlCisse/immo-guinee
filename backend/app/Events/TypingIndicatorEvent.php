@@ -58,7 +58,7 @@ class TypingIndicatorEvent implements ShouldBroadcast
         return [
             'conversation_id' => $this->conversation->id,
             'user_id' => $this->user->id,
-            'user_name' => $this->user->prenom,
+            'user_name' => explode(' ', $this->user->nom_complet ?? 'Utilisateur')[0],
             'is_typing' => $this->isTyping,
             'timestamp' => now()->toISOString(),
         ];

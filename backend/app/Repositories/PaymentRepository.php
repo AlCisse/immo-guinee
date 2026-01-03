@@ -367,8 +367,8 @@ class PaymentRepository
                 return [
                     'reference' => $payment->reference_paiement,
                     'date' => $payment->created_at->format('Y-m-d H:i:s'),
-                    'payeur' => $payment->payer->nom . ' ' . $payment->payer->prenom,
-                    'beneficiaire' => $payment->receiver->nom . ' ' . $payment->receiver->prenom,
+                    'payeur' => $payment->payer->nom_complet ?? 'Inconnu',
+                    'beneficiaire' => $payment->receiver->nom_complet ?? 'Inconnu',
                     'montant_loyer' => $payment->montant_loyer,
                     'montant_caution' => $payment->montant_caution,
                     'montant_commission' => $payment->montant_commission,

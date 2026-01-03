@@ -37,7 +37,7 @@ class ContractSignedNotification extends Notification implements ShouldQueue
     {
         return (new MailMessage)
             ->subject('Contrat signé avec succès')
-            ->greeting("Bonjour {$notifiable->prenom} !")
+            ->greeting("Bonjour " . explode(' ', $notifiable->nom_complet ?? 'Utilisateur')[0] . " !")
             ->line("Votre contrat {$this->contract->reference} a été signé par toutes les parties.")
             ->line("Type de contrat: {$this->contract->type_contrat}")
             ->line("Période de rétractation: 48 heures")

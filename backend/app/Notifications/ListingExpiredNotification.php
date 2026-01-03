@@ -37,7 +37,7 @@ class ListingExpiredNotification extends Notification implements ShouldQueue
     {
         return (new MailMessage)
             ->subject('Votre annonce a expiré')
-            ->greeting("Bonjour {$notifiable->prenom} !")
+            ->greeting("Bonjour " . explode(' ', $notifiable->nom_complet ?? 'Utilisateur')[0] . " !")
             ->line("Votre annonce \"{$this->listing->titre}\" a expiré après 90 jours de publication.")
             ->line("Vous pouvez la renouveler pour qu'elle redevienne visible dans les résultats de recherche.")
             ->action('Renouveler l\'annonce', url('/dashboard/mes-annonces/' . $this->listing->id . '/renew'))

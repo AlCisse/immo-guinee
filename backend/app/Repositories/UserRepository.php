@@ -118,8 +118,7 @@ class UserRepository
 
         if (isset($filters['search'])) {
             $query->where(function($q) use ($filters) {
-                $q->where('nom', 'ILIKE', "%{$filters['search']}%")
-                  ->orWhere('prenom', 'ILIKE', "%{$filters['search']}%")
+                $q->where('nom_complet', 'ILIKE', "%{$filters['search']}%")
                   ->orWhere('email', 'ILIKE', "%{$filters['search']}%")
                   ->orWhere('telephone', 'ILIKE', "%{$filters['search']}%");
             });

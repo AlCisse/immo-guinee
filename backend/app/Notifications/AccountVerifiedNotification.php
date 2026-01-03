@@ -29,7 +29,7 @@ class AccountVerifiedNotification extends Notification
      */
     public function toWhatsApp($notifiable): WhatsAppMessage
     {
-        $name = $notifiable->prenom ?? $notifiable->nom_complet ?? 'Utilisateur';
+        $name = explode(' ', $notifiable->nom_complet ?? 'Utilisateur')[0];
 
         return WhatsAppMessage::create()
             ->bold("Compte vérifié - ImmoGuinée")

@@ -105,11 +105,11 @@ class MessageNotificationService
         $listingTitle = $conversation->listing?->titre ?? 'une annonce';
 
         return [
-            'title' => 'Nouveau message de ' . $sender->prenom,
+            'title' => 'Nouveau message de ' . explode(' ', $sender->nom_complet ?? 'Utilisateur')[0],
             'body' => $preview,
             'preview' => $preview,
             'sender_name' => $sender->nom_complet,
-            'sender_first_name' => $sender->prenom,
+            'sender_first_name' => explode(' ', $sender->nom_complet ?? 'Utilisateur')[0],
             'listing_title' => $listingTitle,
             'conversation_id' => $conversation->id,
             'message_id' => $message->id,
@@ -240,7 +240,7 @@ class MessageNotificationService
 
         $response = Http::timeout(10)->post($webhookUrl, [
             'to' => $email,
-            'recipient_name' => $recipient->prenom,
+            'recipient_name' => explode(' ', $recipient->nom_complet ?? 'Utilisateur')[0],
             'template' => 'new_message',
             'data' => [
                 'sender_name' => $content['sender_name'],
@@ -312,7 +312,7 @@ class MessageNotificationService
             'user_id' => $recipient->id,
             'type' => 'new_message',
             'titre' => 'Nouveau message',
-            'message' => "{$sender->prenom} vous a envoyé un message",
+            'message' => explode(' ', $sender->nom_complet ?? 'Utilisateur')[0] . " vous a envoyé un message",
             'data' => [
                 'message_id' => $message->id,
                 'conversation_id' => $message->conversation_id,

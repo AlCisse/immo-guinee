@@ -39,7 +39,7 @@ class RetractionPeriodExpiredNotification extends Notification implements Should
 
         return (new MailMessage)
             ->subject('Contrat activé - ' . $this->contract->reference)
-            ->greeting("Bonjour {$notifiable->prenom} !")
+            ->greeting("Bonjour " . explode(' ', $notifiable->nom_complet ?? 'Utilisateur')[0] . " !")
             ->line("La période de rétractation de 48 heures pour votre contrat est terminée.")
             ->line('')
             ->line("**Référence:** {$this->contract->reference}")
