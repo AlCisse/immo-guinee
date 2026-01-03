@@ -15,7 +15,7 @@ async function fetchAllListings(): Promise<ListingForSitemap[]> {
 
   for (const apiUrl of apiUrls) {
     try {
-      const response = await fetch(`${apiUrl}/annonces?statut=ACTIVE&limit=1000`, {
+      const response = await fetch(`${apiUrl}/listings?statut=ACTIVE&limit=1000`, {
         next: { revalidate: 3600 }, // Revalidate every hour
         headers: {
           Accept: 'application/json',

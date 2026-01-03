@@ -36,7 +36,7 @@ async function fetchListing(id: string): Promise<ListingData | null> {
 
   for (const apiUrl of apiUrls) {
     try {
-      const response = await fetch(`${apiUrl}/annonces/${id}`, {
+      const response = await fetch(`${apiUrl}/listings/${id}`, {
         next: { revalidate: 300 }, // Cache for 5 minutes
         headers: {
           Accept: 'application/json',
