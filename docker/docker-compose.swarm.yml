@@ -249,7 +249,7 @@ services:
   # ==============================================
   queue-worker:
     image: ${DOCKER_REGISTRY:-}immoguinee-php:${VERSION:-latest}
-    command: php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
+    command: php artisan queue:work redis --queue=default,whatsapp,notifications --sleep=3 --tries=3 --max-time=3600
     volumes:
       - ../backend:/var/www/backend
     secrets:
