@@ -1,0 +1,13 @@
+# PostgreSQL SSL Certificates
+#
+# Generate certificates on the server:
+#   openssl req -new -x509 -days 365 -nodes -text \
+#     -out server.crt -keyout server.key \
+#     -subj "/CN=postgres.immoguinee.local"
+#   chmod 600 server.key
+#
+# Create Docker configs:
+#   docker config create postgres_ssl_cert server.crt
+#   docker config create postgres_ssl_key server.key
+#
+# Files server.crt and server.key are gitignored for security.

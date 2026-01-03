@@ -202,6 +202,8 @@ services:
       - DB_PORT=5432
       - DB_DATABASE=immog_db
       - DB_USERNAME=immog_app
+      - DB_SSLMODE=require
+      - PGSSLMODE=require
       # Secrets are read from /run/secrets/ - set in entrypoint
       - DB_PASSWORD_FILE=/run/secrets/db_password
       - REDIS_HOST=tasks.redis
@@ -267,6 +269,8 @@ services:
       - DB_DATABASE=immog_db
       - DB_USERNAME=immog_app
       - DB_PASSWORD_FILE=/run/secrets/db_password
+      - DB_SSLMODE=require
+      - PGSSLMODE=require
       - REDIS_HOST=tasks.redis
       - REDIS_PASSWORD_FILE=/run/secrets/redis_password
       - WAHA_API_KEY_FILE=/run/secrets/waha_api_key
@@ -309,6 +313,8 @@ services:
       - DB_DATABASE=immog_db
       - DB_USERNAME=immog_app
       - DB_PASSWORD_FILE=/run/secrets/db_password
+      - DB_SSLMODE=require
+      - PGSSLMODE=require
       - REDIS_HOST=tasks.redis
       - REDIS_PASSWORD_FILE=/run/secrets/redis_password
       - WAHA_API_KEY_FILE=/run/secrets/waha_api_key
@@ -323,10 +329,18 @@ services:
         condition: on-failure
 
   # ==============================================
-  # POSTGRESQL - Database
+  # POSTGRESQL - Database (SSL enabled)
   # ==============================================
   postgres:
     image: postgis/postgis:15-3.4
+    command:
+      - postgres
+      - -c
+      - ssl=on
+      - -c
+      - ssl_cert_file=/etc/postgresql/ssl/server.crt
+      - -c
+      - ssl_key_file=/etc/postgresql/ssl/server.key
     environment:
       POSTGRES_DB: immog_db
       POSTGRES_USER: immog_app
@@ -334,6 +348,15 @@ services:
       PGDATA: /var/lib/postgresql/data/pgdata
     secrets:
       - db_password
+    configs:
+      - source: postgres_ssl_cert
+        target: /etc/postgresql/ssl/server.crt
+        mode: 0644
+      - source: postgres_ssl_key
+        target: /etc/postgresql/ssl/server.key
+        mode: 0600
+        uid: "999"
+        gid: "999"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
@@ -443,6 +466,10 @@ services:
         - "traefik.http.routers.echo.entrypoints=websecure"
         - "traefik.http.routers.echo.tls.certresolver=letsencrypt"
         - "traefik.http.services.echo.loadbalancer.server.port=6001"
+        # HTTP router for ACME challenge
+        - "traefik.http.routers.echo-http.rule=Host(`ws.immoguinee.com`)"
+        - "traefik.http.routers.echo-http.entrypoints=web"
+        - "traefik.http.routers.echo-http.middlewares=https-redirect"
 
   # ==============================================
   # N8N - Workflow Automation
@@ -646,6 +673,11 @@ configs:
     file: ./laravel-echo/laravel-echo-server.json
   prometheus_config:
     file: ../monitoring/prometheus/prometheus.yml
+  # PostgreSQL SSL certificates (generated on server)
+  postgres_ssl_cert:
+    external: true
+  postgres_ssl_key:
+    external: true
 
 # ==============================================
 # SECRETS - 32-char passwords stored securely

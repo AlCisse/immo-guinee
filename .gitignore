@@ -178,3 +178,7 @@ Estate Agency Logo-3/
 n8n/n8n-ssh-key
 n8n/n8n-ssh-key.pub
 n8n/*.key
+
+# PostgreSQL SSL certificates
+docker/postgres/ssl/server.crt
+docker/postgres/ssl/server.key
