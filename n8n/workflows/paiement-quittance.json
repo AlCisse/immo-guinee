@@ -189,24 +189,30 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $env.WAHA_API_URL }}/api/sendText",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "url": "={{ $env.WAHA_URL || 'http://immog-waha:3000' }}/api/sendText",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Api-Key",
+              "value": "={{ $env.WAHA_API_KEY }}"
+            }
+          ]
+        },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"chatId\": \"{{ $json.to }}@c.us\",\n  \"text\": \"{{ $json.message }}\",\n  \"session\": \"default\"\n}"
+        "jsonBody": "={\n  \"chatId\": \"{{ $json.to }}@c.us\",\n  \"text\": \"{{ $json.message }}\",\n  \"session\": \"default\"\n}",
+        "options": {}
       },
       "id": "send-whatsapp",
       "name": "Send WhatsApp via WAHA",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4,
-      "position": [1300, 350],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "waha-credentials",
-          "name": "WAHA API Key"
-        }
-      }
+      "typeVersion": 4.1,
+      "position": [1300, 350]
     },
     {
       "parameters": {
