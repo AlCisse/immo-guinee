@@ -93,6 +93,11 @@ services:
       - immog-network
     environment:
       - NODE_ENV=production
+      # WebSocket configuration for Laravel Echo
+      - NEXT_PUBLIC_WEBSOCKET_HOST=ws.immoguinee.com
+      - NEXT_PUBLIC_WEBSOCKET_PORT=443
+      - NEXT_PUBLIC_PUSHER_APP_KEY=immog-echo-key
+      - NEXT_PUBLIC_PUSHER_APP_CLUSTER=eu
     deploy:
       mode: replicated
       replicas: 2
