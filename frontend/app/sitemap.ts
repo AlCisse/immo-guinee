@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 interface ListingForSitemap {
-  id: number;
+  id: string;
   updated_at: string;
   type_transaction: string;
 }
@@ -24,7 +24,8 @@ async function fetchAllListings(): Promise<ListingForSitemap[]> {
 
       if (response.ok) {
         const data = await response.json();
-        return data.data || [];
+        // API returns { success: true, data: { listings: [...], pagination: {...} } }
+        return data.data?.listings || [];
       }
     } catch (error) {
       // Try next URL

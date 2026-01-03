@@ -7,16 +7,17 @@ interface Props {
 }
 
 interface ListingData {
-  id: number;
+  id: string;
   titre: string;
   description?: string;
   prix?: number;
-  loyer_mensuel?: number;
+  loyer_mensuel?: string | number;
   type_transaction: string;
   type_bien: string;
   commune: string;
   quartier: string;
   superficie?: number;
+  surface_m2?: number;
   nombre_chambres?: number;
   nombre_salles_bain?: number;
   main_photo_url?: string;
@@ -109,7 +110,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // Build dynamic SEO metadata
   const typeBien = getTypeBienLabel(listing.type_bien);
   const transaction = getTransactionLabel(listing.type_transaction);
-  const price = listing.prix || listing.loyer_mensuel;
+  const rawPrice = listing.prix || listing.loyer_mensuel;
+  const price = typeof rawPrice === 'string' ? parseFloat(rawPrice) : rawPrice;
   const priceText = price ? `${formatPrice(price)} GNF` : '';
   const location = `${listing.quartier}, ${listing.commune}`;
 
@@ -119,7 +121,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     : `${typeBien} ${transaction} à ${location} - ${priceText} | ImmoGuinée`;
 
   // Description: Include key details for CTR
-  const superficie = listing.superficie ? `${listing.superficie}m²` : '';
+  const surfaceValue = listing.superficie || listing.surface_m2;
+  const superficie = surfaceValue ? `${surfaceValue}m²` : '';
   const chambres = listing.nombre_chambres ? `${listing.nombre_chambres} chambres` : '';
   const features = [superficie, chambres].filter(Boolean).join(', ');
 
@@ -204,10 +207,13 @@ export default async function ListingDetailPage({ params }: Props) {
           listing={{
             id: String(listing.id),
             titre: listing.titre,
-            prix: listing.prix || listing.loyer_mensuel,
+            prix:
+              typeof listing.loyer_mensuel === 'string'
+                ? parseFloat(listing.loyer_mensuel)
+                : listing.prix || listing.loyer_mensuel,
             commune: listing.commune,
             quartier: listing.quartier,
-            superficie: listing.superficie,
+            superficie: listing.superficie || listing.surface_m2,
             nombreChambres: listing.nombre_chambres,
             nombreSallesDeBain: listing.nombre_salles_bain,
             createdAt: listing.created_at,
