@@ -52,7 +52,7 @@ Schedule::command('listings:expire')->daily();
 // Removed: otp:cleanup command does not exist
 
 // Sync Elasticsearch index
-Schedule::command('scout:import', ['model' => 'App\Models\Listing'])->hourly();
+Schedule::command('scout:import "App\\Models\\Listing"')->hourly();
 
 // Generate monthly reports
 Schedule::command('reports:generate')->monthlyOn(1, '00:00');
