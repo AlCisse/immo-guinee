@@ -154,8 +154,39 @@ class RssFeedController extends Controller
         $description .= " - {$listing->quartier}, {$listing->commune}";
         $description .= " - {$priceFormatted}";
 
-        // Get main photo
-        $photoUrl = $listing->main_photo_url ?? $listing->photo_principale;
+        // Collect all photos from various sources
+        // Priority: 1) listingPhotos relation, 2) photos JSON column, 3) photo_principale
+        $allPhotos = collect();
+        $primaryPhotoUrl = null;
+
+        // Try listingPhotos relation first (new system)
+        if ($listing->listingPhotos->isNotEmpty()) {
+            $allPhotos = $listing->listingPhotos->sortBy('order')->values()->map(fn($p) => [
+                'url' => $p->url,
+                'thumbnail_url' => $p->thumbnail_url,
+                'is_primary' => (bool) $p->is_primary,
+            ]);
+            $primary = $allPhotos->firstWhere('is_primary', true) ?? $allPhotos->first();
+            $primaryPhotoUrl = $primary['url'] ?? null;
+        }
+        // Try photos JSON column (legacy with multiple photos)
+        elseif (!empty($listing->photos) && is_array($listing->photos)) {
+            $photosArray = collect($listing->photos)->sortBy('order')->values();
+            $allPhotos = $photosArray->map(fn($p) => [
+                'url' => $p['url'] ?? null,
+                'thumbnail_url' => $p['thumbnail_url'] ?? null,
+                'is_primary' => (bool) ($p['is_primary'] ?? false),
+            ])->filter(fn($p) => !empty($p['url']));
+            $primary = $allPhotos->firstWhere('is_primary', true) ?? $allPhotos->first();
+            $primaryPhotoUrl = $primary['url'] ?? null;
+        }
+        // Fallback to photo_principale (single image)
+        elseif (!empty($listing->photo_principale)) {
+            $primaryPhotoUrl = $listing->photo_principale;
+            $allPhotos = collect([
+                ['url' => $primaryPhotoUrl, 'thumbnail_url' => null, 'is_primary' => true]
+            ]);
+        }
 
         $xml = '  <item>' . PHP_EOL;
         $xml .= '    <title>' . $this->escapeXml($listing->titre) . '</title>' . PHP_EOL;
@@ -167,9 +198,28 @@ class RssFeedController extends Controller
         $xml .= '    <category>' . $this->escapeXml($transactionLabel) . '</category>' . PHP_EOL;
         $xml .= '    <category>' . $this->escapeXml($listing->commune) . '</category>' . PHP_EOL;
 
-        if ($photoUrl) {
-            $xml .= '    <media:content url="' . $this->escapeXml($photoUrl) . '" medium="image"/>' . PHP_EOL;
-            $xml .= '    <enclosure url="' . $this->escapeXml($photoUrl) . '" type="image/jpeg"/>' . PHP_EOL;
+        // Add enclosure for primary photo (for RSS readers that only support one image)
+        if ($primaryPhotoUrl) {
+            $xml .= '    <enclosure url="' . $this->escapeXml($primaryPhotoUrl) . '" type="image/jpeg"/>' . PHP_EOL;
+        }
+
+        // Add all photos using media:group with media:content elements
+        if ($allPhotos->isNotEmpty()) {
+            $xml .= '    <media:group>' . PHP_EOL;
+            foreach ($allPhotos as $photo) {
+                $isDefault = $photo['is_primary'] ? 'true' : 'false';
+                $xml .= '      <media:content url="' . $this->escapeXml($photo['url']) . '" medium="image" isDefault="' . $isDefault . '"';
+
+                // Add thumbnail if available
+                if (!empty($photo['thumbnail_url'])) {
+                    $xml .= '>' . PHP_EOL;
+                    $xml .= '        <media:thumbnail url="' . $this->escapeXml($photo['thumbnail_url']) . '"/>' . PHP_EOL;
+                    $xml .= '      </media:content>' . PHP_EOL;
+                } else {
+                    $xml .= '/>' . PHP_EOL;
+                }
+            }
+            $xml .= '    </media:group>' . PHP_EOL;
         }
 
         $xml .= '  </item>' . PHP_EOL;
