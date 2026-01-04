@@ -48,6 +48,7 @@ import TypeBienSelector, { type TypeBien } from './TypeBienSelector';
 import LocationSelector from './LocationSelector';
 import PhotoUploader, { type PhotoFile } from './PhotoUploader';
 import { api, apiClient } from '@/lib/api/client';
+import { useTranslations } from '@/lib/i18n';
 
 // Commission type from API
 interface Commission {
@@ -176,6 +177,8 @@ export default function ListingFormStepper({
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user, isAuthenticated } = useAuth();
+  const t = useTranslations('publish');
+  const tCommon = useTranslations('common');
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM_DATA);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -218,55 +221,55 @@ export default function ListingFormStepper({
 
     if (currentStep === 1) {
       if (!formData.operationType) {
-        newErrors.operationType = "Veuillez sélectionner le type d'opération";
+        newErrors.operationType = t('validation.selectOperationType');
       }
       if (!formData.typeBien) {
-        newErrors.typeBien = 'Veuillez sélectionner le type de bien';
+        newErrors.typeBien = t('validation.selectPropertyType');
       }
     }
 
     if (currentStep === 2) {
       if (!formData.titre.trim()) {
-        newErrors.titre = 'Le titre est requis';
+        newErrors.titre = t('validation.titleRequired');
       } else if (formData.titre.trim().length < 15) {
-        newErrors.titre = 'Le titre doit contenir au moins 15 caractères';
+        newErrors.titre = t('validation.titleMinLength');
       }
 
       if (!formData.description.trim()) {
-        newErrors.description = 'La description est requise';
+        newErrors.description = t('validation.descriptionRequired');
       } else if (formData.description.trim().length < 50) {
-        newErrors.description = 'La description doit contenir au moins 50 caractères';
+        newErrors.description = t('validation.descriptionMinLength');
       }
 
       if (!formData.prix.trim()) {
-        newErrors.prix = 'Le prix est requis';
+        newErrors.prix = t('validation.priceRequired');
       }
 
       if (!formData.superficie.trim()) {
-        newErrors.superficie = 'La superficie est requise';
+        newErrors.superficie = t('validation.surfaceRequired');
       }
 
       // Only require chambres for residential property types
       if (needsRooms(formData.typeBien) && !formData.nombreChambres.trim()) {
-        newErrors.nombreChambres = 'Le nombre de chambres est requis';
+        newErrors.nombreChambres = t('validation.bedroomsRequired');
       }
     }
 
     if (currentStep === 3) {
       if (!formData.quartier) {
-        newErrors.quartier = 'Veuillez sélectionner le quartier';
+        newErrors.quartier = t('validation.selectQuartier');
       }
     }
 
     if (currentStep === 4) {
       if (formData.photos.length < 3) {
-        newErrors.photos = `Ajoutez au moins 3 photos (${formData.photos.length}/3)`;
+        newErrors.photos = t('validation.minPhotos', { current: formData.photos.length });
       }
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [currentStep, formData]);
+  }, [currentStep, formData, t]);
 
   // Scroll to form container with offset for better UX
   const scrollToFormTop = () => {
@@ -305,7 +308,7 @@ export default function ListingFormStepper({
   // Handle AI optimization
   const handleOptimize = async () => {
     if (!formData.titre.trim() || !formData.description.trim()) {
-      setOptimizeError('Veuillez remplir le titre et la description avant d\'optimiser');
+      setOptimizeError(t('ai.errors.fillFields'));
       return;
     }
 
@@ -330,7 +333,7 @@ export default function ListingFormStepper({
         // Clear any errors on success
         setErrors((prev) => ({ ...prev, titre: undefined, description: undefined }));
       } else {
-        setOptimizeError(response.data?.message || 'Erreur lors de l\'optimisation');
+        setOptimizeError(response.data?.message || t('ai.errors.generic'));
       }
     } catch (error: any) {
       console.error('AI optimization error:', error);
@@ -338,14 +341,14 @@ export default function ListingFormStepper({
       const message = error.response?.data?.message;
 
       if (status === 404) {
-        setOptimizeError('Service d\'optimisation non disponible.');
+        setOptimizeError(t('ai.errors.unavailable'));
       } else if (status === 422) {
-        setOptimizeError(message || 'Le texte n\'a pas pu être optimisé.');
+        setOptimizeError(message || t('ai.errors.cannotOptimize'));
       } else if (status === 503) {
-        setOptimizeError('Service temporairement indisponible.');
+        setOptimizeError(t('ai.errors.temporaryUnavailable'));
       } else {
         setOptimizeError(
-          message || 'Erreur lors de l\'optimisation. Veuillez réessayer.'
+          message || t('ai.errors.generic')
         );
       }
     } finally {

@@ -525,35 +525,158 @@
   },
   "publish": {
     "title": "Publish a listing",
+    "hero": {
+      "title": "Publish your listing",
+      "subtitle": "Sell or rent your property in minutes with our simple and intuitive form",
+      "tagline": "Reach thousands of buyers",
+      "freePublication": "Free publication"
+    },
+    "stats": {
+      "monthlyViews": "Monthly views",
+      "fastValidation": "Fast validation",
+      "contactRate": "Contact rate"
+    },
     "steps": {
-      "type": "Property type",
+      "type": "Type",
+      "typeDesc": "Operation & property",
       "details": "Details",
+      "detailsDesc": "Info & price",
       "location": "Location",
+      "locationDesc": "Address",
       "photos": "Photos",
-      "pricing": "Price",
-      "review": "Review"
+      "photosDesc": "Gallery"
+    },
+    "progress": {
+      "step": "Step",
+      "of": "of",
+      "completed": "completed"
+    },
+    "verification": {
+      "title": "Verification required",
+      "message": "To publish a listing, you must first verify your phone number.",
+      "redirecting": "Redirecting to verification...",
+      "toastMessage": "You need to verify your number to publish a listing. A code has been sent via WhatsApp."
+    },
+    "operationType": {
+      "title": "What would you like to do?",
+      "subtitle": "Choose the type of operation",
+      "rent": "Rent out",
+      "rentDesc": "Long-term rental",
+      "shortRent": "Short-term rental",
+      "shortRentDesc": "Furnished, from 1 day",
+      "sell": "Sell",
+      "sellDesc": "Put up for sale"
     },
     "propertyType": {
-      "title": "What type of property do you want to publish?",
+      "title": "Property type",
+      "subtitle": "Select your property category",
       "transaction": "Transaction type",
       "rental": "Rental",
       "sale": "Sale",
-      "shortRental": "Short-term rental"
+      "shortRental": "Short-term rental",
+      "types": {
+        "studio": "Studio",
+        "studioDesc": "Single space with kitchenette",
+        "chambreSalon": "1 Bedroom",
+        "chambreSalonDesc": "1 bedroom with living room",
+        "appartement2ch": "2BR Apartment",
+        "appartement2chDesc": "2 bedrooms + living room",
+        "appartement3ch": "3BR+ Apartment",
+        "appartement3chDesc": "3 or more bedrooms",
+        "villa": "Villa",
+        "villaDesc": "Detached house",
+        "duplex": "Duplex",
+        "duplexDesc": "2 levels",
+        "bureau": "Office",
+        "bureauDesc": "Professional space",
+        "magasin": "Shop",
+        "magasinDesc": "Commercial premises",
+        "entrepot": "Warehouse",
+        "entrepotDesc": "Storage and logistics",
+        "terrain": "Land",
+        "terrainDesc": "For building or farming"
+      }
     },
     "details": {
-      "title": "Property details",
-      "name": "Listing title",
+      "title": "Present your property",
+      "subtitle": "A good title and detailed description attract more visitors",
+      "titleLabel": "Listing title",
+      "titlePlaceholder": "Ex: Beautiful 4-bedroom villa with pool in Kipe",
       "description": "Description",
-      "surface": "Surface area (sqm)",
-      "bedrooms": "Number of bedrooms",
-      "bathrooms": "Number of bathrooms",
+      "descriptionPlaceholder": "Describe your property in detail: condition, amenities, proximity to services...",
+      "priceLabel": "Price",
+      "priceMonthly": "monthly",
+      "priceDaily": "per day",
+      "priceSale": "sale price",
+      "pricePlaceholder": "2,000,000",
+      "currency": "GNF",
+      "surface": "Surface area",
+      "surfaceUnit": "sqm",
+      "bedrooms": "Bedrooms",
+      "bathrooms": "Bathrooms",
+      "livingRooms": "Living rooms",
+      "name": "Listing title",
       "floor": "Floor",
       "totalFloors": "Total floors",
       "furnished": "Furnished",
       "amenities": "Amenities"
     },
+    "rental": {
+      "deposit": "Deposit",
+      "advance": "Advance",
+      "commission": "ImmoGuinee Commission",
+      "commissionMonths": "{months} months rent",
+      "commissionPercent": "{percent}%",
+      "noCommission": "No commission",
+      "tenantType": "Preferred tenant type",
+      "tenantTypes": {
+        "all": "All profiles",
+        "couple": "Couple",
+        "marriedAbsent": "Married (spouse absent)",
+        "single": "Single",
+        "student": "Student"
+      },
+      "months": "months"
+    },
+    "shortRental": {
+      "title": "Short-term rental (furnished)",
+      "priceInfo": "The price shown is per day. The property will be automatically marked as furnished.",
+      "commissionInfo": "ImmoGuinee commission: {percent}% of total amount",
+      "minDuration": "Minimum rental duration",
+      "durations": {
+        "1day": "1 day minimum",
+        "days": "{days} days minimum",
+        "1week": "1 week minimum",
+        "2weeks": "2 weeks minimum",
+        "1month": "1 month minimum"
+      }
+    },
+    "sale": {
+      "commissionInfo": "ImmoGuinee commission: {percent}% of sale price"
+    },
+    "characteristics": {
+      "title": "Price and characteristics",
+      "subtitle": "Set the price and details of your property",
+      "terrainNote": "For land, only the surface area is required.",
+      "commercialNote": "For this type of commercial property, bedrooms and living rooms are not applicable."
+    },
+    "amenities": {
+      "title": "Amenities",
+      "subtitle": "Select available amenities",
+      "parking": "Parking",
+      "wifi": "WiFi",
+      "airCondition": "Air conditioning",
+      "security": "24h Security",
+      "pool": "Pool",
+      "generator": "Generator",
+      "balcony": "Balcony",
+      "kitchen": "Equipped kitchen",
+      "borehole": "Borehole",
+      "segOnly": "SEG only"
+    },
     "location": {
       "title": "Property location",
+      "subtitle": "Indicate the exact location of your property",
       "commune": "District",
       "quartier": "Neighborhood",
       "address": "Full address",
@@ -561,13 +684,111 @@
     },
     "photos": {
       "title": "Property photos",
-      "subtitle": "Add photos to attract more visitors",
+      "subtitle": "Add quality photos to attract more visitors",
       "upload": "Add photos",
       "mainPhoto": "Main photo",
       "setAsMain": "Set as main",
       "delete": "Delete",
       "minPhotos": "Minimum 3 photos required",
-      "maxPhotos": "Maximum 20 photos"
+      "maxPhotos": "Maximum 10 photos",
+      "tips": {
+        "title": "Tips for good photos:",
+        "daylight": "Take photos during the day with good natural light",
+        "allRooms": "Show all main rooms",
+        "clean": "Tidy and clean before photographing",
+        "mainPhoto": "The first photo will be the main image of the listing"
+      },
+      "errors": {
+        "unsupportedFormat": "Unsupported format. Use JPG, PNG or WebP.",
+        "fileTooLarge": "File too large (max 5MB).",
+        "maxPhotos": "Maximum 10 photos allowed."
+      }
+    },
+    "ai": {
+      "optimize": "Optimize with AI",
+      "optimizeShort": "AI",
+      "optimizing": "Optimizing...",
+      "errors": {
+        "fillFields": "Please fill in the title and description before optimizing",
+        "unavailable": "Optimization service unavailable.",
+        "cannotOptimize": "The text could not be optimized.",
+        "temporaryUnavailable": "Service temporarily unavailable.",
+        "generic": "Error during optimization. Please try again."
+      }
+    },
+    "seoGuide": {
+      "title": "SEO Guide: How to write well?",
+      "subtitle": "Tips for better Google ranking",
+      "titleSection": {
+        "title": "Title (60-70 characters max)",
+        "structure": "Structure:",
+        "template": "[Property type] [Key feature] for [Action] in [Neighborhood]",
+        "badExample": "Nice house for rent",
+        "goodExample1": "4-bedroom villa with pool for rent in Kipe",
+        "goodExample2": "Furnished 2-bedroom apartment in downtown Kaloum"
+      },
+      "descriptionSection": {
+        "title": "Description (150-300 words)",
+        "hook": "Hook",
+        "hookDesc": "Attractive summary of the property",
+        "features": "Features",
+        "featuresDesc": "Bedrooms, amenities, condition",
+        "location": "Location",
+        "locationDesc": "Neighborhood, nearby services",
+        "cta": "Call to action",
+        "ctaDesc": "Invite to contact"
+      },
+      "keywords": {
+        "title": "Keywords to include"
+      },
+      "avoid": {
+        "title": "Avoid:",
+        "uppercase": "Titles in UPPERCASE",
+        "urgent": "\"Urgent!!!\" or \"Great deal!!!\"",
+        "tooShort": "Descriptions too short (< 50 words)",
+        "copyPaste": "Copy-pasting the same description"
+      }
+    },
+    "tips": {
+      "title": "Tips for a successful listing",
+      "subtitle": "Maximize your chances of finding a buyer",
+      "photos": {
+        "title": "Quality photos",
+        "desc": "Add at least 5 clear, bright, high-quality photos"
+      },
+      "titleTip": {
+        "title": "Catchy title",
+        "desc": "Mention key features: location, amenities, condition"
+      },
+      "locationTip": {
+        "title": "Precise location",
+        "desc": "Select the right neighborhood to attract the right visitors"
+      },
+      "priceTip": {
+        "title": "Competitive price",
+        "desc": "Set a realistic price to attract more potential buyers"
+      }
+    },
+    "validation": {
+      "selectOperationType": "Please select the operation type",
+      "selectPropertyType": "Please select the property type",
+      "titleRequired": "Title is required",
+      "titleMinLength": "Title must be at least 15 characters",
+      "descriptionRequired": "Description is required",
+      "descriptionMinLength": "Description must be at least 50 characters",
+      "priceRequired": "Price is required",
+      "surfaceRequired": "Surface area is required",
+      "bedroomsRequired": "Number of bedrooms is required",
+      "selectQuartier": "Please select the neighborhood",
+      "minPhotos": "Add at least 3 photos ({current}/3)"
+    },
+    "buttons": {
+      "back": "Back",
+      "cancel": "Cancel",
+      "previous": "Previous",
+      "continue": "Continue",
+      "publish": "Publish listing",
+      "publishing": "Publishing..."
     },
     "pricing": {
       "title": "Price",
@@ -585,10 +806,18 @@
       "saveDraft": "Save as draft"
     },
     "success": {
-      "title": "Listing published!",
-      "subtitle": "Your listing has been submitted for review",
+      "title": "Listing published successfully!",
+      "subtitle": "Your listing is being reviewed. You will be notified once approved.",
       "viewListing": "View listing",
       "createAnother": "Create another listing"
+    },
+    "errors": {
+      "title": "Error",
+      "generic": "Error publishing. Please try again."
+    },
+    "support": {
+      "needHelp": "Need help?",
+      "contactSupport": "Contact our support"
     }
   },
   "messages": {
@@ -883,10 +1112,18 @@
     "inGuinea": "in Guinea"
   },
   "errors": {
+    "page": {
+      "oops": "Oops!",
+      "title": "An error occurred",
+      "subtitle": "We apologize for the inconvenience. Please try again.",
+      "retry": "Retry",
+      "backHome": "Back to home"
+    },
     "404": {
       "title": "Page not found",
-      "subtitle": "The page you are looking for does not exist or has been moved.",
-      "backHome": "Back to home"
+      "subtitle": "Sorry, the page you are looking for does not exist or has been moved.",
+      "backHome": "Back to home",
+      "searchListing": "Search properties"
     },
     "500": {
       "title": "Server error",

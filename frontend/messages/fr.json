@@ -525,35 +525,158 @@
   },
   "publish": {
     "title": "Publier une annonce",
+    "hero": {
+      "title": "Publiez votre annonce",
+      "subtitle": "Vendez ou louez votre bien en quelques minutes avec notre formulaire simple et intuitif",
+      "tagline": "Touchez des milliers d'acheteurs",
+      "freePublication": "Publication gratuite"
+    },
+    "stats": {
+      "monthlyViews": "Vues mensuelles",
+      "fastValidation": "Validation rapide",
+      "contactRate": "Taux de contact"
+    },
     "steps": {
-      "type": "Type de bien",
+      "type": "Type",
+      "typeDesc": "Operation & bien",
       "details": "Details",
+      "detailsDesc": "Infos & prix",
       "location": "Localisation",
+      "locationDesc": "Adresse",
       "photos": "Photos",
-      "pricing": "Prix",
-      "review": "Verification"
+      "photosDesc": "Galerie"
+    },
+    "progress": {
+      "step": "Etape",
+      "of": "sur",
+      "completed": "complete"
+    },
+    "verification": {
+      "title": "Verification requise",
+      "message": "Pour publier une annonce, vous devez d'abord verifier votre numero de telephone.",
+      "redirecting": "Redirection vers la verification...",
+      "toastMessage": "Vous devez verifier votre numero pour publier une annonce. Un code a ete envoye sur WhatsApp."
+    },
+    "operationType": {
+      "title": "Que souhaitez-vous faire ?",
+      "subtitle": "Choisissez le type d'operation",
+      "rent": "Louer",
+      "rentDesc": "Location longue duree",
+      "shortRent": "Louer courte duree",
+      "shortRentDesc": "Meuble, a partir de 1 jour",
+      "sell": "Vendre",
+      "sellDesc": "Mettre en vente"
     },
     "propertyType": {
-      "title": "Quel type de bien souhaitez-vous publier ?",
+      "title": "Type de bien",
+      "subtitle": "Selectionnez la categorie de votre propriete",
       "transaction": "Type de transaction",
       "rental": "Location",
       "sale": "Vente",
-      "shortRental": "Location courte duree"
+      "shortRental": "Location courte duree",
+      "types": {
+        "studio": "Studio",
+        "studioDesc": "Espace unique avec coin cuisine",
+        "chambreSalon": "Chambre-Salon",
+        "chambreSalonDesc": "1 chambre avec salon",
+        "appartement2ch": "Appartement 2CH",
+        "appartement2chDesc": "2 chambres + salon",
+        "appartement3ch": "Appartement 3CH+",
+        "appartement3chDesc": "3 chambres ou plus",
+        "villa": "Villa",
+        "villaDesc": "Maison individuelle",
+        "duplex": "Duplex",
+        "duplexDesc": "Sur 2 niveaux",
+        "bureau": "Bureau",
+        "bureauDesc": "Espace professionnel",
+        "magasin": "Magasin",
+        "magasinDesc": "Local commercial",
+        "entrepot": "Entrepot",
+        "entrepotDesc": "Stockage et logistique",
+        "terrain": "Terrain",
+        "terrainDesc": "A batir ou agricole"
+      }
     },
     "details": {
-      "title": "Details du bien",
-      "name": "Titre de l'annonce",
+      "title": "Presentez votre bien",
+      "subtitle": "Un bon titre et une description detaillee attirent plus de visiteurs",
+      "titleLabel": "Titre de l'annonce",
+      "titlePlaceholder": "Ex: Magnifique villa 4 chambres avec piscine a Kipe",
       "description": "Description",
-      "surface": "Surface (m2)",
-      "bedrooms": "Nombre de chambres",
-      "bathrooms": "Nombre de salles de bain",
+      "descriptionPlaceholder": "Decrivez votre bien en detail: etat general, equipements, proximite des services...",
+      "priceLabel": "Prix",
+      "priceMonthly": "mensuel",
+      "priceDaily": "par jour",
+      "priceSale": "de vente",
+      "pricePlaceholder": "2 000 000",
+      "currency": "GNF",
+      "surface": "Superficie",
+      "surfaceUnit": "m2",
+      "bedrooms": "Chambres",
+      "bathrooms": "Salles de bain",
+      "livingRooms": "Salons",
+      "name": "Titre de l'annonce",
       "floor": "Etage",
       "totalFloors": "Nombre d'etages",
       "furnished": "Meuble",
       "amenities": "Equipements"
     },
+    "rental": {
+      "deposit": "Caution",
+      "advance": "Avance",
+      "commission": "Commission ImmoGuinee",
+      "commissionMonths": "{months} mois de loyer",
+      "commissionPercent": "{percent}%",
+      "noCommission": "Pas de commission",
+      "tenantType": "Type de locataire prefere",
+      "tenantTypes": {
+        "all": "Tous les profils",
+        "couple": "Couple",
+        "marriedAbsent": "Marie(e) (conjoint absent)",
+        "single": "Celibataire",
+        "student": "Etudiant(e)"
+      },
+      "months": "mois"
+    },
+    "shortRental": {
+      "title": "Location courte duree (meuble)",
+      "priceInfo": "Le prix indique est par jour. Le bien sera automatiquement marque comme meuble.",
+      "commissionInfo": "Commission ImmoGuinee: {percent}% du montant total",
+      "minDuration": "Duree minimum de location",
+      "durations": {
+        "1day": "1 jour minimum",
+        "days": "{days} jours minimum",
+        "1week": "1 semaine minimum",
+        "2weeks": "2 semaines minimum",
+        "1month": "1 mois minimum"
+      }
+    },
+    "sale": {
+      "commissionInfo": "Commission ImmoGuinee: {percent}% du prix de vente"
+    },
+    "characteristics": {
+      "title": "Prix et caracteristiques",
+      "subtitle": "Definissez le prix et les details de votre bien",
+      "terrainNote": "Pour un terrain, seule la superficie est necessaire.",
+      "commercialNote": "Pour ce type de bien commercial, les chambres et salons ne sont pas applicables."
+    },
+    "amenities": {
+      "title": "Equipements",
+      "subtitle": "Selectionnez les equipements disponibles",
+      "parking": "Parking",
+      "wifi": "Wifi",
+      "airCondition": "Climatisation",
+      "security": "Securite 24h",
+      "pool": "Piscine",
+      "generator": "Groupe electrogene",
+      "balcony": "Balcon",
+      "kitchen": "Cuisine equipee",
+      "borehole": "Forage",
+      "segOnly": "SEG uniquement"
+    },
     "location": {
       "title": "Localisation du bien",
+      "subtitle": "Indiquez l'emplacement precis de votre propriete",
       "commune": "Commune",
       "quartier": "Quartier",
       "address": "Adresse complete",
@@ -561,13 +684,111 @@
     },
     "photos": {
       "title": "Photos du bien",
-      "subtitle": "Ajoutez des photos pour attirer plus de visiteurs",
+      "subtitle": "Ajoutez des photos de qualite pour attirer plus de visiteurs",
       "upload": "Ajouter des photos",
       "mainPhoto": "Photo principale",
       "setAsMain": "Definir comme principale",
       "delete": "Supprimer",
       "minPhotos": "Minimum 3 photos requises",
-      "maxPhotos": "Maximum 20 photos"
+      "maxPhotos": "Maximum 10 photos",
+      "tips": {
+        "title": "Conseils pour de bonnes photos :",
+        "daylight": "Prenez les photos en journee avec une bonne lumiere naturelle",
+        "allRooms": "Montrez toutes les pieces principales",
+        "clean": "Rangez et nettoyez avant de photographier",
+        "mainPhoto": "La premiere photo sera l'image principale de l'annonce"
+      },
+      "errors": {
+        "unsupportedFormat": "Format non supporte. Utilisez JPG, PNG ou WebP.",
+        "fileTooLarge": "Fichier trop volumineux (max 5MB).",
+        "maxPhotos": "Maximum 10 photos autorisees."
+      }
+    },
+    "ai": {
+      "optimize": "Optimiser avec l'IA",
+      "optimizeShort": "IA",
+      "optimizing": "Optimisation...",
+      "errors": {
+        "fillFields": "Veuillez remplir le titre et la description avant d'optimiser",
+        "unavailable": "Service d'optimisation non disponible.",
+        "cannotOptimize": "Le texte n'a pas pu etre optimise.",
+        "temporaryUnavailable": "Service temporairement indisponible.",
+        "generic": "Erreur lors de l'optimisation. Veuillez reessayer."
+      }
+    },
+    "seoGuide": {
+      "title": "Guide SEO : Comment bien rediger ?",
+      "subtitle": "Conseils pour un meilleur referencement Google",
+      "titleSection": {
+        "title": "Titre (60-70 caracteres max)",
+        "structure": "Structure :",
+        "template": "[Type de bien] [Caracteristique cle] a [Action] a [Quartier]",
+        "badExample": "Belle maison a louer",
+        "goodExample1": "Villa 4 chambres avec piscine a louer a Kipe",
+        "goodExample2": "Appartement meuble 2 chambres a Kaloum centre"
+      },
+      "descriptionSection": {
+        "title": "Description (150-300 mots)",
+        "hook": "Accroche",
+        "hookDesc": "Resume attractif du bien",
+        "features": "Caracteristiques",
+        "featuresDesc": "Chambres, equipements, etat",
+        "location": "Localisation",
+        "locationDesc": "Quartier, proximite services",
+        "cta": "Appel a l'action",
+        "ctaDesc": "Inviter a contacter"
+      },
+      "keywords": {
+        "title": "Mots-cles a inclure"
+      },
+      "avoid": {
+        "title": "A eviter :",
+        "uppercase": "Titres en MAJUSCULES",
+        "urgent": "\"Urgent!!!\" ou \"Bonne affaire!!!\"",
+        "tooShort": "Descriptions trop courtes (< 50 mots)",
+        "copyPaste": "Copier-coller la meme description"
+      }
+    },
+    "tips": {
+      "title": "Conseils pour une annonce reussie",
+      "subtitle": "Maximisez vos chances de trouver un acheteur",
+      "photos": {
+        "title": "Photos de qualite",
+        "desc": "Ajoutez au moins 5 photos claires, lumineuses et de haute qualite"
+      },
+      "titleTip": {
+        "title": "Titre accrocheur",
+        "desc": "Mentionnez les points forts: localisation, equipements, etat"
+      },
+      "locationTip": {
+        "title": "Localisation precise",
+        "desc": "Selectionnez le bon quartier pour attirer les bons visiteurs"
+      },
+      "priceTip": {
+        "title": "Prix competitif",
+        "desc": "Fixez un prix realiste pour attirer plus d'acheteurs potentiels"
+      }
+    },
+    "validation": {
+      "selectOperationType": "Veuillez selectionner le type d'operation",
+      "selectPropertyType": "Veuillez selectionner le type de bien",
+      "titleRequired": "Le titre est requis",
+      "titleMinLength": "Le titre doit contenir au moins 15 caracteres",
+      "descriptionRequired": "La description est requise",
+      "descriptionMinLength": "La description doit contenir au moins 50 caracteres",
+      "priceRequired": "Le prix est requis",
+      "surfaceRequired": "La superficie est requise",
+      "bedroomsRequired": "Le nombre de chambres est requis",
+      "selectQuartier": "Veuillez selectionner le quartier",
+      "minPhotos": "Ajoutez au moins 3 photos ({current}/3)"
+    },
+    "buttons": {
+      "back": "Retour",
+      "cancel": "Annuler",
+      "previous": "Precedent",
+      "continue": "Continuer",
+      "publish": "Publier l'annonce",
+      "publishing": "Publication..."
     },
     "pricing": {
       "title": "Prix",
@@ -585,10 +806,18 @@
       "saveDraft": "Enregistrer comme brouillon"
     },
     "success": {
-      "title": "Annonce publiee !",
-      "subtitle": "Votre annonce a ete soumise pour verification",
+      "title": "Annonce publiee avec succes !",
+      "subtitle": "Votre annonce est en cours de validation. Vous serez notifie une fois approuvee.",
       "viewListing": "Voir l'annonce",
       "createAnother": "Creer une autre annonce"
+    },
+    "errors": {
+      "title": "Erreur",
+      "generic": "Erreur lors de la publication. Veuillez reessayer."
+    },
+    "support": {
+      "needHelp": "Besoin d'aide ?",
+      "contactSupport": "Contactez notre support"
     }
   },
   "messages": {
@@ -883,10 +1112,18 @@
     "inGuinea": "en Guinee"
   },
   "errors": {
-    "404": {
-      "title": "Page non trouvee",
-      "subtitle": "La page que vous recherchez n'existe pas ou a ete deplacee.",
+    "page": {
+      "oops": "Oops !",
+      "title": "Une erreur est survenue",
+      "subtitle": "Nous nous excusons pour ce desagrement. Veuillez reessayer.",
+      "retry": "Reessayer",
       "backHome": "Retour a l'accueil"
+    },
+    "404": {
+      "title": "Page introuvable",
+      "subtitle": "Desole, la page que vous recherchez n'existe pas ou a ete deplacee.",
+      "backHome": "Retour a l'accueil",
+      "searchListing": "Rechercher un bien"
     },
     "500": {
       "title": "Erreur serveur",

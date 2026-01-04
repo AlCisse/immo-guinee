@@ -27,25 +27,28 @@ import {
 } from 'lucide-react';
 import ListingFormStepper from '@/components/listings/ListingFormStepper';
 import { useAuth } from '@/lib/auth/AuthContext';
-
-const STEPS = [
-  { id: 1, title: 'Type', icon: Home, description: 'Opération & bien' },
-  { id: 2, title: 'Détails', icon: FileText, description: 'Infos & prix' },
-  { id: 3, title: 'Localisation', icon: MapPin, description: 'Adresse' },
-  { id: 4, title: 'Photos', icon: Camera, description: 'Galerie' },
-];
-
-const STATS = [
-  { icon: Eye, value: '15K+', label: 'Vues mensuelles' },
-  { icon: Clock, value: '24h', label: 'Validation rapide' },
-  { icon: TrendingUp, value: '85%', label: 'Taux de contact' },
-];
+import { useTranslations } from '@/lib/i18n';
 
 export default function PublierPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const { user, hasVerifiedPhone, resendOtp } = useAuth();
   const router = useRouter();
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const t = useTranslations('publish');
+  const tCommon = useTranslations('common');
+
+  const STEPS = [
+    { id: 1, title: t('steps.type'), icon: Home, description: t('steps.typeDesc') },
+    { id: 2, title: t('steps.details'), icon: FileText, description: t('steps.detailsDesc') },
+    { id: 3, title: t('steps.location'), icon: MapPin, description: t('steps.locationDesc') },
+    { id: 4, title: t('steps.photos'), icon: Camera, description: t('steps.photosDesc') },
+  ];
+
+  const STATS = [
+    { icon: Eye, value: '15K+', label: t('stats.monthlyViews') },
+    { icon: Clock, value: '24h', label: t('stats.fastValidation') },
+    { icon: TrendingUp, value: '85%', label: t('stats.contactRate') },
+  ];
 
   // Check phone verification on page load
   useEffect(() => {
@@ -53,7 +56,7 @@ export default function PublierPage() {
       setIsRedirecting(true);
       // Send OTP and redirect to verify page
       toast(
-        'Vous devez vérifier votre numéro pour publier une annonce. Un code a été envoyé sur WhatsApp.',
+        t('verification.toastMessage'),
         {
           duration: 5000,
           icon: '📱',
@@ -64,7 +67,7 @@ export default function PublierPage() {
       });
       router.push(`/auth/verify-otp?telephone=${encodeURIComponent(user.telephone)}`);
     }
-  }, [user, hasVerifiedPhone, resendOtp, router]);
+  }, [user, hasVerifiedPhone, resendOtp, router, t]);
 
   // Show loading while redirecting unverified users
   if (isRedirecting || (user && !hasVerifiedPhone())) {
@@ -75,14 +78,14 @@ export default function PublierPage() {
             <AlertCircle className="w-8 h-8 text-orange-500" />
           </div>
           <h2 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">
-            Vérification requise
+            {t('verification.title')}
           </h2>
           <p className="text-neutral-600 dark:text-neutral-400 mb-6">
-            Pour publier une annonce, vous devez d'abord vérifier votre numéro de téléphone.
+            {t('verification.message')}
           </p>
           <div className="flex items-center justify-center gap-2 text-primary-500">
             <Loader2 className="w-5 h-5 animate-spin" />
-            <span>Redirection vers la vérification...</span>
+            <span>{t('verification.redirecting')}</span>
           </div>
         </div>
       </div>
@@ -126,13 +129,13 @@ export default function PublierPage() {
               className="group flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full hover:bg-white/20 transition-all border border-white/20"
             >
               <ArrowLeft className="w-4 h-4 text-white group-hover:-translate-x-1 transition-transform" />
-              <span className="text-sm font-medium text-white">Retour</span>
+              <span className="text-sm font-medium text-white">{tCommon('back')}</span>
             </Link>
 
             <div className="flex items-center gap-2">
               <span className="px-3 py-1.5 bg-emerald-500/20 backdrop-blur-sm rounded-full text-xs font-medium text-white border border-emerald-400/30">
                 <span className="inline-block w-2 h-2 bg-emerald-400 rounded-full mr-1.5 animate-pulse" />
-                Publication gratuite
+                {t('hero.freePublication')}
               </span>
             </div>
           </motion.div>
@@ -151,14 +154,14 @@ export default function PublierPage() {
               className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full mb-4 border border-white/20"
             >
               <Sparkles className="w-4 h-4 text-yellow-300" />
-              <span className="text-sm text-white/90">Touchez des milliers d'acheteurs</span>
+              <span className="text-sm text-white/90">{t('hero.tagline')}</span>
             </motion.div>
 
             <h1 className="text-3xl md:text-5xl font-bold text-white mb-3">
-              Publiez votre annonce
+              {t('hero.title')}
             </h1>
             <p className="text-lg text-white/80 max-w-xl mx-auto">
-              Vendez ou louez votre bien en quelques minutes avec notre formulaire simple et intuitif
+              {t('hero.subtitle')}
             </p>
           </motion.div>
 
@@ -269,10 +272,10 @@ export default function PublierPage() {
           {/* Progress Text */}
           <div className="flex items-center justify-between text-sm pt-4 border-t border-neutral-100 dark:border-dark-border">
             <span className="text-neutral-500">
-              Étape <span className="font-bold text-primary-600">{currentStep}</span> sur {STEPS.length}
+              {t('progress.step')} <span className="font-bold text-primary-600">{currentStep}</span> {t('progress.of')} {STEPS.length}
             </span>
             <span className="text-neutral-500">
-              <span className="font-bold text-primary-600">{Math.round((currentStep / STEPS.length) * 100)}%</span> complété
+              <span className="font-bold text-primary-600">{Math.round((currentStep / STEPS.length) * 100)}%</span> {t('progress.completed')}
             </span>
           </div>
         </motion.div>
@@ -307,9 +310,9 @@ export default function PublierPage() {
               </div>
               <div>
                 <h2 className="text-xl font-bold text-neutral-900 dark:text-white">
-                  Conseils pour une annonce réussie
+                  {t('tips.title')}
                 </h2>
-                <p className="text-sm text-neutral-500">Maximisez vos chances de trouver un acheteur</p>
+                <p className="text-sm text-neutral-500">{t('tips.subtitle')}</p>
               </div>
             </div>
 
@@ -318,26 +321,26 @@ export default function PublierPage() {
                 {
                   icon: Camera,
                   color: 'from-purple-500 to-pink-500',
-                  title: 'Photos de qualité',
-                  desc: 'Ajoutez au moins 5 photos claires, lumineuses et de haute qualité'
+                  title: t('tips.photos.title'),
+                  desc: t('tips.photos.desc')
                 },
                 {
                   icon: FileText,
                   color: 'from-blue-500 to-cyan-500',
-                  title: 'Titre accrocheur',
-                  desc: 'Mentionnez les points forts: localisation, équipements, état'
+                  title: t('tips.titleTip.title'),
+                  desc: t('tips.titleTip.desc')
                 },
                 {
                   icon: MapPin,
                   color: 'from-emerald-500 to-teal-500',
-                  title: 'Localisation précise',
-                  desc: 'Sélectionnez le bon quartier pour attirer les bons visiteurs'
+                  title: t('tips.locationTip.title'),
+                  desc: t('tips.locationTip.desc')
                 },
                 {
                   icon: DollarSign,
                   color: 'from-orange-500 to-amber-500',
-                  title: 'Prix compétitif',
-                  desc: 'Fixez un prix réaliste pour attirer plus d\'acheteurs potentiels'
+                  title: t('tips.priceTip.title'),
+                  desc: t('tips.priceTip.desc')
                 }
               ].map((tip, index) => (
                 <motion.div
@@ -372,12 +375,12 @@ export default function PublierPage() {
           className="mt-8 text-center"
         >
           <p className="text-neutral-600 dark:text-neutral-400">
-            Besoin d'aide ?{' '}
+            {t('support.needHelp')}{' '}
             <Link
               href="/contact"
               className="inline-flex items-center gap-1 text-primary-600 hover:text-primary-700 font-semibold underline underline-offset-4 decoration-primary-200 hover:decoration-primary-400 transition-all"
             >
-              Contactez notre support
+              {t('support.contactSupport')}
               <ArrowRight className="w-4 h-4" />
             </Link>
           </p>
