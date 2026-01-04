@@ -143,16 +143,19 @@ class RssFeedController extends Controller
             default => $listing->type_bien,
         };
 
-        // Build description
-        $description = "{$transactionLabel} - {$typeLabel}";
+        // Build short summary
+        $summary = "{$transactionLabel} - {$typeLabel}";
         if ($listing->nombre_chambres > 0) {
-            $description .= " - {$listing->nombre_chambres} chambre(s)";
+            $summary .= " - {$listing->nombre_chambres} chambre(s)";
         }
         if ($listing->surface_m2 > 0) {
-            $description .= " - {$listing->surface_m2} m2";
+            $summary .= " - {$listing->surface_m2} m2";
         }
-        $description .= " - {$listing->quartier}, {$listing->commune}";
-        $description .= " - {$priceFormatted}";
+        $summary .= " - {$listing->quartier}, {$listing->commune}";
+        $summary .= " - {$priceFormatted}";
+
+        // Use actual listing description if available, otherwise use summary
+        $description = !empty($listing->description) ? $listing->description : $summary;
 
         // Collect all photos from various sources
         // Priority: 1) listingPhotos relation, 2) photos JSON column, 3) photo_principale
@@ -222,7 +225,10 @@ class RssFeedController extends Controller
             $xml .= '    </media:group>' . PHP_EOL;
 
             // Add content:encoded with HTML images for n8n and basic RSS readers
-            $htmlContent = '<p>' . $this->escapeXml($description) . '</p>';
+            $htmlContent = '<p><strong>' . $this->escapeXml($summary) . '</strong></p>';
+            if (!empty($listing->description)) {
+                $htmlContent .= '<p>' . $this->escapeXml($listing->description) . '</p>';
+            }
             $htmlContent .= '<div class="images">';
             foreach ($allPhotos as $index => $photo) {
                 $isPrimary = $photo['is_primary'] ? ' data-primary="true"' : '';
