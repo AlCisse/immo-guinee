@@ -83,7 +83,7 @@ class RssFeedController extends Controller
         $now = now()->toRfc2822String();
 
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
-        $xml .= '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">' . PHP_EOL;
+        $xml .= '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" xmlns:content="http://purl.org/rss/1.0/modules/content/">' . PHP_EOL;
         $xml .= '<channel>' . PHP_EOL;
         $xml .= '  <title>' . $this->escapeXml($title) . '</title>' . PHP_EOL;
         $xml .= '  <link>' . $baseUrl . '</link>' . PHP_EOL;
@@ -220,6 +220,24 @@ class RssFeedController extends Controller
                 }
             }
             $xml .= '    </media:group>' . PHP_EOL;
+
+            // Add content:encoded with HTML images for n8n and basic RSS readers
+            $htmlContent = '<p>' . $this->escapeXml($description) . '</p>';
+            $htmlContent .= '<div class="images">';
+            foreach ($allPhotos as $index => $photo) {
+                $isPrimary = $photo['is_primary'] ? ' data-primary="true"' : '';
+                $htmlContent .= '<img src="' . $this->escapeXml($photo['url']) . '"' . $isPrimary . ' alt="Image ' . ($index + 1) . '"/>';
+            }
+            $htmlContent .= '</div>';
+            // Add JSON array of image URLs for easy parsing
+            $imageUrls = $allPhotos->pluck('url')->toArray();
+            $primaryIndex = $allPhotos->search(fn($p) => $p['is_primary']);
+            $htmlContent .= '<script type="application/json" class="listing-images">' . json_encode([
+                'images' => $imageUrls,
+                'primaryIndex' => $primaryIndex !== false ? $primaryIndex : 0,
+                'count' => count($imageUrls),
+            ]) . '</script>';
+            $xml .= '    <content:encoded><![CDATA[' . $htmlContent . ']]></content:encoded>' . PHP_EOL;
         }
 
         $xml .= '  </item>' . PHP_EOL;
