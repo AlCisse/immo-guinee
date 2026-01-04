@@ -1456,6 +1456,95 @@
       "title": "Vous n'avez pas trouve votre reponse ?",
       "subtitle": "Notre equipe de support est disponible pour vous aider",
       "contactUs": "Nous contacter"
+    },
+    "tutorial": {
+      "title": "Guide : Comment creer une annonce ?",
+      "subtitle": "Tutoriel complet en 4 etapes simples",
+      "step": "Etape",
+      "previous": "Precedent",
+      "next": "Suivant",
+      "createListing": "Creer mon annonce",
+      "avoid": "A eviter",
+      "steps": {
+        "1": {
+          "title": "Type d'operation et Type de bien",
+          "sections": {
+            "operationType": {
+              "title": "Choisir le type d'operation",
+              "rent": "Louer",
+              "rentDesc": "Location longue duree - Prix mensuel",
+              "shortRent": "Louer courte duree",
+              "shortRentDesc": "Location meublee temporaire - Prix par jour",
+              "sell": "Vendre",
+              "sellDesc": "Mise en vente - Prix total"
+            },
+            "propertyType": {
+              "title": "Choisir le type de bien",
+              "residential": "Residentiel",
+              "residentialDesc": "Studio, Chambre-Salon, Appartement, Villa, Duplex",
+              "commercial": "Commercial",
+              "commercialDesc": "Bureau, Boutique, Entrepot, Terrain"
+            }
+          }
+        },
+        "2": {
+          "title": "Details et Prix",
+          "sections": {
+            "listingTitle": {
+              "title": "Titre de l'annonce",
+              "tips": ["15 a 100 caracteres", "Soyez descriptif et attractif", "Exemple: 'Villa 4 chambres avec piscine a Kipe'"],
+              "avoid": ["Titres vagues comme 'Belle maison'", "MAJUSCULES ou 'URGENT!!!'"]
+            },
+            "description": {
+              "title": "Description",
+              "tips": ["50 a 2000 caracteres", "Structure: Accroche → Caracteristiques → Localisation → Appel a l'action", "Mentionnez les equipements cles"]
+            },
+            "price": {
+              "title": "Prix et caracteristiques",
+              "tips": ["Prix en GNF selon le type (mensuel/jour/total)", "Superficie obligatoire pour tous les biens", "Chambres requises pour les biens residentiels"]
+            },
+            "ai": {
+              "title": "Optimisation IA",
+              "tips": ["Cliquez sur 'Optimiser avec l'IA' pour ameliorer votre texte", "Corrige les fautes et ameliore le referencement"]
+            }
+          }
+        },
+        "3": {
+          "title": "Localisation",
+          "sections": {
+            "location": {
+              "title": "Selectionner l'emplacement",
+              "tips": ["Choisissez la region (Conakry par defaut)", "Selectionnez la commune (Kaloum, Dixinn, Matam, Ratoma, Matoto)", "Indiquez le quartier precis"]
+            },
+            "neighborhoods": {
+              "title": "Quartiers populaires",
+              "ratoma": "Ratoma",
+              "ratomaDesc": "Kipe, Nongo, Taouyah",
+              "matam": "Matam",
+              "matamDesc": "Madina, Hamdallaye",
+              "kaloum": "Kaloum",
+              "kaloumDesc": "Almamya, Boulbinet, Centre-ville"
+            }
+          }
+        },
+        "4": {
+          "title": "Photos",
+          "sections": {
+            "requirements": {
+              "title": "Exigences",
+              "tips": ["Minimum 3 photos, maximum 5", "Formats: JPG, PNG, WebP", "Taille max: 5 MB par photo"]
+            },
+            "tips": {
+              "title": "Conseils pour de bonnes photos",
+              "tips": ["Photographiez en journee avec lumiere naturelle", "Rangez et nettoyez avant de photographier", "Montrez toutes les pieces principales", "La premiere photo = couverture de l'annonce"]
+            },
+            "order": {
+              "title": "Ordre recommande",
+              "items": ["Vue exterieure / Facade", "Salon", "Cuisine", "Chambres", "Salle de bain, Exterieur"]
+            }
+          }
+        }
+      }
     }
   },
   "contracts": {

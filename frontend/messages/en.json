@@ -1456,6 +1456,95 @@
       "title": "Didn't find your answer?",
       "subtitle": "Our support team is available to help you",
       "contactUs": "Contact us"
+    },
+    "tutorial": {
+      "title": "Guide: How to create a listing?",
+      "subtitle": "Complete tutorial in 4 simple steps",
+      "step": "Step",
+      "previous": "Previous",
+      "next": "Next",
+      "createListing": "Create my listing",
+      "avoid": "Avoid",
+      "steps": {
+        "1": {
+          "title": "Transaction Type and Property Type",
+          "sections": {
+            "operationType": {
+              "title": "Choose transaction type",
+              "rent": "Rent",
+              "rentDesc": "Long-term rental - Monthly price",
+              "shortRent": "Short-term rent",
+              "shortRentDesc": "Furnished temporary rental - Daily price",
+              "sell": "Sell",
+              "sellDesc": "For sale - Total price"
+            },
+            "propertyType": {
+              "title": "Choose property type",
+              "residential": "Residential",
+              "residentialDesc": "Studio, 1-Bedroom, Apartment, Villa, Duplex",
+              "commercial": "Commercial",
+              "commercialDesc": "Office, Shop, Warehouse, Land"
+            }
+          }
+        },
+        "2": {
+          "title": "Details and Price",
+          "sections": {
+            "listingTitle": {
+              "title": "Listing title",
+              "tips": ["15 to 100 characters", "Be descriptive and attractive", "Example: '4-bedroom villa with pool in Kipé'"],
+              "avoid": ["Vague titles like 'Nice house'", "ALL CAPS or 'URGENT!!!'"]
+            },
+            "description": {
+              "title": "Description",
+              "tips": ["50 to 2000 characters", "Structure: Hook → Features → Location → Call to action", "Mention key amenities"]
+            },
+            "price": {
+              "title": "Price and features",
+              "tips": ["Price in GNF based on type (monthly/daily/total)", "Area required for all properties", "Bedrooms required for residential properties"]
+            },
+            "ai": {
+              "title": "AI Optimization",
+              "tips": ["Click 'Optimize with AI' to improve your text", "Corrects errors and improves SEO"]
+            }
+          }
+        },
+        "3": {
+          "title": "Location",
+          "sections": {
+            "location": {
+              "title": "Select location",
+              "tips": ["Choose the region (Conakry by default)", "Select the commune (Kaloum, Dixinn, Matam, Ratoma, Matoto)", "Specify the exact neighborhood"]
+            },
+            "neighborhoods": {
+              "title": "Popular neighborhoods",
+              "ratoma": "Ratoma",
+              "ratomaDesc": "Kipé, Nongo, Taouyah",
+              "matam": "Matam",
+              "matamDesc": "Madina, Hamdallaye",
+              "kaloum": "Kaloum",
+              "kaloumDesc": "Almamya, Boulbinet, Downtown"
+            }
+          }
+        },
+        "4": {
+          "title": "Photos",
+          "sections": {
+            "requirements": {
+              "title": "Requirements",
+              "tips": ["Minimum 3 photos, maximum 5", "Formats: JPG, PNG, WebP", "Max size: 5 MB per photo"]
+            },
+            "tips": {
+              "title": "Tips for good photos",
+              "tips": ["Photograph during the day with natural light", "Tidy and clean before photographing", "Show all main rooms", "First photo = listing cover"]
+            },
+            "order": {
+              "title": "Recommended order",
+              "items": ["Exterior view / Facade", "Living room", "Kitchen", "Bedrooms", "Bathroom, Outdoor"]
+            }
+          }
+        }
+      }
     }
   },
   "contracts": {
