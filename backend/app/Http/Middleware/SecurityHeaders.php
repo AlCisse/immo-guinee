@@ -65,6 +65,13 @@ class SecurityHeaders
             'payment=(self)'
         );
 
+        // Cross-Origin security headers (modern replacements for deprecated headers)
+        // COOP: Isolate browsing context to prevent cross-origin attacks
+        $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin');
+
+        // CORP: Prevent resources from being loaded by other origins
+        $response->headers->set('Cross-Origin-Resource-Policy', 'same-origin');
+
         return $response;
     }
 }

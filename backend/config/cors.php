@@ -32,7 +32,8 @@ return [
 
     'exposed_headers' => ['Authorization', 'X-Total-Count', 'X-Page', 'X-Per-Page'],
 
-    'max_age' => 0,
+    // Cache preflight requests for 24 hours (reduces OPTIONS requests)
+    'max_age' => 86400,
 
     'supports_credentials' => true,
 
