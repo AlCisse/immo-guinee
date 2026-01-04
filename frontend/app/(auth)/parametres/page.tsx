@@ -25,7 +25,7 @@ import {
   User,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth/AuthContext';
-import { useLocale } from '@/lib/hooks/useLocale';
+import { useTranslations } from '@/lib/i18n';
 
 interface NotificationSettings {
   email: boolean;
@@ -39,7 +39,7 @@ interface NotificationSettings {
 
 export default function ParametresPage() {
   const { user, logout } = useAuth();
-  const { t } = useLocale();
+  const { t } = useTranslations();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
