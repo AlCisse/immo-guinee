@@ -9,6 +9,7 @@ import { api, apiClient } from '@/lib/api/client';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import { Modal } from '@/components/ui/Modal';
+import { useTranslations } from '@/lib/i18n';
 
 interface Contract {
   id: string;
@@ -124,76 +125,76 @@ async function fetchMyContracts(
 }
 
 // Contract status badge
-function StatusBadge({ status }: { status: string }) {
-  const config: Record<string, { label: string; className: string }> = {
+function StatusBadge({ status, t }: { status: string; t: (key: string) => string }) {
+  const config: Record<string, { labelKey: string; className: string }> = {
     BROUILLON: {
-      label: 'Brouillon',
+      labelKey: 'contracts.status.draft',
       className: 'bg-gray-100 text-gray-700',
     },
     EN_ATTENTE_SIGNATURE: {
-      label: 'En attente',
+      labelKey: 'contracts.status.pendingSignature',
       className: 'bg-yellow-100 text-yellow-700',
     },
     EN_ATTENTE_SIGNATURE_LOCATAIRE: {
-      label: 'En attente du locataire',
+      labelKey: 'contracts.status.pendingTenantSignature',
       className: 'bg-yellow-100 text-yellow-700',
     },
     PARTIELLEMENT_SIGNE: {
-      label: 'Signature partielle',
+      labelKey: 'contracts.status.partiallySigned',
       className: 'bg-orange-100 text-orange-700',
     },
     SIGNE: {
-      label: 'Signé',
+      labelKey: 'contracts.status.signed',
       className: 'bg-blue-100 text-blue-700',
     },
     EN_RETRACTATION: {
-      label: 'En rétractation',
+      labelKey: 'contracts.status.inRetraction',
       className: 'bg-purple-100 text-purple-700',
     },
     ACTIF: {
-      label: 'Actif',
+      labelKey: 'contracts.status.active',
       className: 'bg-green-100 text-green-700',
     },
     EN_PREAVIS: {
-      label: 'En préavis',
+      labelKey: 'contracts.status.inNotice',
       className: 'bg-orange-100 text-orange-700',
     },
     EXPIRE: {
-      label: 'Expiré',
+      labelKey: 'contracts.status.expired',
       className: 'bg-gray-100 text-gray-600',
     },
     ANNULE: {
-      label: 'Annulé',
+      labelKey: 'contracts.status.cancelled',
       className: 'bg-red-100 text-red-700',
     },
     RESILIE: {
-      label: 'Résilié',
+      labelKey: 'contracts.status.terminated',
       className: 'bg-red-100 text-red-700',
     },
   };
 
-  const { label, className } = config[status] || {
-    label: status,
+  const { labelKey, className } = config[status] || {
+    labelKey: status,
     className: 'bg-gray-100 text-gray-700',
   };
 
   return (
     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${className}`}>
-      {label}
+      {config[status] ? t(labelKey) : status}
     </span>
   );
 }
 
 // Contract type label
-function getContractTypeLabel(type: string): string {
-  const labels: Record<string, string> = {
-    BAIL_LOCATION_RESIDENTIEL: 'Bail résidentiel',
-    BAIL_LOCATION_COMMERCIAL: 'Bail commercial',
-    PROMESSE_VENTE_TERRAIN: 'Promesse de vente',
-    MANDAT_GESTION: 'Mandat de gestion',
-    ATTESTATION_CAUTION: 'Attestation caution',
+function getContractTypeLabel(type: string, t: (key: string) => string): string {
+  const labelKeys: Record<string, string> = {
+    BAIL_LOCATION_RESIDENTIEL: 'contracts.types.residentialLease',
+    BAIL_LOCATION_COMMERCIAL: 'contracts.types.commercialLease',
+    PROMESSE_VENTE_TERRAIN: 'contracts.types.salePromise',
+    MANDAT_GESTION: 'contracts.types.managementMandate',
+    ATTESTATION_CAUTION: 'contracts.types.depositCertificate',
   };
-  return labels[type] || type;
+  return labelKeys[type] ? t(labelKeys[type]) : type;
 }
 
 // Contract card component
@@ -204,6 +205,7 @@ function ContractCard({
   isCancelling,
   onTerminate,
   isTerminating,
+  t,
 }: {
   contract: Contract;
   currentUserId: string | null;
@@ -211,6 +213,7 @@ function ContractCard({
   isCancelling: boolean;
   onTerminate: (contractId: string) => void;
   isTerminating: boolean;
+  t: (key: string, params?: Record<string, any>) => string;
 }) {
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -220,9 +223,9 @@ function ContractCard({
 
   const isProprietaire = proprietaireId === currentUserId;
   const isLocataire = tenantId === currentUserId;
-  const userRole = isProprietaire ? 'Propriétaire' : 'Locataire';
+  const userRole = isProprietaire ? t('contracts.card.owner') : t('contracts.card.tenant');
   const otherParty = isProprietaire ? contract.locataire : contract.proprietaire;
-  const otherPartyName = otherParty?.nom_complet || 'Autre partie';
+  const otherPartyName = otherParty?.nom_complet || t('contracts.card.otherParty');
 
   // Handle both API field names: date_signature_* and *_signed_at
   const proprietaireSigned = contract.date_signature_proprietaire || contract.bailleur_signed_at;
@@ -272,9 +275,9 @@ function ContractCard({
           <div>
             <div className="flex items-center gap-2 mb-1">
               <h3 className="text-lg font-semibold text-gray-900">{contract.reference || contract.numero_contrat || contract.id.slice(0, 8)}</h3>
-              <StatusBadge status={contract.statut} />
+              <StatusBadge status={contract.statut} t={t} />
             </div>
-            <p className="text-sm text-gray-500">{getContractTypeLabel(contract.type_contrat || 'location')}</p>
+            <p className="text-sm text-gray-500">{getContractTypeLabel(contract.type_contrat || 'location', t)}</p>
           </div>
           {needsAction && (
             <span className="flex h-3 w-3">
@@ -295,10 +298,10 @@ function ContractCard({
             />
           )}
           <div className="flex-1 min-w-0">
-            <p className="font-medium text-gray-900 truncate">{contract.listing?.titre || 'Bien immobilier'}</p>
+            <p className="font-medium text-gray-900 truncate">{contract.listing?.titre || t('contracts.card.property')}</p>
             <p className="text-sm text-gray-500">{contract.listing?.quartier}</p>
             <p className="text-sm font-semibold text-primary-600">
-              {contract.loyer_mensuel?.toLocaleString('fr-GN')} GNF/mois
+              {contract.loyer_mensuel?.toLocaleString('fr-GN')} GNF{t('contracts.card.perMonth')}
             </p>
           </div>
         </div>
@@ -306,11 +309,11 @@ function ContractCard({
         {/* Parties info */}
         <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
           <div>
-            <p className="text-gray-500">Votre rôle</p>
+            <p className="text-gray-500">{t('contracts.card.yourRole')}</p>
             <p className="font-medium text-gray-900">{userRole}</p>
           </div>
           <div>
-            <p className="text-gray-500">Autre partie</p>
+            <p className="text-gray-500">{t('contracts.card.otherParty')}</p>
             <p className="font-medium text-gray-900">{otherPartyName}</p>
           </div>
         </div>
@@ -329,7 +332,7 @@ function ContractCard({
                 </svg>
               )}
               <span className={proprietaireSigned ? 'text-green-700' : 'text-gray-500'}>
-                Propriétaire
+                {t('contracts.card.owner')}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -343,7 +346,7 @@ function ContractCard({
                 </svg>
               )}
               <span className={locataireSigned ? 'text-green-700' : 'text-gray-500'}>
-                Locataire
+                {t('contracts.card.tenant')}
               </span>
             </div>
           </div>
@@ -357,7 +360,7 @@ function ContractCard({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span className="text-xs text-yellow-700">
-                Rétractation possible jusqu&apos;au {new Date(contract.delai_retractation_expire).toLocaleDateString('fr-FR')}
+                {t('contracts.signature.retractionPossible')} {new Date(contract.delai_retractation_expire).toLocaleDateString('fr-FR')}
               </span>
             </div>
           </div>
@@ -372,22 +375,22 @@ function ContractCard({
               </svg>
               <div className="flex-1">
                 <p className="text-sm font-medium text-orange-800">
-                  Résiliation en cours
+                  {t('contracts.termination.inProgress')}
                 </p>
                 <p className="text-xs text-orange-700 mt-1">
-                  Date effective : {new Date(contract.resiliation_effective_date!).toLocaleDateString('fr-FR')}
-                  {' '}({daysUntilTermination} jour{daysUntilTermination > 1 ? 's' : ''} restant{daysUntilTermination > 1 ? 's' : ''})
+                  {t('contracts.termination.effectiveDate')}: {new Date(contract.resiliation_effective_date!).toLocaleDateString('fr-FR')}
+                  {' '}({daysUntilTermination} {t('contracts.termination.daysRemaining')})
                 </p>
                 {contract.resiliation_motif && (
                   <p className="text-xs text-orange-600 mt-1">
-                    Motif : {contract.resiliation_motif}
+                    {t('contracts.termination.reason')}: {contract.resiliation_motif}
                   </p>
                 )}
                 {!contract.resiliation_confirmed_at && (
                   <p className="text-xs text-orange-600 mt-1 italic">
                     {terminationRequestedByMe
-                      ? "En attente de confirmation de l'autre partie"
-                      : 'En attente de votre confirmation'}
+                      ? t('contracts.termination.awaitingOtherParty')
+                      : t('contracts.termination.awaitingYourConfirmation')}
                   </p>
                 )}
               </div>
@@ -403,13 +406,13 @@ function ContractCard({
                 <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                 </svg>
-                Voir et signer
+                {t('contracts.card.viewAndSign')}
               </Button>
             </Link>
           ) : (
             <Link href={`/contrats/${contract.id}`} className="flex-1">
               <Button variant="outline" className="w-full">
-                Voir les détails
+                {t('contracts.card.viewDetails')}
               </Button>
             </Link>
           )}
@@ -439,7 +442,7 @@ function ContractCard({
               onClick={() => onCancel(contract.id)}
               disabled={isCancelling}
               className="text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400"
-              aria-label="Annuler le contrat"
+              aria-label={t('contracts.card.cancel')}
             >
               {isCancelling ? (
                 <Spinner size="sm" />
@@ -448,7 +451,7 @@ function ContractCard({
                   <svg className="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
-                  Annuler
+                  {t('contracts.card.cancel')}
                 </>
               )}
             </Button>
@@ -459,7 +462,7 @@ function ContractCard({
               onClick={() => onTerminate(contract.id)}
               disabled={isTerminating}
               className="text-orange-600 border-orange-300 hover:bg-orange-50 hover:border-orange-400"
-              aria-label="Résilier le contrat"
+              aria-label={t('contracts.card.terminate')}
             >
               {isTerminating ? (
                 <Spinner size="sm" />
@@ -468,7 +471,7 @@ function ContractCard({
                   <svg className="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                   </svg>
-                  Résilier
+                  {t('contracts.card.terminate')}
                 </>
               )}
             </Button>
@@ -479,7 +482,7 @@ function ContractCard({
               onClick={() => onTerminate(contract.id)}
               disabled={isTerminating}
               className="text-green-600 border-green-300 hover:bg-green-50 hover:border-green-400"
-              aria-label="Confirmer la résiliation"
+              aria-label={t('contracts.card.confirm')}
             >
               {isTerminating ? (
                 <Spinner size="sm" />
@@ -488,7 +491,7 @@ function ContractCard({
                   <svg className="h-4 w-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  Confirmer
+                  {t('contracts.card.confirm')}
                 </>
               )}
             </Button>
@@ -501,10 +504,10 @@ function ContractCard({
 
 // Filter tabs
 const FILTER_TABS = [
-  { key: 'all', label: 'Tous' },
-  { key: 'pending', label: 'En attente', statuses: ['EN_ATTENTE_SIGNATURE', 'PARTIELLEMENT_SIGNE'] },
-  { key: 'active', label: 'Actifs', statuses: ['ACTIF', 'SIGNE'] },
-  { key: 'completed', label: 'Terminés', statuses: ['EXPIRE', 'ANNULE', 'RESILIE'] },
+  { key: 'all', labelKey: 'contracts.filters.all' },
+  { key: 'pending', labelKey: 'contracts.filters.pending', statuses: ['EN_ATTENTE_SIGNATURE', 'PARTIELLEMENT_SIGNE'] },
+  { key: 'active', labelKey: 'contracts.filters.active', statuses: ['ACTIF', 'SIGNE'] },
+  { key: 'completed', labelKey: 'contracts.filters.completed', statuses: ['EXPIRE', 'ANNULE', 'RESILIE'] },
 ];
 
 // Cancel contract API
@@ -526,6 +529,7 @@ async function confirmTermination(id: string): Promise<Contract> {
 }
 
 export default function MyContractsPage() {
+  const { t } = useTranslations();
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
@@ -672,9 +676,9 @@ export default function MyContractsPage() {
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Mes contrats</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t('contracts.title')}</h1>
             <p className="mt-1 text-gray-600">
-              Gérez tous vos contrats de location et de vente
+              {t('contracts.subtitle')}
             </p>
           </div>
           <Link href="/contrats/generer">
@@ -682,7 +686,7 @@ export default function MyContractsPage() {
               <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
-              Nouveau contrat
+              {t('contracts.newContract')}
             </Button>
           </Link>
         </div>
@@ -695,7 +699,7 @@ export default function MyContractsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
               <p className="text-sm text-yellow-700">
-                <strong>{pendingCount} contrat{pendingCount > 1 ? 's' : ''}</strong> en attente de votre signature
+                <strong>{pendingCount}</strong> {t('contracts.pendingBanner')}
               </p>
             </div>
           </div>
@@ -719,7 +723,7 @@ export default function MyContractsPage() {
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
-              {tab.label}
+              {t(tab.labelKey)}
             </button>
           ))}
         </div>
@@ -732,11 +736,11 @@ export default function MyContractsPage() {
             setCurrentPage(1);
           }}
           className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm focus:border-primary-500 focus:ring-primary-500"
-          aria-label="Filtrer par rôle"
+          aria-label={t('contracts.filters.allRoles')}
         >
-          <option value="">Tous les rôles</option>
-          <option value="proprietaire">En tant que propriétaire</option>
-          <option value="locataire">En tant que locataire</option>
+          <option value="">{t('contracts.filters.allRoles')}</option>
+          <option value="proprietaire">{t('contracts.filters.asOwner')}</option>
+          <option value="locataire">{t('contracts.filters.asTenant')}</option>
         </select>
       </div>
 
@@ -753,9 +757,9 @@ export default function MyContractsPage() {
           <svg className="mx-auto h-12 w-12 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
-          <h3 className="mt-4 text-lg font-medium text-red-800">Erreur de chargement</h3>
+          <h3 className="mt-4 text-lg font-medium text-red-800">{t('contracts.loadError')}</h3>
           <p className="mt-2 text-sm text-red-600">
-            Impossible de charger vos contrats. Veuillez réessayer.
+            {t('contracts.loadErrorDesc')}
           </p>
         </div>
       )}
@@ -766,16 +770,16 @@ export default function MyContractsPage() {
           <svg className="mx-auto h-16 w-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <h3 className="mt-4 text-lg font-medium text-gray-900">Aucun contrat</h3>
+          <h3 className="mt-4 text-lg font-medium text-gray-900">{t('contracts.noContracts')}</h3>
           <p className="mt-2 text-gray-500">
             {activeTab === 'all'
-              ? "Vous n'avez pas encore de contrats. Parcourez les annonces pour créer votre premier contrat."
-              : 'Aucun contrat ne correspond à ce filtre.'}
+              ? t('contracts.noContractsDesc')
+              : t('contracts.noContractsFilter')}
           </p>
           {activeTab === 'all' && (
             <div className="mt-6">
               <Link href="/contrats/generer">
-                <Button variant="primary">Créer un contrat</Button>
+                <Button variant="primary">{t('contracts.createContract')}</Button>
               </Link>
             </div>
           )}
@@ -795,6 +799,7 @@ export default function MyContractsPage() {
                 isCancelling={cancelMutation.isPending && contractToCancel === contract.id}
                 onTerminate={handleTerminateClick}
                 isTerminating={(terminateMutation.isPending || confirmTerminationMutation.isPending) && contractToTerminate === contract.id}
+                t={t}
               />
             ))}
           </div>
@@ -803,7 +808,7 @@ export default function MyContractsPage() {
           {pagination && pagination.last_page > 1 && (
             <div className="mt-8 flex items-center justify-between border-t border-gray-200 pt-6">
               <p className="text-sm text-gray-600">
-                Page {pagination.current_page} sur {pagination.last_page} ({pagination.total} contrats)
+                {t('contracts.pagination.page')} {pagination.current_page} {t('contracts.pagination.of')} {pagination.last_page} ({pagination.total} {t('contracts.pagination.contracts')})
               </p>
               <div className="flex gap-2">
                 <Button
@@ -811,14 +816,14 @@ export default function MyContractsPage() {
                   disabled={pagination.current_page === 1}
                   onClick={() => setCurrentPage(pagination.current_page - 1)}
                 >
-                  Précédent
+                  {t('contracts.pagination.previous')}
                 </Button>
                 <Button
                   variant="outline"
                   disabled={pagination.current_page === pagination.last_page}
                   onClick={() => setCurrentPage(pagination.current_page + 1)}
                 >
-                  Suivant
+                  {t('contracts.pagination.next')}
                 </Button>
               </div>
             </div>
@@ -833,7 +838,7 @@ export default function MyContractsPage() {
           setShowCancelModal(false);
           setContractToCancel(null);
         }}
-        title="Annuler le contrat"
+        title={t('contracts.modal.cancelTitle')}
         size="sm"
       >
         <div className="flex items-center justify-center mb-4">
@@ -844,16 +849,16 @@ export default function MyContractsPage() {
           </div>
         </div>
         <p className="text-center text-gray-700 mb-2">
-          Êtes-vous sûr de vouloir annuler ce contrat ?
+          {t('contracts.modal.cancelConfirm')}
         </p>
         <p className="text-center text-sm text-gray-500 mb-6">
-          Cette action est irréversible. Le contrat sera définitivement supprimé.
+          {t('contracts.modal.cancelWarning')}
         </p>
 
         {cancelMutation.isError && (
           <div className="mb-4 rounded-md bg-red-50 p-3">
             <p className="text-sm text-red-700">
-              {(cancelMutation.error as any)?.response?.data?.message || 'Une erreur est survenue'}
+              {(cancelMutation.error as any)?.response?.data?.message || t('common.error')}
             </p>
           </div>
         )}
@@ -868,7 +873,7 @@ export default function MyContractsPage() {
             }}
             disabled={cancelMutation.isPending}
           >
-            Non, garder
+            {t('contracts.modal.cancelNo')}
           </Button>
           <Button
             variant="primary"
@@ -879,10 +884,10 @@ export default function MyContractsPage() {
             {cancelMutation.isPending ? (
               <>
                 <Spinner size="sm" className="mr-2" />
-                Annulation...
+                {t('contracts.modal.cancelling')}
               </>
             ) : (
-              'Oui, annuler'
+              t('contracts.modal.cancelYes')
             )}
           </Button>
         </div>
@@ -896,7 +901,7 @@ export default function MyContractsPage() {
           setContractToTerminate(null);
           setTerminationMotif('');
         }}
-        title={isConfirmingTermination ? "Confirmer la résiliation" : "Résilier le contrat"}
+        title={isConfirmingTermination ? t('contracts.modal.terminateConfirmTitle') : t('contracts.modal.terminateTitle')}
         size="sm"
       >
         <div className="flex items-center justify-center mb-4">
@@ -916,30 +921,30 @@ export default function MyContractsPage() {
         {isConfirmingTermination ? (
           <>
             <p className="text-center text-gray-700 mb-2">
-              L&apos;autre partie a demandé la résiliation de ce contrat.
+              {t('contracts.modal.terminateOtherPartyRequested')}
             </p>
             <p className="text-center text-sm text-gray-500 mb-6">
-              En confirmant, vous acceptez la résiliation avec le préavis de 3 mois défini.
+              {t('contracts.modal.terminateConfirmNotice')}
             </p>
           </>
         ) : (
           <>
             <p className="text-center text-gray-700 mb-2">
-              Demander la résiliation du contrat ?
+              {t('contracts.modal.terminateRequest')}
             </p>
             <p className="text-center text-sm text-gray-500 mb-4">
-              Un préavis de <strong>3 mois</strong> sera appliqué. L&apos;autre partie sera notifiée et devra confirmer.
+              {t('contracts.modal.terminateNotice')}
             </p>
 
             <div className="mb-6">
               <label htmlFor="motif" className="block text-sm font-medium text-gray-700 mb-1">
-                Motif de résiliation (facultatif)
+                {t('contracts.modal.terminateReasonLabel')}
               </label>
               <textarea
                 id="motif"
                 value={terminationMotif}
                 onChange={(e) => setTerminationMotif(e.target.value)}
-                placeholder="Ex: Déménagement, fin de location..."
+                placeholder={t('contracts.modal.terminateReasonPlaceholder')}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-primary-500"
                 rows={3}
               />
@@ -952,7 +957,7 @@ export default function MyContractsPage() {
             <p className="text-sm text-red-700">
               {(terminateMutation.error as any)?.response?.data?.message ||
                (confirmTerminationMutation.error as any)?.response?.data?.message ||
-               'Une erreur est survenue'}
+               t('common.error')}
             </p>
           </div>
         )}
@@ -968,7 +973,7 @@ export default function MyContractsPage() {
             }}
             disabled={terminateMutation.isPending || confirmTerminationMutation.isPending}
           >
-            Annuler
+            {t('common.cancel')}
           </Button>
           <Button
             variant="primary"
@@ -979,10 +984,10 @@ export default function MyContractsPage() {
             {(terminateMutation.isPending || confirmTerminationMutation.isPending) ? (
               <>
                 <Spinner size="sm" className="mr-2" />
-                {isConfirmingTermination ? 'Confirmation...' : 'Envoi...'}
+                {isConfirmingTermination ? t('contracts.modal.confirming') : t('contracts.modal.terminating')}
               </>
             ) : (
-              isConfirmingTermination ? 'Confirmer' : 'Demander la résiliation'
+              isConfirmingTermination ? t('contracts.modal.terminateConfirmBtn') : t('contracts.modal.terminateSend')
             )}
           </Button>
         </div>

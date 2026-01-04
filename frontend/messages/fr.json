@@ -838,6 +838,10 @@
     "yourMessages": "Vos messages",
     "selectConversation": "Selectionnez une conversation pour commencer a discuter avec un proprietaire ou un locataire.",
     "voiceMessage": "Message vocal",
+    "voiceReady": "Message vocal pret",
+    "noResults": "Aucune conversation trouvee",
+    "startConversation": "Contactez un proprietaire pour demarrer une conversation",
+    "sendFirst": "Envoyez le premier message!",
     "time": {
       "minutesAgo": "Il y a {count} min",
       "hoursAgo": "Il y a {count}h",

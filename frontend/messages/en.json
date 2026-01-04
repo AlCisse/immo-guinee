@@ -838,6 +838,10 @@
     "yourMessages": "Your messages",
     "selectConversation": "Select a conversation to start chatting with an owner or tenant.",
     "voiceMessage": "Voice message",
+    "voiceReady": "Voice message ready",
+    "noResults": "No conversation found",
+    "startConversation": "Contact a landlord to start a conversation",
+    "sendFirst": "Send the first message!",
     "time": {
       "minutesAgo": "{count} min ago",
       "hoursAgo": "{count}h ago",

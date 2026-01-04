@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { useTranslations } from '@/lib/i18n';
 
 // Types
 interface Message {
@@ -251,6 +252,7 @@ function VoiceMessage({ url, isMine }: { url: string; isMine: boolean }) {
 }
 
 export default function MessagesPage() {
+  const { t } = useTranslations();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
@@ -516,13 +518,13 @@ export default function MessagesPage() {
         {/* Header */}
         <div className="p-4 border-b border-neutral-100 dark:border-neutral-800">
           <h1 className="text-xl font-bold text-neutral-900 dark:text-white mb-4">
-            Messages
+            {t('messages.title')}
           </h1>
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
             <input
               type="text"
-              placeholder="Rechercher..."
+              placeholder={t('messages.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-11 pr-4 py-3 bg-neutral-50 dark:bg-neutral-800/50 rounded-full text-sm border border-neutral-200/50 dark:border-neutral-700/50 focus:outline-none focus:ring-2 focus:ring-primary-500/50 dark:text-white placeholder-neutral-400"
@@ -596,10 +598,10 @@ export default function MessagesPage() {
                 <MessageSquare className="w-8 h-8 text-neutral-400" />
               </div>
               <p className="text-neutral-500 text-center">
-                {searchQuery ? 'Aucune conversation trouvee' : 'Aucune conversation'}
+                {searchQuery ? t('messages.noResults') : t('messages.noMessages')}
               </p>
               <p className="text-sm text-neutral-400 text-center mt-2">
-                Contactez un proprietaire pour demarrer une conversation
+                {t('messages.startConversation')}
               </p>
             </div>
           )}
@@ -712,8 +714,8 @@ export default function MessagesPage() {
               ) : (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
                   <MessageSquare className="w-12 h-12 text-neutral-300 mb-3" />
-                  <p className="text-neutral-500">Aucun message</p>
-                  <p className="text-sm text-neutral-400">Envoyez le premier message!</p>
+                  <p className="text-neutral-500">{t('messages.noMessages')}</p>
+                  <p className="text-sm text-neutral-400">{t('messages.sendFirst')}</p>
                 </div>
               )}
               <div ref={messagesEndRef} />
@@ -788,7 +790,7 @@ export default function MessagesPage() {
                     <div className="flex-1 flex items-center gap-3 px-4 py-3 bg-primary-50 dark:bg-primary-500/10 rounded-full">
                       <Mic className="w-5 h-5 text-primary-500" />
                       <span className="text-primary-600 dark:text-primary-400 font-medium">
-                        Message vocal pret
+                        {t('messages.voiceReady')}
                       </span>
                       <span className="text-sm text-primary-500">
                         {formatRecordingTime(recordingTime)}
@@ -823,7 +825,7 @@ export default function MessagesPage() {
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-                        placeholder="Ecrivez un message..."
+                        placeholder={t('messages.typeMessage')}
                         className="flex-1 px-5 py-3 bg-transparent focus:outline-none text-neutral-900 dark:text-white placeholder-neutral-400"
                         disabled={sendMessageMutation.isPending}
                       />
@@ -868,10 +870,10 @@ export default function MessagesPage() {
                 <Send className="w-10 h-10 text-primary-500" />
               </div>
               <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
-                Vos messages
+                {t('messages.yourMessages')}
               </h2>
               <p className="text-neutral-500 max-w-sm">
-                Selectionnez une conversation pour discuter avec un proprietaire ou une agence.
+                {t('messages.selectConversation')}
               </p>
             </div>
           </div>
