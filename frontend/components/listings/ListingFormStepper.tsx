@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -119,18 +119,19 @@ const INITIAL_FORM_DATA: FormData = {
   amenities: [],
 };
 
-const AMENITIES = [
-  { id: 'parking', label: 'Parking', icon: Car },
-  { id: 'wifi', label: 'Wifi', icon: Wifi },
-  { id: 'climatisation', label: 'Climatisation', icon: Wind },
-  { id: 'securite', label: 'Sécurité 24h', icon: Shield },
-  { id: 'piscine', label: 'Piscine', icon: Droplets },
-  { id: 'groupe_electrogene', label: 'Groupe électrogène', icon: Zap },
-  { id: 'balcon', label: 'Balcon', icon: Building2 },
-  { id: 'cuisine', label: 'Cuisine équipée', icon: UtensilsCrossed },
-  { id: 'forage', label: 'Forage', icon: Waves },
-  { id: 'seg_uniquement', label: 'SEG uniquement', icon: Droplets },
-];
+// Amenity icons mapping (labels come from translations)
+const AMENITY_ICONS = {
+  parking: Car,
+  wifi: Wifi,
+  climatisation: Wind,
+  securite: Shield,
+  piscine: Droplets,
+  groupe_electrogene: Zap,
+  balcon: Building2,
+  cuisine: UtensilsCrossed,
+  forage: Waves,
+  seg_uniquement: Droplets,
+};
 
 // Property types that don't need bedroom/bathroom counts
 const PROPERTY_TYPES_NO_ROOMS = ['TERRAIN', 'ENTREPOT', 'MAGASIN'];
@@ -155,13 +156,8 @@ const needsFurnished = (typeBien?: TypeBien): boolean => {
   return !typeBien || !PROPERTY_TYPES_NO_FURNISHED.includes(typeBien);
 };
 
-const TENANT_TYPES = [
-  { value: 'tous', label: 'Tous les profils' },
-  { value: 'couple', label: 'Couple' },
-  { value: 'marie_absent', label: 'Marié(e) (conjoint absent)' },
-  { value: 'celibataire', label: 'Célibataire' },
-  { value: 'etudiant', label: 'Étudiant(e)' },
-];
+// Tenant type values (labels come from translations)
+const TENANT_TYPE_VALUES = ['tous', 'couple', 'marie_absent', 'celibataire', 'etudiant'];
 
 interface ListingFormStepperProps {
   currentStep: number;
@@ -179,6 +175,30 @@ export default function ListingFormStepper({
   const { user, isAuthenticated } = useAuth();
   const { t } = useTranslations('publish');
   const { t: tCommon } = useTranslations('common');
+
+  // Translated amenities list
+  const AMENITIES = useMemo(() => [
+    { id: 'parking', label: t('amenities.parking'), icon: AMENITY_ICONS.parking },
+    { id: 'wifi', label: t('amenities.wifi'), icon: AMENITY_ICONS.wifi },
+    { id: 'climatisation', label: t('amenities.airCondition'), icon: AMENITY_ICONS.climatisation },
+    { id: 'securite', label: t('amenities.security'), icon: AMENITY_ICONS.securite },
+    { id: 'piscine', label: t('amenities.pool'), icon: AMENITY_ICONS.piscine },
+    { id: 'groupe_electrogene', label: t('amenities.generator'), icon: AMENITY_ICONS.groupe_electrogene },
+    { id: 'balcon', label: t('amenities.balcony'), icon: AMENITY_ICONS.balcon },
+    { id: 'cuisine', label: t('amenities.kitchen'), icon: AMENITY_ICONS.cuisine },
+    { id: 'forage', label: t('amenities.borehole'), icon: AMENITY_ICONS.forage },
+    { id: 'seg_uniquement', label: t('amenities.segOnly'), icon: AMENITY_ICONS.seg_uniquement },
+  ], [t]);
+
+  // Translated tenant types list
+  const TENANT_TYPES = useMemo(() => [
+    { value: 'tous', label: t('rental.tenantTypes.all') },
+    { value: 'couple', label: t('rental.tenantTypes.couple') },
+    { value: 'marie_absent', label: t('rental.tenantTypes.marriedAbsent') },
+    { value: 'celibataire', label: t('rental.tenantTypes.single') },
+    { value: 'etudiant', label: t('rental.tenantTypes.student') },
+  ], [t]);
+
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM_DATA);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -1070,7 +1090,7 @@ export default function ListingFormStepper({
                         >
                           {[1, 2, 3, 4, 5, 6].map((month) => (
                             <option key={month} value={month}>
-                              {month} mois
+                              {month} {t('rental.months')}
                             </option>
                           ))}
                         </select>
@@ -1087,7 +1107,7 @@ export default function ListingFormStepper({
                         >
                           {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((month) => (
                             <option key={month} value={month}>
-                              {month} mois
+                              {month} {t('rental.months')}
                             </option>
                           ))}
                         </select>
