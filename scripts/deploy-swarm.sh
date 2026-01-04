@@ -171,11 +171,6 @@ update_backend() {
                 --image immoguinee/php:latest \
                 --force \
                 "${STACK_NAME}_scheduler"
-
-            docker service update \
-                --image immoguinee/php:latest \
-                --force \
-                "${STACK_NAME}_reverb"
         fi
     else
         # Running locally - sync files to server
@@ -199,7 +194,7 @@ update_backend() {
             echo -e "${YELLOW}Quick mode: Copying files to containers...${NC}"
 
             # Get container IDs
-            PHP_CONTAINERS=$(ssh "$REMOTE_HOST" "docker ps --format '{{.Names}}' | grep -E '${STACK_NAME}_(php|reverb)\.[0-9]' | tr '\n' ' '")
+            PHP_CONTAINERS=$(ssh "$REMOTE_HOST" "docker ps --format '{{.Names}}' | grep -E '${STACK_NAME}_php\.[0-9]' | tr '\n' ' '")
 
             for CONTAINER in $PHP_CONTAINERS; do
                 echo -e "${YELLOW}Updating container: ${CONTAINER}${NC}"
@@ -235,8 +230,7 @@ update_backend() {
                     --update-parallelism 1 --update-delay 10s --update-failure-action rollback \
                     ${STACK_NAME}_php && \
                 docker service update --image immoguinee/php:latest --force ${STACK_NAME}_queue-worker && \
-                docker service update --image immoguinee/php:latest --force ${STACK_NAME}_scheduler && \
-                docker service update --image immoguinee/php:latest --force ${STACK_NAME}_reverb
+                docker service update --image immoguinee/php:latest --force ${STACK_NAME}_scheduler
             "
         fi
 
