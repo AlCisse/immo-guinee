@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import {
   ChevronLeft,
   User,
@@ -12,6 +13,7 @@ import {
   Camera,
   Save,
   Loader2,
+  Trash2,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { api } from '@/lib/api/client';
@@ -22,8 +24,10 @@ export default function EditProfilePage() {
   const router = useRouter();
   const { user, refreshUser, isAuthenticated, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     nom_complet: '',
@@ -56,6 +60,63 @@ export default function EditProfilePage() {
       ...formData,
       [e.target.name]: e.target.value,
     });
+  };
+
+  const handlePhotoClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError(t('profile.edit.photoInvalidType'));
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      setError(t('profile.edit.photoTooLarge'));
+      return;
+    }
+
+    setIsUploadingPhoto(true);
+    setError('');
+
+    try {
+      await api.auth.uploadProfilePhoto(file);
+      await refreshUser();
+      setSuccess(t('profile.edit.photoSuccess'));
+    } catch (err: any) {
+      console.error('Photo upload error:', err);
+      setError(err.response?.data?.message || t('profile.edit.photoError'));
+    } finally {
+      setIsUploadingPhoto(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleDeletePhoto = async () => {
+    if (!user?.photo_profil_url) return;
+
+    setIsUploadingPhoto(true);
+    setError('');
+
+    try {
+      await api.auth.deleteProfilePhoto();
+      await refreshUser();
+      setSuccess(t('profile.edit.photoDeleted'));
+    } catch (err: any) {
+      console.error('Photo delete error:', err);
+      setError(err.response?.data?.message || t('profile.edit.photoError'));
+    } finally {
+      setIsUploadingPhoto(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -118,15 +179,57 @@ export default function EditProfilePage() {
       {/* Content */}
       <div className="max-w-3xl mx-auto px-4 py-6">
         {/* Profile Picture */}
-        <div className="flex justify-center mb-8">
+        <div className="flex flex-col items-center mb-8">
           <div className="relative">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-4xl font-bold text-white">
-              {formData.nom_complet?.charAt(0) || 'U'}
-            </div>
-            <button className="absolute bottom-0 right-0 p-2 bg-primary-500 rounded-full shadow-lg hover:bg-primary-600 transition-colors">
-              <Camera className="w-5 h-5 text-white" />
+            {user?.photo_profil_url ? (
+              <div className="w-24 h-24 rounded-full overflow-hidden ring-4 ring-primary-100 dark:ring-primary-500/20">
+                <Image
+                  src={user.photo_profil_url}
+                  alt={formData.nom_complet || 'Profile'}
+                  width={96}
+                  height={96}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-4xl font-bold text-white">
+                {formData.nom_complet?.charAt(0) || 'U'}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={handlePhotoClick}
+              disabled={isUploadingPhoto}
+              className="absolute bottom-0 right-0 p-2 bg-primary-500 rounded-full shadow-lg hover:bg-primary-600 transition-colors disabled:opacity-50"
+            >
+              {isUploadingPhoto ? (
+                <Loader2 className="w-5 h-5 text-white animate-spin" />
+              ) : (
+                <Camera className="w-5 h-5 text-white" />
+              )}
             </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/jpg,image/webp"
+              onChange={handlePhotoChange}
+              className="hidden"
+            />
           </div>
+          {user?.photo_profil_url && (
+            <button
+              type="button"
+              onClick={handleDeletePhoto}
+              disabled={isUploadingPhoto}
+              className="mt-3 flex items-center gap-1 text-sm text-red-500 hover:text-red-600 transition-colors disabled:opacity-50"
+            >
+              <Trash2 className="w-4 h-4" />
+              {t('profile.edit.deletePhoto')}
+            </button>
+          )}
+          <p className="mt-2 text-xs text-neutral-500">
+            {t('profile.edit.photoHint')}
+          </p>
         </div>
 
         {/* Form */}

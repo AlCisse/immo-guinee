@@ -8,6 +8,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api/client';
 import { CONAKRY_COMMUNES, CONAKRY_QUARTIERS } from '@/lib/data/communes';
+import { useTranslations } from '@/lib/i18n';
 import {
   Search,
   SlidersHorizontal,
@@ -50,33 +51,20 @@ interface Listing {
 // Items per page for pagination
 const ITEMS_PER_PAGE = 12;
 
-// Filter options
+// Filter options (values only, labels come from translations)
 const propertyTypes = ['Tous', 'APPARTEMENT', 'MAISON', 'VILLA', 'STUDIO', 'BUREAU', 'MAGASIN', 'TERRAIN'];
-const propertyTypeLabels: Record<string, string> = {
-  'Tous': 'Tous',
-  'APPARTEMENT': 'Appartement',
-  'MAISON': 'Maison',
-  'VILLA': 'Villa',
-  'STUDIO': 'Studio',
-  'BUREAU': 'Bureau',
-  'MAGASIN': 'Magasin',
-  'TERRAIN': 'Terrain',
-};
 
+const priceRangeKeys = ['all', 'lessThan5M', '5Mto10M', '10Mto20M', 'moreThan20M'];
 const priceRanges = [
-  { label: 'Tous les prix', min: 0, max: 0 },
-  { label: 'Moins de 5M GNF', min: 0, max: 5000000 },
-  { label: '5M - 10M GNF', min: 5000000, max: 10000000 },
-  { label: '10M - 20M GNF', min: 10000000, max: 20000000 },
-  { label: 'Plus de 20M GNF', min: 20000000, max: 0 },
+  { min: 0, max: 0 },
+  { min: 0, max: 5000000 },
+  { min: 5000000, max: 10000000 },
+  { min: 10000000, max: 20000000 },
+  { min: 20000000, max: 0 },
 ];
 
-const sortOptions = [
-  { label: 'Plus recents', value: 'recent' },
-  { label: 'Prix croissant', value: 'price_asc' },
-  { label: 'Prix decroissant', value: 'price_desc' },
-  { label: 'Surface', value: 'area' },
-];
+const sortOptionKeys = ['recent', 'priceAsc', 'priceDesc', 'area'];
+const sortOptionValues = ['recent', 'price_asc', 'price_desc', 'area'];
 
 // Normalize string (remove accents) for search
 const normalizeString = (str: string): string => {
@@ -137,6 +125,7 @@ const formatPrice = (price: number | string | undefined | null) => {
 
 // Property Card
 function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'grid' | 'list' }) {
+  const { t } = useTranslations('search');
   const [isFavorite, setIsFavorite] = useState(false);
 
   const handleToggleFavorite = async (e: React.MouseEvent) => {
@@ -201,12 +190,12 @@ function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'gr
               {property.is_premium && (
                 <span className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-semibold rounded-full">
                   <Sparkles className="w-3 h-3" />
-                  Premium
+                  {t('badges.premium')}
                 </span>
               )}
               {isNew && (
                 <span className="px-2 py-1 bg-primary-500 text-white text-xs font-semibold rounded-full">
-                  Nouveau
+                  {t('badges.new')}
                 </span>
               )}
             </div>
@@ -226,7 +215,7 @@ function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'gr
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="px-2 py-0.5 bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 text-xs font-medium rounded-md">
-                    {propertyTypeLabels[property.type_bien] || property.type_bien}
+                    {t(`propertyTypes.${property.type_bien}`) || property.type_bien}
                   </span>
                   <span className={`px-2 py-0.5 text-xs font-medium rounded-md ${
                     isLocation
@@ -235,7 +224,7 @@ function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'gr
                       ? 'bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400'
                       : 'bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400'
                   }`}>
-                    {isLocation ? 'A louer' : isLocationCourte ? 'Courte durée' : 'A vendre'}
+                    {isLocation ? t('badges.forRent') : isLocationCourte ? t('badges.shortTerm') : t('badges.forSale')}
                   </span>
                 </div>
                 <h3 className="font-semibold text-neutral-900 dark:text-white text-lg mb-1">
@@ -252,10 +241,10 @@ function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'gr
                   {property.formatted_price || formatPrice(price)}
                 </p>
                 {isLocation && (
-                  <span className="text-sm text-neutral-500">/mois</span>
+                  <span className="text-sm text-neutral-500">{t('perMonth')}</span>
                 )}
                 {isLocationCourte && (
-                  <span className="text-sm text-purple-500">/jour</span>
+                  <span className="text-sm text-purple-500">{t('perDay')}</span>
                 )}
               </div>
             </div>
@@ -265,19 +254,19 @@ function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'gr
               {property.nombre_chambres > 0 && (
                 <div className="flex items-center gap-2 text-neutral-600 dark:text-neutral-300">
                   <Bed className="w-4 h-4 text-neutral-400" />
-                  <span className="text-sm">{property.nombre_chambres} ch.</span>
+                  <span className="text-sm">{property.nombre_chambres} {t('bedrooms')}</span>
                 </div>
               )}
               {property.nombre_salles_bain > 0 && (
                 <div className="flex items-center gap-2 text-neutral-600 dark:text-neutral-300">
                   <Bath className="w-4 h-4 text-neutral-400" />
-                  <span className="text-sm">{property.nombre_salles_bain} sdb.</span>
+                  <span className="text-sm">{property.nombre_salles_bain} {t('bathrooms')}</span>
                 </div>
               )}
               {property.surface_m2 > 0 && (
                 <div className="flex items-center gap-2 text-neutral-600 dark:text-neutral-300">
                   <Square className="w-4 h-4 text-neutral-400" />
-                  <span className="text-sm">{property.surface_m2} m2</span>
+                  <span className="text-sm">{property.surface_m2} m²</span>
                 </div>
               )}
             </div>
@@ -313,12 +302,12 @@ function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'gr
             {property.is_premium && (
               <span className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-semibold rounded-full">
                 <Sparkles className="w-3 h-3" />
-                Premium
+                {t('badges.premium')}
               </span>
             )}
             {isNew && (
               <span className="px-2 py-1 bg-primary-500 text-white text-xs font-semibold rounded-full">
-                Nouveau
+                {t('badges.new')}
               </span>
             )}
           </div>
@@ -332,7 +321,7 @@ function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'gr
                 ? 'bg-purple-500 text-white'
                 : 'bg-green-500 text-white'
             }`}>
-              {isLocation ? 'A louer' : isLocationCourte ? 'Courte durée' : 'A vendre'}
+              {isLocation ? t('badges.forRent') : isLocationCourte ? t('badges.shortTerm') : t('badges.forSale')}
             </span>
           </div>
 
@@ -350,10 +339,10 @@ function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'gr
             <span className="px-3 py-1.5 bg-white dark:bg-dark-card rounded-lg font-bold text-neutral-900 dark:text-white shadow-lg">
               {property.formatted_price || formatPrice(price)}
               {isLocation && (
-                <span className="text-sm font-normal text-neutral-500">/mois</span>
+                <span className="text-sm font-normal text-neutral-500">{t('perMonth')}</span>
               )}
               {isLocationCourte && (
-                <span className="text-sm font-normal text-purple-500">/jour</span>
+                <span className="text-sm font-normal text-purple-500">{t('perDay')}</span>
               )}
             </span>
           </div>
@@ -363,7 +352,7 @@ function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'gr
         <div className="p-4">
           <div className="flex items-center gap-2 mb-2">
             <span className="px-2 py-0.5 bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 text-xs font-medium rounded-md">
-              {propertyTypeLabels[property.type_bien] || property.type_bien}
+              {t(`propertyTypes.${property.type_bien}`) || property.type_bien}
             </span>
           </div>
 
@@ -378,17 +367,17 @@ function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'gr
 
           {/* Features */}
           <div className="flex items-center gap-4 pt-3 border-t border-neutral-100 dark:border-dark-border text-sm text-neutral-600 dark:text-neutral-300">
-            {property.nombre_chambres > 0 && <span>{property.nombre_chambres} ch.</span>}
+            {property.nombre_chambres > 0 && <span>{property.nombre_chambres} {t('bedrooms')}</span>}
             {property.nombre_salles_bain > 0 && (
               <>
                 <span className="w-1 h-1 bg-neutral-300 rounded-full" />
-                <span>{property.nombre_salles_bain} sdb.</span>
+                <span>{property.nombre_salles_bain} {t('bathrooms')}</span>
               </>
             )}
             {property.surface_m2 > 0 && (
               <>
                 <span className="w-1 h-1 bg-neutral-300 rounded-full" />
-                <span>{property.surface_m2} m2</span>
+                <span>{property.surface_m2} m²</span>
               </>
             )}
           </div>
@@ -425,6 +414,7 @@ function FilterChip({
 
 // Main search content component
 function SearchContent() {
+  const { t } = useTranslations('search');
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -603,7 +593,7 @@ function SearchContent() {
     <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg">
       {/* Search Header */}
       <div className="sticky top-14 md:top-16 z-30 bg-white dark:bg-dark-card shadow-soft">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           {/* Selected Quartier Badge */}
           {selectedQuartier !== 'Tous' && (
             <div className="flex items-center gap-2 mb-3">
@@ -628,8 +618,8 @@ function SearchContent() {
 
           {/* Quartier Search with Autocomplete */}
           <div className="relative mb-3">
-            <div className="flex items-center gap-3">
-              <div className="flex-1 flex items-center gap-3 px-4 py-2.5 bg-white dark:bg-dark-bg border border-neutral-200 dark:border-dark-border rounded-xl shadow-sm">
+            <div className="flex items-center gap-2">
+              <div className="flex-1 flex items-center gap-2 px-3 py-2.5 bg-white dark:bg-dark-bg border border-neutral-200 dark:border-dark-border rounded-xl shadow-sm focus-within:border-neutral-300 dark:focus-within:border-neutral-600 transition-colors">
                 <MapPin className="w-5 h-5 text-primary-500" />
                 <input
                   type="text"
@@ -639,8 +629,8 @@ function SearchContent() {
                     setShowQuartierDropdown(true);
                   }}
                   onFocus={() => setShowQuartierDropdown(true)}
-                  placeholder="Rechercher un quartier (ex: Kipé, Madina...)"
-                  className="flex-1 bg-transparent focus:outline-none text-neutral-900 dark:text-white"
+                  placeholder={t('searchPlaceholder')}
+                  className="flex-1 bg-transparent focus:outline-none focus:ring-2 focus:ring-neutral-300 dark:focus:ring-neutral-600 border-none rounded-lg text-neutral-900 dark:text-white"
                 />
                 {quartierSearchInput && (
                   <button onClick={() => {
@@ -654,7 +644,7 @@ function SearchContent() {
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowFilters(!showFilters)}
-                className={`relative p-3 rounded-xl transition-colors ${
+                className={`relative p-2.5 rounded-lg transition-colors shrink-0 ${
                   showFilters || activeFiltersCount > 0
                     ? 'bg-primary-500 text-white'
                     : 'bg-neutral-100 dark:bg-dark-bg text-neutral-700 dark:text-neutral-300'
@@ -662,7 +652,7 @@ function SearchContent() {
               >
                 <SlidersHorizontal className="w-5 h-5" />
                 {activeFiltersCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                     {activeFiltersCount}
                   </span>
                 )}
@@ -713,10 +703,10 @@ function SearchContent() {
           {/* Transaction Type Toggle */}
           <div className="flex gap-2 mb-4 overflow-x-auto scrollbar-hide">
             {[
-              { value: 'all', label: 'Tous', color: 'primary' },
-              { value: 'LOCATION', label: 'Location', color: 'blue' },
-              { value: 'LOCATION_COURTE', label: 'Courte durée', color: 'purple' },
-              { value: 'VENTE', label: 'Vente', color: 'green' },
+              { value: 'all', color: 'primary' },
+              { value: 'LOCATION', color: 'blue' },
+              { value: 'LOCATION_COURTE', color: 'purple' },
+              { value: 'VENTE', color: 'green' },
             ].map((option) => (
               <button
                 key={option.value}
@@ -736,7 +726,7 @@ function SearchContent() {
                     : 'bg-neutral-100 dark:bg-dark-bg text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-dark-border'
                 }`}
               >
-                {option.label}
+                {t(`transactionTypes.${option.value}`)}
               </button>
             ))}
           </div>
@@ -746,7 +736,7 @@ function SearchContent() {
             {propertyTypes.map((type) => (
               <FilterChip
                 key={type}
-                label={propertyTypeLabels[type] || type}
+                label={type === 'Tous' ? t('propertyTypes.all') : t(`propertyTypes.${type}`) || type}
                 isActive={selectedType === type}
                 onClick={() => {
                   setSelectedType(type);
@@ -766,11 +756,11 @@ function SearchContent() {
               exit={{ height: 0, opacity: 0 }}
               className="border-t border-neutral-200 dark:border-dark-border overflow-hidden"
             >
-              <div className="max-w-7xl mx-auto px-4 py-4 space-y-4">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-4">
                 {/* Commune */}
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                    Commune
+                    {t('commune')}
                   </label>
                   <div className="flex flex-wrap gap-2">
                     {quartiersWithTous.map((commune) => (
@@ -790,13 +780,13 @@ function SearchContent() {
                 {/* Price Range */}
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                    Budget
+                    {t('budget')}
                   </label>
                   <div className="flex flex-wrap gap-2">
-                    {priceRanges.map((range, index) => (
+                    {priceRangeKeys.map((key, index) => (
                       <FilterChip
-                        key={range.label}
-                        label={range.label}
+                        key={key}
+                        label={t(`priceRanges.${key}`)}
                         isActive={selectedPriceRange === index}
                         onClick={() => setSelectedPriceRange(index)}
                       />
@@ -818,7 +808,7 @@ function SearchContent() {
                     }}
                     className="text-primary-500 text-sm font-medium"
                   >
-                    Reinitialiser les filtres
+                    {t('resetFilters')}
                   </button>
                 )}
               </div>
@@ -828,11 +818,11 @@ function SearchContent() {
       </div>
 
       {/* Results */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Results Header */}
         <div className="flex items-center justify-between mb-6">
           <p className="text-neutral-600 dark:text-neutral-400">
-            <span className="font-semibold text-neutral-900 dark:text-white">{pagination.total}</span> bien(s) trouve(s)
+            <span className="font-semibold text-neutral-900 dark:text-white">{pagination.total}</span> {t('resultsFound')}
           </p>
 
           <div className="flex items-center gap-3">
@@ -843,9 +833,9 @@ function SearchContent() {
                 onChange={(e) => setSelectedSort(e.target.value)}
                 className="appearance-none pl-3 pr-8 py-2 bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-xl text-sm focus:ring-2 focus:ring-primary-500 dark:text-white"
               >
-                {sortOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
+                {sortOptionKeys.map((key, index) => (
+                  <option key={sortOptionValues[index]} value={sortOptionValues[index]}>
+                    {t(`sortOptions.${key}`)}
                   </option>
                 ))}
               </select>
@@ -888,7 +878,7 @@ function SearchContent() {
         {/* Error state */}
         {error && (
           <div className="text-center py-16">
-            <p className="text-red-500">Erreur lors du chargement des annonces</p>
+            <p className="text-red-500">{t('loadingError')}</p>
           </div>
         )}
 
@@ -914,7 +904,7 @@ function SearchContent() {
                         <div className="mb-8">
                           <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4 flex items-center gap-2">
                             <MapPin className="w-5 h-5 text-primary-500" />
-                            A {selectedQuartier}
+                            {t('inQuartier').replace('{quartier}', selectedQuartier)}
                             <span className="text-sm font-normal text-neutral-500">({exactListings.length})</span>
                           </h2>
                           <div
@@ -937,7 +927,7 @@ function SearchContent() {
                           <div className="border-t border-neutral-200 dark:border-dark-border my-6" />
                           <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4 flex items-center gap-2">
                             <Sparkles className="w-5 h-5 text-amber-500" />
-                            Quartiers a proximite
+                            {t('nearbyQuartiers')}
                             <span className="text-sm font-normal text-neutral-500">({nearbyListings.length})</span>
                           </h2>
                           <div
@@ -958,7 +948,7 @@ function SearchContent() {
                       {exactListings.length === 0 && nearbyListings.length > 0 && (
                         <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl">
                           <p className="text-amber-800 dark:text-amber-200 text-sm">
-                            Aucune annonce trouvee a {selectedQuartier}. Voici des biens dans les quartiers a proximite.
+                            {t('noExactMatch').replace('{quartier}', selectedQuartier)}
                           </p>
                         </div>
                       )}
@@ -990,10 +980,10 @@ function SearchContent() {
               <Search className="w-10 h-10 text-neutral-400" />
             </div>
             <h3 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
-              Aucun resultat
+              {t('noResults')}
             </h3>
             <p className="text-neutral-500 dark:text-neutral-400 mb-4">
-              Essayez de modifier vos criteres de recherche
+              {t('noResultsHint')}
             </p>
             <button
               onClick={() => {
@@ -1007,7 +997,7 @@ function SearchContent() {
               }}
               className="px-6 py-2 bg-primary-500 text-white rounded-xl font-medium"
             >
-              Reinitialiser les filtres
+              {t('resetFilters')}
             </button>
           </div>
         )}
@@ -1020,17 +1010,17 @@ function SearchContent() {
               disabled={currentPage === 1}
               className="px-4 py-2 bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-lg disabled:opacity-50"
             >
-              Precedent
+              {t('previous')}
             </button>
             <span className="px-4 py-2 text-neutral-600 dark:text-neutral-400">
-              Page {currentPage} sur {pagination.last_page}
+              {t('page')} {currentPage} {t('of')} {pagination.last_page}
             </span>
             <button
               onClick={() => setCurrentPage(p => Math.min(pagination.last_page, p + 1))}
               disabled={currentPage === pagination.last_page}
               className="px-4 py-2 bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-lg disabled:opacity-50"
             >
-              Suivant
+              {t('next')}
             </button>
           </div>
         )}

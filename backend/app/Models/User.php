@@ -64,6 +64,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'telephone',
         'mot_de_passe',
         'nom_complet',
+        'photo_profil',
         'email',
         'type_compte',
         'nom_entreprise',
@@ -98,6 +99,15 @@ class User extends Authenticatable implements MustVerifyEmail
         'remember_token',
         'two_factor_secret',
         'two_factor_recovery_codes',
+    ];
+
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array<int, string>
+     */
+    protected $appends = [
+        'photo_profil_url',
     ];
 
     /**
@@ -418,6 +428,25 @@ class User extends Authenticatable implements MustVerifyEmail
         };
 
         return $badgeEmoji ? "{$this->nom_complet} {$badgeEmoji}" : $this->nom_complet;
+    }
+
+    /**
+     * Get the profile photo URL.
+     */
+    public function getPhotoProfilUrlAttribute(): ?string
+    {
+        if (!$this->photo_profil) {
+            return null;
+        }
+
+        // If it's already a full URL, return as is
+        if (str_starts_with($this->photo_profil, 'http')) {
+            return $this->photo_profil;
+        }
+
+        // Build the CDN URL for avatars
+        $cdnBase = config('filesystems.disks.spaces.url', 'https://images.immoguinee.com');
+        return rtrim($cdnBase, '/') . '/avatars/' . ltrim($this->photo_profil, '/');
     }
 
     /**

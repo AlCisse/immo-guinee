@@ -109,6 +109,8 @@ Route::prefix('auth')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         Route::get('/me/counts', [AuthController::class, 'counts']); // Unread notifications, messages, favorites count
         Route::patch('/me', [AuthController::class, 'updateProfile']);
+        Route::post('/me/photo', [AuthController::class, 'uploadProfilePhoto']);
+        Route::delete('/me/photo', [AuthController::class, 'deleteProfilePhoto']);
 
         // Push notifications
         Route::post('/push-token', [AuthController::class, 'registerPushToken']);

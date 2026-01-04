@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Home,
@@ -243,6 +244,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   // Fetch user counts from DB
   const { data: userCounts } = useUserCounts(isAuthenticated);
@@ -301,6 +303,19 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
     setIsMenuOpen(false);
   }, [pathname]);
 
+  // Close user menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false);
+      }
+    }
+    if (showUserMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showUserMenu]);
+
   // Get badge count based on type
   const getBadgeCount = (badge?: string): number | undefined => {
     if (!badge) return undefined;
@@ -320,7 +335,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
   if (variant === 'minimal') {
     return (
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-dark-card/95 backdrop-blur-md shadow-soft">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 md:h-16">
             <Link href={ROUTES.HOME} className="flex items-center gap-2.5">
               <div className="w-9 h-9 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/25">
@@ -363,7 +378,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
             : 'bg-white/95 dark:bg-dark-card/95 backdrop-blur-md shadow-soft'
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link href={ROUTES.HOME} className="flex items-center gap-3 group">
@@ -447,7 +462,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
 
               {/* User Menu */}
               {isAuthenticated && user ? (
-                <div className="relative">
+                <div className="relative" ref={userMenuRef}>
                   <button
                     onClick={() => {
                       setShowUserMenu(!showUserMenu);
@@ -455,10 +470,22 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
                     }}
                     className="flex items-center gap-2 p-2 rounded-xl transition-colors hover:bg-neutral-100 dark:hover:bg-dark-bg"
                   >
-                    <div className="w-8 h-8 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                      {user.nom_complet?.charAt(0).toUpperCase() || 'U'}
-                    </div>
                     <ChevronDown className={`w-4 h-4 text-neutral-700 dark:text-white transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+                    {user.photo_profil_url ? (
+                      <div className="w-8 h-8 rounded-full overflow-hidden">
+                        <Image
+                          src={user.photo_profil_url}
+                          alt={user.nom_complet || 'Profile'}
+                          width={32}
+                          height={32}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-8 h-8 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                        {user.nom_complet?.charAt(0).toUpperCase() || 'U'}
+                      </div>
+                    )}
                   </button>
 
                   {showUserMenu && (
@@ -587,9 +614,21 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
               <div className="p-4 border-b border-neutral-100 dark:border-dark-border flex items-center justify-between">
                 {isAuthenticated && user ? (
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold text-lg">
-                      {user.nom_complet?.charAt(0).toUpperCase() || 'U'}
-                    </div>
+                    {user.photo_profil_url ? (
+                      <div className="w-12 h-12 rounded-full overflow-hidden">
+                        <Image
+                          src={user.photo_profil_url}
+                          alt={user.nom_complet || 'Profile'}
+                          width={48}
+                          height={48}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold text-lg">
+                        {user.nom_complet?.charAt(0).toUpperCase() || 'U'}
+                      </div>
+                    )}
                     <div>
                       <p className="font-semibold text-neutral-900 dark:text-white">{user.nom_complet || 'Utilisateur'}</p>
                       <p className="text-sm text-neutral-500">{user.email || user.telephone}</p>

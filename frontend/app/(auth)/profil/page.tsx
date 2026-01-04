@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
 import {
   User,
@@ -232,12 +233,24 @@ export default function ProfilePage() {
           {/* User Info */}
           <div className="flex items-center gap-4">
             <div className="relative">
-              <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-3xl font-bold text-white">
-                {user?.name?.charAt(0) || 'U'}
-              </div>
-              <button className="absolute bottom-0 right-0 p-1.5 bg-white rounded-full shadow-lg">
+              {user?.photo_profil_url ? (
+                <div className="w-20 h-20 rounded-full overflow-hidden ring-4 ring-white/30">
+                  <Image
+                    src={user.photo_profil_url}
+                    alt={user?.nom_complet || 'Profile'}
+                    width={80}
+                    height={80}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-3xl font-bold text-white">
+                  {user?.nom_complet?.charAt(0) || 'U'}
+                </div>
+              )}
+              <Link href="/profil/edit" className="absolute bottom-0 right-0 p-1.5 bg-white rounded-full shadow-lg hover:bg-neutral-50 transition-colors">
                 <Camera className="w-4 h-4 text-primary-500" />
-              </button>
+              </Link>
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2">

@@ -114,6 +114,19 @@ export const api = {
 
     updateProfile: (data: any) =>
       apiClient.patch('/auth/me', data),
+
+    uploadProfilePhoto: (file: File) => {
+      const formData = new FormData();
+      formData.append('photo', file);
+      return apiClient.post('/auth/me/photo', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+    },
+
+    deleteProfilePhoto: () =>
+      apiClient.delete('/auth/me/photo'),
   },
 
   // AI endpoints (rule-based text optimization - instant response)

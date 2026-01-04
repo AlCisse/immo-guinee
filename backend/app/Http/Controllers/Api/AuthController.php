@@ -867,6 +867,106 @@ class AuthController extends Controller
     }
 
     /**
+     * Upload profile photo
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function uploadProfilePhoto(Request $request): JsonResponse
+    {
+        $request->validate([
+            'photo' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120', // 5MB max
+        ]);
+
+        try {
+            $user = $request->user();
+            $file = $request->file('photo');
+
+            // Generate unique filename
+            $filename = $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+
+            // Delete old photo if exists
+            if ($user->photo_profil) {
+                $storageService = app(\App\Services\StorageService::class);
+                $storageService->delete('avatars', $user->photo_profil);
+            }
+
+            // Upload new photo using StorageService
+            $storageService = app(\App\Services\StorageService::class);
+            $storageService->put('avatars', $filename, file_get_contents($file->getRealPath()), 'public');
+
+            // Update user
+            $user->update(['photo_profil' => $filename]);
+
+            Log::info('Profile photo uploaded', [
+                'user_id' => $user->id,
+                'filename' => $filename,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Photo de profil mise à jour avec succès',
+                'data' => [
+                    'photo_profil_url' => $user->fresh()->photo_profil_url,
+                ],
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Profile photo upload failed', [
+                'error' => $e->getMessage(),
+                'user_id' => $request->user()->id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Une erreur est survenue lors de l\'upload',
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete profile photo
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function deleteProfilePhoto(Request $request): JsonResponse
+    {
+        try {
+            $user = $request->user();
+
+            if ($user->photo_profil) {
+                // Delete from storage
+                $storageService = app(\App\Services\StorageService::class);
+                $storageService->delete('avatars', $user->photo_profil);
+
+                // Update user
+                $user->update(['photo_profil' => null]);
+
+                Log::info('Profile photo deleted', [
+                    'user_id' => $user->id,
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Photo de profil supprimée',
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Profile photo delete failed', [
+                'error' => $e->getMessage(),
+                'user_id' => $request->user()->id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Une erreur est survenue',
+            ], 500);
+        }
+    }
+
+    /**
      * Register a push notification token for the authenticated user
      *
      * @param Request $request

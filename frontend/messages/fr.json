@@ -1032,7 +1032,14 @@
       "save": "Enregistrer les modifications",
       "saving": "Enregistrement...",
       "success": "Profil mis a jour avec succes",
-      "error": "Erreur lors de la mise a jour du profil"
+      "error": "Erreur lors de la mise a jour du profil",
+      "photoHint": "JPG, PNG ou WebP. Max 5 Mo.",
+      "photoSuccess": "Photo de profil mise a jour",
+      "photoDeleted": "Photo de profil supprimee",
+      "photoError": "Erreur lors de la mise a jour de la photo",
+      "photoInvalidType": "Format de fichier non supporte",
+      "photoTooLarge": "La photo est trop volumineuse (max 5 Mo)",
+      "deletePhoto": "Supprimer la photo"
     }
   },
   "settings": {
@@ -2023,5 +2030,99 @@
         "location courte duree expatrie Guinee"
       ]
     }
+  },
+  "search": {
+    "searchPlaceholder": "Rechercher un quartier (ex: Kipe, Madina...)",
+    "resultsFound": "bien(s) trouve(s)",
+    "noResults": "Aucun resultat",
+    "noResultsHint": "Essayez de modifier vos criteres de recherche",
+    "resetFilters": "Reinitialiser les filtres",
+    "loadingError": "Erreur lors du chargement des annonces",
+    "commune": "Commune",
+    "budget": "Budget",
+    "inQuartier": "A {quartier}",
+    "nearbyQuartiers": "Quartiers a proximite",
+    "noExactMatch": "Aucune annonce trouvee a {quartier}. Voici des biens dans les quartiers a proximite.",
+    "page": "Page",
+    "of": "sur",
+    "previous": "Precedent",
+    "next": "Suivant",
+    "propertyTypes": {
+      "all": "Tous",
+      "APPARTEMENT": "Appartement",
+      "MAISON": "Maison",
+      "VILLA": "Villa",
+      "STUDIO": "Studio",
+      "BUREAU": "Bureau",
+      "MAGASIN": "Magasin",
+      "TERRAIN": "Terrain"
+    },
+    "transactionTypes": {
+      "all": "Tous",
+      "LOCATION": "Location",
+      "LOCATION_COURTE": "Courte duree",
+      "VENTE": "Vente"
+    },
+    "badges": {
+      "premium": "Premium",
+      "new": "Nouveau",
+      "forRent": "A louer",
+      "shortTerm": "Courte duree",
+      "forSale": "A vendre"
+    },
+    "priceRanges": {
+      "all": "Tous les prix",
+      "lessThan5M": "Moins de 5M GNF",
+      "5Mto10M": "5M - 10M GNF",
+      "10Mto20M": "10M - 20M GNF",
+      "moreThan20M": "Plus de 20M GNF"
+    },
+    "sortOptions": {
+      "recent": "Plus recents",
+      "priceAsc": "Prix croissant",
+      "priceDesc": "Prix decroissant",
+      "area": "Surface"
+    },
+    "perMonth": "/mois",
+    "perDay": "/jour",
+    "bedrooms": "ch.",
+    "bathrooms": "sdb."
+  },
+  "estimate": {
+    "title": "Estimez votre bien immobilier",
+    "subtitle": "Obtenez une estimation gratuite du prix de votre bien en quelques clics",
+    "operationType": "Type d'operation",
+    "rental": "Location",
+    "sale": "Vente",
+    "propertyType": "Type de bien",
+    "selectType": "Selectionnez un type",
+    "commune": "Commune",
+    "selectCommune": "Selectionnez une commune",
+    "quartier": "Quartier",
+    "selectQuartier": "Selectionnez un quartier",
+    "area": "Superficie (m²)",
+    "areaPlaceholder": "Ex: 80",
+    "bedrooms": "Nombre de chambres",
+    "selectBedrooms": "Selectionnez",
+    "bedroom": "chambre",
+    "bedroomsPlural": "chambres",
+    "bedroomsMore": "5+ chambres",
+    "furnished": "Le bien est meuble",
+    "calculating": "Calcul en cours...",
+    "estimateButton": "Estimer mon bien",
+    "resultTitle": "Estimation de votre bien",
+    "minPrice": "Prix minimum",
+    "estimatedPrice": "Prix estime",
+    "maxPrice": "Prix maximum",
+    "pricePerM2": "Prix au m²",
+    "perMonth": "/ mois",
+    "publishListing": "Publier mon annonce",
+    "viewSimilar": "Voir les annonces similaires",
+    "marketData": "Donnees du marche",
+    "marketDataDesc": "Notre estimation est basee sur les prix reels du marche immobilier a Conakry.",
+    "preciseLocation": "Localisation precise",
+    "preciseLocationDesc": "Les prix varient selon la commune et le quartier. Notre outil en tient compte.",
+    "freeService": "100% gratuit",
+    "freeServiceDesc": "Notre service d'estimation est entierement gratuit et sans engagement."
   }
 }
