@@ -179,6 +179,7 @@ update_backend() {
         # Sync backend files to server
         echo -e "${YELLOW}Syncing backend files...${NC}"
         rsync -avz --delete \
+            --chmod=F644,D755 \
             --exclude 'vendor' \
             --exclude 'node_modules' \
             --exclude '.env' \
