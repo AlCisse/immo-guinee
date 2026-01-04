@@ -632,11 +632,11 @@ export default function AidePage() {
               {t('help.cta.contactUs')}
             </Link>
             <a
-              href="tel:+224620000000"
+              href="tel:+224613354420"
               className="w-full sm:w-auto px-6 py-3 bg-white/20 text-white font-semibold rounded-xl hover:bg-white/30 transition-colors flex items-center justify-center gap-2"
             >
               <Phone className="w-5 h-5" />
-              +224 620 00 00 00
+              +224 613 35 44 20
             </a>
           </div>
         </motion.div>

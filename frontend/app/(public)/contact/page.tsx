@@ -134,8 +134,8 @@ export default function ContactPage() {
                   <p className="text-neutral-600 dark:text-neutral-400 text-sm mb-2">
                     Appelez-nous directement
                   </p>
-                  <a href="tel:+224620000000" className="text-primary-500 font-medium hover:underline">
-                    +224 620 00 00 00
+                  <a href="tel:+224613354420" className="text-primary-500 font-medium hover:underline">
+                    +224 613 35 44 20
                   </a>
                 </div>
               </div>
@@ -154,7 +154,7 @@ export default function ContactPage() {
                     Écrivez-nous sur WhatsApp
                   </p>
                   <a
-                    href="https://wa.me/224620000000"
+                    href="https://wa.me/224613354420"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-emerald-500 font-medium hover:underline"
