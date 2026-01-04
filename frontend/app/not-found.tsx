@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useTranslations } from '@/lib/i18n';
 
 export default function NotFound() {
-  const t = useTranslations('errors');
+  const { t } = useTranslations('errors');
 
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg flex items-center justify-center px-4">

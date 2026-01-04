@@ -177,8 +177,8 @@ export default function ListingFormStepper({
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user, isAuthenticated } = useAuth();
-  const t = useTranslations('publish');
-  const tCommon = useTranslations('common');
+  const { t } = useTranslations('publish');
+  const { t: tCommon } = useTranslations('common');
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM_DATA);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -606,10 +606,10 @@ export default function ListingFormStepper({
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-neutral-900 dark:text-white">
-                    Que souhaitez-vous faire ?
+                    {t('operationType.title')}
                   </h3>
                   <p className="text-sm text-neutral-500">
-                    Choisissez le type d'opération
+                    {t('operationType.subtitle')}
                   </p>
                 </div>
               </div>
@@ -619,22 +619,22 @@ export default function ListingFormStepper({
                   {
                     type: 'LOCATION' as OperationType,
                     icon: Home,
-                    title: 'Louer',
-                    subtitle: 'Location longue durée',
+                    title: t('operationType.rent'),
+                    subtitle: t('operationType.rentDesc'),
                     color: 'from-blue-500 to-cyan-500',
                   },
                   {
                     type: 'LOCATION_COURTE' as OperationType,
                     icon: Calendar,
-                    title: 'Louer courte durée',
-                    subtitle: 'Meublé, à partir de 1 jour',
+                    title: t('operationType.shortRent'),
+                    subtitle: t('operationType.shortRentDesc'),
                     color: 'from-purple-500 to-pink-500',
                   },
                   {
                     type: 'VENTE' as OperationType,
                     icon: DollarSign,
-                    title: 'Vendre',
-                    subtitle: 'Mettre en vente',
+                    title: t('operationType.sell'),
+                    subtitle: t('operationType.sellDesc'),
                     color: 'from-emerald-500 to-teal-500',
                   },
                 ].map((option) => (
@@ -716,10 +716,10 @@ export default function ListingFormStepper({
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-neutral-900 dark:text-white">
-                    Type de bien
+                    {t('propertyType.title')}
                   </h3>
                   <p className="text-sm text-neutral-500">
-                    Sélectionnez la catégorie de votre propriété
+                    {t('propertyType.subtitle')}
                   </p>
                 </div>
               </div>
@@ -757,10 +757,10 @@ export default function ListingFormStepper({
                   </div>
                   <div>
                     <h3 className="text-lg font-bold text-neutral-900 dark:text-white">
-                      Présentez votre bien
+                      {t('details.title')}
                     </h3>
                     <p className="text-sm text-neutral-500">
-                      Un bon titre et une description détaillée attirent plus de visiteurs
+                      {t('details.subtitle')}
                     </p>
                   </div>
                 </div>
@@ -777,13 +777,13 @@ export default function ListingFormStepper({
                   {isOptimizing ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span className="hidden sm:inline">Optimisation...</span>
+                      <span className="hidden sm:inline">{t('ai.optimizing')}</span>
                     </>
                   ) : (
                     <>
                       <Wand2 className="w-4 h-4" />
-                      <span className="hidden sm:inline">Optimiser avec l'IA</span>
-                      <span className="sm:hidden">IA</span>
+                      <span className="hidden sm:inline">{t('ai.optimize')}</span>
+                      <span className="sm:hidden">{t('ai.optimizeShort')}</span>
                     </>
                   )}
                 </motion.button>
@@ -810,10 +810,10 @@ export default function ListingFormStepper({
                     </div>
                     <div className="text-left">
                       <p className="font-semibold text-emerald-800 dark:text-emerald-200">
-                        Guide SEO : Comment bien rédiger ?
+                        {t('seoGuide.title')}
                       </p>
                       <p className="text-xs text-emerald-600 dark:text-emerald-400">
-                        Conseils pour un meilleur référencement Google
+                        {t('seoGuide.subtitle')}
                       </p>
                     </div>
                   </div>
@@ -931,7 +931,7 @@ export default function ListingFormStepper({
                 {/* Titre */}
                 <div>
                   <label className="block text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
-                    Titre de l'annonce
+                    {t('details.titleLabel')}
                     <span className="ml-2 text-xs font-normal text-neutral-500">
                       ({formData.titre.length}/100)
                     </span>
@@ -951,7 +951,7 @@ export default function ListingFormStepper({
                       focus:outline-none focus:ring-4 focus:ring-primary-500/10
                       text-neutral-900 dark:text-white placeholder-neutral-400
                     `}
-                    placeholder="Ex: Magnifique villa 4 chambres avec piscine à Kipé"
+                    placeholder={t('details.titlePlaceholder')}
                   />
                   {errors.titre && (
                     <p className="mt-2 text-sm text-red-500 flex items-center gap-1">
@@ -964,7 +964,7 @@ export default function ListingFormStepper({
                 {/* Description */}
                 <div>
                   <label className="block text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
-                    Description
+                    {t('details.description')}
                     <span className="ml-2 text-xs font-normal text-neutral-500">
                       ({formData.description.length}/2000)
                     </span>
@@ -984,7 +984,7 @@ export default function ListingFormStepper({
                       focus:outline-none focus:ring-4 focus:ring-primary-500/10
                       text-neutral-900 dark:text-white placeholder-neutral-400
                     `}
-                    placeholder="Décrivez votre bien en détail: état général, équipements, proximité des services..."
+                    placeholder={t('details.descriptionPlaceholder')}
                   />
                   {errors.description && (
                     <p className="mt-2 text-sm text-red-500 flex items-center gap-1">
@@ -1004,10 +1004,10 @@ export default function ListingFormStepper({
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-neutral-900 dark:text-white">
-                    Prix et caractéristiques
+                    {t('pricing.title')}
                   </h3>
                   <p className="text-sm text-neutral-500">
-                    Définissez le prix et les détails de votre bien
+                    {t('pricing.subtitle')}
                   </p>
                 </div>
               </div>
@@ -1016,7 +1016,7 @@ export default function ListingFormStepper({
                 {/* Prix */}
                 <div>
                   <label className="block text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
-                    Prix {formData.operationType === 'LOCATION' ? 'mensuel' : formData.operationType === 'LOCATION_COURTE' ? 'par jour' : 'de vente'}
+                    {t('details.priceLabel')} {formData.operationType === 'LOCATION' ? t('details.priceMonthly') : formData.operationType === 'LOCATION_COURTE' ? t('details.priceDaily') : t('details.priceSale')}
                   </label>
                   <div className="relative">
                     <input
@@ -1060,7 +1060,7 @@ export default function ListingFormStepper({
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div>
                         <label className="block text-xs sm:text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
-                          Caution
+                          {t('rental.deposit')}
                         </label>
                         <select
                           name="cautionMois"
@@ -1077,7 +1077,7 @@ export default function ListingFormStepper({
                       </div>
                       <div>
                         <label className="block text-xs sm:text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
-                          Avance
+                          {t('rental.advance')}
                         </label>
                         <select
                           name="avanceMois"
@@ -1095,17 +1095,17 @@ export default function ListingFormStepper({
                       <div>
                         <label className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
                           <Percent className="w-3.5 h-3.5 text-primary-500" />
-                          Commission ImmoGuinee
+                          {t('rental.commission')}
                         </label>
                         <div className="px-3 py-2.5 sm:py-3 rounded-xl border-2 border-primary-200 dark:border-primary-500/30 bg-primary-50 dark:bg-primary-500/10 text-sm text-primary-700 dark:text-primary-300 font-medium">
                           {currentCommission ? (
                             currentCommission.mois > 0
-                              ? `${currentCommission.mois} mois de loyer`
+                              ? t('rental.commissionMonths', { months: currentCommission.mois })
                               : currentCommission.taux_pourcentage > 0
                                 ? `${currentCommission.taux_pourcentage}%`
-                                : 'Pas de commission'
+                                : t('rental.noCommission')
                           ) : (
-                            '1 mois de loyer'
+                            t('rental.commissionMonths', { months: 1 })
                           )}
                         </div>
                       </div>
@@ -1115,7 +1115,7 @@ export default function ListingFormStepper({
                     <div>
                       <label className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
                         <Users className="w-3.5 h-3.5 text-primary-500" />
-                        Type de locataire préféré
+                        {t('rental.tenantType')}
                       </label>
                       <select
                         name="typeLocatairePrefere"
@@ -1139,21 +1139,21 @@ export default function ListingFormStepper({
                     <div className="p-4 bg-purple-50 dark:bg-purple-500/10 rounded-xl border border-purple-200 dark:border-purple-500/20">
                       <div className="flex items-center gap-2 text-purple-700 dark:text-purple-300 mb-2">
                         <Calendar className="w-5 h-5" />
-                        <span className="font-semibold">Location courte durée (meublé)</span>
+                        <span className="font-semibold">{t('shortRental.title')}</span>
                       </div>
                       <p className="text-sm text-purple-600 dark:text-purple-400">
-                        Le prix indiqué est par jour. Le bien sera automatiquement marqué comme meublé.
+                        {t('shortRental.priceInfo')}
                       </p>
                       {currentCommission && currentCommission.taux_pourcentage > 0 && (
                         <div className="mt-2 flex items-center gap-2 text-sm">
                           <Percent className="w-4 h-4" />
-                          <span>Commission ImmoGuinee: <strong>{currentCommission.taux_pourcentage}%</strong> du montant total</span>
+                          <span>{t('shortRental.commissionInfo', { percent: currentCommission.taux_pourcentage })}</span>
                         </div>
                       )}
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
-                        Durée minimum de location
+                        {t('shortRental.minDuration')}
                       </label>
                       <select
                         name="dureeMinimumJours"
@@ -1181,10 +1181,10 @@ export default function ListingFormStepper({
                     : 'grid-cols-1 md:grid-cols-2'
               }`}>
                 {[
-                  { id: 'superficie', label: 'Superficie', icon: Ruler, unit: 'm²', required: true, show: true },
-                  { id: 'nombreChambres', label: 'Chambres', icon: BedDouble, required: true, show: needsRooms(formData.typeBien) },
-                  { id: 'nombreSallesDeBain', label: 'Salles de bain', icon: Bath, required: false, show: needsBathrooms(formData.typeBien) },
-                  { id: 'nombreSalons', label: 'Salons', icon: Sofa, required: false, show: needsRooms(formData.typeBien) },
+                  { id: 'superficie', label: t('details.surface'), icon: Ruler, unit: t('details.surfaceUnit'), required: true, show: true },
+                  { id: 'nombreChambres', label: t('details.bedrooms'), icon: BedDouble, required: true, show: needsRooms(formData.typeBien) },
+                  { id: 'nombreSallesDeBain', label: t('details.bathrooms'), icon: Bath, required: false, show: needsBathrooms(formData.typeBien) },
+                  { id: 'nombreSalons', label: t('details.livingRooms'), icon: Sofa, required: false, show: needsRooms(formData.typeBien) },
                 ].filter(field => field.show).map((field) => (
                   <div key={field.id}>
                     <label className="flex items-center gap-2 text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
@@ -1241,10 +1241,10 @@ export default function ListingFormStepper({
                   </div>
                   <div>
                     <h3 className="text-lg font-bold text-neutral-900 dark:text-white">
-                      Équipements
+                      {t('amenities.title')}
                     </h3>
                     <p className="text-sm text-neutral-500">
-                      Sélectionnez les équipements disponibles
+                      {t('amenities.subtitle')}
                     </p>
                   </div>
                 </div>
@@ -1298,10 +1298,10 @@ export default function ListingFormStepper({
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-neutral-900 dark:text-white">
-                    Localisation du bien
+                    {t('location.title')}
                   </h3>
                   <p className="text-sm text-neutral-500">
-                    Indiquez l'emplacement précis de votre propriété
+                    {t('location.subtitle')}
                   </p>
                 </div>
               </div>
@@ -1348,10 +1348,10 @@ export default function ListingFormStepper({
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-neutral-900 dark:text-white">
-                    Photos du bien
+                    {t('photos.title')}
                   </h3>
                   <p className="text-sm text-neutral-500">
-                    Ajoutez des photos de qualité pour attirer plus de visiteurs
+                    {t('photos.subtitle')}
                   </p>
                 </div>
               </div>
@@ -1368,13 +1368,13 @@ export default function ListingFormStepper({
               {/* Photo Tips */}
               <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-500/10 rounded-xl border border-amber-200 dark:border-amber-500/20">
                 <p className="text-sm text-amber-800 dark:text-amber-200 font-medium mb-2">
-                  Conseils pour de bonnes photos :
+                  {t('photos.tips.title')}
                 </p>
                 <ul className="text-sm text-amber-700 dark:text-amber-300 space-y-1">
-                  <li>• Prenez les photos en journée avec une bonne lumière naturelle</li>
-                  <li>• Montrez toutes les pièces principales</li>
-                  <li>• Rangez et nettoyez avant de photographier</li>
-                  <li>• La première photo sera l'image principale de l'annonce</li>
+                  <li>• {t('photos.tips.daylight')}</li>
+                  <li>• {t('photos.tips.allRooms')}</li>
+                  <li>• {t('photos.tips.clean')}</li>
+                  <li>• {t('photos.tips.mainPhoto')}</li>
                 </ul>
               </div>
             </div>
@@ -1391,7 +1391,7 @@ export default function ListingFormStepper({
         >
           <XCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
           <div>
-            <p className="font-medium text-red-800 dark:text-red-200">Erreur</p>
+            <p className="font-medium text-red-800 dark:text-red-200">{tCommon('error')}</p>
             <p className="text-sm text-red-700 dark:text-red-300">{submitError}</p>
           </div>
         </motion.div>
@@ -1413,10 +1413,10 @@ export default function ListingFormStepper({
             <CheckCircle className="w-8 h-8 text-white" />
           </motion.div>
           <h3 className="text-xl font-bold text-emerald-800 dark:text-emerald-200 mb-2">
-            Annonce publiée avec succès !
+            {t('success.title')}
           </h3>
           <p className="text-emerald-700 dark:text-emerald-300">
-            Votre annonce est en cours de validation. Vous serez notifié une fois approuvée.
+            {t('success.subtitle')}
           </p>
         </motion.div>
       )}
@@ -1432,7 +1432,7 @@ export default function ListingFormStepper({
           disabled={isSubmitting}
         >
           <ArrowLeft className="w-5 h-5" />
-          {currentStep === 1 ? 'Annuler' : 'Précédent'}
+          {currentStep === 1 ? t('buttons.cancel') : t('buttons.previous')}
         </motion.button>
 
         {currentStep < totalSteps ? (
@@ -1443,7 +1443,7 @@ export default function ListingFormStepper({
             onClick={handleNext}
             className="flex items-center gap-2 px-8 py-3.5 text-white bg-gradient-to-r from-primary-500 to-orange-500 rounded-xl hover:from-primary-600 hover:to-orange-600 transition-all font-semibold shadow-lg shadow-primary-500/30"
           >
-            Continuer
+            {t('buttons.continue')}
             <ArrowRight className="w-5 h-5" />
           </motion.button>
         ) : (
@@ -1458,12 +1458,12 @@ export default function ListingFormStepper({
             {isSubmitting ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                Publication...
+                {t('buttons.publishing')}
               </>
             ) : (
               <>
                 <CheckCircle className="w-5 h-5" />
-                Publier l'annonce
+                {t('buttons.publish')}
               </>
             )}
           </motion.button>

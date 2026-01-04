@@ -791,7 +791,8 @@
       "publishing": "Publishing..."
     },
     "pricing": {
-      "title": "Price",
+      "title": "Price and features",
+      "subtitle": "Set the price and details of your property",
       "monthlyRent": "Monthly rent",
       "dailyRate": "Daily rate",
       "salePrice": "Sale price",

@@ -34,8 +34,8 @@ export default function PublierPage() {
   const { user, hasVerifiedPhone, resendOtp } = useAuth();
   const router = useRouter();
   const [isRedirecting, setIsRedirecting] = useState(false);
-  const t = useTranslations('publish');
-  const tCommon = useTranslations('common');
+  const { t } = useTranslations('publish');
+  const { t: tCommon } = useTranslations('common');
 
   const STEPS = [
     { id: 1, title: t('steps.type'), icon: Home, description: t('steps.typeDesc') },

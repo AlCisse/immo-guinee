@@ -791,7 +791,8 @@
       "publishing": "Publication..."
     },
     "pricing": {
-      "title": "Prix",
+      "title": "Prix et caracteristiques",
+      "subtitle": "Definissez le prix et les details de votre bien",
       "monthlyRent": "Loyer mensuel",
       "dailyRate": "Tarif journalier",
       "salePrice": "Prix de vente",
