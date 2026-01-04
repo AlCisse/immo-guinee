@@ -17,13 +17,13 @@ import {
   MapPin,
   Phone,
   Play,
-  Search,
   Shield,
   Star,
   Store,
   Users,
   Zap
 } from 'lucide-react';
+import SearchInput from '@/components/ui/SearchInput';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -275,7 +275,6 @@ export default function ClientHomePage() {
   const router = useRouter();
   const { t } = useTranslations();
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchType, setSearchType] = useState<'location' | 'achat'>('location');
 
   // Fetch premium listings
   const { data: premiumListings = [], isLoading: listingsLoading } = useQuery({
@@ -296,99 +295,28 @@ export default function ClientHomePage() {
   const handleSearch = () => {
     const params = new URLSearchParams();
     if (searchQuery) params.set('q', searchQuery);
-    params.set('type_transaction', searchType === 'location' ? 'LOCATION' : 'VENTE');
     router.push(`/recherche?${params.toString()}`);
   };
 
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        {/* Background Image */}
-        <div className="absolute inset-0">
-          <img
-            src="/images/banner-hero.jpg"
-            alt="ImmoGuinee Banner"
-            className="w-full h-full object-cover"
-            style={{ objectPosition: 'center 30%' }}
-          />
-        </div>
-        {/* Overlay for better text readability */}
-        <div className="absolute inset-0 bg-black/10 pointer-events-none" />
-
-        <div className="relative z-10 max-w-7xl mx-auto px-4 pt-8 pb-16 md:pt-16 md:pb-24">
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-8 md:mb-12"
-          >
-            <h1 className="text-3xl md:text-5xl font-bold text-white mb-4">
-              {t('home.hero.title')}
-              <br />
-              <span className="text-orange-200">{t('home.hero.titleHighlight')}</span>
-            </h1>
-            <p className="text-white/80 text-lg max-w-2xl mx-auto">
-              {t('home.hero.subtitle')}
-            </p>
-          </motion.div>
-
-          {/* Search Box */}
+      {/* Search Section */}
+      <section className="bg-white dark:bg-dark-card border-b border-neutral-200 dark:border-dark-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
             className="max-w-3xl mx-auto"
           >
-            {/* Search Type Toggle */}
-            <div className="flex justify-center mb-4">
-              <div className="inline-flex bg-white/10 backdrop-blur-sm rounded-full p-1">
-                <button
-                  onClick={() => setSearchType('location')}
-                  className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${searchType === 'location'
-                    ? 'bg-white text-primary-600 shadow-md'
-                    : 'text-white hover:bg-white/10'
-                    }`}
-                >
-                  {t('home.hero.rental')}
-                </button>
-                <button
-                  onClick={() => setSearchType('achat')}
-                  className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${searchType === 'achat'
-                    ? 'bg-white text-primary-600 shadow-md'
-                    : 'text-white hover:bg-white/10'
-                    }`}
-                >
-                  {t('home.hero.purchase')}
-                </button>
-              </div>
-            </div>
-
             {/* Search Input */}
-            <div className="bg-white dark:bg-dark-card rounded-2xl shadow-2xl p-1">
-              <div className="flex items-center gap-2">
-                <div className="flex-1 flex items-center gap-3 px-4 bg-neutral-50 dark:bg-dark-bg rounded-xl">
-                  <Search className="w-5 h-5 text-neutral-400" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    placeholder={t('home.hero.searchPlaceholder')}
-                    className="flex-1 py-3 sm:py-4 bg-transparent text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none text-sm sm:text-base border-neutral-200 dark:border-neutral-700"
-                  />
-                </div>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleSearch}
-                  className="p-4 md:px-8 md:py-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors shrink-0"
-                >
-                  <Search className="w-5 h-5 md:hidden" />
-                  <span className="hidden md:inline">{t('common.search')}</span>
-                </motion.button>
-              </div>
-            </div>
+            <SearchInput
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onSearch={handleSearch}
+              placeholder={t('home.hero.searchPlaceholder')}
+              showButton
+              buttonText={t('common.search')}
+            />
 
             {/* Quick Links */}
             <div className="flex flex-wrap justify-center gap-2 mt-4">
@@ -396,7 +324,7 @@ export default function ClientHomePage() {
                 <Link
                   key={commune}
                   href={`/recherche?commune=${commune}`}
-                  className="px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white text-sm rounded-full transition-colors"
+                  className="px-4 py-2 bg-neutral-100 dark:bg-dark-bg hover:bg-neutral-200 dark:hover:bg-dark-border text-neutral-600 dark:text-neutral-400 text-sm rounded-full transition-colors"
                 >
                   {commune}
                 </Link>
@@ -407,7 +335,7 @@ export default function ClientHomePage() {
       </section>
 
       {/* Categories Section */}
-      <section className="max-w-7xl mx-auto px-4 -mt-8 relative z-10">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <CategoryButton
             icon={Home}
@@ -437,7 +365,7 @@ export default function ClientHomePage() {
       </section>
 
       {/* Premium Listings */}
-      <section className="max-w-7xl mx-auto px-4 py-16">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white mb-2">
@@ -485,7 +413,7 @@ export default function ClientHomePage() {
 
       {/* Quartiers Section */}
       <section className="bg-white dark:bg-dark-card py-16">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
             <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white mb-2">
               {t('home.quartiers.title')}
@@ -504,7 +432,7 @@ export default function ClientHomePage() {
       </section>
 
       {/* Features Section */}
-      <section className="max-w-7xl mx-auto px-4 py-16">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center mb-12">
           <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white mb-2">
             {t('home.features.title')}
@@ -562,7 +490,7 @@ export default function ClientHomePage() {
 
       {/* Stats Section */}
       <section className="bg-gradient-to-r from-primary-500 to-orange-500 py-16">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
               { value: '5000+', label: t('home.stats.activeListings'), icon: Home },
@@ -588,7 +516,7 @@ export default function ClientHomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="max-w-7xl mx-auto px-4 py-16">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -622,7 +550,7 @@ export default function ClientHomePage() {
 
       {/* Download App Section */}
       <section className="bg-primary-50 dark:bg-primary-500/5 py-16">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center gap-8">
             <div className="flex-1">
               <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white mb-4">
@@ -673,59 +601,49 @@ export default function ClientHomePage() {
 
       {/* SEO Content Section */}
       <section className="bg-neutral-100 dark:bg-dark-card py-12 border-t border-neutral-200 dark:border-dark-border">
-        <div className="max-w-6xl mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="prose prose-neutral dark:prose-invert max-w-none text-sm">
             <h2 className="text-xl font-bold text-neutral-800 dark:text-neutral-200 mb-4">
-              ImmoGuinée : Votre plateforme immobilière de référence en Guinée
+              {t('seo.home.landingTitle')}
             </h2>
 
             <div className="grid md:grid-cols-2 gap-8 text-neutral-600 dark:text-neutral-400">
               <div>
                 <h3 className="text-base font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
-                  Location d'appartements et villas à Conakry
+                  {t('seo.home.landingRental')}
                 </h3>
                 <p className="text-sm leading-relaxed mb-4">
-                  Trouvez votre <strong>appartement à louer à Conakry</strong> dans les meilleurs quartiers :
-                  <strong> Kipé</strong>, <strong>Nongo</strong>, <strong>Taouyah</strong>, <strong>Lambanyi</strong> (Ratoma),
-                  <strong> Almamya</strong>, <strong>Boulbinet</strong> (Kaloum), <strong>Madina</strong>, <strong>Hamdallaye</strong> (Matam).
-                  Appartements meublés et non meublés, studios, chambres-salon, villas avec piscine, duplex de standing.
+                  {t('seo.home.landingRentalContent')}
                 </p>
 
                 <h3 className="text-base font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
-                  Location courte durée pour expatriés
+                  {t('seo.home.landingShortTerm')}
                 </h3>
                 <p className="text-sm leading-relaxed">
-                  <strong>Location meublée à Conakry</strong> pour expatriés, professionnels en mission et voyageurs d'affaires.
-                  Appartements équipés avec <strong>climatisation</strong>, <strong>groupe électrogène</strong>, <strong>wifi</strong>,
-                  <strong> gardien 24h/24</strong>. Réservation flexible à partir de 1 jour.
+                  {t('seo.home.landingShortTermContent')}
                 </p>
               </div>
 
               <div>
                 <h3 className="text-base font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
-                  Vente de terrains et maisons en Guinée
+                  {t('seo.home.landingSale')}
                 </h3>
                 <p className="text-sm leading-relaxed mb-4">
-                  <strong>Terrain à vendre à Conakry</strong> avec <strong>titre foncier</strong>. Parcelles constructibles à
-                  Ratoma, Matoto, Dixinn. Investissement immobilier en Guinée : terrains, maisons, villas, immeubles.
-                  <strong> Achat immobilier</strong> sécurisé avec accompagnement.
+                  {t('seo.home.landingSaleContent')}
                 </p>
 
                 <h3 className="text-base font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
-                  Publiez gratuitement votre annonce
+                  {t('seo.home.landingPublish')}
                 </h3>
                 <p className="text-sm leading-relaxed">
-                  <strong>Annonces immobilières gratuites</strong> pour particuliers et professionnels.
-                  Publiez votre bien en quelques minutes : appartement, maison, villa, terrain, bureau, local commercial.
-                  Touchez des milliers d'acheteurs et locataires potentiels à Conakry et dans toute la Guinée.
+                  {t('seo.home.landingPublishContent')}
                 </p>
               </div>
             </div>
 
             <div className="mt-6 pt-4 border-t border-neutral-200 dark:border-dark-border">
               <p className="text-xs text-neutral-500 dark:text-neutral-500">
-                ImmoGuinée couvre toutes les communes de Conakry : Kaloum, Dixinn, Matam, Ratoma, Matoto.
-                Quartiers populaires : Kipé, Nongo, Taouyah, Kaporo, Lambanyi, Sonfonia, Almamya, Madina, Hamdallaye, Bonfi, Sangoyah.
+                {t('seo.home.landingCoverage')}
               </p>
             </div>
           </div>
