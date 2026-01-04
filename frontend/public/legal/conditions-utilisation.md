@@ -107,7 +107,7 @@ ImmoGuinee propose une authentification a deux facteurs (2FA) pour renforcer la 
 
 ### 4.2 Services pour les proprietaires
 
-- Publication d'annonces (jusqu'a 10 photos par annonce)
+- Publication d'annonces (jusqu'a 5 photos par annonce)
 - Gestion des visites programmees
 - Messagerie securisee avec les candidats
 - Generation de contrats numeriques

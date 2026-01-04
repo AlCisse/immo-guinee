@@ -109,7 +109,7 @@ Route::prefix('auth')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         Route::get('/me/counts', [AuthController::class, 'counts']); // Unread notifications, messages, favorites count
         Route::patch('/me', [AuthController::class, 'updateProfile']);
-        Route::post('/me/photo', [AuthController::class, 'uploadProfilePhoto']);
+        Route::post('/me/photo', [AuthController::class, 'uploadProfilePhoto'])->middleware('throttle:profile-photos');
         Route::delete('/me/photo', [AuthController::class, 'deleteProfilePhoto']);
 
         // Push notifications
@@ -141,7 +141,7 @@ Route::prefix('listings')->group(function () {
     // Protected routes (auth required) - MUST be before /{id} to avoid conflict
     Route::middleware('auth:api')->group(function () {
         Route::get('/my', [ListingController::class, 'myListings']); // Get current user's listings
-        Route::post('/', [ListingController::class, 'store']);
+        Route::post('/', [ListingController::class, 'store'])->middleware('throttle:listings'); // Rate limited: 5 per hour
         Route::post('/{id}/update', [ListingController::class, 'update']); // POST for FormData with file uploads
         Route::patch('/{id}', [ListingController::class, 'update']);
         Route::put('/{id}', [ListingController::class, 'update']);
@@ -149,9 +149,11 @@ Route::prefix('listings')->group(function () {
         Route::post('/{id}/premium', [ListingController::class, 'applyPremium']);
         Route::get('/{id}/contacts', [ListingController::class, 'getListingContacts']); // Get contacts from conversations
 
-        // Photo management routes
-        Route::post('/{id}/photos', [ListingPhotoController::class, 'store']); // Upload multiple photos
-        Route::post('/{id}/photos/upload', [ListingPhotoController::class, 'upload']); // Upload single photo
+        // Photo management routes (rate limited: 25 photos per hour)
+        Route::middleware('throttle:listing-photos')->group(function () {
+            Route::post('/{id}/photos', [ListingPhotoController::class, 'store']); // Upload multiple photos
+            Route::post('/{id}/photos/upload', [ListingPhotoController::class, 'upload']); // Upload single photo
+        });
         Route::post('/{id}/photos/reorder', [ListingPhotoController::class, 'reorder']); // Reorder photos
         Route::post('/{id}/photos/{photoId}/primary', [ListingPhotoController::class, 'setPrimary']); // Set primary
         Route::delete('/{id}/photos/{photoId}', [ListingPhotoController::class, 'destroy']); // Delete photo

@@ -690,7 +690,7 @@
       "setAsMain": "Definir comme principale",
       "delete": "Supprimer",
       "minPhotos": "Minimum 3 photos requises",
-      "maxPhotos": "Maximum 10 photos",
+      "maxPhotos": "Maximum 5 photos",
       "tips": {
         "title": "Conseils pour de bonnes photos :",
         "daylight": "Prenez les photos en journee avec une bonne lumiere naturelle",
@@ -701,7 +701,7 @@
       "errors": {
         "unsupportedFormat": "Format non supporte. Utilisez JPG, PNG ou WebP.",
         "fileTooLarge": "Fichier trop volumineux (max 5MB).",
-        "maxPhotos": "Maximum 10 photos autorisees."
+        "maxPhotos": "Maximum 5 photos autorisees."
       }
     },
     "ai": {

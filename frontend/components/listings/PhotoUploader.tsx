@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 
-const MAX_PHOTOS = 10;
+const MAX_PHOTOS = 5;
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_FORMATS = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 

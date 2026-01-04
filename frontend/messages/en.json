@@ -690,7 +690,7 @@
       "setAsMain": "Set as main",
       "delete": "Delete",
       "minPhotos": "Minimum 3 photos required",
-      "maxPhotos": "Maximum 10 photos",
+      "maxPhotos": "Maximum 5 photos",
       "tips": {
         "title": "Tips for good photos:",
         "daylight": "Take photos during the day with good natural light",
@@ -701,7 +701,7 @@
       "errors": {
         "unsupportedFormat": "Unsupported format. Use JPG, PNG or WebP.",
         "fileTooLarge": "File too large (max 5MB).",
-        "maxPhotos": "Maximum 10 photos allowed."
+        "maxPhotos": "Maximum 5 photos allowed."
       }
     },
     "ai": {

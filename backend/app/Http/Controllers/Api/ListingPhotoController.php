@@ -67,10 +67,15 @@ class ListingPhotoController extends Controller
      * @param string $listingId
      * @return JsonResponse
      */
+    /**
+     * Maximum photos allowed per listing
+     */
+    private const MAX_PHOTOS_PER_LISTING = 5;
+
     public function store(Request $request, string $listingId): JsonResponse
     {
         $request->validate([
-            'photos' => 'required|array|min:1|max:10',
+            'photos' => 'required|array|min:1|max:' . self::MAX_PHOTOS_PER_LISTING,
             'photos.*' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120', // 5MB max
             'primary_index' => 'sometimes|integer|min:0',
         ]);
@@ -93,17 +98,34 @@ class ListingPhotoController extends Controller
                 ], 403);
             }
 
-            // Check current photo count (max 10)
+            // Check current photo count (max 5 per listing)
             $currentCount = $listing->listingPhotos()->count();
             $newCount = count($request->file('photos'));
+            $remainingSlots = self::MAX_PHOTOS_PER_LISTING - $currentCount;
 
-            if ($currentCount + $newCount > 10) {
+            if ($currentCount >= self::MAX_PHOTOS_PER_LISTING) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Nombre maximum de photos atteint (10)',
+                    'message' => 'Limite atteinte: maximum ' . self::MAX_PHOTOS_PER_LISTING . ' photos par annonce',
+                    'error_code' => 'MAX_PHOTOS_REACHED',
                     'data' => [
                         'current_count' => $currentCount,
-                        'max_allowed' => 10,
+                        'max_allowed' => self::MAX_PHOTOS_PER_LISTING,
+                        'remaining_slots' => 0,
+                    ],
+                ], 422);
+            }
+
+            if ($currentCount + $newCount > self::MAX_PHOTOS_PER_LISTING) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Vous ne pouvez ajouter que {$remainingSlots} photo(s) supplémentaire(s). Maximum " . self::MAX_PHOTOS_PER_LISTING . " photos par annonce.",
+                    'error_code' => 'TOO_MANY_PHOTOS',
+                    'data' => [
+                        'current_count' => $currentCount,
+                        'max_allowed' => self::MAX_PHOTOS_PER_LISTING,
+                        'remaining_slots' => $remainingSlots,
+                        'requested_count' => $newCount,
                     ],
                 ], 422);
             }
@@ -177,13 +199,19 @@ class ListingPhotoController extends Controller
                 ], 403);
             }
 
-            // Check current photo count (max 10)
+            // Check current photo count (max 5 per listing)
             $currentCount = $listing->listingPhotos()->count();
 
-            if ($currentCount >= 10) {
+            if ($currentCount >= self::MAX_PHOTOS_PER_LISTING) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Nombre maximum de photos atteint (10)',
+                    'message' => 'Limite atteinte: maximum ' . self::MAX_PHOTOS_PER_LISTING . ' photos par annonce',
+                    'error_code' => 'MAX_PHOTOS_REACHED',
+                    'data' => [
+                        'current_count' => $currentCount,
+                        'max_allowed' => self::MAX_PHOTOS_PER_LISTING,
+                        'remaining_slots' => 0,
+                    ],
                 ], 422);
             }
 

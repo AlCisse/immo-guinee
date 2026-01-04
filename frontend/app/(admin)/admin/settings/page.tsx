@@ -501,7 +501,7 @@ export default function AdminSettingsPage() {
     paymentMethods: ['orange_money', 'mtn_momo'],
 
     // Listings
-    maxPhotosPerListing: '10',
+    maxPhotosPerListing: '5',
     listingDuration: '90',
     premiumDuration: '30',
 

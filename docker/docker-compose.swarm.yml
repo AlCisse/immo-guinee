@@ -30,6 +30,8 @@ volumes:
     driver: local
   waha-data:
     driver: local
+  clamav-data:
+    driver: local
 
 services:
   # ==============================================
@@ -639,6 +641,37 @@ services:
         - "traefik.http.routers.grafana.entrypoints=websecure"
         - "traefik.http.routers.grafana.tls.certresolver=letsencrypt"
         - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+
+  # ==============================================
+  # CLAMAV - Antivirus Scanner
+  # ==============================================
+  clamav:
+    image: clamav/clamav:latest
+    networks:
+      - immog-network
+    volumes:
+      - clamav-data:/var/lib/clamav
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "clamdscan", "--version"]
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      start_period: 300s
 
   # ==============================================
   # PGADMIN - PostgreSQL Management

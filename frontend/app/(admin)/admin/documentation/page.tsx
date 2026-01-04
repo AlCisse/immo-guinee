@@ -489,7 +489,7 @@ Authorization: Bearer {token}  # Pour les routes authentifiees`}
                   <ApiEndpoint method="POST" path="/api/listings" description="Creer une annonce" />
                   <ApiEndpoint method="PATCH" path="/api/listings/{id}" description="Modifier une annonce" />
                   <ApiEndpoint method="DELETE" path="/api/listings/{id}" description="Supprimer une annonce" />
-                  <ApiEndpoint method="POST" path="/api/listings/{id}/photos" description="Ajouter des photos (max 10)" />
+                  <ApiEndpoint method="POST" path="/api/listings/{id}/photos" description="Ajouter des photos (max 5)" />
                   <ApiEndpoint method="DELETE" path="/api/listings/{id}/photos/{photoId}" description="Supprimer une photo" />
                   <ApiEndpoint method="POST" path="/api/listings/{id}/contact" description="Contacter le proprietaire" />
                   <ApiEndpoint method="POST" path="/api/listings/{id}/renew" description="Renouveler (si expiree)" />

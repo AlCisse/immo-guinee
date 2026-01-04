@@ -152,7 +152,7 @@ export default function ConditionsUtilisationPage() {
               <div className="border rounded-lg p-4">
                 <h4 className="font-semibold text-gray-900 mb-3">Services proprietaires</h4>
                 <ul className="text-gray-600 text-sm space-y-2">
-                  <li>- Publication d&apos;annonces (10 photos max)</li>
+                  <li>- Publication d&apos;annonces (5 photos max)</li>
                   <li>- Gestion des visites</li>
                   <li>- Contrats numeriques</li>
                   <li>- Signature electronique</li>

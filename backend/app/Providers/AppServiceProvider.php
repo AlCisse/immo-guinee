@@ -132,10 +132,51 @@ class AppServiceProvider extends ServiceProvider
                 : Limit::none();
         });
 
-        // Listing creation: prevent mass spamming
+        // Listing creation: prevent mass spamming (5 listings per hour)
         RateLimiter::for('listings', function (Request $request) {
             return $request->user()
-                ? Limit::perDay(50)->by($request->user()->id)
+                ? Limit::perHour(5)->by($request->user()->id)->response(function (Request $request, array $headers) {
+                    $retryAfter = $headers['Retry-After'] ?? 3600;
+                    $minutes = ceil($retryAfter / 60);
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Limite atteinte: 5 annonces par heure. Réessayez dans {$minutes} minute(s).",
+                        'error_code' => 'RATE_LIMIT_EXCEEDED',
+                        'retry_after' => $retryAfter,
+                    ], 429);
+                })
+                : Limit::none();
+        });
+
+        // Listing photo uploads: 5 uploads per hour per user
+        RateLimiter::for('listing-photos', function (Request $request) {
+            return $request->user()
+                ? Limit::perHour(25)->by($request->user()->id)->response(function (Request $request, array $headers) {
+                    $retryAfter = $headers['Retry-After'] ?? 3600;
+                    $minutes = ceil($retryAfter / 60);
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Limite atteinte: 25 photos par heure. Réessayez dans {$minutes} minute(s).",
+                        'error_code' => 'RATE_LIMIT_EXCEEDED',
+                        'retry_after' => $retryAfter,
+                    ], 429);
+                })
+                : Limit::none();
+        });
+
+        // Profile photo uploads: 5 uploads per hour per user
+        RateLimiter::for('profile-photos', function (Request $request) {
+            return $request->user()
+                ? Limit::perHour(5)->by($request->user()->id)->response(function (Request $request, array $headers) {
+                    $retryAfter = $headers['Retry-After'] ?? 3600;
+                    $minutes = ceil($retryAfter / 60);
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Limite atteinte: 5 photos de profil par heure. Réessayez dans {$minutes} minute(s).",
+                        'error_code' => 'RATE_LIMIT_EXCEEDED',
+                        'retry_after' => $retryAfter,
+                    ], 429);
+                })
                 : Limit::none();
         });
 

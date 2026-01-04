@@ -207,9 +207,9 @@ const tutorialSteps = [
       {
         subtitle: 'Exigences',
         tips: [
-          'Minimum 3 photos, maximum 10',
+          'Minimum 3 photos, maximum 5',
           'Formats: JPG, PNG, WebP',
-          'Taille max: 10 MB par photo',
+          'Taille max: 5 MB par photo',
         ],
       },
       {
