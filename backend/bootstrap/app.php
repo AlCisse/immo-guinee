@@ -46,6 +46,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // This extracts token from httpOnly cookie and sets Authorization header
         $middleware->prependToGroup('api', \App\Http\Middleware\AuthenticateFromCookie::class);
 
+        // Set locale based on Accept-Language header for translated responses
+        $middleware->prependToGroup('api', \App\Http\Middleware\SetLocale::class);
+
         // Apply XSS sanitization to all API requests
         $middleware->appendToGroup('api', \App\Http\Middleware\SanitizeInput::class);
 
