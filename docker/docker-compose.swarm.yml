@@ -232,6 +232,9 @@ services:
       - PASSPORT_PRIVATE_KEY_FILE=/run/secrets/passport_private_key
       - PASSPORT_PUBLIC_KEY_FILE=/run/secrets/passport_public_key
       - WAHA_API_KEY_FILE=/run/secrets/waha_api_key
+      # ClamAV antivirus scanner
+      - CLAMAV_HOST=immog_clamav
+      - CLAMAV_PORT=3310
     deploy:
       mode: replicated
       replicas: 2
@@ -647,8 +650,11 @@ services:
   # ==============================================
   clamav:
     image: clamav/clamav:latest
+    hostname: clamav
     networks:
-      - immog-network
+      immog-network:
+        aliases:
+          - clamav
     volumes:
       - clamav-data:/var/lib/clamav
     deploy:
