@@ -875,15 +875,25 @@ class AuthController extends Controller
     public function uploadProfilePhoto(Request $request): JsonResponse
     {
         $request->validate([
-            'photo' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120', // 5MB max
+            'photo' => 'required|file|max:5120', // 5MB max - detailed validation below
         ]);
 
         try {
             $user = $request->user();
             $file = $request->file('photo');
 
-            // Generate unique filename
-            $filename = $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            // Use FileSecurityHelper for comprehensive security validation
+            $validation = \App\Helpers\FileSecurityHelper::validateUpload($file, 'avatar', true);
+
+            if (!$validation['valid']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validation['error'],
+                ], 422);
+            }
+
+            // Use secure filename from helper (UUID-based)
+            $filename = $validation['secure_name'];
 
             // Delete old photo if exists
             if ($user->photo_profil) {
@@ -901,6 +911,7 @@ class AuthController extends Controller
             Log::info('Profile photo uploaded', [
                 'user_id' => $user->id,
                 'filename' => $filename,
+                'mime_type' => $validation['mime_type'] ?? 'unknown',
             ]);
 
             return response()->json([
