@@ -254,7 +254,7 @@ export default function PhoneInput({
         </button>
 
         {/* Phone Number Input */}
-        <div className="flex items-center gap-2.5 px-3 sm:px-4">
+        <div className="flex-1 flex items-center gap-2 sm:gap-2.5 px-2 sm:px-3 min-w-0">
           <Phone className="w-4 h-4 shrink-0 text-gray-400" />
           <input
             ref={inputRef}
@@ -266,7 +266,7 @@ export default function PhoneInput({
             placeholder={placeholder}
             required={required}
             aria-label="Numéro de téléphone"
-            className="flex-1 py-3 sm:py-4 bg-transparent text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none text-sm sm:text-base rounded-r-lg border border-neutral-200 dark:border-neutral-700"
+            className="flex-1 min-w-0 py-3 bg-transparent text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none text-base"
           />
         </div>
       </div>

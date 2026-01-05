@@ -108,7 +108,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex bg-neutral-50 dark:bg-dark-bg">
+    <div className="min-h-[100dvh] lg:min-h-screen flex bg-neutral-50 dark:bg-dark-bg overflow-x-hidden">
       {/* Left side - Image (hidden on mobile) */}
       <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-primary-500 to-primary-700">
         <div className="absolute inset-0 bg-black/20" />
@@ -148,10 +148,10 @@ export default function RegisterPage() {
       </div>
 
       {/* Right side - Form */}
-      <div className="flex-1 flex items-center justify-center px-4 py-4 sm:p-6 lg:p-12 overflow-y-auto">
-        <div className="w-full max-w-md py-2 sm:py-8">
+      <div className="flex-1 flex items-start lg:items-center justify-center px-4 py-4 sm:p-6 lg:p-12 overflow-y-auto overflow-x-hidden w-full max-w-full">
+        <div className="w-full max-w-md mx-auto py-2 sm:py-8">
           {/* Mobile logo */}
-          <div className="lg:hidden text-center mb-4 sm:mb-8">
+          <div className="lg:hidden text-center mb-4 sm:mb-6">
             <Image
               src="/images/iOS/Icon-60.png"
               alt="ImmoGuinée"

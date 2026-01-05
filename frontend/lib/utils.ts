@@ -13,9 +13,10 @@ export function cn(...inputs: ClassValue[]) {
  * Shared input styles - consistent across all form inputs
  */
 export const inputStyles = {
-  base: 'w-full py-2.5 sm:py-3 bg-white dark:bg-dark-card rounded-xl ring-1 ring-gray-200 dark:ring-neutral-700 focus:ring-2 focus:ring-primary-400 focus:outline-none transition-all text-base text-neutral-900 dark:text-white placeholder-gray-400',
-  withIcon: 'pl-9 sm:pl-11 pr-3 sm:pr-4',
-  withIconRight: 'pl-9 sm:pl-11 pr-10 sm:pr-12',
+  // text-base (16px) prevents iOS auto-zoom on input focus
+  base: 'w-full py-3 bg-white dark:bg-dark-card rounded-xl ring-1 ring-gray-200 dark:ring-neutral-700 focus:ring-2 focus:ring-primary-400 focus:outline-none transition-all text-base text-neutral-900 dark:text-white placeholder-gray-400',
+  withIcon: 'pl-10 sm:pl-11 pr-3 sm:pr-4',
+  withIconRight: 'pl-10 sm:pl-11 pr-10 sm:pr-12',
   error: 'ring-red-300 focus:ring-red-400',
 };
 

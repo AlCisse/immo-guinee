@@ -63,7 +63,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] md:min-h-[calc(100vh-4rem)]">
+    <div className="flex min-h-[100dvh] lg:min-h-screen overflow-x-hidden">
       {/* Left side - Image (hidden on mobile) */}
       <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-primary-500 to-primary-700">
         <div className="absolute inset-0 bg-black/20" />
@@ -103,8 +103,8 @@ export default function LoginPage() {
       </div>
 
       {/* Right side - Form */}
-      <div className="flex-1 flex items-center justify-center px-4 py-6 sm:p-6 lg:p-12">
-        <div className="w-full max-w-md">
+      <div className="flex-1 flex items-center justify-center px-4 py-6 sm:p-6 lg:p-12 w-full max-w-full overflow-x-hidden">
+        <div className="w-full max-w-md mx-auto">
           {/* Mobile logo */}
           <div className="lg:hidden text-center mb-6">
             <Image
@@ -268,25 +268,25 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Features - hidden on very small screens */}
+          {/* Features - hidden on mobile for cleaner display */}
           <div className="hidden sm:grid mt-6 sm:mt-8 grid-cols-3 gap-2 sm:gap-4 text-center text-xs text-neutral-500">
             <div>
               <div className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-1 sm:mb-2 rounded-full bg-primary-100 dark:bg-primary-500/10 flex items-center justify-center">
                 <span className="text-primary-500 text-xs sm:text-sm">✓</span>
               </div>
-              {t('auth.login.features.freeListings')}
+              <span className="block text-[11px] sm:text-xs leading-tight">{t('auth.login.features.freeListings')}</span>
             </div>
             <div>
               <div className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-1 sm:mb-2 rounded-full bg-primary-100 dark:bg-primary-500/10 flex items-center justify-center">
                 <span className="text-primary-500 text-xs sm:text-sm">✓</span>
               </div>
-              {t('auth.login.features.advancedSearch')}
+              <span className="block text-[11px] sm:text-xs leading-tight">{t('auth.login.features.advancedSearch')}</span>
             </div>
             <div>
               <div className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-1 sm:mb-2 rounded-full bg-primary-100 dark:bg-primary-500/10 flex items-center justify-center">
                 <span className="text-primary-500 text-xs sm:text-sm">✓</span>
               </div>
-              {t('auth.login.features.secureMessaging')}
+              <span className="block text-[11px] sm:text-xs leading-tight">{t('auth.login.features.secureMessaging')}</span>
             </div>
           </div>
         </div>
