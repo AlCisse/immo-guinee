@@ -27,6 +27,8 @@ import {
   Building2,
   Users,
 } from 'lucide-react';
+import { FacebookPostsList } from '@/components/facebook';
+import { useFacebookStatus } from '@/lib/hooks/useFacebook';
 
 // Statut d'annonce
 type AnnonceStatus = 'ACTIVE' | 'EN_ATTENTE' | 'PENDING' | 'EXPIREE' | 'REJETEE' | 'REJECTED' | 'BROUILLON' | 'publiee' | 'ARCHIVEE' | 'SUSPENDUE';
@@ -136,6 +138,9 @@ export default function MesAnnoncesPage() {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [showRentedModal, setShowRentedModal] = useState(false);
   const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
+
+  // Check Facebook connection status
+  const { data: facebookStatus } = useFacebookStatus();
 
   // Fetch user's listings from API
   const { data: listingsData, isLoading, error } = useQuery({
@@ -599,6 +604,18 @@ export default function MesAnnoncesPage() {
               );
             })}
           </div>
+        )}
+
+        {/* Facebook Posts Section - Only show if connected */}
+        {facebookStatus?.connected && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mt-8"
+          >
+            <FacebookPostsList showStats={true} />
+          </motion.div>
         )}
       </div>
 

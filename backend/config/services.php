@@ -48,4 +48,11 @@ return [
         'base_url' => env('N8N_BASE_URL', 'http://n8n:5678'),
     ],
 
+    'facebook' => [
+        'app_id' => SecretHelper::get('FACEBOOK_APP_ID'),
+        'app_secret' => SecretHelper::get('FACEBOOK_APP_SECRET'),
+        'api_version' => env('FACEBOOK_API_VERSION', 'v18.0'),
+        'redirect_uri' => env('FACEBOOK_REDIRECT_URI'),
+    ],
+
 ];

@@ -296,6 +296,17 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Get the Facebook page connection for this user.
+     * Each user can only have one Facebook page connected.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function facebookPageConnection()
+    {
+        return $this->hasOne(FacebookPageConnection::class);
+    }
+
+    /**
      * Favorite listings.
      */
     public function favorites()

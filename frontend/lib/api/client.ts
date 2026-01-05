@@ -328,6 +328,36 @@ export const api = {
       apiClient.post(`/messaging/messages/${messageId}/report`, { raison }),
   },
 
+  // Facebook integration endpoints
+  facebook: {
+    status: () =>
+      apiClient.get('/facebook/status'),
+
+    connect: () =>
+      apiClient.post('/facebook/connect'),
+
+    disconnect: () =>
+      apiClient.delete('/facebook/disconnect'),
+
+    toggleAutoPublish: (enabled: boolean) =>
+      apiClient.post('/facebook/toggle-auto-publish', { enabled }),
+
+    refreshToken: () =>
+      apiClient.post('/facebook/refresh-token'),
+
+    posts: (params?: Record<string, any>) =>
+      apiClient.get('/facebook/posts', { params }),
+
+    statistics: () =>
+      apiClient.get('/facebook/statistics'),
+
+    publishListing: (listingId: string) =>
+      apiClient.post(`/listings/${listingId}/facebook/publish`),
+
+    deleteListing: (listingId: string) =>
+      apiClient.delete(`/listings/${listingId}/facebook`),
+  },
+
   // Admin endpoints
   admin: {
     sidebarCounts: () =>

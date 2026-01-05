@@ -51,6 +51,13 @@ class AppServiceProvider extends ServiceProvider
         \App\Events\DocumentVerified::class => [
             \App\Listeners\UpdateBadgeLevel::class,
         ],
+        // Facebook Page Integration events
+        \App\Events\ListingPublished::class => [
+            \App\Listeners\FacebookAutoPublishListener::class,
+        ],
+        \App\Events\ListingStatusChanged::class => [
+            \App\Listeners\FacebookAutoDeleteListener::class,
+        ],
     ];
 
     /**

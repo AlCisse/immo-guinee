@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasFacebookPublication;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +11,7 @@ use Laravel\Scout\Searchable;
 
 class Listing extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes, Searchable;
+    use HasFactory, HasUuids, SoftDeletes, Searchable, HasFacebookPublication;
 
     /**
      * The attributes that are mass assignable.
@@ -195,6 +196,29 @@ class Listing extends Model
     public function contracts()
     {
         return $this->hasMany(Contract::class);
+    }
+
+    /**
+     * Get the Facebook posts for this listing.
+     * Tracks posts published to Facebook for auto-deletion.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function facebookPosts()
+    {
+        return $this->hasMany(FacebookPost::class);
+    }
+
+    /**
+     * Get the latest published Facebook post for this listing.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function latestFacebookPost()
+    {
+        return $this->hasOne(FacebookPost::class)
+            ->where('status', 'published')
+            ->latest('published_at');
     }
 
     /**

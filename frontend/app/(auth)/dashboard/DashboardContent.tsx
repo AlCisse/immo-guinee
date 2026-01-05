@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { api } from '@/lib/api/client';
 import { useTranslations } from '@/lib/i18n';
+import { FacebookSettings } from '@/components/facebook';
 
 // Types
 interface DashboardStats {
@@ -667,6 +668,15 @@ export default function DashboardContent() {
                   </Link>
                 </div>
               </div>
+            </motion.div>
+
+            {/* Facebook Integration */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+            >
+              <FacebookSettings />
             </motion.div>
           </div>
         </div>

@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\VisitController;
 use App\Http\Controllers\Api\ModeratorController;
 use App\Http\Controllers\Api\AiController;
 use App\Http\Controllers\Api\ConfigController;
+use App\Http\Controllers\Api\FacebookController;
 
 /*
 |--------------------------------------------------------------------------
@@ -456,4 +457,28 @@ Route::prefix('waha')->middleware(['auth:api', 'ensure.role:admin'])->group(func
     Route::get('/qr-code', [WahaWebhookController::class, 'qrCode']);
     Route::post('/session/start', [WahaWebhookController::class, 'startSession']);
     Route::post('/session/stop', [WahaWebhookController::class, 'stopSession']);
+});
+
+// Facebook Page Integration
+// Public callback endpoint (receives OAuth redirect from Facebook)
+Route::get('/facebook/callback', [FacebookController::class, 'callback']);
+
+// Protected Facebook endpoints
+Route::prefix('facebook')->middleware('auth:api')->group(function () {
+    // Connection management
+    Route::get('/status', [FacebookController::class, 'status']);
+    Route::post('/connect', [FacebookController::class, 'connect']);
+    Route::delete('/disconnect', [FacebookController::class, 'disconnect']);
+    Route::post('/toggle-auto-publish', [FacebookController::class, 'toggleAutoPublish']);
+    Route::post('/refresh-token', [FacebookController::class, 'refreshToken']);
+
+    // Posts management
+    Route::get('/posts', [FacebookController::class, 'posts']);
+    Route::get('/statistics', [FacebookController::class, 'statistics']);
+});
+
+// Facebook listing-specific endpoints (nested under listings)
+Route::prefix('listings/{listing}/facebook')->middleware('auth:api')->group(function () {
+    Route::post('/publish', [FacebookController::class, 'publishListing']);
+    Route::delete('/', [FacebookController::class, 'deleteListing']);
 });
