@@ -195,6 +195,8 @@ services:
       - waha_api_key
       - do_spaces_access_key
       - do_spaces_secret_key
+      - facebook_app_id
+      - facebook_app_secret
     networks:
       - immog-network
     environment:
@@ -232,6 +234,8 @@ services:
       - PASSPORT_PRIVATE_KEY_FILE=/run/secrets/passport_private_key
       - PASSPORT_PUBLIC_KEY_FILE=/run/secrets/passport_public_key
       - WAHA_API_KEY_FILE=/run/secrets/waha_api_key
+      - FACEBOOK_APP_ID_FILE=/run/secrets/facebook_app_id
+      - FACEBOOK_APP_SECRET_FILE=/run/secrets/facebook_app_secret
       # ClamAV antivirus scanner
       - CLAMAV_HOST=immog_clamav
       - CLAMAV_PORT=3310
@@ -268,6 +272,8 @@ services:
       - passport_client_secret
       - reverb_app_key
       - reverb_app_secret
+      - facebook_app_id
+      - facebook_app_secret
     networks:
       - immog-network
     environment:
@@ -286,6 +292,8 @@ services:
       - PASSPORT_PERSONAL_ACCESS_CLIENT_SECRET_FILE=/run/secrets/passport_client_secret
       - REVERB_APP_KEY_FILE=/run/secrets/reverb_app_key
       - REVERB_APP_SECRET_FILE=/run/secrets/reverb_app_secret
+      - FACEBOOK_APP_ID_FILE=/run/secrets/facebook_app_id
+      - FACEBOOK_APP_SECRET_FILE=/run/secrets/facebook_app_secret
     deploy:
       mode: replicated
       replicas: 1
@@ -312,6 +320,8 @@ services:
       - passport_client_secret
       - reverb_app_key
       - reverb_app_secret
+      - facebook_app_id
+      - facebook_app_secret
     networks:
       - immog-network
     environment:
@@ -330,6 +340,8 @@ services:
       - PASSPORT_PERSONAL_ACCESS_CLIENT_SECRET_FILE=/run/secrets/passport_client_secret
       - REVERB_APP_KEY_FILE=/run/secrets/reverb_app_key
       - REVERB_APP_SECRET_FILE=/run/secrets/reverb_app_secret
+      - FACEBOOK_APP_ID_FILE=/run/secrets/facebook_app_id
+      - FACEBOOK_APP_SECRET_FILE=/run/secrets/facebook_app_secret
     deploy:
       mode: replicated
       replicas: 1
@@ -809,3 +821,10 @@ secrets:
   # Backup
   backup_encryption_key:
     file: ./secrets/backup_encryption_key
+  # Facebook Integration
+  facebook_app_id:
+    external: true
+    name: immog_facebook_app_id
+  facebook_app_secret:
+    external: true
+    name: immog_facebook_app_secret
