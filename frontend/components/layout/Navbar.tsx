@@ -498,12 +498,14 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
                       </div>
 
                       {USER_MENU_ITEMS.filter((item) => {
-                        // Filter by account type if specified
-                        if (item.forAccountTypes && user?.type_compte) {
+                        // If no account type restriction, show to everyone
+                        if (!item.forAccountTypes) return true;
+                        // If has restriction, check user's account type
+                        if (user?.type_compte) {
                           return item.forAccountTypes.includes(user.type_compte);
                         }
-                        // Show item if no account type filter
-                        return !item.forAccountTypes;
+                        // User has no type_compte, hide restricted items
+                        return false;
                       }).map((item) => (
                         <Link
                           key={item.labelKey}
@@ -665,12 +667,14 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
                   {MOBILE_MENU_ITEMS.filter((item) => {
                     // Skip items that require auth if not authenticated
                     if (item.requiresAuth && !isAuthenticated) return false;
-                    // Filter by account type if specified
-                    if (item.forAccountTypes) {
-                      if (!isAuthenticated || !user?.type_compte) return false;
+                    // If no account type restriction, show to everyone
+                    if (!item.forAccountTypes) return true;
+                    // If has restriction, check user's account type
+                    if (user?.type_compte) {
                       return item.forAccountTypes.includes(user.type_compte);
                     }
-                    return true;
+                    // User has no type_compte, hide restricted items
+                    return false;
                   }).map((item) => (
                     <Link
                       key={item.labelKey}

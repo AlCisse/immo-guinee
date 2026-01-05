@@ -1,0 +1,109 @@
+{
+  "projectName": "ImmoGuinée",
+  "version": "3.2",
+  
+  "agents": {
+    "local": {
+      "file": ".claude/agents/local.md",
+      "name": "Agent LOCAL",
+      "description": "Développement local - Plus permissif",
+      "securityLevel": "moderate",
+      "triggers": [
+        "local",
+        "dev",
+        "docker-compose",
+        "npm",
+        "composer",
+        "artisan",
+        "test",
+        "migrate",
+        "seed",
+        "make:"
+      ]
+    },
+    "prod": {
+      "file": ".claude/agents/production.md",
+      "name": "Agent PRODUCTION",
+      "description": "Production sécurisée - Validation stricte",
+      "securityLevel": "maximum",
+      "triggers": [
+        "prod",
+        "production",
+        "deploy",
+        "swarm",
+        "server",
+        "vps",
+        "rollback",
+        "scale",
+        "cloudflare",
+        "waha",
+        "backup"
+      ]
+    }
+  },
+
+  "defaultAgent": "local",
+
+  "security": {
+    "deployKeyword": "deploy",
+    "publicRepository": true,
+    "secretPatterns": [
+      "sk-",
+      "pk_",
+      "api_key=",
+      "token=",
+      "password=",
+      "pwd=",
+      "postgres://",
+      "mysql://",
+      "AKIA",
+      "aws_secret",
+      "CF_",
+      "-----BEGIN RSA"
+    ],
+    "forbiddenCommands": {
+      "production": [
+        "migrate:fresh",
+        "migrate:reset",
+        "db:wipe",
+        "DROP DATABASE",
+        "DELETE FROM * WHERE 1=1"
+      ]
+    }
+  },
+
+  "references": {
+    "constitution": ".specify/memory/constitution.md",
+    "dataModel": "specs/001-immog-platform/data-model.md",
+    "plan": "specs/001-immog-platform/plan.md"
+  },
+
+  "production": {
+    "host": "ssh immoguinee",
+    "path": "~/immoguinee",
+    "mainScript": "./scripts/deploy-swarm.sh",
+    "services": {
+      "scalable": ["frontend", "php", "queue-worker", "nginx", "clamav"],
+      "singleInstance": ["traefik", "postgres", "redis", "minio", "n8n", "waha", "scheduler"],
+      "critical": ["traefik", "postgres", "redis", "minio"]
+    }
+  },
+
+  "i18n": {
+    "required": true,
+    "languages": ["fr", "en"],
+    "defaultLanguage": "fr"
+  },
+
+  "riskLevels": {
+    "🟢": "FAIBLE - Exécution libre",
+    "🟡": "MODÉRÉ - Validation simple", 
+    "🟠": "ÉLEVÉ - Explication requise",
+    "🔴": "CRITIQUE - Double confirmation",
+    "⚫": "INTERDIT - Bloqué"
+  }
+}
+```
+
+---
+
