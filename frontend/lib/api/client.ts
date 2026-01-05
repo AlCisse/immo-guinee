@@ -163,6 +163,12 @@ export const api = {
     delete: (id: string) =>
       apiClient.delete(`/listings/${id}`),
 
+    markAsRented: (id: string) =>
+      apiClient.patch(`/listings/${id}`, { disponible: false, statut: 'ARCHIVEE' }),
+
+    reactivate: (id: string) =>
+      apiClient.patch(`/listings/${id}`, { disponible: true, statut: 'ACTIVE' }),
+
     search: (params: Record<string, any>) =>
       apiClient.get('/listings/search', { params }),
 

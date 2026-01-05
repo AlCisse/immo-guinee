@@ -945,7 +945,9 @@
       "REJETEE": "Rejetee",
       "REJECTED": "Rejetee",
       "BROUILLON": "Brouillon",
-      "publiee": "Publiee"
+      "publiee": "Publiee",
+      "ARCHIVEE": "Louee",
+      "SUSPENDUE": "Suspendue"
     },
     "noListings": "Aucune annonce trouvee",
     "noListingsHint": "Essayez de modifier vos criteres de recherche.",
@@ -957,11 +959,19 @@
     "actions": {
       "viewListing": "Voir l'annonce",
       "edit": "Modifier",
-      "delete": "Supprimer"
+      "delete": "Supprimer",
+      "markAsRented": "Marquer comme loue",
+      "reactivate": "Reactiver"
     },
     "deleteConfirm": "Voulez-vous vraiment supprimer cette annonce ?",
     "deleteSuccess": "Annonce supprimee avec succes",
     "deleteError": "Erreur lors de la suppression",
+    "markAsRentedConfirm": "Voulez-vous marquer cette annonce comme louee ? Elle ne sera plus visible dans les recherches.",
+    "markAsRentedSuccess": "Annonce marquee comme louee",
+    "markAsRentedError": "Erreur lors de la mise a jour",
+    "reactivateConfirm": "Voulez-vous reactiver cette annonce ?",
+    "reactivateSuccess": "Annonce reactivee avec succes",
+    "reactivateError": "Erreur lors de la reactivation",
     "publishSuccess": "Votre annonce a ete publiee avec succes ! Elle sera visible apres validation.",
     "error": {
       "loading": "Erreur lors du chargement des annonces",

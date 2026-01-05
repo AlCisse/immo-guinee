@@ -13,6 +13,7 @@ import {
   HelpCircle,
   FileText,
   LayoutDashboard,
+  ClipboardList,
 } from 'lucide-react';
 
 // Route paths
@@ -34,6 +35,7 @@ export const ROUTES = {
 
   // User routes (protected)
   DASHBOARD: '/dashboard',
+  MY_LISTINGS: '/mes-annonces',
   PROFILE: '/profil',
   FAVORITES: '/favoris',
   MESSAGES: '/messages',
@@ -97,6 +99,7 @@ export const MOBILE_NAV_ITEMS: NavItem[] = [
 // User dropdown menu items
 export const USER_MENU_ITEMS: NavItem[] = [
   { href: ROUTES.DASHBOARD, icon: LayoutDashboard, labelKey: 'nav.dashboard', requiresAuth: true, forAccountTypes: ['AGENCE', 'AGENT', 'PROPRIETAIRE'] },
+  { href: ROUTES.MY_LISTINGS, icon: ClipboardList, labelKey: 'nav.myListings', requiresAuth: true },
   { href: ROUTES.PROFILE, icon: User, labelKey: 'nav.myProfile' },
   { href: ROUTES.FAVORITES, icon: Heart, labelKey: 'nav.myFavorites' },
   { href: ROUTES.MESSAGES, icon: MessageSquare, labelKey: 'nav.messages', badge: 'messages' },
@@ -109,6 +112,7 @@ export const USER_MENU_ITEMS: NavItem[] = [
 export const MOBILE_MENU_ITEMS: NavItem[] = [
   { href: ROUTES.HOME, icon: Home, labelKey: 'nav.home' },
   { href: ROUTES.DASHBOARD, icon: LayoutDashboard, labelKey: 'nav.dashboard', requiresAuth: true, forAccountTypes: ['AGENCE', 'AGENT', 'PROPRIETAIRE'] },
+  { href: ROUTES.MY_LISTINGS, icon: ClipboardList, labelKey: 'nav.myListings', requiresAuth: true },
   { href: ROUTES.SEARCH, icon: Search, labelKey: 'nav.search' },
   { href: ROUTES.FAVORITES, icon: Heart, labelKey: 'nav.myFavorites', requiresAuth: true },
   { href: ROUTES.MESSAGES, icon: MessageSquare, labelKey: 'nav.messages', requiresAuth: true, badge: 'messages' },
@@ -132,6 +136,7 @@ export function isActiveRoute(pathname: string, route: string): boolean {
 export function requiresAuth(pathname: string): boolean {
   const protectedPaths = [
     ROUTES.DASHBOARD,
+    ROUTES.MY_LISTINGS,
     ROUTES.PROFILE,
     ROUTES.FAVORITES,
     ROUTES.MESSAGES,
@@ -140,6 +145,7 @@ export function requiresAuth(pathname: string): boolean {
     ROUTES.CONTRACTS,
     ROUTES.RATINGS,
     '/dashboard',
+    '/mes-annonces',
     '/contrats',
     '/notations',
   ];

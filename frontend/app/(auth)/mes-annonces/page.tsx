@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 
 // Statut d'annonce
-type AnnonceStatus = 'ACTIVE' | 'EN_ATTENTE' | 'PENDING' | 'EXPIREE' | 'REJETEE' | 'REJECTED' | 'BROUILLON' | 'publiee';
+type AnnonceStatus = 'ACTIVE' | 'EN_ATTENTE' | 'PENDING' | 'EXPIREE' | 'REJETEE' | 'REJECTED' | 'BROUILLON' | 'publiee' | 'ARCHIVEE' | 'SUSPENDUE';
 
 interface Annonce {
   id: string;
@@ -69,6 +69,10 @@ const STATUS_CONFIG: Record<string, { icon: any; className: string }> = {
   EXPIREE: {
     icon: AlertCircle,
     className: 'bg-neutral-100 text-neutral-600 dark:bg-neutral-500/10 dark:text-neutral-400',
+  },
+  ARCHIVEE: {
+    icon: CheckCircle,
+    className: 'bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400',
   },
   REJETEE: {
     icon: XCircle,
@@ -152,6 +156,32 @@ export default function MesAnnoncesPage() {
     },
   });
 
+  // Mark as rented mutation
+  const markAsRentedMutation = useMutation({
+    mutationFn: (id: string) => api.listings.markAsRented(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-listings'] });
+      toast.success(t('myListings.markAsRentedSuccess'));
+      setActiveMenu(null);
+    },
+    onError: () => {
+      toast.error(t('myListings.markAsRentedError'));
+    },
+  });
+
+  // Reactivate listing mutation
+  const reactivateMutation = useMutation({
+    mutationFn: (id: string) => api.listings.reactivate(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-listings'] });
+      toast.success(t('myListings.reactivateSuccess'));
+      setActiveMenu(null);
+    },
+    onError: () => {
+      toast.error(t('myListings.reactivateError'));
+    },
+  });
+
   // Masquer le message de succes apres 5 secondes
   useEffect(() => {
     if (showSuccessMessage) {
@@ -181,6 +211,20 @@ export default function MesAnnoncesPage() {
   const handleDelete = (id: string) => {
     if (confirm(t('myListings.deleteConfirm'))) {
       deleteMutation.mutate(id);
+    }
+  };
+
+  // Marquer comme loue
+  const handleMarkAsRented = (id: string) => {
+    if (confirm(t('myListings.markAsRentedConfirm'))) {
+      markAsRentedMutation.mutate(id);
+    }
+  };
+
+  // Reactiver une annonce
+  const handleReactivate = (id: string) => {
+    if (confirm(t('myListings.reactivateConfirm'))) {
+      reactivateMutation.mutate(id);
     }
   };
 
@@ -300,7 +344,7 @@ export default function MesAnnoncesPage() {
 
             {/* Status Filter */}
             <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
-              {(['ALL', 'ACTIVE', 'EN_ATTENTE', 'EXPIREE', 'REJETEE'] as const).map((status) => (
+              {(['ALL', 'ACTIVE', 'EN_ATTENTE', 'ARCHIVEE', 'EXPIREE', 'REJETEE'] as const).map((status) => (
                 <button
                   key={status}
                   onClick={() => setFilterStatus(status)}
@@ -453,6 +497,36 @@ export default function MesAnnoncesPage() {
                                   <Edit className="w-4 h-4" />
                                   {t('myListings.actions.edit')}
                                 </Link>
+                                {/* Mark as rented - only for ACTIVE listings */}
+                                {annonce.statut === 'ACTIVE' && (
+                                  <button
+                                    onClick={() => handleMarkAsRented(annonce.id)}
+                                    disabled={markAsRentedMutation.isPending}
+                                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-green-50 dark:hover:bg-green-500/10 text-green-600 w-full disabled:opacity-50"
+                                  >
+                                    {markAsRentedMutation.isPending ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <CheckCircle className="w-4 h-4" />
+                                    )}
+                                    {t('myListings.actions.markAsRented')}
+                                  </button>
+                                )}
+                                {/* Reactivate - only for ARCHIVEE or EXPIREE listings */}
+                                {(annonce.statut === 'ARCHIVEE' || annonce.statut === 'EXPIREE') && (
+                                  <button
+                                    onClick={() => handleReactivate(annonce.id)}
+                                    disabled={reactivateMutation.isPending}
+                                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-blue-50 dark:hover:bg-blue-500/10 text-blue-600 w-full disabled:opacity-50"
+                                  >
+                                    {reactivateMutation.isPending ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <Clock className="w-4 h-4" />
+                                    )}
+                                    {t('myListings.actions.reactivate')}
+                                  </button>
+                                )}
                                 <button
                                   onClick={() => handleDelete(annonce.id)}
                                   disabled={deleteMutation.isPending}
