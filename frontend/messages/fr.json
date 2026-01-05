@@ -700,6 +700,8 @@
         "searchQuartier": "Rechercher un quartier...",
         "noQuartierFound": "Aucun quartier trouve",
         "popularQuartiers": "Quartiers populaires",
+        "descriptionAdded": "Description de localisation ajoutee !",
+        "descriptionAddedHint": "La description a ete ajoutee a votre annonce. Vous pouvez la modifier a l'etape 2.",
         "errors": {
           "notSupported": "La geolocalisation n'est pas supportee par votre navigateur",
           "permissionDenied": "Acces a la position refuse. Veuillez autoriser la geolocalisation.",

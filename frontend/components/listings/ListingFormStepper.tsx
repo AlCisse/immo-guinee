@@ -211,6 +211,7 @@ export default function ListingFormStepper({
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [optimizeError, setOptimizeError] = useState<string | null>(null);
   const [showSeoGuide, setShowSeoGuide] = useState(false);
+  const [locationDescAdded, setLocationDescAdded] = useState(false);
 
   // Refs for step containers to enable smooth scrolling
   const formContainerRef = useRef<HTMLDivElement>(null);
@@ -1360,30 +1361,56 @@ export default function ListingFormStepper({
                   }));
                 }}
                 onUseLocation={(data) => {
-                  // Update coordinates
-                  setFormData((prev) => ({
-                    ...prev,
-                    latitude: data.coordinates.latitude,
-                    longitude: data.coordinates.longitude,
-                  }));
-
-                  // Append location description to existing description
-                  if (data.locationDescription) {
-                    const newDescription = formData.description
-                      ? `${formData.description}\n\n${data.locationDescription}`
-                      : data.locationDescription;
-                    setFormData((prev) => ({
+                  // Update coordinates and append location description atomically
+                  setFormData((prev) => {
+                    let newDescription = prev.description;
+                    if (data.locationDescription) {
+                      newDescription = prev.description
+                        ? `${prev.description}\n\n${data.locationDescription}`
+                        : data.locationDescription;
+                    }
+                    return {
                       ...prev,
+                      latitude: data.coordinates.latitude,
+                      longitude: data.coordinates.longitude,
                       description: newDescription,
-                      locationDescription: undefined, // Clear after using
-                    }));
+                      locationDescription: undefined,
+                    };
+                  });
+
+                  if (data.locationDescription) {
                     setErrors((prev) => ({ ...prev, description: undefined }));
+                    // Show success notification
+                    setLocationDescAdded(true);
+                    setTimeout(() => setLocationDescAdded(false), 3000);
                   }
                 }}
                 regionError={errors.region}
                 prefectureError={errors.prefecture}
                 quartierError={errors.quartier}
               />
+
+              {/* Success notification when location description is added */}
+              <AnimatePresence>
+                {locationDescAdded && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="mt-4 p-4 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl border border-emerald-200 dark:border-emerald-500/20 flex items-center gap-3"
+                  >
+                    <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium text-emerald-800 dark:text-emerald-200">
+                        {t('location.geolocation.descriptionAdded')}
+                      </p>
+                      <p className="text-sm text-emerald-600 dark:text-emerald-400">
+                        {t('location.geolocation.descriptionAddedHint')}
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
         )}

@@ -700,6 +700,8 @@
         "searchQuartier": "Search neighborhood...",
         "noQuartierFound": "No neighborhood found",
         "popularQuartiers": "Popular neighborhoods",
+        "descriptionAdded": "Location description added!",
+        "descriptionAddedHint": "The description has been added to your listing. You can edit it in step 2.",
         "errors": {
           "notSupported": "Geolocation is not supported by your browser",
           "permissionDenied": "Location access denied. Please allow geolocation.",
