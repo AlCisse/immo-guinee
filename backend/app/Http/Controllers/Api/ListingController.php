@@ -643,6 +643,128 @@ class ListingController extends Controller
     }
 
     /**
+     * Mark a listing as rented
+     *
+     * @param Request $request
+     * @param string $id
+     * @return JsonResponse
+     */
+    public function markAsRented(Request $request, string $id): JsonResponse
+    {
+        $request->validate([
+            'rented_via_immoguinee' => 'required|boolean',
+        ]);
+
+        try {
+            $listing = $this->listingRepository->findById($id);
+
+            if (!$listing) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Annonce introuvable',
+                ], 404);
+            }
+
+            // Check authorization using policy
+            $this->authorize('markAsRented', $listing);
+
+            // Update listing status
+            $listing->statut = 'ARCHIVEE';
+            $listing->disponible = false;
+            $listing->rented_via_immoguinee = $request->rented_via_immoguinee;
+            $listing->rented_at = now();
+            $listing->save();
+
+            Log::info('Listing marked as rented', [
+                'listing_id' => $id,
+                'user_id' => $request->user()->id,
+                'rented_via_immoguinee' => $request->rented_via_immoguinee,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Annonce marquée comme louée',
+                'data' => $listing,
+            ]);
+
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Non autorisé',
+            ], 403);
+        } catch (Exception $e) {
+            Log::error('Failed to mark listing as rented', [
+                'error' => $e->getMessage(),
+                'listing_id' => $id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Une erreur est survenue',
+            ], 500);
+        }
+    }
+
+    /**
+     * Reactivate a rented/expired listing
+     *
+     * @param Request $request
+     * @param string $id
+     * @return JsonResponse
+     */
+    public function reactivate(Request $request, string $id): JsonResponse
+    {
+        try {
+            $listing = $this->listingRepository->findById($id);
+
+            if (!$listing) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Annonce introuvable',
+                ], 404);
+            }
+
+            // Check authorization using policy
+            $this->authorize('reactivate', $listing);
+
+            // Update listing status
+            $listing->statut = 'ACTIVE';
+            $listing->disponible = true;
+            $listing->rented_via_immoguinee = null;
+            $listing->rented_at = null;
+            $listing->expire_at = now()->addDays(config('app.listing_duration_days', 30));
+            $listing->save();
+
+            Log::info('Listing reactivated', [
+                'listing_id' => $id,
+                'user_id' => $request->user()->id,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Annonce réactivée avec succès',
+                'data' => $listing,
+            ]);
+
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Non autorisé',
+            ], 403);
+        } catch (Exception $e) {
+            Log::error('Failed to reactivate listing', [
+                'error' => $e->getMessage(),
+                'listing_id' => $id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Une erreur est survenue',
+            ], 500);
+        }
+    }
+
+    /**
      * Apply premium badge to listing
      *
      * @param Request $request

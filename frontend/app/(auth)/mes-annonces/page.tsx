@@ -23,6 +23,9 @@ import {
   ArrowLeft,
   Loader2,
   AlertCircle,
+  X,
+  Building2,
+  Users,
 } from 'lucide-react';
 
 // Statut d'annonce
@@ -131,6 +134,8 @@ export default function MesAnnoncesPage() {
     }
   }, [successParam, t]);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [showRentedModal, setShowRentedModal] = useState(false);
+  const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
 
   // Fetch user's listings from API
   const { data: listingsData, isLoading, error } = useQuery({
@@ -158,11 +163,14 @@ export default function MesAnnoncesPage() {
 
   // Mark as rented mutation
   const markAsRentedMutation = useMutation({
-    mutationFn: (id: string) => api.listings.markAsRented(id),
+    mutationFn: ({ id, rentedViaImmoguinee }: { id: string; rentedViaImmoguinee: boolean }) =>
+      api.listings.markAsRented(id, rentedViaImmoguinee),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-listings'] });
       toast.success(t('myListings.markAsRentedSuccess'));
       setActiveMenu(null);
+      setShowRentedModal(false);
+      setSelectedListingId(null);
     },
     onError: () => {
       toast.error(t('myListings.markAsRentedError'));
@@ -214,10 +222,17 @@ export default function MesAnnoncesPage() {
     }
   };
 
-  // Marquer comme loue
+  // Ouvrir le modal pour marquer comme loue
   const handleMarkAsRented = (id: string) => {
-    if (confirm(t('myListings.markAsRentedConfirm'))) {
-      markAsRentedMutation.mutate(id);
+    setSelectedListingId(id);
+    setShowRentedModal(true);
+    setActiveMenu(null);
+  };
+
+  // Confirmer le marquage comme loue
+  const confirmMarkAsRented = (rentedViaImmoguinee: boolean) => {
+    if (selectedListingId) {
+      markAsRentedMutation.mutate({ id: selectedListingId, rentedViaImmoguinee });
     }
   };
 
@@ -591,6 +606,100 @@ export default function MesAnnoncesPage() {
       {activeMenu && (
         <div className="fixed inset-0 z-0" onClick={() => setActiveMenu(null)} />
       )}
+
+      {/* Mark as Rented Modal */}
+      <AnimatePresence>
+        {showRentedModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+            onClick={() => setShowRentedModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white dark:bg-dark-card rounded-2xl shadow-xl max-w-md w-full p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">
+                  {t('myListings.markAsRentedModal.title')}
+                </h3>
+                <button
+                  onClick={() => setShowRentedModal(false)}
+                  className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-neutral-500" />
+                </button>
+              </div>
+
+              {/* Question */}
+              <p className="text-neutral-600 dark:text-neutral-400 mb-6">
+                {t('myListings.markAsRentedModal.question')}
+              </p>
+
+              {/* Options */}
+              <div className="space-y-3">
+                {/* Via ImmoGuinee */}
+                <button
+                  onClick={() => confirmMarkAsRented(true)}
+                  disabled={markAsRentedMutation.isPending}
+                  className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-primary-500 bg-primary-50 dark:bg-primary-500/10 hover:bg-primary-100 dark:hover:bg-primary-500/20 transition-colors disabled:opacity-50"
+                >
+                  <div className="p-3 bg-primary-500 rounded-xl">
+                    <Building2 className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-left flex-1">
+                    <p className="font-semibold text-primary-700 dark:text-primary-400">
+                      {t('myListings.markAsRentedModal.viaImmoguinee')}
+                    </p>
+                    <p className="text-sm text-primary-600/70 dark:text-primary-400/70">
+                      {t('myListings.markAsRentedModal.viaImmoguineeDesc')}
+                    </p>
+                  </div>
+                  {markAsRentedMutation.isPending && (
+                    <Loader2 className="w-5 h-5 animate-spin text-primary-500" />
+                  )}
+                </button>
+
+                {/* External */}
+                <button
+                  onClick={() => confirmMarkAsRented(false)}
+                  disabled={markAsRentedMutation.isPending}
+                  className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-neutral-200 dark:border-dark-border hover:border-neutral-300 dark:hover:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors disabled:opacity-50"
+                >
+                  <div className="p-3 bg-neutral-200 dark:bg-dark-bg rounded-xl">
+                    <Users className="w-6 h-6 text-neutral-600 dark:text-neutral-400" />
+                  </div>
+                  <div className="text-left flex-1">
+                    <p className="font-semibold text-neutral-700 dark:text-neutral-300">
+                      {t('myListings.markAsRentedModal.external')}
+                    </p>
+                    <p className="text-sm text-neutral-500 dark:text-neutral-500">
+                      {t('myListings.markAsRentedModal.externalDesc')}
+                    </p>
+                  </div>
+                  {markAsRentedMutation.isPending && (
+                    <Loader2 className="w-5 h-5 animate-spin text-neutral-500" />
+                  )}
+                </button>
+              </div>
+
+              {/* Cancel button */}
+              <button
+                onClick={() => setShowRentedModal(false)}
+                className="w-full mt-4 py-3 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-xl transition-colors"
+              >
+                {t('myListings.markAsRentedModal.cancel')}
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

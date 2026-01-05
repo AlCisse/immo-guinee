@@ -966,7 +966,16 @@
     "deleteConfirm": "Voulez-vous vraiment supprimer cette annonce ?",
     "deleteSuccess": "Annonce supprimee avec succes",
     "deleteError": "Erreur lors de la suppression",
-    "markAsRentedConfirm": "Voulez-vous marquer cette annonce comme louee ? Elle ne sera plus visible dans les recherches.",
+    "markAsRentedModal": {
+      "title": "Marquer comme loue",
+      "question": "Comment avez-vous trouve votre locataire ?",
+      "viaImmoguinee": "Via ImmoGuinee",
+      "viaImmoguineeDesc": "J'ai trouve mon locataire grace a ImmoGuinee",
+      "external": "Autre source",
+      "externalDesc": "J'ai trouve mon locataire par un autre moyen",
+      "cancel": "Annuler",
+      "confirm": "Confirmer"
+    },
     "markAsRentedSuccess": "Annonce marquee comme louee",
     "markAsRentedError": "Erreur lors de la mise a jour",
     "reactivateConfirm": "Voulez-vous reactiver cette annonce ?",

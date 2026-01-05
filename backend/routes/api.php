@@ -147,6 +147,8 @@ Route::prefix('listings')->group(function () {
         Route::put('/{id}', [ListingController::class, 'update']);
         Route::delete('/{id}', [ListingController::class, 'destroy']);
         Route::post('/{id}/premium', [ListingController::class, 'applyPremium']);
+        Route::post('/{id}/mark-as-rented', [ListingController::class, 'markAsRented']); // Mark listing as rented
+        Route::post('/{id}/reactivate', [ListingController::class, 'reactivate']); // Reactivate listing
         Route::get('/{id}/contacts', [ListingController::class, 'getListingContacts']); // Get contacts from conversations
 
         // Photo management routes (rate limited: 25 photos per hour)

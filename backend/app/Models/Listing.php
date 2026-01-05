@@ -54,6 +54,8 @@ class Listing extends Model
         'renouvellements_count',
         'latitude',
         'longitude',
+        'rented_via_immoguinee',
+        'rented_at',
     ];
 
     /**
@@ -98,10 +100,12 @@ class Listing extends Model
             // Note: 'photos' is handled by getPhotosAttribute accessor, not a cast
             'searchable_keywords' => 'array',
             'disponible' => 'boolean',
+            'rented_via_immoguinee' => 'boolean',
             'date_disponibilite' => 'date',
             'publie_at' => 'datetime',
             'expire_at' => 'datetime',
             'moderated_at' => 'datetime',
+            'rented_at' => 'datetime',
             'vues_count' => 'integer',
             'favoris_count' => 'integer',
             'contacts_count' => 'integer',

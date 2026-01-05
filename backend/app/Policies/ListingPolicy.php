@@ -25,12 +25,12 @@ class ListingPolicy
     public function view(?User $user, Listing $listing): bool
     {
         // Anyone can view a listing if it's available
-        if ($listing->statut === 'DISPONIBLE') {
+        if ($listing->statut === 'DISPONIBLE' || $listing->statut === 'ACTIVE') {
             return true;
         }
 
         // Owner can always view their own listings
-        if ($user && $listing->createur_id === $user->id) {
+        if ($user && $listing->user_id === $user->id) {
             return true;
         }
 
@@ -56,9 +56,9 @@ class ListingPolicy
      */
     public function update(User $user, Listing $listing): bool
     {
-        // Only owner can update, and only if listing is not LOUE_VENDU
-        return $listing->createur_id === $user->id
-            && $listing->statut !== 'LOUE_VENDU';
+        // Only owner can update, and only if listing is not ARCHIVEE (rented)
+        return $listing->user_id === $user->id
+            && $listing->statut !== 'ARCHIVEE';
     }
 
     /**
@@ -67,7 +67,7 @@ class ListingPolicy
     public function delete(User $user, Listing $listing): bool
     {
         // Only owner can delete, or admin
-        return $listing->createur_id === $user->id
+        return $listing->user_id === $user->id
             || $user->hasRole('admin');
     }
 
@@ -77,7 +77,7 @@ class ListingPolicy
     public function publish(User $user, Listing $listing): bool
     {
         // Only owner can publish
-        return $listing->createur_id === $user->id;
+        return $listing->user_id === $user->id;
     }
 
     /**
@@ -86,7 +86,27 @@ class ListingPolicy
     public function applyPremium(User $user, Listing $listing): bool
     {
         // Only owner can apply premium options
-        return $listing->createur_id === $user->id;
+        return $listing->user_id === $user->id;
+    }
+
+    /**
+     * Determine whether the user can mark the listing as rented.
+     */
+    public function markAsRented(User $user, Listing $listing): bool
+    {
+        // Only owner can mark as rented, and only if listing is ACTIVE
+        return $listing->user_id === $user->id
+            && $listing->statut === 'ACTIVE';
+    }
+
+    /**
+     * Determine whether the user can reactivate the listing.
+     */
+    public function reactivate(User $user, Listing $listing): bool
+    {
+        // Only owner can reactivate, and only if listing is ARCHIVEE or EXPIREE
+        return $listing->user_id === $user->id
+            && in_array($listing->statut, ['ARCHIVEE', 'EXPIREE']);
     }
 
     /**
