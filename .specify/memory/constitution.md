@@ -1,9 +1,13 @@
-# ImmoG Constitution
+# ImmoGuinée Constitution
 <!-- Plateforme d'Annonces Immobilières pour la Guinée-Conakry -->
 
 ## Vision du Projet
 
-**ImmoG** est une plateforme d'annonces immobilières moderne conçue pour digitaliser le marché immobilier guinéen. Elle permet aux particuliers, propriétaires et agents de publier gratuitement leurs annonces, de trouver des biens via des filtres avancés, de communiquer en toute sécurité, de générer des contrats automatiquement et de finaliser les transactions via Mobile Money.
+**ImmoGuinée** est la plateforme immobilière de référence en Guinée, conçue pour digitaliser et moderniser le marché immobilier guinéen. Elle permet aux particuliers, propriétaires et agences de publier gratuitement leurs annonces, de trouver des biens via des filtres avancés, de communiquer en toute sécurité, de générer des contrats automatiquement et de finaliser les transactions via Mobile Money.
+
+**Slogan**: *Trouvez votre logement idéal en Guinée*
+
+---
 
 ## Core Principles
 
@@ -12,31 +16,37 @@
 - Interface intuitive : toute action doit être réalisable en 3 clics maximum
 - Mobile-first : 90% des utilisateurs guinéens accèdent via smartphone
 - Temps de chargement < 3s sur connexion 3G/4G
-- Support du français simplifié (langage clair, pas de jargon)
+- Support bilingue : Français (défaut) + Anglais
 - Aide contextuelle visible sur chaque page critique
 - Mode sombre/clair pour confort visuel
+- PWA pour consultation offline
 
 ### II. Gratuité & Monétisation Éthique
 **Annonces gratuites illimitées pour démocratiser l'accès**
 - Publication d'annonces 100% gratuite (particuliers, agents, propriétaires)
 - Pas de limite de nombre d'annonces actives
 - Monétisation via services premium optionnels :
-  - Mise en avant d'annonces (boost)
+  - Mise en avant d'annonces (boost premium)
   - Badges de vérification (propriétaire vérifié)
   - Statistiques avancées pour agents
   - Forfaits pour agences immobilières
-- Transparence totale sur les tarifs
+- Commissions transparentes sur transactions :
+  - Location longue durée : 1 mois de loyer
+  - Location courte durée : 10% du montant
+  - Vente : 3% du prix de vente
+- Réductions par badge : Bronze (0%), Argent (0%), Or (-20%), Diamant (-40%)
 
 ### III. Contexte Local Guinéen
 **Adapter chaque fonctionnalité aux réalités du marché guinéen**
 - **Localisation** :
-  - Adressage par quartiers/communes (Matoto, Ratoma, Kaloum, etc.)
-  - Support de Conakry + villes principales (Kindia, Labé, Kankan, etc.)
-  - Carte interactive adaptée aux zones mal référencées
+  - Adressage par quartiers/communes (Matoto, Ratoma, Kaloum, Dixinn, Matam)
+  - Support de Conakry + villes principales (Kindia, Labé, Kankan, Mamou, etc.)
+  - Carte interactive Leaflet + OpenStreetMap adaptée aux zones mal référencées
+  - PostGIS pour recherche géospatiale
 - **Types de biens** :
-  - Locations : Studio, Chambre simple, Appartement, Villa, Duplex, Immeuble, Bureau, entrepot, logement courte séjour
-  - Ventes : Terrain, Maison, Immeuble, Commerce
-  - Biens atypiques : Chambre en colocation, Bureau partagé
+  - Locations : Studio, Chambre-Salon, Appartement (2-3ch), Villa, Duplex, Bureau, Magasin, Entrepôt
+  - Ventes : Terrain, Maison, Villa, Immeuble, Commerce
+  - Location courte durée : Logement meublé style Airbnb
 - **Formats locaux** :
   - Devise : Francs Guinéens (GNF) avec séparateurs d'espaces (ex: 5 000 000 GNF)
   - Superficies en m² et hectares
@@ -44,28 +54,35 @@
 
 ### IV. Communication Sécurisée
 **Protéger les utilisateurs contre fraudes et arnaques**
-- Messagerie interne obligatoire (pas d'échange de numéros avant accord mutuel)
+- Messagerie interne obligatoire avec chiffrement E2E
 - Système de signalement d'annonces suspectes (1 clic)
-- Détection automatique de mots-clés frauduleux
+- Détection automatique de mots-clés frauduleux (ContentModerationService)
 - Historique complet des conversations (traçabilité)
-- Notification push/SMS pour nouveaux messages
+- Notifications multi-canal : Push, SMS, Email, WhatsApp
 - Blocage d'utilisateurs malveillants
-- Mode anonyme pour les recherches (pas de numéro visible)
+- Mode anonyme pour les recherches (pas de numéro visible avant accord)
 
 ### V. Vérification & Confiance
 **Réduire les fraudes via un système de vérification multicouche**
 - **Vérification utilisateurs** :
-  - Numéro de téléphone (OTP SMS obligatoire)
+  - Numéro de téléphone (OTP SMS/WhatsApp obligatoire)
   - Adresse email (optionnelle mais recommandée)
   - Document d'identité (CNI/Passeport) pour badges vérifiés
+  - 2FA Google Authenticator pour admins
 - **Vérification annonces** :
   - Photos obligatoires (minimum 3, maximum 20)
-  - Validation automatique des prix aberrants (alertes)
+  - Validation automatique des prix aberrants
   - Géolocalisation GPS optionnelle mais valorisée
+  - Modération par queue avant publication
+- **Système de badges gamifié** :
+  - BRONZE : Utilisateur de base
+  - ARGENT : 1+ transaction, rating minimum
+  - OR : 5+ transactions, rating >= 4.0
+  - DIAMANT : 20+ transactions, rating >= 4.5
 - **Système de notation** :
   - Notes 1-5 étoiles après transaction
   - Commentaires publics modérés
-  - Badge "Vendeur fiable" après 5 transactions positives
+  - Badge automatique basé sur performance
 
 ### VI. Automatisation Légale
 **Simplifier la génération de documents légaux conformes**
@@ -73,16 +90,18 @@
   - Bail de location (durée déterminée/indéterminée)
   - Promesse de vente
   - État des lieux (entrée/sortie)
-  - Quittance de loyer
+  - Quittance de loyer (PDF)
 - **Conformité légale guinéenne** :
   - Templates validés par juristes locaux
   - Clauses obligatoires pré-remplies
   - Personnalisation guidée (formulaire simple)
+  - Durée minimum 7 jours avant résiliation
+  - Préavis 3 mois pour terminaison
 - **Signature électronique** :
   - Signature via OTP SMS (2FA)
   - Horodatage sécurisé
   - Archivage crypté 10 ans minimum
-  - Export PDF signé
+  - Export PDF signé avec certificat d'authenticité
 
 ### VII. Paiements Sécurisés
 **Intégration native avec Mobile Money local**
@@ -92,55 +111,54 @@
   - Paiement espèces (marqué "à confirmer")
 - **Fonctionnalités** :
   - Paiement post-signature uniquement (sécurité)
-  - Frais de service transparents (max 2%)
-  - Reçu automatique par SMS + Email
+  - Frais de service transparents
+  - Reçu automatique par SMS + Email + WhatsApp
   - Historique complet des transactions
-  - Remboursement en cas de litige (sous 48h)
+  - Remboursement en cas de litige
 - **Sécurité** :
   - Escrow system : argent bloqué jusqu'à validation
-  - 2FA obligatoire pour paiements > 500k GNF
-  - Détection de fraudes (machine learning)
+  - 2FA obligatoire pour paiements sensibles
+  - Détection de fraudes (FraudDetectionService)
+  - Webhooks sécurisés pour callbacks
 
 ### VIII. Performance & Scalabilité
 **Garantir une expérience fluide même avec forte croissance**
 - Support de 100,000+ annonces actives simultanées
-- Temps de recherche < 500ms (même avec filtres complexes)
-- Optimisation images automatique (compression, WebP, lazy loading)
-- Cache intelligent pour annonces populaires (Redis)
-- CDN pour assets statiques (images, CSS, JS)
-- Base de données répliquée (haute disponibilité)
+- Temps de recherche < 500ms (Elasticsearch)
+- Optimisation images automatique (Sharp, WebP, lazy loading)
+- Cache intelligent (Redis + Varnish)
+- CDN pour assets statiques (DigitalOcean Spaces)
+- Base de données répliquée PostgreSQL avec PostGIS
+- Docker Swarm pour haute disponibilité
 
 ### IX. Automatisation via n8n (NON-NÉGOCIABLE)
 **Orchestrer tous les workflows automatisés avec n8n**
 - **Plateforme centrale** : n8n (open source) pour tous les workflows
-- **Workflows critiques** :
-  - Nouvelle annonce → Notifications utilisateurs matching critères
-  - Nouveau message → Alerte WhatsApp (si opt-in) + SMS + Push
-  - Signature contrat → Génération PDF + Archivage S3 + Notifications
-  - Paiement reçu → Génération quittance + Notifications + Mise à jour DB
-  - Rappels automatiques → Échéances loyer, visites programmées
-  - Modération → Détection mots-clés frauduleux + Alerte admin
+- **Workflows implémentés** :
+  - `send-otp-whatsapp.json` : Envoi OTP via WhatsApp
+  - `paiement-quittance.json` : Génération quittance après paiement
+  - `signature-contrat-pdf.json` : Workflow signature contrat
+  - `escrow-timeout.json` : Gestion timeout escrow
+  - `nouveau-message-alerts.json` : Alertes nouveaux messages
+  - `docker-ops-telegram.json` : Alertes ops via Telegram
 - **Intégrations n8n** :
   - WAHA (WhatsApp) : Notifications opt-in
-  - Orange SMS API : Messages critiques
+  - Twilio SMS : Messages critiques
   - PostgreSQL : Lecture/écriture base de données
   - S3 : Upload/download documents
   - Email (SMTP) : Notifications secondaires
-- **Avantages** :
-  - Visual workflow builder (facilité maintenance)
-  - Auto-hébergé (contrôle total, confidentialité)
-  - Extensible (custom nodes si besoin)
-  - Logs détaillés pour debugging
+  - Telegram : Alertes opérationnelles
 
 ### X. Open Source First (PRINCIPE FONDAMENTAL)
 **Privilégier les solutions open source pour indépendance et pérennité**
 - **Stack 100% open source** :
-  - Frontend : Next.js, React, TailwindCSS
-  - Backend : Node.js, Express/Fastify
-  - Base de données : PostgreSQL, Redis
+  - Frontend : Next.js 15, React 18, TailwindCSS
+  - Backend : Laravel 12, PHP 8.2+
+  - Base de données : PostgreSQL 15+, Redis 7+
+  - Search : Elasticsearch 8.17
   - Automation : n8n
-  - Messaging : WAHA (WhatsApp), Socket.io
-  - Infrastructure : Docker, Linux
+  - Messaging : WAHA (WhatsApp), Socket.io, Laravel Reverb
+  - Infrastructure : Docker, Docker Swarm, Traefik
 - **Avantages** :
   - Pas de vendor lock-in
   - Coûts maîtrisés (pas de licences)
@@ -148,304 +166,405 @@
   - Auditabilité (sécurité, conformité)
   - Personnalisation totale
 - **Exceptions autorisées** (services payants essentiels) :
-  - Hébergement cloud (OVH, AWS, DigitalOcean)
+  - Hébergement cloud (DigitalOcean)
   - Mobile Money APIs (Orange, MTN) - pas d'alternative
-  - Monitoring (Sentry) - version open source disponible mais hosted plus pratique
-  - CDN (optionnel si performance critique)
+  - Sentry (error tracking) - hosted plus pratique
+  - Twilio (SMS)
 
-## Exigences Techniques
+---
 
-### Stack Technologique
+## Stack Technologique Actuelle
 
-**Frontend** :
-- Framework : Next.js 14+ (App Router, React 18+)
-- UI Library : TailwindCSS + Shadcn/UI
-- État global : Zustand ou React Context
-- Formulaires : React Hook Form + Zod validation
-- Maps : Leaflet + OpenStreetMap (gratuit)
-- PWA : Support offline pour consultation annonces
+### Frontend (Next.js 15)
+```
+Framework       : Next.js 15.1.0 (App Router, SSR/SSG)
+Runtime         : Node.js >= 20.0.0
+TypeScript      : 5.7.2 (strict mode)
+UI Library      : TailwindCSS 3.4.1 + Headless UI 2.2.9
+State           : TanStack React Query 5.62 + React Context
+Forms           : React Hook Form 7.51 + Zod 3.24
+i18n            : next-intl 4.6.1 (FR + EN)
+Maps            : Leaflet 1.9.4 + React Leaflet 4.2.1
+Animations      : Framer Motion 11.18
+Icons           : Lucide React 0.469
+Real-time       : Socket.io-client 4.7 + Laravel Echo 1.16
+HTTP Client     : Axios 1.7.9
+Date            : date-fns 3.3.1
+```
 
-**Backend** :
-- Runtime : Node.js 20+ LTS
-- Framework : Express.js ou Fastify
-- API : RESTful + endpoints GraphQL (phase 2)
-- Auth : JWT + Refresh tokens, bcrypt
-- File upload : Multer + Sharp (compression images)
+### Backend (Laravel 12)
+```
+Framework       : Laravel 12.40 (PHP 8.2 || 8.3)
+API Auth        : Laravel Passport 12.4 + Sanctum 4.0
+WebSocket       : Laravel Reverb 1.0
+Queue           : Redis + Laravel Horizon 5.30
+Search          : Elasticsearch 8.17 + Laravel Scout 10.12
+PDF             : barryvdh/laravel-dompdf 3.0
+Images          : Intervention/image 3.10
+Permissions     : Spatie/laravel-permission 6.4
+2FA             : PragmaRX/google2fa-laravel 2.2
+Storage         : AWS SDK PHP 3.368 (S3-compatible)
+```
 
-**Base de données** :
-- Principal : PostgreSQL 15+ (données structurées)
-  - Extensions : PostGIS (géolocalisation), pg_trgm (recherche fulltext)
-- Cache : Redis 7+ (sessions, cache recherches)
-- Storage : AWS S3 / DigitalOcean Spaces (images, documents)
+### Base de Données
+```
+Principal       : PostgreSQL 15+ avec PostGIS 3.5
+Extensions      : PostGIS (géolocalisation), pg_trgm (fulltext)
+Cache/Session   : Redis 7.4-alpine
+Search          : Elasticsearch 8.17.0
+Storage         : DigitalOcean Spaces (S3-compatible)
+Backup          : MinIO (local cache) + DO Spaces (production)
+```
 
-**Messagerie & Temps réel** :
-- WebSocket : Socket.io (chat temps réel)
-- WhatsApp : WAHA (WhatsApp HTTP API - open source, auto-hébergé)
-  - Notifications opt-in utilisateurs
-  - Rappels de paiement, confirmations, alertes
-  - Multi-sessions support
-- Notifications : Firebase Cloud Messaging (push mobile) ou alternatives open source (Gotify, ntfy.sh)
-- SMS : API locale guinéenne (Orange SMS API)
-- Email : Mailtrain (open source) ou Resend/SendGrid (si budget)
+### Infrastructure Docker
+```
+Orchestration   : Docker Swarm (production)
+Reverse Proxy   : Traefik v2.11 (SSL/TLS auto via Let's Encrypt)
+Cache HTTP      : Varnish 7.6
+WebSocket       : Laravel Reverb
+Automation      : n8n
+WhatsApp        : WAHA
+Antivirus       : ClamAV (scan fichiers uploadés)
+Secrets         : Docker Secrets
+```
 
-**Paiements** :
-- Orange Money API (REST)
-- MTN Mobile Money API (SOAP → REST wrapper)
-- Webhook handlers pour callbacks
+### Monitoring & Observabilité
+```
+Metrics         : Prometheus v3.1.0
+Dashboards      : Grafana 11.4.0
+Alerting        : AlertManager 0.28.0
+Container       : cAdvisor 0.51.0
+Exporters       : Node, Redis, PostgreSQL
+Error Tracking  : Sentry
+Session Replay  : LogRocket
+DB Admin        : PgAdmin 4
+```
 
-**Automation & Workflows** :
-- n8n : Workflow automation platform (open source, auto-hébergé)
-  - Interface web visuelle pour créer workflows
-  - 300+ intégrations natives (PostgreSQL, S3, WAHA, etc.)
-  - Webhooks pour événements temps réel
-  - Scheduling (cron jobs pour rappels automatiques)
-  - Error handling & retry logic
-- Exemples workflows :
-  - Trigger: Nouvelle annonce → Actions: Notification WhatsApp + Email matching users
-  - Trigger: Paiement confirmé → Actions: Générer quittance PDF + Upload S3 + Notifier parties
+---
 
-**Infrastructure** :
-- Containerisation : Docker + Docker Compose
-  - Containers: frontend, backend, postgresql, redis, n8n, waha
-  - Docker Compose pour orchestration locale
-  - Production: Docker Swarm ou Kubernetes (si scale)
-- Hébergement : OVH (priorité - data souveraineté) ou DigitalOcean
-- CI/CD : GitHub Actions (open source, gratuit pour projets publics)
-- Monitoring :
-  - Sentry (errors - version self-hosted possible)
-  - Grafana + Prometheus (metrics - open source)
-  - Uptime Kuma (monitoring uptime - open source)
-- Backup : Automated daily PostgreSQL dumps → S3
-  - Rétention : 30 jours
-  - Tests de restauration mensuels
+## Architecture
 
-### Architecture
+### Pattern Architectural
+- **Backend** : MVC + Service Layer + Repository Pattern
+- **Frontend** : Components + Custom Hooks + Context API
+- **API** : RESTful JSON avec pagination et filtering
+- **Real-time** : WebSocket via Reverb + Socket.io + Laravel Echo
+- **Async** : Queue Redis avec Horizon monitoring
 
-**Pattern** : Monolithe modulaire (début) → Microservices (phase 4)
+### Modules Backend
+```
+app/
+├── Actions/          → Logique métier réutilisable
+├── Channels/         → Notification channels (Email, SMS, WhatsApp)
+├── Console/Commands/ → Artisan commands
+├── Events/           → Events (BadgeUpgraded, PaymentReceived, etc.)
+├── Http/Controllers/ → 26 contrôleurs API
+├── Jobs/             → 11+ jobs asynchrones
+├── Models/           → 24 modèles Eloquent
+├── Notifications/    → Classes de notification
+├── Policies/         → Authorization policies
+├── Repositories/     → Data access layer
+└── Services/         → 20+ services métier
+```
 
-**Modules** :
-- `auth` : Authentification, gestion utilisateurs
-- `listings` : Annonces (CRUD, recherche)
-- `messaging` : Chat interne
-- `contracts` : Génération documents légaux
-- `payments` : Intégration Mobile Money
-- `notifications` : SMS, Email, Push, WhatsApp (via n8n)
-- `workflows` : Webhooks pour déclencher workflows n8n
-- `admin` : Modération, analytics
+### Modules Frontend
+```
+app/
+├── (public)/      → Routes publiques (home, search, contact)
+├── (auth)/        → Routes auth (login, register)
+├── (client)/      → Routes client (dashboard, listings, contracts)
+├── (admin)/       → Routes admin (moderation, users)
+├── (moderator)/   → Routes modérateur
+components/        → Composants UI réutilisables
+lib/
+├── api/           → Client API Axios
+├── auth/          → Context d'authentification
+├── hooks/         → 15+ custom hooks
+├── i18n/          → Configuration i18n
+├── socket/        → Socket.io + Laravel Echo
+└── utils/         → Utilitaires
+```
 
-**Architecture n8n** :
-- n8n tourne en container Docker séparé
-- Backend expose des webhooks pour événements critiques :
-  - POST /webhooks/listing-created
-  - POST /webhooks/message-received
-  - POST /webhooks/contract-signed
-  - POST /webhooks/payment-confirmed
-- n8n écoute ces webhooks et déclenche workflows appropriés
-- Workflows n8n peuvent appeler API backend pour actions (update DB, etc.)
+### Services Backend Clés
+| Service | Responsabilité |
+|---------|----------------|
+| OtpService | Génération/validation OTP |
+| MessageNotificationService | Notifications multi-canal |
+| ContentModerationService | Modération automatique |
+| ListingPhotoService | Optimisation images |
+| EncryptionService | Chiffrement E2E |
+| SignatureService | Signature électronique |
+| OrangeMoneyService | Intégration Orange Money |
+| MtnMomoService | Intégration MTN MoMo |
+| EscrowService | Gestion escrow |
+| CertificationService | Vérification documents |
+| FraudDetectionService | Détection fraude |
 
-**Sécurité** :
-- HTTPS obligatoire (Let's Encrypt)
-- Helmet.js (headers sécurisés)
-- Rate limiting (express-rate-limit)
-- CORS configuré strictement
-- Sanitisation inputs (validator.js)
-- Protection CSRF pour formulaires
+---
+
+## Fonctionnalités Implémentées
+
+### Authentification & Sécurité
+- [x] Inscription/Connexion avec OTP SMS/WhatsApp
+- [x] Normalisation numéros téléphone (Guinée + international)
+- [x] 2FA Google Authenticator (admins)
+- [x] OAuth2 via Laravel Passport
+- [x] Rate limiting par endpoint
+- [x] Tokens refresh automatique
+
+### Gestion des Annonces
+- [x] CRUD complet annonces
+- [x] 10 types de biens (Studio, Chambre-Salon, Villa, etc.)
+- [x] 3 types de transactions (Location, Location courte, Vente)
+- [x] Galerie photos dynamique (max 20)
+- [x] Modération par queue
+- [x] Statuts : pending → approved → active → expired
+- [x] Listings premium avec upgrade
+- [x] Compteurs (vues, favoris, contacts)
+- [x] Géolocalisation PostGIS
+- [x] Expiration auto 30 jours
+- [x] Renouvellement
+
+### Messagerie
+- [x] Conversations entre utilisateurs
+- [x] Messages avec statuts (sent, delivered, read)
+- [x] Chiffrement E2E
+- [x] Médias chiffrés
+- [x] WebSocket temps réel
+- [x] Archive/suppression
+- [x] Recherche dans conversations
+
+### Contrats
+- [x] Signature électronique OTP
+- [x] Génération PDF
+- [x] Multi-signatures
+- [x] Certificat d'authenticité
+- [x] Archivage 10 ans
+- [x] Workflow terminaison avec préavis
+- [x] Envoi multi-canal (email, SMS, WhatsApp)
+
+### Paiements
+- [x] Orange Money API
+- [x] MTN Mobile Money API
+- [x] Escrow system
+- [x] Génération quittances PDF
+- [x] Historique transactions
+- [x] Webhooks sécurisés
+- [x] Commissions configurables
+
+### Notifications
+- [x] Email (SMTP)
+- [x] WhatsApp (WAHA)
+- [x] SMS (Twilio)
+- [x] Telegram (bot)
+- [x] Push (Expo)
+- [x] Database notifications
+- [x] Jobs asynchrones
+
+### Modération & Admin
+- [x] Dashboard admin complet
+- [x] Queue modération (listings, messages, ratings)
+- [x] Rôles : admin, moderator, mediator
+- [x] Audit logs
+- [x] Bulk notifications
+- [x] Gestion utilisateurs/rôles
+
+### Système de Badges
+- [x] 4 niveaux : Bronze, Argent, Or, Diamant
+- [x] Critères automatiques (transactions, rating)
+- [x] Upload documents certification
+- [x] Vérification par admin
+- [x] Events BadgeUpgraded/Downgraded
+
+### Visites
+- [x] Planification avec dates/heures
+- [x] Statuts : pending → confirmed → completed
+- [x] Notifications multi-canal
+- [x] Liens publics pour réponse
+- [x] Statistiques par listing
+
+### Assurances
+- [x] Souscription
+- [x] Réclamations
+- [x] Résiliation
+- [x] Certificats PDF
+
+### Internationalisation
+- [x] Français (défaut)
+- [x] Anglais
+- [x] Système next-intl
+- [x] ~2300+ clés de traduction
+
+---
+
+## Rôles et Permissions
+
+### Rôles (6)
+| Rôle | Description | 2FA |
+|------|-------------|-----|
+| admin | Accès complet, gestion totale | Requis |
+| moderator | Modération contenu et listings | Optionnel |
+| mediator | Résolution disputes | Optionnel |
+| proprietaire | Propriétaire immobilier | Non |
+| chercheur | Locataire potentiel | Non |
+| agence | Agence immobilière | Non |
+
+### Permissions (11)
+- manage_users
+- manage_roles
+- manage_listings
+- manage_contracts
+- manage_payments
+- manage_certifications
+- view_analytics
+- moderate_content
+- moderate_listings
+- moderate_ratings
+- resolve_disputes
+
+---
+
+## Statuts et États
+
+### Annonces (Listings)
+```
+pending → approved → active → expired/archived
+                  ↘ suspended
+```
+
+### Contrats
+```
+pending → signed → completed
+       ↘ cancelled
+       ↘ terminated (avec préavis)
+```
+
+### Paiements
+```
+pending → processing → completed
+                    ↘ failed
+                    ↘ refunded
+```
+
+### Messages
+```
+sent → delivered → read
+```
+
+### Visites
+```
+pending → confirmed → completed
+       ↘ cancelled
+```
+
+---
+
+## Rate Limiting
+
+| Endpoint | Limite |
+|----------|--------|
+| Auth | 5 req/min |
+| OTP | Custom limiter |
+| Contact form | 5 req/min |
+| AI endpoints | 10 req/min |
+| Listings creation | 5/heure |
+| Listing photos | 25/heure |
+
+---
+
+## Intégrations Externes
+
+### WAHA (WhatsApp)
+- Endpoint : http://waha:3000
+- Webhook : /api/webhooks/waha
+- Events : message, message.ack, session.status
+- Usage : OTP, notifications, messages commerciaux
+
+### n8n (Automation)
+- Port : 5678
+- 6 workflows actifs
+- Webhooks Laravel → n8n
+
+### Mobile Money
+- Orange Money : REST API
+- MTN MoMo : REST API (wrapper SOAP)
+- Webhooks callbacks
+
+### Stockage S3
+- Production : DigitalOcean Spaces (fra1)
+- Dev : MinIO local
+- Bucket : immoguinee-images
+
+### Autres
+- Twilio : SMS
+- Telegram : Alertes ops
+- Sentry : Error tracking
+- LogRocket : Session replay
+- Nominatim : Geocoding
+
+---
+
+## Sécurité
+
+### Mesures Implémentées
+- HTTPS obligatoire (Let's Encrypt via Traefik)
+- Headers sécurisés (Helmet équivalent Laravel)
+- Rate limiting multi-niveau
+- CORS strict
+- Sanitisation inputs
+- Protection CSRF
 - Chiffrement données sensibles (AES-256)
+- 2FA pour admins
+- Chiffrement E2E messages
+- Docker Secrets pour credentials
+- ClamAV scan fichiers uploadés
 
-### Testing & Qualité (NON-NÉGOCIABLE)
+### Authentification
+- JWT + Refresh tokens
+- OTP SMS/WhatsApp
+- Google Authenticator 2FA
+- Sessions Redis (120min TTL)
 
-**Tests obligatoires** :
-- **Unitaires** : Jest + 70% coverage minimum (logique métier)
-- **Intégration** : Supertest (API endpoints)
+---
+
+## Testing & Qualité
+
+### Tests Requis
+- **Unitaires** : PHPUnit + Jest (70% coverage min)
+- **Intégration** : Laravel Feature Tests
 - **E2E** : Playwright (parcours critiques)
-  - Publication annonce
-  - Recherche + filtres
-  - Envoi message
-  - Génération contrat
-  - Paiement Mobile Money
-- **Performance** : k6 ou Artillery (load testing)
-- **Sécurité** : OWASP ZAP (scan automatisé)
+- **Performance** : k6 / Artillery
+- **Sécurité** : OWASP ZAP
 
-**Qualité code** :
-- ESLint + Prettier (formatage automatique)
-- Husky (pre-commit hooks)
+### Qualité Code
+- ESLint + Prettier (frontend)
+- PHP CS Fixer (backend)
 - TypeScript strict mode
-- Code review obligatoire (1+ reviewer)
+- Pre-commit hooks
+- Code review obligatoire
 
-## Roadmap de Développement
-
-### Mois 1 : Fondations & Annonces (Semaines 1-4)
-
-**Semaine 1-2 : Infrastructure & Auth**
-- Setup projet (Next.js + PostgreSQL + Docker)
-- Setup n8n (container Docker + configuration initiale)
-- Setup WAHA (container Docker + connexion WhatsApp Business)
-- Authentification (inscription, login, OTP SMS)
-- Dashboard basique utilisateur
-- Upload photos (max 20 par annonce)
-- Workflow n8n test : Nouvel utilisateur → Email bienvenue
-
-**Semaine 3-4 : Annonces & Recherche**
-- CRUD annonces (créer, éditer, supprimer)
-- Recherche avec filtres avancés :
-  - Type bien (location, vente)
-  - Localisation (commune, quartier)
-  - Prix min/max
-  - Superficie min/max
-  - Nombre de chambres/salons
-- Pagination + tri (récent, prix, popularité)
-- Page détail annonce (galerie photos, carte, contact)
-
-**Semaine 4 : Messagerie & Notation**
-- Chat temps réel (Socket.io)
-- Historique conversations
-- Système notation 1-5 étoiles
-- Commentaires publics
-- Workflows n8n notifications :
-  - Nouveau message → WhatsApp (si opt-in activé) + SMS + Push
-  - Nouvelle annonce → Alertes utilisateurs avec critères matching
-  - Paramètres utilisateur : Opt-in/out notifications WhatsApp
-
-**Livrables Mois 1** :
-- ✅ Publication annonces gratuites illimitées
-- ✅ Recherche + filtres avancés (7+ critères)
-- ✅ Messagerie interne sécurisée
-- ✅ Système notation + commentaires
-- ✅ n8n opérationnel (3+ workflows actifs)
-- ✅ WAHA connecté (notifications WhatsApp opt-in)
-- ✅ 50 annonces test publiées
-- ✅ 20 utilisateurs beta internes testant notifications WhatsApp
-
-### Mois 2 : Contrats & Documents (Semaines 5-8)
-
-**Semaine 5-6 : Génération Contrats**
-- Templates contrats (Bail location, Promesse vente, État des lieux)
-- Formulaire guidé personnalisation contrats
-- Prévisualisation PDF avant signature
-- Validation juridique (collaboration juriste local)
-
-**Semaine 7 : Signatures Électroniques**
-- Système signature OTP SMS (2FA)
-- Horodatage sécurisé (timestamp server)
-- Multi-signatures (propriétaire + locataire)
-- Export PDF signé + cachet électronique
-- Workflow n8n :
-  - Demande signature → WhatsApp + SMS aux parties
-  - Contrat signé → PDF généré + Upload S3 + Notifications parties + Email récapitulatif
-
-**Semaine 8 : Archivage & Vérification**
-- Archivage sécurisé S3 (chiffrement AES-256)
-- Accès documents signés (liste, téléchargement)
-- Vérification documents uploadés :
-  - CNI/Passeport (OCR détection texte)
-  - Titre foncier (format PDF validé)
-  - Photos (détection duplicatas)
-- Badge "Vérifié" pour utilisateurs
-
-**Livrables Mois 2** :
-- ✅ Génération contrats automatiques (3 types)
-- ✅ Signatures électroniques OTP SMS
-- ✅ Archivage sécurisé 10 ans
-- ✅ Module vérification documents
-- ✅ 100 contrats test générés
-- ✅ Tests juridiques validés
-
-### Mois 3 : Paiements & Lancement (Semaines 9-12)
-
-**Semaine 9 : Intégration Mobile Money**
-- API Orange Money (sandbox → production)
-- API MTN Mobile Money (sandbox → production)
-- Webhook handlers (confirmations paiements)
-- Escrow system (argent bloqué)
-- Workflows n8n paiements :
-  - Paiement initié → SMS confirmation + WhatsApp recap
-  - Paiement confirmé → Génération quittance PDF + Upload S3 + Notifications + Update statut DB
-  - Rappel échéance → WhatsApp (J-3, J-1) + SMS (J-0)
-  - Paiement en retard → Notification propriétaire + Alerte locataire
-
-**Semaine 10 : Dashboard & Analytics**
-- Dashboard utilisateur :
-  - Mes annonces (actives, expirées)
-  - Mes conversations
-  - Mes contrats signés
-  - Mes paiements
-- Dashboard agent immobilier :
-  - Statistiques annonces (vues, clics, messages)
-  - Leads générés
-  - Commissions calculées
-- Dashboard admin :
-  - Modération annonces
-  - Gestion utilisateurs
-  - Analytics globales
-
-**Semaine 11 : Tests Beta**
-- Recrutement 100 utilisateurs beta (Conakry)
-- Tests terrain : publication 200+ annonces réelles
-- Collecte feedback (formulaire + interviews)
-- Corrections bugs critiques
-
-**Semaine 12 : Optimisation & Lancement**
-- Optimisation performance (caching, images)
-- Sécurisation finale (audit OWASP)
-- Documentation utilisateur (FAQ, guides)
-- Campagne marketing pré-lancement (réseaux sociaux)
-- **Lancement public** 🚀
-
-**Livrables Mois 3** :
-- ✅ Intégration Mobile Money (Orange + MTN)
-- ✅ Paiements post-signature sécurisés
-- ✅ Dashboard utilisateurs complet
-- ✅ Dashboard agents immobiliers
-- ✅ Dashboard admin modération
-- ✅ Tests beta 100 utilisateurs
-- ✅ 500+ annonces réelles
-- ✅ Lancement public
-
-## Post-Lancement (Mois 4-6)
-
-**Améliorations prioritaires** :
-- **Workflows n8n avancés** :
-  - Détection fraudes ML (patterns suspects)
-  - Recommandations personnalisées IA
-  - Analytics prédictifs (meilleur moment pour publier annonce)
-  - A/B testing automatisé (optimisation conversion)
-- **Features utilisateurs** :
-  - Galerie vidéos (visites virtuelles)
-  - Visite 360° (photos panoramiques)
-  - Chatbot WhatsApp via WAHA (FAQ automatiques)
-  - Système alertes avancé (prix marché, nouveaux biens)
-- **Expansion géographique** :
-  - Extension villes province (Kindia, Labé, Kankan)
-  - Adaptation langues locales (Soussou, Poular, Malinké)
-- **Applications natives** :
-  - Application mobile React Native (iOS + Android)
-  - Progressive Web App (PWA) optimisée
+---
 
 ## Gates de Qualité
 
 **Avant chaque déploiement** :
-- ✅ Tous les tests passent (CI/CD green)
-- ✅ Pas de régression performance (Lighthouse > 80)
-- ✅ Pas de failles sécurité critiques (OWASP scan)
-- ✅ Code review approuvé (1+ senior dev)
-- ✅ Documentation mise à jour
-- ✅ Test manuel sur Android low-end (< 150$)
-- ✅ Backup base de données effectué
+- [ ] Tous les tests passent
+- [ ] Pas de régression performance
+- [ ] Pas de failles sécurité critiques
+- [ ] Code review approuvé
+- [ ] Documentation mise à jour
+- [ ] Test sur device low-end
+- [ ] Backup DB effectué
 
-**Métriques de succès** :
-- Mois 1 : 50 utilisateurs actifs, 100 annonces
-- Mois 2 : 200 utilisateurs, 500 annonces, 50 contrats générés
-- Mois 3 : 500 utilisateurs, 1000 annonces, 100 transactions
-- Mois 6 : 5000 utilisateurs, 10000 annonces, 1000 transactions
+---
 
 ## Gouvernance
 
 ### Règles de Développement
 - Cette constitution guide toutes les décisions techniques
-- Toute déviation doit être justifiée et documentée (ADR)
-- Les features non planifiées nécessitent validation
+- Toute déviation doit être justifiée et documentée
 - La simplicité prime sur la complexité : "KISS > YAGNI"
-- Question clé : "Est-ce que ça aide un Guinéen à trouver un logement ?"
+- Question clé : *"Est-ce que ça aide un Guinéen à trouver un logement ?"*
 
 ### Priorités
 1. **Sécurité** : Pas de compromis sur données utilisateurs
@@ -454,44 +573,52 @@
 4. **Fiabilité** : Moins de bugs = meilleure réputation
 5. **Features** : Seulement après les 4 premiers points
 
-### Décisions Architecturales
-- Documenter choix majeurs (ADR - Architecture Decision Records)
-- Privilégier solutions éprouvées (battle-tested)
-- Évaluer coûts vs bénéfices (TCO - Total Cost of Ownership)
-- Éviter vendor lock-in (portabilité)
-- Penser scalabilité dès le début (mais pas over-engineer)
+### Déploiement
+- **RÈGLE STRICTE** : Aucun déploiement sans consentement explicite via le mot `deploy`
+- Backup automatique avant déploiement
+- Rollback possible en < 5min
+- Zero-downtime via Docker Swarm rolling updates
 
 ### Support & Maintenance
-- Monitoring 24/7 (Sentry + uptime monitoring)
+- Monitoring 24/7 (Prometheus + Grafana + AlertManager)
 - Backup quotidien automatique (rétention 30 jours)
-- Hotfix déployable en < 2h (bugs critiques)
+- Hotfix déployable en < 2h
 - Mises à jour sécurité hebdomadaires
 - Support utilisateurs : Email + WhatsApp Business
 
-### Bonnes Pratiques n8n
+---
 
-**Organisation workflows** :
-- Nommage clair : `[Trigger] - [Action] - [Destination]` (ex: "New Listing - Notify - WhatsApp")
-- Tags par catégorie : `#notifications`, `#paiements`, `#contrats`, `#moderation`
-- Documentation inline : Notes dans chaque workflow expliquant la logique
-- Versionning : Export régulier des workflows (backup JSON)
+## Métriques de Succès
 
-**Performance** :
-- Éviter boucles infinies (max iterations configuré)
-- Timeouts raisonnables (30s par défaut, 2min max)
-- Retry logic : 3 tentatives max avec backoff exponentiel
-- Queue system pour tâches lourdes (génération PDF)
+| Période | Utilisateurs | Annonces | Transactions |
+|---------|-------------|----------|--------------|
+| Mois 1 | 50 | 100 | - |
+| Mois 2 | 200 | 500 | 50 contrats |
+| Mois 3 | 500 | 1000 | 100 |
+| Mois 6 | 5000 | 10000 | 1000 |
 
-**Sécurité** :
-- Credentials séparées (pas hardcodées dans workflows)
-- Webhook URLs sécurisées (authentification via API keys)
-- Logs sensibles désactivés (pas de logs passwords/tokens)
-- Rate limiting sur webhooks publics
+---
 
-**Monitoring** :
-- Alertes erreurs → Canal Slack/Discord dédié
-- Métriques trackées : Succès rate, durée moyenne, erreurs
-- Dashboard Grafana : Vue d'ensemble workflows critiques
-- Tests hebdomadaires workflows critiques (dry run)
+## Roadmap Future
 
-**Version**: 1.0.0 | **Ratified**: 2025-01-28 | **Last Amended**: 2025-01-28 | **Next Review**: 2025-04-28
+### Court terme (1-3 mois)
+- [ ] Application mobile React Native (iOS + Android)
+- [ ] Chatbot WhatsApp via WAHA
+- [ ] Visite virtuelle 360°
+- [ ] Amélioration SEO
+
+### Moyen terme (3-6 mois)
+- [ ] Expansion géographique (villes province)
+- [ ] Langues locales (Soussou, Poular, Malinké)
+- [ ] Recommandations IA
+- [ ] Analytics prédictifs
+
+### Long terme (6-12 mois)
+- [ ] API publique pour partenaires
+- [ ] Intégration banques locales
+- [ ] Marketplace services (déménagement, rénovation)
+- [ ] Expansion régionale (Afrique de l'Ouest)
+
+---
+
+**Version**: 2.0.0 | **Ratified**: 2026-01-05 | **Last Amended**: 2026-01-05 | **Next Review**: 2026-04-05
