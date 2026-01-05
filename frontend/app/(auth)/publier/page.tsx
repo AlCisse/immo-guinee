@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
@@ -9,19 +9,13 @@ import {
   ArrowLeft,
   ArrowRight,
   Home,
-  Shield,
-  Lightbulb,
   Camera,
   MapPin,
   FileText,
   Check,
-  Sparkles,
   Eye,
   Clock,
   TrendingUp,
-  Building2,
-  DollarSign,
-  Images,
   AlertCircle,
   Loader2
 } from 'lucide-react';
@@ -138,31 +132,6 @@ export default function PublierPage() {
                 {t('hero.freePublication')}
               </span>
             </div>
-          </motion.div>
-
-          {/* Main Title */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-center mb-10"
-          >
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: 'spring', delay: 0.2 }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full mb-4 border border-white/20"
-            >
-              <Sparkles className="w-4 h-4 text-yellow-300" />
-              <span className="text-sm text-white/90">{t('hero.tagline')}</span>
-            </motion.div>
-
-            <h1 className="text-3xl md:text-5xl font-bold text-white mb-3">
-              {t('hero.title')}
-            </h1>
-            <p className="text-lg text-white/80 max-w-xl mx-auto">
-              {t('hero.subtitle')}
-            </p>
           </motion.div>
 
           {/* Stats Cards */}
@@ -293,78 +262,6 @@ export default function PublierPage() {
             onStepChange={setCurrentStep}
             totalSteps={STEPS.length}
           />
-        </motion.div>
-
-        {/* Tips Section - Enhanced */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="mt-12 relative overflow-hidden"
-        >
-          <div className="absolute inset-0 bg-gradient-to-br from-primary-50/50 to-orange-50/50 dark:from-primary-500/5 dark:to-orange-500/5 rounded-3xl" />
-          <div className="relative bg-white/60 dark:bg-dark-card/60 backdrop-blur-sm rounded-3xl p-6 md:p-8 border border-primary-100 dark:border-primary-500/20">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-3 bg-gradient-to-br from-primary-500 to-orange-500 rounded-2xl shadow-lg shadow-primary-500/30">
-                <Lightbulb className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-neutral-900 dark:text-white">
-                  {t('tips.title')}
-                </h2>
-                <p className="text-sm text-neutral-500">{t('tips.subtitle')}</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[
-                {
-                  icon: Camera,
-                  color: 'from-purple-500 to-pink-500',
-                  title: t('tips.photos.title'),
-                  desc: t('tips.photos.desc')
-                },
-                {
-                  icon: FileText,
-                  color: 'from-blue-500 to-cyan-500',
-                  title: t('tips.titleTip.title'),
-                  desc: t('tips.titleTip.desc')
-                },
-                {
-                  icon: MapPin,
-                  color: 'from-emerald-500 to-teal-500',
-                  title: t('tips.locationTip.title'),
-                  desc: t('tips.locationTip.desc')
-                },
-                {
-                  icon: DollarSign,
-                  color: 'from-orange-500 to-amber-500',
-                  title: t('tips.priceTip.title'),
-                  desc: t('tips.priceTip.desc')
-                }
-              ].map((tip, index) => (
-                <motion.div
-                  key={tip.title}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.7 + index * 0.1 }}
-                  className="group flex items-start gap-4 p-4 bg-white dark:bg-dark-card rounded-2xl border border-neutral-100 dark:border-dark-border hover:shadow-lg hover:border-primary-200 dark:hover:border-primary-500/30 transition-all"
-                >
-                  <div className={`p-2.5 bg-gradient-to-br ${tip.color} rounded-xl shadow-lg group-hover:scale-110 transition-transform`}>
-                    <tip.icon className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-neutral-900 dark:text-white mb-1">
-                      {tip.title}
-                    </p>
-                    <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                      {tip.desc}
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
         </motion.div>
 
         {/* Support Contact - Enhanced */}
