@@ -533,12 +533,12 @@ export default function ListingFormStepper({
         router.push('/mes-annonces?success=created');
         return; // Exit early, no need to show success state in form
       } else {
-        throw new Error(response.data?.message || 'Une erreur est survenue');
+        throw new Error(response.data?.message || t('errors.generic'));
       }
     } catch (error: unknown) {
       console.error('Error submitting listing:', error);
       // Handle Axios errors with validation messages
-      let errorMessage = 'Erreur lors de la publication. Veuillez réessayer.';
+      let errorMessage = t('errors.generic');
       if (error && typeof error === 'object' && 'response' in error) {
         const axiosError = error as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } };
         if (axiosError.response?.data?.errors) {
@@ -942,13 +942,13 @@ export default function ListingFormStepper({
                         {/* What to Avoid */}
                         <div className="p-3 bg-red-50 dark:bg-red-500/10 rounded-lg border border-red-200 dark:border-red-500/20">
                           <p className="font-semibold text-red-700 dark:text-red-300 text-sm mb-2">
-                            À éviter :
+                            {t('seoGuide.avoid.title')}
                           </p>
                           <ul className="text-xs text-red-600 dark:text-red-400 space-y-1">
-                            <li>• Titres en MAJUSCULES</li>
-                            <li>• "Urgent!!!" ou "Bonne affaire!!!"</li>
-                            <li>• Descriptions trop courtes (&lt; 50 mots)</li>
-                            <li>• Copier-coller la même description</li>
+                            <li>• {t('seoGuide.avoid.uppercase')}</li>
+                            <li>• {t('seoGuide.avoid.urgent')}</li>
+                            <li>• {t('seoGuide.avoid.tooShort')}</li>
+                            <li>• {t('seoGuide.avoid.copyPaste')}</li>
                           </ul>
                         </div>
                       </div>
@@ -1255,8 +1255,8 @@ export default function ListingFormStepper({
                 <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-500/10 rounded-xl border border-blue-200 dark:border-blue-500/20">
                   <p className="text-sm text-blue-700 dark:text-blue-300">
                     {formData.typeBien === 'TERRAIN'
-                      ? 'Pour un terrain, seule la superficie est nécessaire.'
-                      : 'Pour ce type de bien commercial, les chambres et salons ne sont pas applicables.'}
+                      ? t('characteristics.terrainNote')
+                      : t('characteristics.commercialNote')}
                   </p>
                 </div>
               )}

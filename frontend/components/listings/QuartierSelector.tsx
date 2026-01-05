@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import type { LatLngExpression } from 'leaflet';
+import { useTranslations } from '@/lib/i18n';
 
 // Dynamically import React Leaflet components (client-side only)
 const MapContainer = dynamic(
@@ -76,6 +77,7 @@ export default function QuartierSelector({
   quartierError,
   required = true,
 }: QuartierSelectorProps) {
+  const { t } = useTranslations();
   const [selectedCommune, setSelectedCommune] = useState<string | undefined>(commune);
   const [selectedQuartier, setSelectedQuartier] = useState<string | undefined>(quartier);
   const [showMap, setShowMap] = useState(false);
@@ -107,7 +109,7 @@ export default function QuartierSelector({
       {/* Commune Selector */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Commune {required && <span className="text-red-500">*</span>}
+          {t('publish.location.commune')} {required && <span className="text-red-500">*</span>}
         </label>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -133,7 +135,7 @@ export default function QuartierSelector({
                   {communeData.commune}
                 </div>
                 <div className="text-xs text-gray-600">
-                  {communeData.quartiers.length} quartiers
+                  {t('publish.location.quartiersCount', { count: communeData.quartiers.length })}
                 </div>
 
                 {isSelected && (
@@ -165,7 +167,7 @@ export default function QuartierSelector({
       {selectedCommune && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Quartier {required && <span className="text-red-500">*</span>}
+            {t('publish.location.quartier')} {required && <span className="text-red-500">*</span>}
           </label>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
@@ -219,7 +221,7 @@ export default function QuartierSelector({
               d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
             />
           </svg>
-          {showMap ? 'Masquer la carte' : 'Voir sur la carte'}
+          {showMap ? t('location.hideMap') : t('location.showMap')}
         </button>
       </div>
 
@@ -260,7 +262,7 @@ export default function QuartierSelector({
       {/* Helper text */}
       {!communeError && !quartierError && (
         <p className="text-xs text-gray-500">
-          Sélectionnez d'abord la commune, puis le quartier où se trouve votre bien
+          {t('publish.location.selectCommuneFirst')}
         </p>
       )}
     </div>

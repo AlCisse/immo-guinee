@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
+import { useTranslations } from '@/lib/i18n';
 
 const MAX_PHOTOS = 5;
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -26,19 +27,20 @@ export default function PhotoUploader({
   error,
   required = true,
 }: PhotoUploaderProps) {
+  const { t } = useTranslations();
   const [isDragging, setIsDragging] = useState(false);
   const [uploadErrors, setUploadErrors] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const validateFile = (file: File): string | null => {
+  const validateFile = useCallback((file: File): string | null => {
     if (!ACCEPTED_FORMATS.includes(file.type)) {
-      return `${file.name}: Format non supporté. Utilisez JPG, PNG ou WebP.`;
+      return `${file.name}: ${t('photos.errors.unsupportedFormat')}`;
     }
     if (file.size > MAX_FILE_SIZE) {
-      return `${file.name}: Fichier trop volumineux (max 5MB).`;
+      return `${file.name}: ${t('photos.errors.fileTooLarge')}`;
     }
     return null;
-  };
+  }, [t]);
 
   const processFiles = useCallback(
     (files: FileList | File[]) => {
@@ -200,11 +202,11 @@ export default function PhotoUploader({
 
           <p className="mt-2 text-sm font-medium text-gray-700">
             {isDragging
-              ? 'Déposez les photos ici'
-              : 'Glissez-déposez vos photos ou cliquez pour sélectionner'}
+              ? t('photos.dropHere')
+              : t('photos.dragDrop')}
           </p>
           <p className="mt-1 text-xs text-gray-500">
-            PNG, JPG, WebP jusqu'à 5MB • Max {MAX_PHOTOS} photos
+            {t('photos.formatInfo')} • Max {MAX_PHOTOS} photos
           </p>
         </div>
       )}
@@ -227,7 +229,7 @@ export default function PhotoUploader({
               {/* Main Photo Badge */}
               {index === 0 && (
                 <div className="absolute top-2 left-2 bg-green-600 text-white text-xs font-medium px-2 py-1 rounded">
-                  Photo principale
+                  {t('photos.mainPhoto')}
                 </div>
               )}
 
@@ -244,7 +246,7 @@ export default function PhotoUploader({
                     type="button"
                     onClick={() => movePhoto(photo.id, 'left')}
                     className="p-2 bg-white rounded-full hover:bg-gray-100 transition-colors"
-                    title="Déplacer à gauche"
+                    title={t('photos.moveLeft')}
                   >
                     <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -257,7 +259,7 @@ export default function PhotoUploader({
                   type="button"
                   onClick={() => removePhoto(photo.id)}
                   className="p-2 bg-red-600 rounded-full hover:bg-red-700 transition-colors"
-                  title="Supprimer"
+                  title={t('photos.delete')}
                 >
                   <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -270,7 +272,7 @@ export default function PhotoUploader({
                     type="button"
                     onClick={() => movePhoto(photo.id, 'right')}
                     className="p-2 bg-white rounded-full hover:bg-gray-100 transition-colors"
-                    title="Déplacer à droite"
+                    title={t('photos.moveRight')}
                   >
                     <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

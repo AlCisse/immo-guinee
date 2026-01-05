@@ -4,6 +4,7 @@ import { memo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
+import { useTranslations } from '@/lib/i18n';
 import type { TypeBien } from './TypeBienSelector';
 
 export interface Listing {
@@ -39,6 +40,8 @@ interface ListingCardProps {
 }
 
 function ListingCard({ listing, priority = false }: ListingCardProps) {
+  const { t } = useTranslations();
+
   const formatPrice = (price: number): string => {
     return new Intl.NumberFormat('fr-GN', {
       style: 'currency',
@@ -49,13 +52,16 @@ function ListingCard({ listing, priority = false }: ListingCardProps) {
 
   const getTypeBienLabel = (type: TypeBien): string => {
     const labels: Record<TypeBien, string> = {
-      STUDIO: 'Studio',
-      CHAMBRE_SALON: 'Chambre-Salon',
-      APPARTEMENT_2CH: '2 Chambres',
-      APPARTEMENT_3CH: '3 Chambres',
-      VILLA: 'Villa',
-      DUPLEX: 'Duplex',
-      BUREAU: 'Bureau',
+      STUDIO: t('publish.propertyType.types.studio'),
+      CHAMBRE_SALON: t('publish.propertyType.types.chambreSalon'),
+      APPARTEMENT_2CH: t('publish.propertyType.types.appartement2ch'),
+      APPARTEMENT_3CH: t('publish.propertyType.types.appartement3ch'),
+      VILLA: t('publish.propertyType.types.villa'),
+      DUPLEX: t('publish.propertyType.types.duplex'),
+      BUREAU: t('publish.propertyType.types.bureau'),
+      MAGASIN: t('publish.propertyType.types.magasin'),
+      ENTREPOT: t('publish.propertyType.types.entrepot'),
+      TERRAIN: t('publish.propertyType.types.terrain'),
     };
     return labels[type] || type;
   };
@@ -126,10 +132,10 @@ function ListingCard({ listing, priority = false }: ListingCardProps) {
             }`}
           >
             {listing.operationType === 'LOCATION' || listing.type_transaction === 'location' || listing.type_transaction === 'LOCATION'
-              ? 'À louer'
+              ? t('search.badges.forRent')
               : listing.operationType === 'LOCATION_COURTE' || listing.type_transaction === 'location_courte' || listing.type_transaction === 'LOCATION_COURTE'
-              ? 'Courte durée'
-              : 'À vendre'}
+              ? t('search.badges.shortTerm')
+              : t('search.badges.forSale')}
           </span>
         </div>
 
@@ -156,11 +162,11 @@ function ListingCard({ listing, priority = false }: ListingCardProps) {
             {displayPrice}
           </div>
           {(listing.operationType === 'LOCATION' || listing.type_transaction === 'location' || listing.type_transaction === 'LOCATION') && (
-            <div className="text-xs text-gray-600">par mois</div>
+            <div className="text-xs text-gray-600">{t('listing.perMonth')}</div>
           )}
           {(listing.operationType === 'LOCATION_COURTE' || listing.type_transaction === 'location_courte' || listing.type_transaction === 'LOCATION_COURTE') && (
             <div className="text-xs text-purple-600 font-medium">
-              par jour {listing.duree_minimum_jours && listing.duree_minimum_jours > 1 && `(min. ${listing.duree_minimum_jours} jours)`}
+              {t('listing.perDay')} {listing.duree_minimum_jours && listing.duree_minimum_jours > 1 && t('listing.minDays', { days: listing.duree_minimum_jours })}
             </div>
           )}
         </div>
