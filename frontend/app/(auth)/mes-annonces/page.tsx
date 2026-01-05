@@ -421,11 +421,45 @@ export default function MesAnnoncesPage() {
                     <div className="flex-1 p-4">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
-                          {/* Status Badge */}
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium mb-2 ${statusConfig.className}`}>
-                            <StatusIcon className="w-3.5 h-3.5" />
-                            {getStatusLabel(annonce.statut)}
-                          </span>
+                          {/* Status Badge + Quick Action */}
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusConfig.className}`}>
+                              <StatusIcon className="w-3.5 h-3.5" />
+                              {getStatusLabel(annonce.statut)}
+                            </span>
+
+                            {/* Quick Mark as Rented Button */}
+                            {annonce.statut === 'ACTIVE' && (
+                              <button
+                                onClick={() => handleMarkAsRented(annonce.id)}
+                                disabled={markAsRentedMutation.isPending}
+                                className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-500/10 dark:text-green-400 dark:hover:bg-green-500/20 transition-colors disabled:opacity-50"
+                              >
+                                {markAsRentedMutation.isPending ? (
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                ) : (
+                                  <CheckCircle className="w-3 h-3" />
+                                )}
+                                {t('myListings.actions.markAsRented')}
+                              </button>
+                            )}
+
+                            {/* Quick Reactivate Button */}
+                            {(annonce.statut === 'ARCHIVEE' || annonce.statut === 'EXPIREE') && (
+                              <button
+                                onClick={() => handleReactivate(annonce.id)}
+                                disabled={reactivateMutation.isPending}
+                                className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/20 transition-colors disabled:opacity-50"
+                              >
+                                {reactivateMutation.isPending ? (
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                ) : (
+                                  <Clock className="w-3 h-3" />
+                                )}
+                                {t('myListings.actions.reactivate')}
+                              </button>
+                            )}
+                          </div>
 
                           {/* Title */}
                           <h3 className="font-semibold text-neutral-900 dark:text-white line-clamp-2 mb-1">
@@ -481,7 +515,7 @@ export default function MesAnnoncesPage() {
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
-                                className="absolute right-0 top-10 w-44 bg-white dark:bg-dark-card rounded-xl shadow-lg border border-neutral-200 dark:border-dark-border py-2 z-10"
+                                className="absolute right-0 top-10 w-44 bg-white dark:bg-dark-card rounded-xl shadow-lg border border-neutral-200 dark:border-dark-border py-2 z-10 max-h-[60vh] overflow-y-auto"
                               >
                                 <Link
                                   href={`/bien/${annonce.id}`}
