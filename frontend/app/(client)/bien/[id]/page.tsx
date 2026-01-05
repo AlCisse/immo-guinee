@@ -51,6 +51,7 @@ import {
 } from 'lucide-react';
 import { api } from '@/lib/api/client';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { useTranslations } from '@/lib/i18n';
 
 // Action names for verification messages
 const VERIFICATION_ACTIONS = {
@@ -196,6 +197,7 @@ export default function PropertyDetailPage() {
   const router = useRouter();
   const id = params.id as string;
   const { isAuthenticated, user, requirePhoneVerification } = useAuth();
+  const { t } = useTranslations();
 
   const [isFavorite, setIsFavorite] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -339,12 +341,12 @@ export default function PropertyDetailPage() {
   // Get transaction type label
   const getTransactionLabel = () => {
     if (listing.type_transaction === 'VENTE' || listing.type_transaction === 'vente') {
-      return 'À vendre';
+      return t('listingDetail.forSale');
     }
     if (listing.type_transaction === 'LOCATION_COURTE' || listing.type_transaction === 'location_courte') {
-      return 'Location courte durée';
+      return t('listingDetail.shortTermRental');
     }
-    return 'À louer';
+    return t('listingDetail.forRent');
   };
 
   // Get price suffix
@@ -353,9 +355,9 @@ export default function PropertyDetailPage() {
       return '';
     }
     if (listing.type_transaction === 'LOCATION_COURTE' || listing.type_transaction === 'location_courte') {
-      return ' /nuit';
+      return t('listingDetail.perNight');
     }
-    return ' /mois';
+    return t('listingDetail.perMonth');
   };
 
   return (
@@ -373,7 +375,7 @@ export default function PropertyDetailPage() {
               className="flex items-center gap-2 px-3 py-2 hover:bg-neutral-100 dark:hover:bg-dark-card rounded-lg transition-colors"
             >
               <Share2 className="w-4 h-4" />
-              <span className="hidden sm:inline text-sm font-medium underline">Partager</span>
+              <span className="hidden sm:inline text-sm font-medium underline">{t('listingDetail.share')}</span>
             </button>
             <button
               onClick={() => {
@@ -387,7 +389,7 @@ export default function PropertyDetailPage() {
               className="flex items-center gap-2 px-3 py-2 hover:bg-neutral-100 dark:hover:bg-dark-card rounded-lg transition-colors"
             >
               <Heart className={`w-4 h-4 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
-              <span className="hidden sm:inline text-sm font-medium underline">Enregistrer</span>
+              <span className="hidden sm:inline text-sm font-medium underline">{t('listingDetail.save')}</span>
             </button>
           </div>
         </div>
@@ -437,7 +439,7 @@ export default function PropertyDetailPage() {
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center flex-col gap-2">
                     <Home className="w-16 h-16 text-neutral-400" />
-                    <span className="text-neutral-400 text-sm">Pas de photo</span>
+                    <span className="text-neutral-400 text-sm">{t('listingDetail.noPhoto')}</span>
                   </div>
                 )}
               </div>
@@ -531,7 +533,7 @@ export default function PropertyDetailPage() {
                   className="absolute bottom-4 right-4 flex items-center gap-2 px-4 py-2 bg-white text-neutral-900 text-sm font-medium rounded-lg shadow-lg hover:bg-neutral-100 transition-colors"
                 >
                   <Grid3X3 className="w-4 h-4" />
-                  {totalImages > 1 ? `Voir les ${totalImages} photos` : 'Voir la photo'}
+                  {totalImages > 1 ? t('listingDetail.viewPhotos', { count: totalImages }) : t('listingDetail.viewPhoto')}
                 </button>
               )}
 
@@ -560,19 +562,19 @@ export default function PropertyDetailPage() {
               <div className="flex flex-wrap items-center gap-1 text-neutral-600 dark:text-neutral-400">
                 {listing.nombre_chambres && (
                   <>
-                    <span>{listing.nombre_chambres} chambre{listing.nombre_chambres > 1 ? 's' : ''}</span>
+                    <span>{listing.nombre_chambres} {listing.nombre_chambres > 1 ? t('listingDetail.bedrooms') : t('listingDetail.bedroom')}</span>
                     <span>·</span>
                   </>
                 )}
                 {listing.nombre_salons && (
                   <>
-                    <span>{listing.nombre_salons} salon{listing.nombre_salons > 1 ? 's' : ''}</span>
+                    <span>{listing.nombre_salons} {listing.nombre_salons > 1 ? t('listingDetail.livingRooms') : t('listingDetail.livingRoom')}</span>
                     <span>·</span>
                   </>
                 )}
                 {listing.nombre_salles_bain && (
                   <>
-                    <span>{listing.nombre_salles_bain} salle{listing.nombre_salles_bain > 1 ? 's' : ''} de bain</span>
+                    <span>{listing.nombre_salles_bain} {listing.nombre_salles_bain > 1 ? t('listingDetail.bathrooms') : t('listingDetail.bathroom')}</span>
                     <span>·</span>
                   </>
                 )}
@@ -588,13 +590,13 @@ export default function PropertyDetailPage() {
                 </span>
                 {listing.meuble && (
                   <span className="px-3 py-1 bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 text-sm font-medium rounded-full">
-                    Meublé
+                    {t('listingDetail.furnished')}
                   </span>
                 )}
                 {listing.user?.statut_verification === 'VERIFIE' && (
                   <span className="flex items-center gap-1 px-3 py-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-sm font-medium rounded-full">
                     <Check className="w-3 h-3" />
-                    Vérifié
+                    {t('listingDetail.verified')}
                   </span>
                 )}
               </div>
@@ -607,7 +609,7 @@ export default function PropertyDetailPage() {
               </div>
               <div>
                 <h3 className="font-semibold text-neutral-900 dark:text-white">
-                  Proposé par {listing.user?.nom_complet || 'Propriétaire'}
+                  {t('listingDetail.hostedBy')} {listing.user?.nom_complet || t('listingDetail.owner')}
                 </h3>
                 {listing.user?.badge && (
                   <span className={`text-xs px-2 py-0.5 rounded-full ${
@@ -628,8 +630,8 @@ export default function PropertyDetailPage() {
                 <div className="flex gap-4">
                   <Square className="w-6 h-6 text-neutral-600 dark:text-neutral-400 flex-shrink-0" />
                   <div>
-                    <h4 className="font-medium text-neutral-900 dark:text-white">Surface de {listing.surface_m2} m²</h4>
-                    <p className="text-sm text-neutral-500">Espace spacieux pour votre confort</p>
+                    <h4 className="font-medium text-neutral-900 dark:text-white">{t('listingDetail.surfaceOf')} {listing.surface_m2} m²</h4>
+                    <p className="text-sm text-neutral-500">{t('listingDetail.spaciousArea')}</p>
                   </div>
                 </div>
               )}
@@ -637,8 +639,8 @@ export default function PropertyDetailPage() {
                 <div className="flex gap-4">
                   <Bed className="w-6 h-6 text-neutral-600 dark:text-neutral-400 flex-shrink-0" />
                   <div>
-                    <h4 className="font-medium text-neutral-900 dark:text-white">{listing.nombre_chambres} chambre{listing.nombre_chambres > 1 ? 's' : ''}</h4>
-                    <p className="text-sm text-neutral-500">Parfait pour {listing.nombre_chambres <= 2 ? 'un couple ou une petite famille' : 'une famille'}</p>
+                    <h4 className="font-medium text-neutral-900 dark:text-white">{listing.nombre_chambres} {listing.nombre_chambres > 1 ? t('listingDetail.bedrooms') : t('listingDetail.bedroom')}</h4>
+                    <p className="text-sm text-neutral-500">{listing.nombre_chambres <= 2 ? t('listingDetail.perfectForCouple') : t('listingDetail.perfectForFamily')}</p>
                   </div>
                 </div>
               )}
@@ -646,8 +648,8 @@ export default function PropertyDetailPage() {
                 <div className="flex gap-4">
                   <Sofa className="w-6 h-6 text-neutral-600 dark:text-neutral-400 flex-shrink-0" />
                   <div>
-                    <h4 className="font-medium text-neutral-900 dark:text-white">Entièrement meublé</h4>
-                    <p className="text-sm text-neutral-500">Prêt à emménager avec tous les équipements</p>
+                    <h4 className="font-medium text-neutral-900 dark:text-white">{t('listingDetail.fullyFurnished')}</h4>
+                    <p className="text-sm text-neutral-500">{t('listingDetail.readyToMoveIn')}</p>
                   </div>
                 </div>
               )}
@@ -656,7 +658,7 @@ export default function PropertyDetailPage() {
             {/* Description */}
             <div className="border-b border-neutral-200 dark:border-dark-border pb-6">
               <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-4">
-                Description
+                {t('listingDetail.description')}
               </h2>
               <p className="text-neutral-600 dark:text-neutral-300 whitespace-pre-line leading-relaxed">
                 {listing.description}
@@ -667,7 +669,7 @@ export default function PropertyDetailPage() {
             {amenities.length > 0 && (
               <div className="border-b border-neutral-200 dark:border-dark-border pb-6">
                 <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-4">
-                  Ce que propose ce logement
+                  {t('listingDetail.whatThisPlaceOffers')}
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {amenities.map((amenity) => {
@@ -687,7 +689,7 @@ export default function PropertyDetailPage() {
             {/* Location Map */}
             <div>
               <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-4">
-                Où se situe le logement
+                {t('listingDetail.whereYoullBe')}
               </h2>
               <p className="text-neutral-600 dark:text-neutral-400 mb-4">
                 {listing.quartier}, {listing.commune}
@@ -713,14 +715,14 @@ export default function PropertyDetailPage() {
                 {/* Caution info */}
                 {listing.caution && parseFloat(listing.caution) > 0 && (
                   <p className="text-sm text-neutral-500 mb-4">
-                    Caution: {formatPrice(listing.caution)}
+                    {t('listingDetail.advance')}: {formatPrice(listing.caution)}
                   </p>
                 )}
 
                 {/* Short rental minimum duration */}
                 {(listing.type_transaction === 'LOCATION_COURTE' || listing.type_transaction === 'location_courte') && listing.duree_minimum_jours && (
                   <p className="text-sm text-purple-600 dark:text-purple-400 mb-4">
-                    Durée minimum: {listing.duree_minimum_jours} nuit{listing.duree_minimum_jours > 1 ? 's' : ''}
+                    {t('listingDetail.minimumDuration')}: {listing.duree_minimum_jours} {listing.duree_minimum_jours > 1 ? t('listingDetail.nights') : t('listingDetail.night')}
                   </p>
                 )}
 
@@ -740,7 +742,7 @@ export default function PropertyDetailPage() {
                       }}
                       className="w-full py-3 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-lg transition-all"
                     >
-                      Contacter le propriétaire
+                      {t('listingDetail.contactOwner')}
                     </motion.button>
 
                     <motion.button
@@ -756,19 +758,19 @@ export default function PropertyDetailPage() {
                       }}
                       className="w-full py-3 border-2 border-neutral-900 dark:border-white text-neutral-900 dark:text-white font-semibold rounded-lg hover:bg-neutral-100 dark:hover:bg-dark-border transition-all"
                     >
-                      Programmer une visite
+                      {t('listingDetail.scheduleVisit')}
                     </motion.button>
                   </div>
                 ) : (
                   <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
                     <p className="text-blue-600 dark:text-blue-400 font-medium">
-                      Ceci est votre annonce
+                      {t('listingDetail.thisIsYourListing')}
                     </p>
                     <Link
                       href={`/mes-annonces/${id}/modifier`}
                       className="text-sm text-blue-500 hover:underline"
                     >
-                      Modifier l'annonce
+                      {t('listingDetail.editListing')}
                     </Link>
                   </div>
                 )}
@@ -777,7 +779,7 @@ export default function PropertyDetailPage() {
                 <div className="flex items-center justify-center gap-4 mt-6 pt-4 border-t border-neutral-200 dark:border-dark-border text-sm text-neutral-500">
                   <div className="flex items-center gap-1">
                     <Eye className="w-4 h-4" />
-                    <span>{listing.vues_count || 0} vues</span>
+                    <span>{listing.vues_count || 0} {t('listingDetail.views')}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
@@ -793,7 +795,7 @@ export default function PropertyDetailPage() {
         {similarListings.length > 0 && (
           <div className="mt-16 border-t border-neutral-200 dark:border-dark-border pt-12">
             <h2 className="text-2xl font-semibold text-neutral-900 dark:text-white mb-6">
-              Biens similaires
+              {t('listingDetail.similarProperties')}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {similarListings.slice(0, 4).map((prop: any) => (
@@ -856,11 +858,11 @@ export default function PropertyDetailPage() {
               }}
               className="px-6 py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-semibold rounded-lg"
             >
-              Contacter
+              {t('listingDetail.contact')}
             </motion.button>
           ) : (
             <span className="px-4 py-2 text-sm text-blue-600 bg-blue-50 rounded-lg">
-              Votre annonce
+              {t('listingDetail.yourListing')}
             </span>
           )}
         </div>
@@ -971,19 +973,19 @@ export default function PropertyDetailPage() {
               <div className="w-12 h-1.5 bg-neutral-200 dark:bg-neutral-700 rounded-full mx-auto mb-6 md:hidden" />
 
               <h2 className="text-xl font-bold text-neutral-900 dark:text-white mb-2 text-center">
-                Contacter le propriétaire
+                {t('listingDetail.contactOwner')}
               </h2>
               <p className="text-sm text-neutral-500 dark:text-neutral-400 text-center mb-6">
-                Envoyez un message à {listing.user?.nom_complet || 'propriétaire'}
+                {t('listingDetail.sendMessageTo')} {listing.user?.nom_complet || t('listingDetail.owner')}
               </p>
 
               <div className="space-y-4">
                 {/* Quick message suggestions */}
                 <div className="flex flex-wrap gap-2">
                   {[
-                    'Bonjour, ce bien est-il toujours disponible ?',
-                    'Je souhaite programmer une visite',
-                    'Quelles sont les conditions de location ?',
+                    t('listingDetail.suggestions.isAvailable'),
+                    t('listingDetail.suggestions.scheduleVisit'),
+                    t('listingDetail.suggestions.rentalConditions'),
                   ].map((suggestion) => (
                     <button
                       key={suggestion}
@@ -999,7 +1001,7 @@ export default function PropertyDetailPage() {
                 <textarea
                   value={contactMessage}
                   onChange={(e) => setContactMessage(e.target.value)}
-                  placeholder="Écrivez votre message..."
+                  placeholder={t('listingDetail.writeYourMessage')}
                   rows={4}
                   className="w-full px-4 py-3 bg-neutral-50 dark:bg-dark-bg border border-neutral-200 dark:border-dark-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:text-white resize-none"
                 />
@@ -1040,12 +1042,12 @@ export default function PropertyDetailPage() {
                   {isSendingMessage ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      Envoi en cours...
+                      {t('listingDetail.sending')}
                     </>
                   ) : (
                     <>
                       <Send className="w-5 h-5" />
-                      Envoyer le message
+                      {t('listingDetail.sendMessage')}
                     </>
                   )}
                 </motion.button>
@@ -1058,7 +1060,7 @@ export default function PropertyDetailPage() {
                 }}
                 className="w-full mt-4 py-3 text-neutral-500 font-medium"
               >
-                Annuler
+                {t('listingDetail.cancel')}
               </button>
             </motion.div>
           </motion.div>
@@ -1085,13 +1087,13 @@ export default function PropertyDetailPage() {
               <div className="w-12 h-1.5 bg-neutral-200 dark:bg-neutral-700 rounded-full mx-auto mb-6 md:hidden" />
 
               <h2 className="text-xl font-bold text-neutral-900 dark:text-white mb-6 text-center">
-                Programmer une visite
+                {t('listingDetail.scheduleVisit')}
               </h2>
 
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                    Date souhaitée
+                    {t('listingDetail.preferredDate')}
                   </label>
                   <input
                     type="date"
@@ -1104,7 +1106,7 @@ export default function PropertyDetailPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                    Créneau horaire
+                    {t('listingDetail.timeSlot')}
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     {['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'].map((time) => (
@@ -1126,13 +1128,13 @@ export default function PropertyDetailPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                    Message (optionnel)
+                    {t('listingDetail.messageOptional')}
                   </label>
                   <textarea
                     rows={3}
                     value={visitNotes}
                     onChange={(e) => setVisitNotes(e.target.value)}
-                    placeholder="Questions ou précisions..."
+                    placeholder={t('listingDetail.questionsOrDetails')}
                     className="w-full px-4 py-3 bg-neutral-50 dark:bg-dark-bg border border-neutral-200 dark:border-dark-border rounded-xl focus:ring-2 focus:ring-primary-500 dark:text-white resize-none"
                   />
                 </div>
@@ -1146,10 +1148,10 @@ export default function PropertyDetailPage() {
                   {isSubmittingVisit ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      Envoi en cours...
+                      {t('listingDetail.sending')}
                     </>
                   ) : (
-                    'Envoyer la demande'
+                    t('listingDetail.sendRequest')
                   )}
                 </motion.button>
               </div>
@@ -1158,7 +1160,7 @@ export default function PropertyDetailPage() {
                 onClick={() => setShowBookingModal(false)}
                 className="w-full mt-4 py-3 text-neutral-500 font-medium"
               >
-                Annuler
+                {t('listingDetail.cancel')}
               </button>
             </motion.div>
           </motion.div>
