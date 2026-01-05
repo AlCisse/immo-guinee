@@ -10,7 +10,7 @@ import dynamic from 'next/dynamic';
 import toast from 'react-hot-toast';
 
 // Dynamically import map component to avoid SSR issues
-const MapView = dynamic(() => import('@/app/(public)/annonces/[id]/MapView'), {
+const MapView = dynamic(() => import('./MapView'), {
   ssr: false,
   loading: () => (
     <div className="w-full h-full flex items-center justify-center bg-neutral-100 dark:bg-dark-bg rounded-xl">
