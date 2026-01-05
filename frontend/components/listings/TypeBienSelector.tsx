@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Home, Building, Building2, Store, Warehouse, Castle, Check, Trees, LandPlot } from 'lucide-react';
+import { useTranslations } from '@/lib/i18n';
 
 export type TypeBien =
   | 'STUDIO'
@@ -18,8 +19,8 @@ export type TypeBien =
 
 interface TypeBienOption {
   value: TypeBien;
-  label: string;
-  description: string;
+  labelKey: string;
+  descKey: string;
   icon: React.ElementType;
   category: 'residential' | 'commercial';
   emoji: string;
@@ -29,8 +30,8 @@ interface TypeBienOption {
 const TYPE_BIEN_OPTIONS: TypeBienOption[] = [
   {
     value: 'STUDIO',
-    label: 'Studio',
-    description: 'Espace unique avec coin cuisine',
+    labelKey: 'publish.propertyType.types.studio',
+    descKey: 'publish.propertyType.types.studioDesc',
     icon: Home,
     category: 'residential',
     emoji: '🏠',
@@ -38,8 +39,8 @@ const TYPE_BIEN_OPTIONS: TypeBienOption[] = [
   },
   {
     value: 'CHAMBRE_SALON',
-    label: 'Chambre-Salon',
-    description: '1 chambre avec salon',
+    labelKey: 'publish.propertyType.types.chambreSalon',
+    descKey: 'publish.propertyType.types.chambreSalonDesc',
     icon: Home,
     category: 'residential',
     emoji: '🛋️',
@@ -47,8 +48,8 @@ const TYPE_BIEN_OPTIONS: TypeBienOption[] = [
   },
   {
     value: 'APPARTEMENT_2CH',
-    label: 'Appart. 2CH',
-    description: '2 chambres + salon',
+    labelKey: 'publish.propertyType.types.appartement2ch',
+    descKey: 'publish.propertyType.types.appartement2chDesc',
     icon: Building,
     category: 'residential',
     emoji: '🏢',
@@ -56,8 +57,8 @@ const TYPE_BIEN_OPTIONS: TypeBienOption[] = [
   },
   {
     value: 'APPARTEMENT_3CH',
-    label: 'Appart. 3+CH',
-    description: '3 chambres ou plus',
+    labelKey: 'publish.propertyType.types.appartement3ch',
+    descKey: 'publish.propertyType.types.appartement3chDesc',
     icon: Building,
     category: 'residential',
     emoji: '🏬',
@@ -65,8 +66,8 @@ const TYPE_BIEN_OPTIONS: TypeBienOption[] = [
   },
   {
     value: 'VILLA',
-    label: 'Villa',
-    description: 'Maison individuelle',
+    labelKey: 'publish.propertyType.types.villa',
+    descKey: 'publish.propertyType.types.villaDesc',
     icon: Castle,
     category: 'residential',
     emoji: '🏡',
@@ -74,8 +75,8 @@ const TYPE_BIEN_OPTIONS: TypeBienOption[] = [
   },
   {
     value: 'DUPLEX',
-    label: 'Duplex',
-    description: 'Sur 2 niveaux',
+    labelKey: 'publish.propertyType.types.duplex',
+    descKey: 'publish.propertyType.types.duplexDesc',
     icon: Building2,
     category: 'residential',
     emoji: '🏘️',
@@ -83,8 +84,8 @@ const TYPE_BIEN_OPTIONS: TypeBienOption[] = [
   },
   {
     value: 'BUREAU',
-    label: 'Bureau',
-    description: 'Espace professionnel',
+    labelKey: 'publish.propertyType.types.bureau',
+    descKey: 'publish.propertyType.types.bureauDesc',
     icon: Building2,
     category: 'commercial',
     emoji: '🏢',
@@ -92,8 +93,8 @@ const TYPE_BIEN_OPTIONS: TypeBienOption[] = [
   },
   {
     value: 'MAGASIN',
-    label: 'Boutique',
-    description: 'Local commercial',
+    labelKey: 'publish.propertyType.types.magasin',
+    descKey: 'publish.propertyType.types.magasinDesc',
     icon: Store,
     category: 'commercial',
     emoji: '🏪',
@@ -101,8 +102,8 @@ const TYPE_BIEN_OPTIONS: TypeBienOption[] = [
   },
   {
     value: 'ENTREPOT',
-    label: 'Entrepôt',
-    description: 'Espace de stockage',
+    labelKey: 'publish.propertyType.types.entrepot',
+    descKey: 'publish.propertyType.types.entrepotDesc',
     icon: Warehouse,
     category: 'commercial',
     emoji: '🏭',
@@ -110,8 +111,8 @@ const TYPE_BIEN_OPTIONS: TypeBienOption[] = [
   },
   {
     value: 'TERRAIN',
-    label: 'Terrain',
-    description: 'Terrain à bâtir',
+    labelKey: 'publish.propertyType.types.terrain',
+    descKey: 'publish.propertyType.types.terrainDesc',
     icon: LandPlot,
     category: 'residential',
     emoji: '🌳',
@@ -132,6 +133,7 @@ export default function TypeBienSelector({
   error,
   required = true,
 }: TypeBienSelectorProps) {
+  const { t } = useTranslations();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedType, setSelectedType] = useState<TypeBien | undefined>(value);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -184,10 +186,10 @@ export default function TypeBienSelector({
             </div>
             <div className="flex-1">
               <p className="font-semibold text-neutral-900 dark:text-white">
-                {selectedOption.label}
+                {t(selectedOption.labelKey)}
               </p>
               <p className="text-sm text-neutral-500">
-                {selectedOption.description}
+                {t(selectedOption.descKey)}
               </p>
             </div>
             <Check className="w-5 h-5 text-primary-500" />
@@ -199,10 +201,10 @@ export default function TypeBienSelector({
             </div>
             <div className="flex-1">
               <p className="font-medium text-neutral-400">
-                Sélectionner le type de bien
+                {t('publish.propertyType.selectType')}
               </p>
               <p className="text-sm text-neutral-400">
-                Cliquez pour choisir
+                {t('publish.propertyType.clickToChoose')}
               </p>
             </div>
           </>
@@ -232,7 +234,7 @@ export default function TypeBienSelector({
                 <div className="flex items-center gap-2 px-3 py-2 mb-2">
                   <span className="text-lg">🏠</span>
                   <p className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                    Résidentiel
+                    {t('publish.propertyType.residential')}
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -258,9 +260,9 @@ export default function TypeBienSelector({
                         </div>
                         <div className="flex-1 text-left">
                           <p className={`font-semibold text-sm ${isSelected ? 'text-primary-600' : 'text-neutral-900 dark:text-white'}`}>
-                            {option.label}
+                            {t(option.labelKey)}
                           </p>
-                          <p className="text-xs text-neutral-500">{option.description}</p>
+                          <p className="text-xs text-neutral-500">{t(option.descKey)}</p>
                         </div>
                         {isSelected && (
                           <motion.div
@@ -281,7 +283,7 @@ export default function TypeBienSelector({
                 <div className="flex items-center gap-2 px-3 py-2 mb-2">
                   <span className="text-lg">🏢</span>
                   <p className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                    Commercial
+                    {t('publish.propertyType.commercial')}
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -307,9 +309,9 @@ export default function TypeBienSelector({
                         </div>
                         <div className="flex-1 text-left">
                           <p className={`font-semibold text-sm ${isSelected ? 'text-primary-600' : 'text-neutral-900 dark:text-white'}`}>
-                            {option.label}
+                            {t(option.labelKey)}
                           </p>
-                          <p className="text-xs text-neutral-500">{option.description}</p>
+                          <p className="text-xs text-neutral-500">{t(option.descKey)}</p>
                         </div>
                         {isSelected && (
                           <motion.div

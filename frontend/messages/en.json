@@ -573,6 +573,10 @@
     "propertyType": {
       "title": "Property type",
       "subtitle": "Select your property category",
+      "selectType": "Select property type",
+      "clickToChoose": "Click to choose",
+      "residential": "Residential",
+      "commercial": "Commercial",
       "transaction": "Transaction type",
       "rental": "Rental",
       "sale": "Sale",
