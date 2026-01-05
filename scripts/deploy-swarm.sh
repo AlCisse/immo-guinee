@@ -97,6 +97,23 @@ update_service() {
     echo -e "${GREEN}Service updated${NC}"
 }
 
+# Cleanup old containers and images
+cleanup() {
+    echo -e "${YELLOW}Cleaning up old containers and images...${NC}"
+
+    # Remove stopped containers
+    docker container prune -f 2>/dev/null || true
+
+    # Remove unused images (dangling)
+    docker image prune -f 2>/dev/null || true
+
+    # Remove old images not used by any container (keep last 2 versions)
+    echo -e "${YELLOW}Removing old unused images...${NC}"
+    docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep -E '^immoguinee/(frontend|php):' | tail -n +3 | awk '{print $2}' | xargs -r docker rmi 2>/dev/null || true
+
+    echo -e "${GREEN}Cleanup completed${NC}"
+}
+
 # Update frontend with new build
 update_frontend() {
     echo -e "${YELLOW}Updating frontend...${NC}"
@@ -105,12 +122,14 @@ update_frontend() {
     cd "$PROJECT_DIR"
     git pull
 
-    # Build new image (--no-cache to force rebuild)
+    # Step 1: Build new image FIRST
+    echo -e "${YELLOW}Step 1/3: Building new frontend image...${NC}"
     docker build --no-cache -t immoguinee/frontend:latest \
         --build-arg NEXT_PUBLIC_API_URL=/api \
         -f frontend/Dockerfile frontend/
 
-    # Update service (rolling update - zero downtime)
+    # Step 2: Update service with new image (rolling update - zero downtime)
+    echo -e "${YELLOW}Step 2/3: Updating service with new image...${NC}"
     docker service update \
         --image immoguinee/frontend:latest \
         --force \
@@ -119,6 +138,10 @@ update_frontend() {
         --update-failure-action rollback \
         --update-order start-first \
         "${STACK_NAME}_frontend"
+
+    # Step 3: Cleanup old containers and images
+    echo -e "${YELLOW}Step 3/3: Cleaning up...${NC}"
+    cleanup
 
     echo -e "${GREEN}Frontend updated with zero downtime${NC}"
 }
@@ -171,6 +194,9 @@ update_backend() {
                 --image immoguinee/php:latest \
                 --force \
                 "${STACK_NAME}_scheduler"
+
+            # Cleanup after update
+            cleanup
         fi
     else
         # Running locally - sync files to server
@@ -262,13 +288,20 @@ update_all() {
     cd "$PROJECT_DIR"
     git pull
 
+    # Step 1: Build all images first
+    echo -e "${YELLOW}Step 1/3: Building all images...${NC}"
     build_images
 
-    # Update all application services
-    docker service update --image immoguinee/frontend:latest "${STACK_NAME}_frontend"
-    docker service update --image immoguinee/php:latest "${STACK_NAME}_php"
-    docker service update --image immoguinee/php:latest "${STACK_NAME}_queue-worker"
-    docker service update --image immoguinee/php:latest "${STACK_NAME}_scheduler"
+    # Step 2: Update all application services with new images
+    echo -e "${YELLOW}Step 2/3: Updating all services...${NC}"
+    docker service update --image immoguinee/frontend:latest --force "${STACK_NAME}_frontend"
+    docker service update --image immoguinee/php:latest --force "${STACK_NAME}_php"
+    docker service update --image immoguinee/php:latest --force "${STACK_NAME}_queue-worker"
+    docker service update --image immoguinee/php:latest --force "${STACK_NAME}_scheduler"
+
+    # Step 3: Cleanup
+    echo -e "${YELLOW}Step 3/3: Cleaning up...${NC}"
+    cleanup
 
     echo -e "${GREEN}All services updated${NC}"
 }
@@ -584,6 +617,9 @@ case "$1" in
     "setup-waha")
         setup_waha
         ;;
+    "cleanup")
+        cleanup
+        ;;
     *)
         echo "Usage: $0 {command}"
         echo ""
@@ -609,6 +645,7 @@ case "$1" in
         echo "  post-deploy --seed - Run post-deployment fixes with database seeding"
         echo "  fix-db          - Fix database credentials if connection fails"
         echo "  setup-waha      - Configure WAHA (WhatsApp API) service"
+        echo "  cleanup         - Remove stopped containers and unused images"
         echo ""
         echo "Examples:"
         echo "  $0 full                    # First time deployment"
