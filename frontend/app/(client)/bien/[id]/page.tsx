@@ -665,6 +665,92 @@ export default function PropertyDetailPage() {
               </p>
             </div>
 
+            {/* Mobile Pricing Card - After Description */}
+            <div className="lg:hidden border-b border-neutral-200 dark:border-dark-border pb-6">
+              <div className="bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-xl p-5 shadow-lg">
+                {/* Price */}
+                <div className="flex items-baseline gap-1 mb-4">
+                  <span className="text-2xl font-semibold text-neutral-900 dark:text-white">
+                    {listing.formatted_price || formatPrice(listing.loyer_mensuel)}
+                  </span>
+                  <span className="text-neutral-500">{getPriceSuffix()}</span>
+                </div>
+
+                {/* Caution info */}
+                {listing.caution && parseFloat(listing.caution) > 0 && (
+                  <p className="text-sm text-neutral-500 mb-4">
+                    {t('listingDetail.advance')}: {formatPrice(listing.caution)}
+                  </p>
+                )}
+
+                {/* Short rental minimum duration */}
+                {(listing.type_transaction === 'LOCATION_COURTE' || listing.type_transaction === 'location_courte') && listing.duree_minimum_jours && (
+                  <p className="text-sm text-purple-600 dark:text-purple-400 mb-4">
+                    {t('listingDetail.minimumDuration')}: {listing.duree_minimum_jours} {listing.duree_minimum_jours > 1 ? t('listingDetail.nights') : t('listingDetail.night')}
+                  </p>
+                )}
+
+                {/* Action Buttons */}
+                {!isOwner ? (
+                  <div className="space-y-3">
+                    <motion.button
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        if (!isAuthenticated) {
+                          router.push(`/auth/login?redirect=/bien/${id}`);
+                          return;
+                        }
+                        if (!requirePhoneVerification(VERIFICATION_ACTIONS.contact)) return;
+                        setShowContactModal(true);
+                      }}
+                      className="w-full py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-semibold rounded-lg transition-all"
+                    >
+                      {t('listingDetail.contactOwner')}
+                    </motion.button>
+
+                    <motion.button
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        if (!isAuthenticated) {
+                          router.push(`/auth/login?redirect=/bien/${id}`);
+                          return;
+                        }
+                        if (!requirePhoneVerification(VERIFICATION_ACTIONS.booking)) return;
+                        setShowBookingModal(true);
+                      }}
+                      className="w-full py-3 border-2 border-neutral-900 dark:border-white text-neutral-900 dark:text-white font-semibold rounded-lg transition-all"
+                    >
+                      {t('listingDetail.scheduleVisit')}
+                    </motion.button>
+                  </div>
+                ) : (
+                  <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
+                    <p className="text-blue-600 dark:text-blue-400 font-medium">
+                      {t('listingDetail.thisIsYourListing')}
+                    </p>
+                    <Link
+                      href={`/mes-annonces/${id}/modifier`}
+                      className="text-sm text-blue-500 hover:underline"
+                    >
+                      {t('listingDetail.editListing')}
+                    </Link>
+                  </div>
+                )}
+
+                {/* Stats */}
+                <div className="flex items-center justify-center gap-4 mt-4 pt-4 border-t border-neutral-200 dark:border-dark-border text-sm text-neutral-500">
+                  <div className="flex items-center gap-1">
+                    <Eye className="w-4 h-4" />
+                    <span>{listing.vues_count || 0} {t('listingDetail.views')}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Clock className="w-4 h-4" />
+                    <span>{new Date(listing.created_at).toLocaleDateString('fr-FR')}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Amenities */}
             {amenities.length > 0 && (
               <div className="border-b border-neutral-200 dark:border-dark-border pb-6">
@@ -700,8 +786,8 @@ export default function PropertyDetailPage() {
             </div>
           </div>
 
-          {/* Right Column: Booking Card (Sticky) */}
-          <div className="lg:col-span-1">
+          {/* Right Column: Booking Card (Sticky) - Desktop only */}
+          <div className="hidden lg:block lg:col-span-1">
             <div className="sticky top-24">
               <div className="bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-xl p-6 shadow-xl">
                 {/* Price */}
@@ -834,38 +920,6 @@ export default function PropertyDetailPage() {
             </div>
           </div>
         )}
-      </div>
-
-      {/* Mobile Fixed Bottom Bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-dark-card border-t border-neutral-200 dark:border-dark-border p-4 z-40">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-lg font-semibold text-neutral-900 dark:text-white">
-              {listing.formatted_price || formatPrice(listing.loyer_mensuel)}
-              <span className="text-sm font-normal text-neutral-500">{getPriceSuffix()}</span>
-            </p>
-          </div>
-          {!isOwner ? (
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => {
-                if (!isAuthenticated) {
-                  router.push(`/auth/login?redirect=/bien/${id}`);
-                  return;
-                }
-                if (!requirePhoneVerification(VERIFICATION_ACTIONS.contact)) return;
-                setShowContactModal(true);
-              }}
-              className="px-6 py-3 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-semibold rounded-lg"
-            >
-              {t('listingDetail.contact')}
-            </motion.button>
-          ) : (
-            <span className="px-4 py-2 text-sm text-blue-600 bg-blue-50 rounded-lg">
-              {t('listingDetail.yourListing')}
-            </span>
-          )}
-        </div>
       </div>
 
       {/* Fullscreen Gallery Modal */}
