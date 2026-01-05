@@ -665,7 +665,28 @@ export default function PropertyDetailPage() {
               </p>
             </div>
 
-            {/* Mobile Pricing Card - After Description */}
+            {/* Amenities */}
+            {amenities.length > 0 && (
+              <div className="border-b border-neutral-200 dark:border-dark-border pb-6">
+                <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-4">
+                  {t('listingDetail.whatThisPlaceOffers')}
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {amenities.map((amenity) => {
+                    const config = amenityConfig[amenity.toLowerCase()] || { icon: Check, label: amenity };
+                    const Icon = config.icon;
+                    return (
+                      <div key={amenity} className="flex items-center gap-4">
+                        <Icon className="w-6 h-6 text-neutral-600 dark:text-neutral-400" />
+                        <span className="text-neutral-700 dark:text-neutral-300">{config.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Mobile Pricing Card - After Amenities */}
             <div className="lg:hidden border-b border-neutral-200 dark:border-dark-border pb-6">
               <div className="bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-xl p-5 shadow-lg">
                 {/* Price */}
@@ -750,27 +771,6 @@ export default function PropertyDetailPage() {
                 </div>
               </div>
             </div>
-
-            {/* Amenities */}
-            {amenities.length > 0 && (
-              <div className="border-b border-neutral-200 dark:border-dark-border pb-6">
-                <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-4">
-                  {t('listingDetail.whatThisPlaceOffers')}
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {amenities.map((amenity) => {
-                    const config = amenityConfig[amenity.toLowerCase()] || { icon: Check, label: amenity };
-                    const Icon = config.icon;
-                    return (
-                      <div key={amenity} className="flex items-center gap-4">
-                        <Icon className="w-6 h-6 text-neutral-600 dark:text-neutral-400" />
-                        <span className="text-neutral-700 dark:text-neutral-300">{config.label}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
 
             {/* Location Map */}
             <div>
