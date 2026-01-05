@@ -88,6 +88,7 @@ interface Listing {
   adresse_complete: string | null;
   loyer_mensuel: string;
   caution: string;
+  avance: string;
   nombre_chambres: number | null;
   nombre_salles_bain: number | null;
   nombre_salons: number | null;
@@ -697,11 +698,22 @@ export default function PropertyDetailPage() {
                   <span className="text-neutral-500">{getPriceSuffix()}</span>
                 </div>
 
-                {/* Caution info */}
-                {listing.caution && parseFloat(listing.caution) > 0 && (
-                  <p className="text-sm text-neutral-500 mb-4">
-                    {t('listingDetail.advance')}: {formatPrice(listing.caution)}
-                  </p>
+                {/* Caution & Avance - Separate and visible */}
+                {((listing.caution && parseFloat(listing.caution) > 0) || (listing.avance && parseFloat(listing.avance) > 0)) && (
+                  <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mb-4 space-y-2">
+                    {listing.caution && parseFloat(listing.caution) > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-amber-800 dark:text-amber-300">{t('listingDetail.deposit')}</span>
+                        <span className="text-sm font-semibold text-amber-900 dark:text-amber-200">{formatPrice(listing.caution)}</span>
+                      </div>
+                    )}
+                    {listing.avance && parseFloat(listing.avance) > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-amber-800 dark:text-amber-300">{t('listingDetail.advance')}</span>
+                        <span className="text-sm font-semibold text-amber-900 dark:text-amber-200">{formatPrice(listing.avance)}</span>
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 {/* Short rental minimum duration */}
@@ -791,18 +803,29 @@ export default function PropertyDetailPage() {
             <div className="sticky top-24">
               <div className="bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-xl p-6 shadow-xl">
                 {/* Price */}
-                <div className="flex items-baseline gap-1 mb-6">
+                <div className="flex items-baseline gap-1 mb-4">
                   <span className="text-2xl font-semibold text-neutral-900 dark:text-white">
                     {listing.formatted_price || formatPrice(listing.loyer_mensuel)}
                   </span>
                   <span className="text-neutral-500">{getPriceSuffix()}</span>
                 </div>
 
-                {/* Caution info */}
-                {listing.caution && parseFloat(listing.caution) > 0 && (
-                  <p className="text-sm text-neutral-500 mb-4">
-                    {t('listingDetail.advance')}: {formatPrice(listing.caution)}
-                  </p>
+                {/* Caution & Avance - Separate and visible */}
+                {((listing.caution && parseFloat(listing.caution) > 0) || (listing.avance && parseFloat(listing.avance) > 0)) && (
+                  <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-4 space-y-2">
+                    {listing.caution && parseFloat(listing.caution) > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-amber-800 dark:text-amber-300">{t('listingDetail.deposit')}</span>
+                        <span className="font-semibold text-amber-900 dark:text-amber-200">{formatPrice(listing.caution)}</span>
+                      </div>
+                    )}
+                    {listing.avance && parseFloat(listing.avance) > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-amber-800 dark:text-amber-300">{t('listingDetail.advance')}</span>
+                        <span className="font-semibold text-amber-900 dark:text-amber-200">{formatPrice(listing.avance)}</span>
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 {/* Short rental minimum duration */}
