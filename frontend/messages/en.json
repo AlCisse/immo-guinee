@@ -680,7 +680,34 @@
       "commune": "District",
       "quartier": "Neighborhood",
       "address": "Full address",
-      "selectOnMap": "Select on map"
+      "selectOnMap": "Select on map",
+      "geolocation": {
+        "detectPosition": "Detect my position",
+        "detecting": "Detecting...",
+        "position": "Position",
+        "positionDetected": "Position detected",
+        "useThisLocation": "Use this location",
+        "detectedLocation": "Detected location",
+        "nearbyPlaces": "Nearby places",
+        "generatedDescription": "Generated description",
+        "noPlacesFound": "GPS coordinates saved. No reference places found nearby in OpenStreetMap.",
+        "cityRegion": "City / Neighborhood",
+        "region": "Region",
+        "prefecture": "Prefecture",
+        "commune": "District",
+        "quartier": "Neighborhood",
+        "selectQuartier": "Select a neighborhood",
+        "searchQuartier": "Search neighborhood...",
+        "noQuartierFound": "No neighborhood found",
+        "popularQuartiers": "Popular neighborhoods",
+        "errors": {
+          "notSupported": "Geolocation is not supported by your browser",
+          "permissionDenied": "Location access denied. Please allow geolocation.",
+          "positionUnavailable": "Position unavailable. Check your location settings.",
+          "timeout": "Detection timeout. Please try again.",
+          "searchFailed": "Error searching for places"
+        }
+      }
     },
     "photos": {
       "title": "Property photos",

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { CONAKRY_COMMUNES, CONAKRY_QUARTIERS, PROPERTY_TYPES } from '@/lib/data/communes';
+import { useTranslations } from '@/lib/i18n';
 
 interface EstimationResult {
   minPrice: number;
@@ -12,6 +13,8 @@ interface EstimationResult {
 }
 
 export default function EstimerPage() {
+  const { t } = useTranslations('estimate');
+
   const [formData, setFormData] = useState({
     typeBien: '',
     operationType: 'LOCATION',
@@ -123,25 +126,25 @@ export default function EstimerPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
       {/* Header */}
       <div className="bg-gradient-to-r from-green-600 to-green-700 text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl font-bold mb-4">Estimez votre bien immobilier</h1>
+          <h1 className="text-4xl font-bold mb-4">{t('title')}</h1>
           <p className="text-xl text-green-100">
-            Obtenez une estimation gratuite du prix de votre bien en quelques clics
+            {t('subtitle')}
           </p>
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div className="bg-white dark:bg-dark-card rounded-2xl shadow-lg overflow-hidden">
           <div className="p-8">
             <form onSubmit={handleCalculate} className="space-y-6">
               {/* Type d'opération */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Type d&apos;opération
+                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-3">
+                  {t('operationType')}
                 </label>
                 <div className="flex gap-4">
                   <button
@@ -150,10 +153,10 @@ export default function EstimerPage() {
                     className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
                       formData.operationType === 'LOCATION'
                         ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        : 'bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-neutral-300 hover:bg-gray-200 dark:hover:bg-dark-border'
                     }`}
                   >
-                    Location
+                    {t('rental')}
                   </button>
                   <button
                     type="button"
@@ -161,27 +164,27 @@ export default function EstimerPage() {
                     className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
                       formData.operationType === 'VENTE'
                         ? 'bg-green-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        : 'bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-neutral-300 hover:bg-gray-200 dark:hover:bg-dark-border'
                     }`}
                   >
-                    Vente
+                    {t('sale')}
                   </button>
                 </div>
               </div>
 
               {/* Type de bien */}
               <div>
-                <label htmlFor="typeBien" className="block text-sm font-medium text-gray-700 mb-2">
-                  Type de bien *
+                <label htmlFor="typeBien" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                  {t('propertyType')} *
                 </label>
                 <select
                   id="typeBien"
                   value={formData.typeBien}
                   onChange={(e) => setFormData({ ...formData, typeBien: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all bg-white dark:bg-dark-bg text-gray-900 dark:text-white"
                   required
                 >
-                  <option value="">Sélectionnez un type</option>
+                  <option value="">{t('selectType')}</option>
                   {PROPERTY_TYPES.map((type) => (
                     <option key={type.value} value={type.value}>
                       {type.label}
@@ -193,8 +196,8 @@ export default function EstimerPage() {
               {/* Commune et Quartier */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="commune" className="block text-sm font-medium text-gray-700 mb-2">
-                    Commune *
+                  <label htmlFor="commune" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                    {t('commune')} *
                   </label>
                   <select
                     id="commune"
@@ -202,10 +205,10 @@ export default function EstimerPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, commune: e.target.value, quartier: '' })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all bg-white dark:bg-dark-bg text-gray-900 dark:text-white"
                     required
                   >
-                    <option value="">Sélectionnez une commune</option>
+                    <option value="">{t('selectCommune')}</option>
                     {CONAKRY_COMMUNES.map((commune) => (
                       <option key={commune} value={commune}>
                         {commune}
@@ -215,17 +218,17 @@ export default function EstimerPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="quartier" className="block text-sm font-medium text-gray-700 mb-2">
-                    Quartier
+                  <label htmlFor="quartier" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                    {t('quartier')}
                   </label>
                   <select
                     id="quartier"
                     value={formData.quartier}
                     onChange={(e) => setFormData({ ...formData, quartier: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all bg-white dark:bg-dark-bg text-gray-900 dark:text-white disabled:opacity-50"
                     disabled={!formData.commune}
                   >
-                    <option value="">Sélectionnez un quartier</option>
+                    <option value="">{t('selectQuartier')}</option>
                     {quartiersForCommune.map((q) => (
                       <option key={q.name} value={q.name}>
                         {q.name}
@@ -238,38 +241,38 @@ export default function EstimerPage() {
               {/* Superficie et Chambres */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="superficie" className="block text-sm font-medium text-gray-700 mb-2">
-                    Superficie (m²) *
+                  <label htmlFor="superficie" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                    {t('area')} *
                   </label>
                   <input
                     type="number"
                     id="superficie"
                     value={formData.superficie}
                     onChange={(e) => setFormData({ ...formData, superficie: e.target.value })}
-                    placeholder="Ex: 80"
+                    placeholder={t('areaPlaceholder')}
                     min="10"
                     max="10000"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all bg-white dark:bg-dark-bg text-gray-900 dark:text-white"
                     required
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="nombreChambres" className="block text-sm font-medium text-gray-700 mb-2">
-                    Nombre de chambres
+                  <label htmlFor="nombreChambres" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                    {t('bedrooms')}
                   </label>
                   <select
                     id="nombreChambres"
                     value={formData.nombreChambres}
                     onChange={(e) => setFormData({ ...formData, nombreChambres: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all bg-white dark:bg-dark-bg text-gray-900 dark:text-white"
                   >
-                    <option value="">Sélectionnez</option>
-                    <option value="1">1 chambre</option>
-                    <option value="2">2 chambres</option>
-                    <option value="3">3 chambres</option>
-                    <option value="4">4 chambres</option>
-                    <option value="5">5+ chambres</option>
+                    <option value="">{t('selectBedrooms')}</option>
+                    <option value="1">1 {t('bedroom')}</option>
+                    <option value="2">2 {t('bedroomsPlural')}</option>
+                    <option value="3">3 {t('bedroomsPlural')}</option>
+                    <option value="4">4 {t('bedroomsPlural')}</option>
+                    <option value="5">{t('bedroomsMore')}</option>
                   </select>
                 </div>
               </div>
@@ -284,8 +287,8 @@ export default function EstimerPage() {
                     onChange={(e) => setFormData({ ...formData, meuble: e.target.checked })}
                     className="h-5 w-5 text-green-600 focus:ring-green-500 border-gray-300 rounded"
                   />
-                  <label htmlFor="meuble" className="ml-3 text-sm text-gray-700">
-                    Le bien est meublé
+                  <label htmlFor="meuble" className="ml-3 text-sm text-gray-700 dark:text-neutral-300">
+                    {t('furnished')}
                   </label>
                 </div>
               )}
@@ -314,7 +317,7 @@ export default function EstimerPage() {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       />
                     </svg>
-                    Calcul en cours...
+                    {t('calculating')}
                   </>
                 ) : (
                   <>
@@ -326,7 +329,7 @@ export default function EstimerPage() {
                         d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
                       />
                     </svg>
-                    Estimer mon bien
+                    {t('estimateButton')}
                   </>
                 )}
               </button>
@@ -334,8 +337,8 @@ export default function EstimerPage() {
 
             {/* Results */}
             {result && (
-              <div className="mt-8 p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
-                <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <div className="mt-8 p-6 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200 dark:border-green-800">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                   <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
@@ -344,27 +347,27 @@ export default function EstimerPage() {
                       d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  Estimation de votre bien
+                  {t('resultTitle')}
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  <div className="bg-white p-4 rounded-lg shadow-sm">
-                    <div className="text-sm text-gray-600 mb-1">Prix minimum</div>
-                    <div className="text-xl font-bold text-gray-900">{formatPrice(result.minPrice)}</div>
+                  <div className="bg-white dark:bg-dark-card p-4 rounded-lg shadow-sm">
+                    <div className="text-sm text-gray-600 dark:text-neutral-400 mb-1">{t('minPrice')}</div>
+                    <div className="text-xl font-bold text-gray-900 dark:text-white">{formatPrice(result.minPrice)}</div>
                   </div>
-                  <div className="bg-white p-4 rounded-lg shadow-sm border-2 border-green-500">
-                    <div className="text-sm text-green-600 mb-1">Prix estimé</div>
+                  <div className="bg-white dark:bg-dark-card p-4 rounded-lg shadow-sm border-2 border-green-500">
+                    <div className="text-sm text-green-600 mb-1">{t('estimatedPrice')}</div>
                     <div className="text-2xl font-bold text-green-600">{formatPrice(result.avgPrice)}</div>
                   </div>
-                  <div className="bg-white p-4 rounded-lg shadow-sm">
-                    <div className="text-sm text-gray-600 mb-1">Prix maximum</div>
-                    <div className="text-xl font-bold text-gray-900">{formatPrice(result.maxPrice)}</div>
+                  <div className="bg-white dark:bg-dark-card p-4 rounded-lg shadow-sm">
+                    <div className="text-sm text-gray-600 dark:text-neutral-400 mb-1">{t('maxPrice')}</div>
+                    <div className="text-xl font-bold text-gray-900 dark:text-white">{formatPrice(result.maxPrice)}</div>
                   </div>
                 </div>
 
-                <div className="text-sm text-gray-600 mb-4">
-                  Prix au m² : <span className="font-semibold">{formatPrice(result.pricePerM2)}</span>
-                  {formData.operationType === 'LOCATION' && ' / mois'}
+                <div className="text-sm text-gray-600 dark:text-neutral-400 mb-4">
+                  {t('pricePerM2')} : <span className="font-semibold">{formatPrice(result.pricePerM2)}</span>
+                  {formData.operationType === 'LOCATION' && t('perMonth')}
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3">
@@ -372,13 +375,13 @@ export default function EstimerPage() {
                     href="/publier"
                     className="flex-1 bg-green-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-green-700 transition-colors text-center"
                   >
-                    Publier mon annonce
+                    {t('publishListing')}
                   </Link>
                   <Link
-                    href="/annonces"
-                    className="flex-1 bg-white text-green-600 border border-green-600 py-3 px-4 rounded-lg font-semibold hover:bg-green-50 transition-colors text-center"
+                    href="/recherche"
+                    className="flex-1 bg-white dark:bg-dark-bg text-green-600 border border-green-600 py-3 px-4 rounded-lg font-semibold hover:bg-green-50 dark:hover:bg-dark-border transition-colors text-center"
                   >
-                    Voir les annonces similaires
+                    {t('viewSimilar')}
                   </Link>
                 </div>
               </div>
@@ -388,8 +391,8 @@ export default function EstimerPage() {
 
         {/* Info section */}
         <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white p-6 rounded-xl shadow-sm">
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+          <div className="bg-white dark:bg-dark-card p-6 rounded-xl shadow-sm">
+            <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mb-4">
               <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
@@ -399,14 +402,14 @@ export default function EstimerPage() {
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Données du marché</h3>
-            <p className="text-gray-600 text-sm">
-              Notre estimation est basée sur les prix réels du marché immobilier à Conakry.
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t('marketData')}</h3>
+            <p className="text-gray-600 dark:text-neutral-400 text-sm">
+              {t('marketDataDesc')}
             </p>
           </div>
 
-          <div className="bg-white p-6 rounded-xl shadow-sm">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+          <div className="bg-white dark:bg-dark-card p-6 rounded-xl shadow-sm">
+            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mb-4">
               <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
@@ -422,14 +425,14 @@ export default function EstimerPage() {
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Localisation précise</h3>
-            <p className="text-gray-600 text-sm">
-              Les prix varient selon la commune et le quartier. Notre outil en tient compte.
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t('preciseLocation')}</h3>
+            <p className="text-gray-600 dark:text-neutral-400 text-sm">
+              {t('preciseLocationDesc')}
             </p>
           </div>
 
-          <div className="bg-white p-6 rounded-xl shadow-sm">
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+          <div className="bg-white dark:bg-dark-card p-6 rounded-xl shadow-sm">
+            <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center mb-4">
               <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
@@ -439,9 +442,9 @@ export default function EstimerPage() {
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">100% gratuit</h3>
-            <p className="text-gray-600 text-sm">
-              Notre service d&apos;estimation est entièrement gratuit et sans engagement.
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t('freeService')}</h3>
+            <p className="text-gray-600 dark:text-neutral-400 text-sm">
+              {t('freeServiceDesc')}
             </p>
           </div>
         </div>

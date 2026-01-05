@@ -894,19 +894,23 @@ class AuthController extends Controller
 
             // Use secure filename from helper (UUID-based)
             $filename = $validation['secure_name'];
+            $oldPhoto = $user->photo_profil;
 
-            // Delete old photo if exists
-            if ($user->photo_profil) {
+            // Use DB transaction for atomicity
+            \DB::transaction(function () use ($user, $file, $filename, $oldPhoto) {
                 $storageService = app(\App\Services\StorageService::class);
-                $storageService->delete('avatars', $user->photo_profil);
-            }
 
-            // Upload new photo using StorageService
-            $storageService = app(\App\Services\StorageService::class);
-            $storageService->put('avatars', $filename, file_get_contents($file->getRealPath()), 'public');
+                // Upload new photo first
+                $storageService->put('avatars', $filename, file_get_contents($file->getRealPath()), 'public');
 
-            // Update user
-            $user->update(['photo_profil' => $filename]);
+                // Update user in DB
+                $user->update(['photo_profil' => $filename]);
+
+                // Delete old photo only after successful update
+                if ($oldPhoto) {
+                    $storageService->delete('avatars', $oldPhoto);
+                }
+            });
 
             Log::info('Profile photo uploaded', [
                 'user_id' => $user->id,

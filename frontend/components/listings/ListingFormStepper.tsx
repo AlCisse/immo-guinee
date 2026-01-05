@@ -73,6 +73,9 @@ interface FormData {
   region?: string;
   prefecture?: string;
   quartier?: string;
+  latitude?: number;
+  longitude?: number;
+  locationDescription?: string;
   superficie: string;
   nombreChambres: string;
   nombreSallesDeBain: string;
@@ -463,6 +466,12 @@ export default function ListingFormStepper({
       // Location (backend expects commune and quartier)
       submitData.append('commune', commune);
       submitData.append('quartier', formData.quartier || 'Centre');
+
+      // Add GPS coordinates if detected
+      if (formData.latitude && formData.longitude) {
+        submitData.append('latitude', formData.latitude.toString());
+        submitData.append('longitude', formData.longitude.toString());
+      }
 
       // Caution, Avance, Commission and Tenant type for long-term rental
       if (formData.operationType === 'LOCATION') {
@@ -1341,6 +1350,35 @@ export default function ListingFormStepper({
                 onQuartierChange={(quartier) => {
                   setFormData((prev) => ({ ...prev, quartier }));
                   setErrors((prev) => ({ ...prev, quartier: undefined }));
+                }}
+                onLocationDetected={(data) => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    latitude: data.coordinates.latitude,
+                    longitude: data.coordinates.longitude,
+                    locationDescription: data.locationDescription,
+                  }));
+                }}
+                onUseLocation={(data) => {
+                  // Update coordinates
+                  setFormData((prev) => ({
+                    ...prev,
+                    latitude: data.coordinates.latitude,
+                    longitude: data.coordinates.longitude,
+                  }));
+
+                  // Append location description to existing description
+                  if (data.locationDescription) {
+                    const newDescription = formData.description
+                      ? `${formData.description}\n\n${data.locationDescription}`
+                      : data.locationDescription;
+                    setFormData((prev) => ({
+                      ...prev,
+                      description: newDescription,
+                      locationDescription: undefined, // Clear after using
+                    }));
+                    setErrors((prev) => ({ ...prev, description: undefined }));
+                  }
                 }}
                 regionError={errors.region}
                 prefectureError={errors.prefecture}

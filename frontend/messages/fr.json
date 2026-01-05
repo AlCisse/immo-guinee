@@ -680,7 +680,34 @@
       "commune": "Commune",
       "quartier": "Quartier",
       "address": "Adresse complete",
-      "selectOnMap": "Selectionner sur la carte"
+      "selectOnMap": "Selectionner sur la carte",
+      "geolocation": {
+        "detectPosition": "Detecter ma position",
+        "detecting": "Detection...",
+        "position": "Position",
+        "positionDetected": "Position detectee",
+        "useThisLocation": "Utiliser cette localisation",
+        "detectedLocation": "Localisation detectee",
+        "nearbyPlaces": "Lieux a proximite",
+        "generatedDescription": "Description generee",
+        "noPlacesFound": "Coordonnees GPS enregistrees. Aucun lieu de reference trouve a proximite dans OpenStreetMap.",
+        "cityRegion": "Ville / Quartier",
+        "region": "Region",
+        "prefecture": "Prefecture",
+        "commune": "Commune",
+        "quartier": "Quartier",
+        "selectQuartier": "Selectionner un quartier",
+        "searchQuartier": "Rechercher un quartier...",
+        "noQuartierFound": "Aucun quartier trouve",
+        "popularQuartiers": "Quartiers populaires",
+        "errors": {
+          "notSupported": "La geolocalisation n'est pas supportee par votre navigateur",
+          "permissionDenied": "Acces a la position refuse. Veuillez autoriser la geolocalisation.",
+          "positionUnavailable": "Position non disponible. Verifiez vos parametres de localisation.",
+          "timeout": "Delai de detection depasse. Reessayez.",
+          "searchFailed": "Erreur lors de la recherche de lieux"
+        }
+      }
     },
     "photos": {
       "title": "Photos du bien",
