@@ -12,6 +12,7 @@ import * as ScreenCapture from 'expo-screen-capture';
 import * as Crypto from 'expo-crypto';
 import * as Application from 'expo-application';
 import Constants from 'expo-constants';
+import i18n from '../i18n';
 
 // Security configuration
 const SECURITY_CONFIG = {
@@ -329,7 +330,7 @@ class BankSecurityService {
     } catch (error: any) {
       return {
         success: false,
-        error: error.message || 'Erreur d\'authentification',
+        error: error.message || i18n.t('errors.authentication'),
       };
     }
   }

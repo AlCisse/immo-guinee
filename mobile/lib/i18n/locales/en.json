@@ -784,6 +784,11 @@
   "errors": {
     "generic": "An error occurred",
     "network": "Connection error",
+    "authentication": "Authentication error",
+    "login": "Login error",
+    "registration": "Registration error",
+    "verification": "Verification error",
+    "sendCode": "Error sending code",
     "serverError": "Server error",
     "timeout": "Request timeout",
     "invalidPhone": "Invalid phone number",

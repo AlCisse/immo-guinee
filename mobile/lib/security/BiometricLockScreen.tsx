@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
+import { useTranslation } from 'react-i18next';
 import Colors, { lightTheme } from '@/constants/Colors';
 import { bankSecurity } from './BankSecurityService';
 
@@ -31,6 +32,7 @@ export function BiometricLockScreen({
   onUnlock,
   onCancel,
 }: BiometricLockScreenProps) {
+  const { t } = useTranslation();
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [biometricName, setBiometricName] = useState('');
@@ -58,7 +60,7 @@ export function BiometricLockScreen({
         setError(result.error || 'Authentification echouee');
       }
     } catch (err: any) {
-      setError(err.message || 'Erreur d\'authentification');
+      setError(err.message || t('errors.authentication'));
     } finally {
       setIsAuthenticating(false);
     }

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { router } from 'expo-router';
 import { api, tokenManager, ApiResponse } from '../api/client';
 import { pushNotifications } from '../services/pushNotifications';
+import i18n from '../i18n';
 
 // User type matching backend
 export interface User {
@@ -116,10 +117,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         registerPushToken();
         router.replace('/(tabs)');
       } else {
-        throw new Error(data.message || 'Erreur de connexion');
+        throw new Error(data.message || i18n.t('errors.login'));
       }
     } catch (error: any) {
-      const message = error.response?.data?.message || error.message || 'Erreur de connexion';
+      const message = error.response?.data?.message || error.message || i18n.t('errors.login');
       throw new Error(message);
     }
   }, [registerPushToken]);
@@ -145,7 +146,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           });
         }
       } else {
-        throw new Error(result.message || 'Erreur lors de l\'inscription');
+        throw new Error(result.message || i18n.t('errors.registration'));
       }
     } catch (error: any) {
       // Handle existing verified account
@@ -156,7 +157,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           throw new Error('Ce compte existe deja. Veuillez vous connecter.');
         }
       }
-      const message = error.response?.data?.message || error.message || 'Erreur lors de l\'inscription';
+      const message = error.response?.data?.message || error.message || i18n.t('errors.registration');
       throw new Error(message);
     }
   }, []);
@@ -183,7 +184,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(data.message || 'Code invalide');
       }
     } catch (error: any) {
-      const message = error.response?.data?.message || error.message || 'Erreur de verification';
+      const message = error.response?.data?.message || error.message || i18n.t('errors.verification');
       throw new Error(message);
     }
   }, [registerPushToken]);
@@ -193,10 +194,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await api.auth.resendOtp({ telephone });
       const data = response.data as ApiResponse;
       if (!data.success) {
-        throw new Error(data.message || 'Erreur lors de l\'envoi du code');
+        throw new Error(data.message || i18n.t('errors.sendCode'));
       }
     } catch (error: any) {
-      const message = error.response?.data?.message || error.message || 'Erreur lors de l\'envoi du code';
+      const message = error.response?.data?.message || error.message || i18n.t('errors.sendCode');
       throw new Error(message);
     }
   }, []);
