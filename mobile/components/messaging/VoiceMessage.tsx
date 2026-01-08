@@ -7,7 +7,7 @@ import {
   Animated,
   ActivityIndicator,
 } from 'react-native';
-import { Audio, AVPlaybackStatus } from 'expo-av';
+import { useAudioPlayer, AudioPlayer } from 'expo-audio';
 import { Ionicons } from '@expo/vector-icons';
 
 interface VoiceMessageProps {
@@ -36,19 +36,60 @@ export function VoiceMessage({
   const [totalDuration, setTotalDuration] = useState(initialDuration || 0);
   const [speedIndex, setSpeedIndex] = useState(0);
 
-  const soundRef = useRef<Audio.Sound | null>(null);
+  const player = useAudioPlayer(uri);
   const progressAnim = useRef(new Animated.Value(0)).current;
+  const positionIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Generate random waveform bars (simulate waveform data)
   const waveformBars = useRef(
     Array.from({ length: 20 }, () => 0.2 + Math.random() * 0.8)
   ).current;
 
+  // Update duration when player is ready
+  useEffect(() => {
+    if (player && player.duration && player.duration > 0) {
+      setTotalDuration(player.duration);
+    }
+  }, [player?.duration]);
+
+  // Track playback status
+  useEffect(() => {
+    if (!player) return;
+
+    const updateStatus = () => {
+      if (player.playing) {
+        setIsPlaying(true);
+        setIsLoading(false);
+        setCurrentPosition(player.currentTime);
+      } else {
+        setIsPlaying(false);
+      }
+    };
+
+    // Poll for status updates
+    positionIntervalRef.current = setInterval(updateStatus, 100);
+
+    return () => {
+      if (positionIntervalRef.current) {
+        clearInterval(positionIntervalRef.current);
+      }
+    };
+  }, [player]);
+
+  // Handle playback end
+  useEffect(() => {
+    if (player && !player.playing && currentPosition > 0 && currentPosition >= totalDuration - 0.1) {
+      setCurrentPosition(0);
+      progressAnim.setValue(0);
+      onPlaybackEnd?.();
+    }
+  }, [player?.playing, currentPosition, totalDuration]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (soundRef.current) {
-        soundRef.current.unloadAsync();
+      if (positionIntervalRef.current) {
+        clearInterval(positionIntervalRef.current);
       }
     };
   }, []);
@@ -64,108 +105,38 @@ export function VoiceMessage({
     }
   }, [currentPosition, totalDuration]);
 
-  // Handle playback status updates
-  const onPlaybackStatusUpdate = useCallback(
-    (status: AVPlaybackStatus) => {
-      if (!status.isLoaded) {
-        setIsLoading(false);
-        return;
-      }
-
-      setIsPlaying(status.isPlaying);
-      setCurrentPosition(status.positionMillis / 1000);
-
-      if (status.durationMillis && totalDuration === 0) {
-        setTotalDuration(status.durationMillis / 1000);
-      }
-
-      if (status.didJustFinish) {
-        setIsPlaying(false);
-        setCurrentPosition(0);
-        onPlaybackEnd?.();
-        progressAnim.setValue(0);
-      }
-    },
-    [totalDuration, onPlaybackEnd]
-  );
-
-  // Load and play audio
-  const loadAndPlay = useCallback(async () => {
-    try {
-      setIsLoading(true);
-
-      // Configure audio mode for playback
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: false,
-        playsInSilentModeIOS: true,
-        staysActiveInBackground: false,
-        shouldDuckAndroid: true,
-        playThroughEarpieceAndroid: false,
-      });
-
-      // Unload previous sound if exists
-      if (soundRef.current) {
-        await soundRef.current.unloadAsync();
-      }
-
-      // Load new sound
-      const { sound, status } = await Audio.Sound.createAsync(
-        { uri },
-        {
-          shouldPlay: true,
-          rate: PLAYBACK_SPEEDS[speedIndex],
-          shouldCorrectPitch: true,
-        },
-        onPlaybackStatusUpdate
-      );
-
-      soundRef.current = sound;
-      setIsLoading(false);
-      onPlaybackStart?.();
-    } catch (error) {
-      if (__DEV__) console.error('Error loading audio:', error);
-      setIsLoading(false);
-    }
-  }, [uri, speedIndex, onPlaybackStatusUpdate, onPlaybackStart]);
-
   // Toggle play/pause
   const togglePlayback = useCallback(async () => {
-    if (isLoading) return;
+    if (isLoading || !player) return;
 
-    if (!soundRef.current) {
-      await loadAndPlay();
-      return;
-    }
-
-    const status = await soundRef.current.getStatusAsync();
-    if (!status.isLoaded) {
-      await loadAndPlay();
-      return;
-    }
-
-    if (status.isPlaying) {
-      await soundRef.current.pauseAsync();
-    } else {
-      // If finished, replay from start
-      if (status.didJustFinish || status.positionMillis >= (status.durationMillis || 0)) {
-        await soundRef.current.setPositionAsync(0);
+    try {
+      if (player.playing) {
+        player.pause();
+      } else {
+        // If at the end, seek to start
+        if (currentPosition >= totalDuration - 0.1) {
+          player.seekTo(0);
+          setCurrentPosition(0);
+        }
+        setIsLoading(true);
+        player.play();
+        onPlaybackStart?.();
+        setIsLoading(false);
       }
-      await soundRef.current.playAsync();
+    } catch (error) {
+      if (__DEV__) console.error('Error toggling playback:', error);
+      setIsLoading(false);
     }
-  }, [isLoading, loadAndPlay]);
+  }, [player, isLoading, currentPosition, totalDuration, onPlaybackStart]);
 
   // Cycle through playback speeds
-  const cycleSpeed = useCallback(async () => {
+  const cycleSpeed = useCallback(() => {
+    if (!player) return;
+
     const newIndex = (speedIndex + 1) % PLAYBACK_SPEEDS.length;
     setSpeedIndex(newIndex);
-
-    if (soundRef.current) {
-      const status = await soundRef.current.getStatusAsync();
-      if (status.isLoaded) {
-        await soundRef.current.setRateAsync(PLAYBACK_SPEEDS[newIndex], true);
-      }
-    }
-  }, [speedIndex]);
+    player.setPlaybackRate(PLAYBACK_SPEEDS[newIndex]);
+  }, [player, speedIndex]);
 
   // Format time as MM:SS
   const formatTime = (seconds: number): string => {
@@ -212,11 +183,6 @@ export function VoiceMessage({
       <View style={styles.waveformContainer}>
         <View style={styles.waveform}>
           {waveformBars.map((height, index) => {
-            const progressWidth = progressAnim.interpolate({
-              inputRange: [0, 1],
-              outputRange: [0, 100],
-            });
-
             return (
               <Animated.View
                 key={index}

@@ -6,9 +6,8 @@ import {
   StyleSheet,
   Animated,
   Alert,
-  Platform,
 } from 'react-native';
-import { Audio } from 'expo-av';
+import { useAudioRecorder, AudioModule, RecordingPresets } from 'expo-audio';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
@@ -30,7 +29,7 @@ export function VoiceRecorder({
   const [duration, setDuration] = useState(0);
   const [permissionGranted, setPermissionGranted] = useState(false);
 
-  const recordingRef = useRef<Audio.Recording | null>(null);
+  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const waveAnims = useRef([
@@ -45,7 +44,7 @@ export function VoiceRecorder({
   useEffect(() => {
     const requestPermission = async () => {
       try {
-        const { granted } = await Audio.requestPermissionsAsync();
+        const { granted } = await AudioModule.requestRecordingPermissionsAsync();
         setPermissionGranted(granted);
         if (!granted) {
           Alert.alert(
@@ -117,45 +116,7 @@ export function VoiceRecorder({
     if (!permissionGranted) return;
 
     try {
-      // Configure audio mode for recording
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
-        staysActiveInBackground: false,
-        shouldDuckAndroid: true,
-        playThroughEarpieceAndroid: false,
-      });
-
-      // Create recording with optimized settings for voice
-      const recording = new Audio.Recording();
-      await recording.prepareToRecordAsync({
-        android: {
-          extension: '.m4a',
-          outputFormat: Audio.AndroidOutputFormat.MPEG_4,
-          audioEncoder: Audio.AndroidAudioEncoder.AAC,
-          sampleRate: 44100,
-          numberOfChannels: 1,
-          bitRate: 128000,
-        },
-        ios: {
-          extension: '.m4a',
-          outputFormat: Audio.IOSOutputFormat.MPEG4AAC,
-          audioQuality: Audio.IOSAudioQuality.HIGH,
-          sampleRate: 44100,
-          numberOfChannels: 1,
-          bitRate: 128000,
-          linearPCMBitDepth: 16,
-          linearPCMIsBigEndian: false,
-          linearPCMIsFloat: false,
-        },
-        web: {
-          mimeType: 'audio/webm',
-          bitsPerSecond: 128000,
-        },
-      });
-
-      await recording.startAsync();
-      recordingRef.current = recording;
+      audioRecorder.record();
       setIsRecording(true);
       setDuration(0);
 
@@ -173,7 +134,7 @@ export function VoiceRecorder({
       if (__DEV__) console.error('Error starting recording:', error);
       Alert.alert(t('common.error'), t('chat.errors.startRecording'));
     }
-  }, [permissionGranted, maxDuration]);
+  }, [permissionGranted, maxDuration, audioRecorder]);
 
   // Stop recording
   const stopRecording = useCallback(
@@ -183,20 +144,13 @@ export function VoiceRecorder({
         timerRef.current = null;
       }
 
-      if (!recordingRef.current) return;
+      if (!audioRecorder.isRecording) return;
 
       try {
-        await recordingRef.current.stopAndUnloadAsync();
-        const uri = recordingRef.current.getURI();
+        await audioRecorder.stop();
+        const uri = audioRecorder.uri;
         const finalDuration = duration;
 
-        // Reset audio mode
-        await Audio.setAudioModeAsync({
-          allowsRecordingIOS: false,
-          playsInSilentModeIOS: true,
-        });
-
-        recordingRef.current = null;
         setIsRecording(false);
 
         if (!cancelled && uri && finalDuration >= 1) {
@@ -212,7 +166,7 @@ export function VoiceRecorder({
         onCancel();
       }
     },
-    [duration, onRecordingComplete, onCancel]
+    [duration, onRecordingComplete, onCancel, audioRecorder]
   );
 
   // Format duration as MM:SS
