@@ -10,7 +10,8 @@
       "channel": "development",
       "android": {
         "buildType": "apk",
-        "gradleCommand": ":app:assembleDebug"
+        "gradleCommand": ":app:assembleDebug",
+        "googleServicesFile": "./google-services.json"
       },
       "ios": {
         "simulator": true
@@ -24,7 +25,8 @@
       "distribution": "internal",
       "channel": "preview",
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "googleServicesFile": "./google-services.json"
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://immoguinee.com/api",
@@ -42,7 +44,8 @@
       "channel": "production",
       "autoIncrement": true,
       "android": {
-        "buildType": "app-bundle"
+        "buildType": "app-bundle",
+        "googleServicesFile": "./google-services.json"
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://immoguinee.com/api",
