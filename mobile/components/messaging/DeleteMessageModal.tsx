@@ -38,7 +38,7 @@ export function DeleteMessageModal({
       await onDeleteForMe();
       onClose();
     } catch (error) {
-      console.error('Failed to delete message:', error);
+      if (__DEV__) console.error('Failed to delete message:', error);
     } finally {
       setIsDeleting(false);
       setDeleteType(null);
@@ -53,7 +53,7 @@ export function DeleteMessageModal({
       await onDeleteForEveryone();
       onClose();
     } catch (error) {
-      console.error('Failed to delete message for everyone:', error);
+      if (__DEV__) console.error('Failed to delete message for everyone:', error);
     } finally {
       setIsDeleting(false);
       setDeleteType(null);

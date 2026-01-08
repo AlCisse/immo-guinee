@@ -61,7 +61,6 @@ export default function ForgotPasswordScreen() {
       setStep('verify');
       Alert.alert(t('auth.codeSentTitle'), t('auth.codeSentMessage'));
     } catch (error: any) {
-      console.error('Request OTP error:', error);
       const message = error.response?.data?.message || t('auth.errors.otpSendFailed');
       Alert.alert(t('common.error'), message);
     } finally {
@@ -100,7 +99,6 @@ export default function ForgotPasswordScreen() {
         [{ text: 'OK', onPress: () => router.replace('/auth/login') }]
       );
     } catch (error: any) {
-      console.error('Reset password error:', error);
       const message = error.response?.data?.message || t('auth.errors.resetFailed');
       Alert.alert(t('common.error'), message);
     } finally {

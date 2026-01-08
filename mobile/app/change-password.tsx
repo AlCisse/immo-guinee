@@ -51,7 +51,6 @@ export default function ChangePasswordScreen() {
       setStep('verify');
       Alert.alert(t('changePassword.codeSent'), t('changePassword.codeSentWhatsapp'));
     } catch (error: any) {
-      console.error('Request OTP error:', error);
       const message = error.response?.data?.message || t('changePassword.errors.sendOtpFailed');
       Alert.alert(t('common.error'), message);
     } finally {
@@ -90,7 +89,6 @@ export default function ChangePasswordScreen() {
         [{ text: t('common.ok'), onPress: () => router.back() }]
       );
     } catch (error: any) {
-      console.error('Reset password error:', error);
       const message = error.response?.data?.message || t('changePassword.errors.resetFailed');
       Alert.alert(t('common.error'), message);
     } finally {

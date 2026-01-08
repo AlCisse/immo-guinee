@@ -223,7 +223,7 @@ export async function cancelRecording(): Promise<void> {
       await FileSystem.deleteAsync(uri, { idempotent: true });
     }
   } catch (error) {
-    console.warn('[VoiceRecorder] Error canceling recording:', error);
+    if (__DEV__) console.warn('[VoiceRecorder] Error canceling recording:', error);
   } finally {
     currentRecording = null;
     stateCallback = null;
@@ -273,7 +273,7 @@ function onRecordingStatusUpdate(status: Audio.RecordingStatus): void {
   // Check max duration
   if (status.durationMillis && status.durationMillis >= MAX_RECORDING_DURATION * 1000) {
     // Auto-stop at max duration
-    stopRecording().catch(console.error);
+    stopRecording().catch(() => {});
     return;
   }
 

@@ -227,8 +227,6 @@ export default function NotificationsScreen() {
   };
 
   const handleNotificationPress = (notification: Notification) => {
-    console.log('[Notification] === handleNotificationPress v2 ===');
-
     // Mark as read
     if (!notification.read_at) {
       markAsReadMutation.mutate(notification.id);
@@ -244,39 +242,26 @@ export default function NotificationsScreen() {
       }
     }
 
-    // Debug log
-    if (__DEV__) {
-      console.log('[Notification] Type:', notification.type, 'Data:', JSON.stringify(data));
-    }
-
     // Navigate based on action_url first (if provided)
-    console.log('[Notification] action_url:', notification.action_url, 'truthy?', !!notification.action_url);
     if (notification.action_url) {
-      console.log('[Notification] Navigating to action_url:', notification.action_url);
       router.push(notification.action_url as any);
       return;
     }
 
     // For message notifications, always try to open conversation
-    console.log('[Notification] Checking type:', notification.type);
     if (notification.type === 'new_message' || notification.type === 'message_received') {
       const conversationId = data?.conversation_id;
-      console.log('[Notification] Inside message check, conversationId:', conversationId);
       if (conversationId) {
-        console.log('[Notification] Opening chat:', conversationId);
         // Use setTimeout to ensure navigation happens after any UI updates
         setTimeout(() => {
-          console.log('[Notification] setTimeout executing, pushing to /chat/' + conversationId);
           router.push(`/chat/${conversationId}` as any);
         }, 100);
         return;
       }
       // Fallback to messages tab only if no conversation_id
-      console.log('[Notification] No conversation_id, opening messages tab');
       router.push('/(tabs)/messages' as any);
       return;
     }
-    console.log('[Notification] Type did not match message types');
 
     // For other notification types, check conversation_id
     const conversationId = data?.conversation_id;

@@ -136,7 +136,6 @@ export default function EditProfileScreen() {
         { text: t('common.ok'), onPress: () => router.back() }
       ]);
     } catch (error: any) {
-      console.error('Update profile error:', error);
       const message = error.response?.data?.message || t('editProfile.updateFailed');
       Alert.alert(t('common.error'), message);
     } finally {

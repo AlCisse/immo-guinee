@@ -131,7 +131,7 @@ export async function loadDecryptedMedia(mediaId: string): Promise<ArrayBuffer |
     // Load key from SecureStore
     const keyBase64 = await SecureStore.getItemAsync(`${KEY_PREFIX}${mediaId}`);
     if (!keyBase64) {
-      console.warn('[LocalMediaStorage] Key not found for media:', mediaId);
+      if (__DEV__) console.warn('[LocalMediaStorage] Key not found for media:', mediaId);
       return null;
     }
     const key = base64ToUint8Array(keyBase64);
@@ -139,7 +139,7 @@ export async function loadDecryptedMedia(mediaId: string): Promise<ArrayBuffer |
     // Load metadata for IV and authTag
     const metaJson = await SecureStore.getItemAsync(`${META_PREFIX}${mediaId}`);
     if (!metaJson) {
-      console.warn('[LocalMediaStorage] Metadata not found for media:', mediaId);
+      if (__DEV__) console.warn('[LocalMediaStorage] Metadata not found for media:', mediaId);
       return null;
     }
     const meta: StoredMediaMeta = JSON.parse(metaJson);
@@ -149,7 +149,7 @@ export async function loadDecryptedMedia(mediaId: string): Promise<ArrayBuffer |
     // Decrypt and return
     return await decryptMedia(encryptedData, iv, key, authTag);
   } catch (error) {
-    console.error('[LocalMediaStorage] Failed to load media:', mediaId, error);
+    if (__DEV__) console.error('[LocalMediaStorage] Failed to load media:', mediaId, error);
     return null;
   }
 }
@@ -168,7 +168,7 @@ export async function getMediaMetadata(mediaId: string): Promise<StoredMediaMeta
     }
     return JSON.parse(metaJson);
   } catch (error) {
-    console.error('[LocalMediaStorage] Failed to get metadata:', mediaId, error);
+    if (__DEV__) console.error('[LocalMediaStorage] Failed to get metadata:', mediaId, error);
     return null;
   }
 }
@@ -203,11 +203,8 @@ export async function storePendingKey(
   try {
     const data = JSON.stringify({ encryptionKey, conversationId, senderId, storedAt: new Date().toISOString() });
     await SecureStore.setItemAsync(`${PENDING_KEY_PREFIX}${mediaId}`, data);
-    if (__DEV__) {
-      console.log('[LocalMediaStorage] Stored pending key for:', mediaId);
-    }
   } catch (error) {
-    console.error('[LocalMediaStorage] Failed to store pending key:', mediaId, error);
+    if (__DEV__) console.error('[LocalMediaStorage] Failed to store pending key:', mediaId, error);
   }
 }
 
@@ -227,7 +224,7 @@ export async function getPendingKey(mediaId: string): Promise<{
     if (!data) return null;
     return JSON.parse(data);
   } catch (error) {
-    console.error('[LocalMediaStorage] Failed to get pending key:', mediaId, error);
+    if (__DEV__) console.error('[LocalMediaStorage] Failed to get pending key:', mediaId, error);
     return null;
   }
 }
@@ -257,7 +254,7 @@ export async function deleteLocalMedia(mediaId: string): Promise<void> {
     await SecureStore.deleteItemAsync(`${KEY_PREFIX}${mediaId}`);
     await SecureStore.deleteItemAsync(`${META_PREFIX}${mediaId}`);
   } catch (error) {
-    console.error('[LocalMediaStorage] Failed to delete media:', mediaId, error);
+    if (__DEV__) console.error('[LocalMediaStorage] Failed to delete media:', mediaId, error);
   }
 }
 
@@ -280,7 +277,7 @@ export async function deleteConversationMedia(conversationId: string): Promise<v
       }
     }
   } catch (error) {
-    console.error('[LocalMediaStorage] Failed to delete conversation media:', error);
+    if (__DEV__) console.error('[LocalMediaStorage] Failed to delete conversation media:', error);
   }
 }
 
@@ -316,7 +313,7 @@ export async function getStorageStats(): Promise<{
       formattedSize: formatBytes(totalSize),
     };
   } catch (error) {
-    console.error('[LocalMediaStorage] Failed to get stats:', error);
+    if (__DEV__) console.error('[LocalMediaStorage] Failed to get stats:', error);
     return { count: 0, totalSize: 0, formattedSize: '0 bytes' };
   }
 }
@@ -333,7 +330,7 @@ export async function clearAllMedia(): Promise<void> {
     // Note: SecureStore items need to be cleared individually
     // This is a limitation - consider tracking all media IDs separately
   } catch (error) {
-    console.error('[LocalMediaStorage] Failed to clear all media:', error);
+    if (__DEV__) console.error('[LocalMediaStorage] Failed to clear all media:', error);
   }
 }
 
@@ -382,7 +379,7 @@ export async function getDecryptedMediaUri(
 
     return tempPath;
   } catch (error) {
-    console.error('[LocalMediaStorage] Failed to create decrypted URI:', error);
+    if (__DEV__) console.error('[LocalMediaStorage] Failed to create decrypted URI:', error);
     return null;
   }
 }
@@ -401,7 +398,7 @@ export async function cleanupDecryptedCache(): Promise<void> {
       }
     }
   } catch (error) {
-    console.error('[LocalMediaStorage] Failed to cleanup cache:', error);
+    if (__DEV__) console.error('[LocalMediaStorage] Failed to cleanup cache:', error);
   }
 }
 
