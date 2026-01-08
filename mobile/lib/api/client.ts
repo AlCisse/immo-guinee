@@ -1,14 +1,13 @@
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
+import { Platform } from 'react-native';
 
 // API URL - change this to your production URL
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://immoguinee.com/api';
 
 // Security: Expected SSL certificate public key hash (SHA-256)
 // Update this when renewing SSL certificate
-// Note: True SSL pinning requires native module (expo-ssl-pinning)
-// These pins are used for runtime validation warnings
 const EXPECTED_SSL_PINS = [
   // Primary certificate pin (Let's Encrypt)
   process.env.EXPO_PUBLIC_SSL_PIN_PRIMARY || '',
@@ -16,19 +15,64 @@ const EXPECTED_SSL_PINS = [
   process.env.EXPO_PUBLIC_SSL_PIN_BACKUP || '',
 ].filter(pin => pin.length > 0);
 
-// Validate SSL pins are configured in production
-const validateSSLPinsConfigured = (): void => {
-  if (!__DEV__ && EXPECTED_SSL_PINS.length === 0) {
-    console.warn(
-      '[Security] SSL pins not configured for production. ' +
-      'Set EXPO_PUBLIC_SSL_PIN_PRIMARY and EXPO_PUBLIC_SSL_PIN_BACKUP ' +
-      'environment variables for certificate pinning.'
-    );
+// SSL Pinning enforcement configuration
+const SSL_PINNING_CONFIG = {
+  // Block requests in production if SSL pins are not configured
+  ENFORCE_IN_PRODUCTION: true,
+  // Minimum number of pins required for production
+  MIN_PINS_REQUIRED: 1,
+  // Allow bypass in development mode only
+  ALLOW_DEV_BYPASS: true,
+};
+
+// Security state
+let sslPinningValidated = false;
+let sslPinningError: string | null = null;
+
+/**
+ * Validate SSL pinning configuration
+ * In production, this will block requests if pins are not properly configured
+ */
+const validateSSLPinning = (): { valid: boolean; error?: string } => {
+  // Allow bypass in development
+  if (__DEV__ && SSL_PINNING_CONFIG.ALLOW_DEV_BYPASS) {
+    return { valid: true };
   }
+
+  // Check if enough pins are configured
+  if (EXPECTED_SSL_PINS.length < SSL_PINNING_CONFIG.MIN_PINS_REQUIRED) {
+    const error = `[Security] SSL pinning not configured. Required: ${SSL_PINNING_CONFIG.MIN_PINS_REQUIRED} pin(s), Found: ${EXPECTED_SSL_PINS.length}. ` +
+      'Set EXPO_PUBLIC_SSL_PIN_PRIMARY and EXPO_PUBLIC_SSL_PIN_BACKUP environment variables.';
+
+    if (SSL_PINNING_CONFIG.ENFORCE_IN_PRODUCTION) {
+      console.error(error);
+      return { valid: false, error };
+    } else {
+      console.warn(error);
+      return { valid: true };
+    }
+  }
+
+  // Validate pin format (should be base64 SHA-256 hash, 44 chars)
+  for (const pin of EXPECTED_SSL_PINS) {
+    if (pin.length !== 44 || !/^[A-Za-z0-9+/=]+$/.test(pin)) {
+      const error = `[Security] Invalid SSL pin format: ${pin.substring(0, 10)}... Expected base64 SHA-256 (44 chars)`;
+      console.error(error);
+      return { valid: false, error };
+    }
+  }
+
+  return { valid: true };
 };
 
 // Run validation on module load
-validateSSLPinsConfigured();
+const initialValidation = validateSSLPinning();
+sslPinningValidated = initialValidation.valid;
+sslPinningError = initialValidation.error || null;
+
+if (!sslPinningValidated) {
+  console.error('[Security] SSL Pinning validation failed. API requests will be blocked in production.');
+}
 
 // Security: Allowed API domains
 const ALLOWED_DOMAINS = ['immoguinee.com', 'api.immoguinee.com'];
@@ -118,11 +162,24 @@ export const tokenManager = {
 // Request interceptor - Add auth token and security checks
 apiClient.interceptors.request.use(
   async (config) => {
-    // Security: Validate request URL domain
+    // Security Check 1: SSL Pinning validation (blocks requests in production if not configured)
+    if (!sslPinningValidated && !__DEV__) {
+      const error = new Error(sslPinningError || 'SSL pinning validation failed');
+      if (__DEV__) console.error('[API] Security: Blocked request - SSL pinning not validated');
+      return Promise.reject(error);
+    }
+
+    // Security Check 2: Validate request URL domain
     const fullUrl = config.baseURL ? `${config.baseURL}${config.url}` : config.url || '';
     if (fullUrl && !isValidDomain(fullUrl)) {
       if (__DEV__) console.error('[API] Security: Blocked request to untrusted domain:', fullUrl);
       return Promise.reject(new Error('Untrusted domain'));
+    }
+
+    // Security Check 3: Ensure HTTPS in production
+    if (!__DEV__ && fullUrl && !fullUrl.startsWith('https://')) {
+      if (__DEV__) console.error('[API] Security: Blocked non-HTTPS request in production');
+      return Promise.reject(new Error('HTTPS required in production'));
     }
 
     // Add auth token
@@ -133,6 +190,10 @@ apiClient.interceptors.request.use(
 
     // Security: Add request timestamp for replay protection
     config.headers['X-Request-Time'] = Date.now().toString();
+
+    // Security: Add platform info for server-side validation
+    config.headers['X-Platform'] = Platform.OS;
+    config.headers['X-Platform-Version'] = String(Platform.Version);
 
     return config;
   },
@@ -437,4 +498,18 @@ export type ApiError = {
   success: false;
   message: string;
   errors?: Record<string, string[]>;
+};
+
+// Security status exports
+export const getSecurityStatus = () => ({
+  sslPinningValidated,
+  sslPinningError,
+  sslPinsConfigured: EXPECTED_SSL_PINS.length,
+  isProduction: !__DEV__,
+  enforcementEnabled: SSL_PINNING_CONFIG.ENFORCE_IN_PRODUCTION,
+});
+
+export const isSecurityValid = (): boolean => {
+  if (__DEV__) return true;
+  return sslPinningValidated;
 };

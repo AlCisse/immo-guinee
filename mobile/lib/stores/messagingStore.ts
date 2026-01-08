@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { createEncryptedStorage } from '@/lib/storage/EncryptedStorage';
 import { Message, Conversation } from '@/types';
 
 export type MessageStatus = 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
@@ -25,7 +27,7 @@ interface MessagingState {
   conversations: Conversation[];
   messages: Record<string, LocalMessage[]>;
   typingUsers: Record<string, TypingUser[]>;
-  onlineUsers: Map<string, OnlineUser>;
+  onlineUsers: Record<string, OnlineUser>;
   pendingMessages: LocalMessage[];
 
   // Connection state
@@ -80,12 +82,14 @@ interface MessagingState {
 // Typing indicator timeout (3 seconds)
 const TYPING_TIMEOUT = 3000;
 
-export const useMessagingStore = create<MessagingState>((set, get) => ({
+export const useMessagingStore = create<MessagingState>()(
+  persist(
+    (set, get) => ({
   // Initial state
   conversations: [],
   messages: {},
   typingUsers: {},
-  onlineUsers: new Map(),
+  onlineUsers: {},
   pendingMessages: [],
   isConnected: false,
   lastSyncTime: null,
@@ -263,27 +267,25 @@ export const useMessagingStore = create<MessagingState>((set, get) => ({
 
   // Online status
   setUserOnline: (user) =>
-    set((state) => {
-      const newOnlineUsers = new Map(state.onlineUsers);
-      newOnlineUsers.set(user.id, user);
-      return { onlineUsers: newOnlineUsers };
-    }),
+    set((state) => ({
+      onlineUsers: { ...state.onlineUsers, [user.id]: user },
+    })),
 
   setUserOffline: (userId) =>
     set((state) => {
-      const newOnlineUsers = new Map(state.onlineUsers);
-      newOnlineUsers.delete(userId);
-      return { onlineUsers: newOnlineUsers };
+      const { [userId]: _, ...rest } = state.onlineUsers;
+      return { onlineUsers: rest };
     }),
 
   setOnlineUsers: (users) =>
-    set(() => {
-      const newOnlineUsers = new Map<string, OnlineUser>();
-      users.forEach((user) => newOnlineUsers.set(user.id, user));
-      return { onlineUsers: newOnlineUsers };
-    }),
+    set(() => ({
+      onlineUsers: users.reduce((acc, user) => {
+        acc[user.id] = user;
+        return acc;
+      }, {} as Record<string, OnlineUser>),
+    })),
 
-  isUserOnline: (userId) => get().onlineUsers.has(userId),
+  isUserOnline: (userId) => userId in get().onlineUsers,
 
   // Connection
   setConnected: (isConnected) => set({ isConnected }),
@@ -308,7 +310,20 @@ export const useMessagingStore = create<MessagingState>((set, get) => ({
 
   getTotalUnreadCount: () =>
     get().conversations.reduce((sum, conv) => sum + (conv.unread_count || 0), 0),
-}));
+    }),
+    {
+      name: 'immoguinee-messaging',
+      // Use encrypted storage for sensitive message data (AES-256-GCM)
+      storage: createJSONStorage(createEncryptedStorage),
+      // Only persist pending messages and conversations for offline support
+      partialize: (state) => ({
+        pendingMessages: state.pendingMessages,
+        conversations: state.conversations,
+        messages: state.messages,
+      }),
+    }
+  )
+);
 
 // Cleanup interval for expired typing indicators
 if (typeof window !== 'undefined') {
