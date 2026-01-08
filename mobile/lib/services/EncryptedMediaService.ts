@@ -10,6 +10,7 @@
  * The server NEVER has access to decryption keys.
  */
 
+// Note: Using legacy import until full migration to new File/Directory API
 import * as FileSystem from 'expo-file-system/legacy';
 import { apiClient } from '@/lib/api/client';
 import {

@@ -9,6 +9,7 @@
  * The server never has access to decryption keys.
  */
 
+// Note: Using legacy import until full migration to new File/Directory API
 import * as FileSystem from 'expo-file-system/legacy';
 import * as SecureStore from 'expo-secure-store';
 import {

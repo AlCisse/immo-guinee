@@ -13,7 +13,7 @@ import {
   RecordingOptions,
   RecordingPresets,
 } from 'expo-audio';
-import * as FileSystem from 'expo-file-system/legacy';
+import * as FileSystem from 'expo-file-system';
 
 /**
  * Result of a completed recording
