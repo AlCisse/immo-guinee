@@ -13,8 +13,8 @@ module.exports = {
     userInterfaceStyle: 'automatic',
     newArchEnabled: true,
     splash: {
-      image: './assets/images/splash-icon.png',
-      resizeMode: 'contain',
+      image: './assets/images/splash.png',
+      resizeMode: 'cover',
       backgroundColor: '#FFFFFF',
     },
     ios: {
@@ -61,8 +61,8 @@ module.exports = {
         backgroundColor: '#FFFFFF',
       },
       splash: {
-        image: './assets/images/splash-icon.png',
-        resizeMode: 'contain',
+        image: './assets/images/splash.png',
+        resizeMode: 'cover',
         backgroundColor: '#FFFFFF',
       },
       permissions: [
