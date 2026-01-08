@@ -776,8 +776,8 @@ class AuthController extends Controller
                 ], 404);
             }
 
-            // Verify OTP
-            $result = $this->otpService->verify($request->telephone, $request->code, 'password_reset');
+            // Verify OTP - use $user->telephone to match the key used in forgotPassword
+            $result = $this->otpService->verify($user->telephone, $request->code, 'password_reset');
 
             if (!$result['valid']) {
                 return response()->json([

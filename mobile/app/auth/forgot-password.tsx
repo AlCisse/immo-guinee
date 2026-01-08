@@ -74,7 +74,7 @@ export default function ForgotPasswordScreen() {
       return;
     }
 
-    if (!newPassword || newPassword.length < 6) {
+    if (!newPassword || newPassword.length < 8) {
       Alert.alert(t('common.error'), t('auth.errors.passwordMinLength'));
       return;
     }
