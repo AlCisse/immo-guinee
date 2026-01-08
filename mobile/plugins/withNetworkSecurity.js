@@ -12,7 +12,7 @@ const NETWORK_SECURITY_CONFIG = `<?xml version="1.0" encoding="utf-8"?>
     </base-config>
     <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="true">immoguinee.com</domain>
-        <pin-set expiration="2026-01-01">
+        <pin-set expiration="2027-01-01">
             <!-- Primary: Current Let's Encrypt certificate -->
             <pin digest="SHA-256">LOv+QdFaqnOuyIXGtn5hPngBXKLwCylu5Py+5oBPRVo=</pin>
             <!-- Backup: ISRG Root X1 (Let's Encrypt root) -->

@@ -21,6 +21,13 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import Colors, { lightTheme } from '@/constants/Colors';
 import Logo from '@/components/Logo';
 import PhoneInput, { Country } from '@/components/PhoneInput';
+import {
+  validatePhone,
+  validatePassword,
+  validatePasswordMatch,
+  validateFullName,
+  sanitizeInput,
+} from '@/lib/utils/validation';
 
 type AccountType = 'PARTICULIER' | 'PROFESSIONNEL' | 'AGENCE';
 
@@ -48,35 +55,56 @@ export default function RegisterScreen() {
   ];
 
   const handleRegister = async () => {
-    if (!nomComplet || !telephone || !password || !confirmPassword) {
-      Alert.alert(t('common.error'), t('errors.requiredField'));
+    // Sanitize all inputs
+    const sanitizedName = sanitizeInput(nomComplet);
+    const sanitizedPhone = sanitizeInput(telephone);
+    const sanitizedPassword = sanitizeInput(password);
+    const sanitizedConfirmPassword = sanitizeInput(confirmPassword);
+
+    // Validate full name
+    const nameValidation = validateFullName(sanitizedName);
+    if (!nameValidation.isValid) {
+      Alert.alert(t('common.error'), t(nameValidation.error || 'errors.requiredField'));
       return;
     }
 
-    if (password !== confirmPassword) {
-      Alert.alert(t('common.error'), t('errors.passwordMismatch'));
+    // Validate phone number
+    const phoneValidation = validatePhone(
+      sanitizedPhone,
+      selectedCountry.code,
+      selectedCountry.dialCode
+    );
+    if (!phoneValidation.isValid) {
+      Alert.alert(t('common.error'), t(phoneValidation.error || 'errors.invalidPhone'));
       return;
     }
 
-    if (password.length < 8) {
-      Alert.alert(t('common.error'), t('errors.passwordTooShort'));
+    // Validate password
+    const passwordValidation = validatePassword(sanitizedPassword);
+    if (!passwordValidation.isValid) {
+      Alert.alert(t('common.error'), t(passwordValidation.error || 'errors.passwordTooShort'));
       return;
     }
 
+    // Validate password match
+    const matchValidation = validatePasswordMatch(sanitizedPassword, sanitizedConfirmPassword);
+    if (!matchValidation.isValid) {
+      Alert.alert(t('common.error'), t(matchValidation.error || 'errors.passwordMismatch'));
+      return;
+    }
+
+    // Check CGU acceptance
     if (!acceptedCGU) {
       Alert.alert(t('alerts.attention'), t('auth.termsAgree'));
       return;
     }
 
-    let formattedPhone = telephone.replace(/\s/g, '').replace(/^0/, '');
-    formattedPhone = selectedCountry.dialCode + formattedPhone;
-
     setIsLoading(true);
     try {
       await register({
-        nom_complet: nomComplet,
-        telephone: formattedPhone,
-        mot_de_passe: password,
+        nom_complet: sanitizedName,
+        telephone: phoneValidation.formattedPhone!,
+        mot_de_passe: sanitizedPassword,
         type_compte: typeCompte,
       });
     } catch (error: any) {

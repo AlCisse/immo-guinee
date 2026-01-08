@@ -21,6 +21,7 @@ import Colors, { lightTheme } from '@/constants/Colors';
 import Logo from '@/components/Logo';
 import PhoneInput, { Country } from '@/components/PhoneInput';
 import { haptics } from '@/lib/haptics';
+import { validatePhone, validatePassword, sanitizeInput } from '@/lib/utils/validation';
 
 export default function LoginScreen() {
   const { t } = useTranslation();
@@ -37,18 +38,33 @@ export default function LoginScreen() {
   const maxWidth = isTablet ? 440 : width;
 
   const handleLogin = async () => {
-    if (!telephone || !password) {
+    // Sanitize inputs
+    const sanitizedPhone = sanitizeInput(telephone);
+    const sanitizedPassword = sanitizeInput(password);
+
+    // Validate phone number
+    const phoneValidation = validatePhone(
+      sanitizedPhone,
+      selectedCountry.code,
+      selectedCountry.dialCode
+    );
+    if (!phoneValidation.isValid) {
       haptics.warning();
-      Alert.alert(t('common.error'), t('errors.requiredField'));
+      Alert.alert(t('common.error'), t(phoneValidation.error || 'errors.invalidPhone'));
       return;
     }
 
-    let formattedPhone = telephone.replace(/\s/g, '').replace(/^0/, '');
-    formattedPhone = selectedCountry.dialCode + formattedPhone;
+    // Validate password
+    const passwordValidation = validatePassword(sanitizedPassword);
+    if (!passwordValidation.isValid) {
+      haptics.warning();
+      Alert.alert(t('common.error'), t(passwordValidation.error || 'errors.requiredField'));
+      return;
+    }
 
     setIsLoading(true);
     try {
-      await login(formattedPhone, password);
+      await login(phoneValidation.formattedPhone!, sanitizedPassword);
       haptics.success();
     } catch (error: any) {
       haptics.error();
