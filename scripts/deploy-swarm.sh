@@ -60,6 +60,11 @@ build_images() {
     docker build --no-cache -t immoguinee/php:latest \
         -f docker/php/Dockerfile backend/
 
+    # Build FFmpeg API
+    echo -e "${YELLOW}Building FFmpeg API image...${NC}"
+    docker build --no-cache -t immoguinee/ffmpeg-api:latest \
+        -f docker/ffmpeg-api/Dockerfile docker/ffmpeg-api/
+
     echo -e "${GREEN}Images built successfully${NC}"
 }
 

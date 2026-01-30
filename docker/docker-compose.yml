@@ -43,6 +43,7 @@ volumes:
   prometheus-data:
   alertmanager-data:
   clamav-data:
+  ffmpeg-data:
   waha-sessions:  # Persist WhatsApp sessions for auto-restart
 
 services:
@@ -433,6 +434,39 @@ services:
       start_period: 120s  # Virus definitions take time to load
 
   # ============================================
+  # Media Processing Services
+  # ============================================
+
+  ffmpeg-api:
+    image: ${FFMPEG_API_IMAGE:-immoguinee/ffmpeg-api:latest}
+    hostname: ffmpeg-api
+    secrets:
+      - ffmpeg_api_key
+    volumes:
+      - ffmpeg-data:/data
+    networks:
+      - backend-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          memory: 1G
+          cpus: '2.0'
+        reservations:
+          memory: 256M
+          cpus: '0.5'
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:3500/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # ============================================
   # Storage & External Services
   # ============================================
 
@@ -477,6 +511,7 @@ services:
       - n8n_smtp_host
       - n8n_smtp_user
       - n8n_smtp_password
+      - ffmpeg_api_key
     environment:
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_BASIC_AUTH_USER=${N8N_USER:-admin}
@@ -497,9 +532,11 @@ services:
       - WAHA_URL=${WAHA_URL:-http://waha:3000}
       - WAHA_API_URL=${WAHA_API_URL:-http://waha:3000}
       - SMS_GATEWAY_URL=${SMS_GATEWAY_URL:-https://api.orange.gn/sms/v1}
+      - FFMPEG_API_URL=${FFMPEG_API_URL:-http://ffmpeg-api:3500}
     entrypoint: ["/bin/sh", "/custom-entrypoint.sh"]
     volumes:
       - n8n-data:/home/node/.n8n
+      - ffmpeg-data:/data/ffmpeg
       - ../n8n/entrypoint.sh:/custom-entrypoint.sh:ro
     networks:
       - backend-network
@@ -1086,4 +1123,7 @@ secrets:
     external: true
   # Backup encryption
   backup_encryption_key:
+    external: true
+  # FFmpeg API
+  ffmpeg_api_key:
     external: true

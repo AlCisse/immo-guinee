@@ -36,6 +36,9 @@ load_secret "n8n_smtp_host" "SMTP_HOST"
 load_secret "n8n_smtp_user" "SMTP_USER"
 load_secret "n8n_smtp_password" "SMTP_PASSWORD"
 
+# FFmpeg API secret
+load_secret "ffmpeg_api_key" "FFMPEG_API_KEY"
+
 # URLs are set via environment variables in docker-compose
 # These are just defaults if not set
 export IMMOGUINEE_API_URL="${IMMOGUINEE_API_URL:-https://immoguinee.com}"
@@ -46,6 +49,7 @@ export WAHA_URL="${WAHA_URL:-http://waha:3000}"
 export WAHA_API_URL="${WAHA_API_URL:-http://waha:3000}"
 export SMS_GATEWAY_URL="${SMS_GATEWAY_URL:-https://api.orange.gn/sms/v1}"
 export TWILIO_API_URL="${TWILIO_API_URL:-https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}}"
+export FFMPEG_API_URL="${FFMPEG_API_URL:-http://ffmpeg-api:3500}"
 
 echo "n8n environment configured with secrets"
 

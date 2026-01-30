@@ -84,6 +84,19 @@ services:
         - "traefik.http.routers.reverb.priority=200"
         - "traefik.http.services.reverb.loadbalancer.server.port=8080"
 
+  # FFmpeg API - Production
+  ffmpeg-api:
+    image: immoguinee/ffmpeg-api:latest
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          memory: 1G
+          cpus: '2.0'
+        reservations:
+          memory: 256M
+          cpus: '0.5'
+
   # n8n - Production URLs
   n8n:
     environment:
@@ -213,6 +226,8 @@ secrets:
   n8n_password:
     external: true
   elasticsearch_password:
+    external: true
+  ffmpeg_api_key:
     external: true
   passport_personal_access_client_id:
     external: true
