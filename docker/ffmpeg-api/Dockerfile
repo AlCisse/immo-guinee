@@ -10,6 +10,7 @@ RUN apk add --no-cache \
     ffmpeg \
     mediainfo \
     wget \
+    font-dejavu \
     && rm -rf /var/cache/apk/*
 
 # Create non-root user

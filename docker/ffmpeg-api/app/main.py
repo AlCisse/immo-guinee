@@ -19,6 +19,11 @@ app = FastAPI(title="FFmpeg API", docs_url=None, redoc_url=None)
 DATA_DIR = Path("/data")
 API_KEY = os.environ.get("FFMPEG_API_KEY", "")
 
+FONT_PATH = "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf"
+HIGHLIGHT_COLOR = "FFD700"
+DEFAULT_COLOR = "FFFFFF"
+SHADOW_COLOR = "000000@0.7"
+
 
 def verify_api_key(x_api_key: str | None = Header(None)):
     """Validate API key. Skipped if no key is configured (internal-only service)."""
@@ -751,6 +756,219 @@ def _mix_audio_tracks(
 
     timeout = max(120, int(voice_duration * 3))
     return run_ffmpeg(args, timeout=timeout)
+
+
+# ============================================
+# Thumbnail helpers
+# ============================================
+
+
+def _escape_drawtext(text: str) -> str:
+    """Escape special characters for FFmpeg drawtext filter."""
+    text = text.replace("'", "\u2019")  # typographic apostrophe
+    text = text.replace(":", "\\:")
+    text = text.replace("%", "%%")
+    text = text.replace(";", "\\;")
+    return text
+
+
+def _auto_thumbnail_layout(
+    title: str, width: int, font_size: int
+) -> tuple[int, list[str]]:
+    """Compute font_size and split title into lines for the thumbnail.
+
+    Returns (font_size, [line1, line2?]).
+    """
+    words = title.split()
+    if not words:
+        return (48, [title])
+
+    usable_width = width * 0.82  # conservative margin for proportional font variance
+    char_w_ratio = 0.70  # DejaVu Sans Bold — over-estimate to prevent overlap
+    space_w_ratio = 0.40
+    min_single_line_fs = 40  # Force 2-line split below this
+
+    def _line_width(word_list: list[str], fs: int) -> float:
+        return sum(len(w) * char_w_ratio * fs for w in word_list) + max(
+            0, len(word_list) - 1
+        ) * space_w_ratio * fs
+
+    if font_size <= 0:
+        # Auto-compute: find largest font where title fits in one line
+        for fs in range(72, min_single_line_fs - 1, -1):
+            if _line_width(words, fs) <= usable_width:
+                return (fs, [title])
+
+        # Single line too small — split into 2 lines
+        mid = len(words) // 2
+        line1 = " ".join(words[:mid])
+        line2 = " ".join(words[mid:])
+
+        for fs in range(72, 27, -1):
+            w1 = _line_width(words[:mid], fs)
+            w2 = _line_width(words[mid:], fs)
+            if max(w1, w2) <= usable_width:
+                return (fs, [line1, line2])
+
+        return (28, [line1, line2])
+    else:
+        # Fixed font_size — check if it fits in one line
+        if _line_width(words, font_size) <= usable_width:
+            return (font_size, [title])
+
+        mid = len(words) // 2
+        return (font_size, [" ".join(words[:mid]), " ".join(words[mid:])])
+
+
+def _build_thumbnail_filters(
+    width: int,
+    height: int,
+    lines: list[str],
+    font_size: int,
+    highlight_words: list[str],
+) -> str:
+    """Build the full FFmpeg filter chain for the thumbnail."""
+    filters: list[str] = []
+
+    # Scale + crop to exact dimensions (cover mode)
+    filters.append(
+        f"scale={width}:{height}:force_original_aspect_ratio=increase"
+    )
+    filters.append(f"crop={width}:{height}")
+
+    # Slight darkening + saturation boost
+    filters.append("eq=brightness=-0.08:saturation=1.1")
+
+    # Gradient overlay — 4 bands covering bottom ~45%
+    band_h = int(height * 0.45 / 4)
+    for i in range(4):
+        opacity = 0.15 + i * 0.15  # 0.15, 0.30, 0.45, 0.60
+        y_pos = height - band_h * (4 - i)
+        filters.append(
+            f"drawbox=x=0:y={y_pos}:w={width}:h={band_h}"
+            f":color=black@{opacity:.2f}:t=fill"
+        )
+
+    # Highlight words set for matching
+    hl_set = {w.lower() for w in highlight_words if w.strip()}
+
+    char_w_ratio = 0.70
+    space_w_ratio = 0.40
+    num_lines = len(lines)
+
+    for line_idx, line in enumerate(lines):
+        words = line.split()
+        if not words:
+            continue
+
+        # Y position: center text at ~78% of height, adjust for multi-line
+        line_height = font_size * 1.3
+        total_text_h = num_lines * line_height
+        base_y = int(height * 0.78 - total_text_h / 2)
+        y = int(base_y + line_idx * line_height)
+
+        # Compute total line width for centering
+        total_line_w = sum(
+            len(w) * char_w_ratio * font_size for w in words
+        ) + (len(words) - 1) * space_w_ratio * font_size
+
+        # Starting X to center the line
+        x_cursor = (width - total_line_w) / 2
+
+        for word in words:
+            escaped = _escape_drawtext(word)
+            word_w = len(word) * char_w_ratio * font_size
+            x_pos = int(x_cursor)
+
+            # Check if this word should be highlighted
+            clean_word = word.strip(".,!?:;'\"").lower()
+            color = HIGHLIGHT_COLOR if clean_word in hl_set else DEFAULT_COLOR
+
+            # Shadow
+            filters.append(
+                f"drawtext=fontfile={FONT_PATH}"
+                f":text='{escaped}'"
+                f":fontcolor={SHADOW_COLOR}"
+                f":fontsize={font_size}"
+                f":x={x_pos + 3}:y={y + 3}"
+            )
+            # Text
+            filters.append(
+                f"drawtext=fontfile={FONT_PATH}"
+                f":text='{escaped}'"
+                f":fontcolor={color}"
+                f":fontsize={font_size}"
+                f":x={x_pos}:y={y}"
+            )
+
+            x_cursor += word_w + space_w_ratio * font_size
+
+    return ",".join(filters)
+
+
+# ============================================
+# POST /thumbnail/create
+# ============================================
+@app.post("/thumbnail/create")
+async def thumbnail_create(
+    image: UploadFile = File(...),
+    title: str = Form(...),
+    highlight_words: str = Form(""),
+    width: int = Form(1280),
+    height: int = Form(720),
+    font_size: int = Form(0),
+    output_format: str = Form("jpg"),
+    x_api_key: str | None = Header(None),
+):
+    """Generate a YouTube-style thumbnail with text overlay.
+
+    - image: source image (JPG, PNG, WebP)
+    - title: text to overlay on the image
+    - highlight_words: comma-separated words to render in yellow (#FFD700)
+    - width/height: output dimensions (default 1280x720)
+    - font_size: font size in px (0 = auto-compute)
+    - output_format: jpg or png (default jpg)
+    """
+    verify_api_key(x_api_key)
+    input_path = save_upload(image)
+    output_path = DATA_DIR / f"{uuid.uuid4().hex}.{output_format}"
+
+    try:
+        hl_words = [
+            w.strip() for w in highlight_words.split(",") if w.strip()
+        ]
+
+        fs, lines = _auto_thumbnail_layout(title, width, font_size)
+        filter_chain = _build_thumbnail_filters(
+            width, height, lines, fs, hl_words
+        )
+
+        args = ["-i", str(input_path), "-vf", filter_chain, "-frames:v", "1"]
+
+        if output_format == "jpg":
+            args += ["-q:v", "2"]
+
+        args.append(str(output_path))
+        result = run_ffmpeg(args, timeout=60)
+
+        if result.returncode != 0 or not output_path.exists():
+            raise HTTPException(
+                422, f"Thumbnail creation failed: {result.stderr}"
+            )
+
+        media = "image/jpeg" if output_format == "jpg" else f"image/{output_format}"
+        return FileResponse(
+            str(output_path),
+            media_type=media,
+            filename=f"thumbnail.{output_format}",
+            background=_cleanup_task(input_path, output_path),
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        input_path.unlink(missing_ok=True)
+        output_path.unlink(missing_ok=True)
+        raise HTTPException(500, str(e))
 
 
 # ============================================
