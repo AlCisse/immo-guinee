@@ -777,50 +777,75 @@ def _auto_thumbnail_layout(
 ) -> tuple[int, list[str]]:
     """Compute font_size and split title into lines for the text panel.
 
-    Args:
-        panel_width: width of the text area (right panel).
+    Supports 1, 2, or 3 lines. Tries the fewest lines first and picks the
+    split that maximises font size.
 
     Returns (font_size, [line1, line2, ...]).
     """
     words = title.split()
     if not words:
-        return (48, [title])
+        return (max(48, panel_width // 14), [title])
 
-    usable_width = panel_width * 0.80  # 80% of panel — generous padding
-    char_w_ratio = 0.70  # DejaVu Sans Bold — over-estimate to prevent overlap
+    usable_width = panel_width * 0.90
+    char_w_ratio = 0.70
     space_w_ratio = 0.40
-    min_single_line_fs = 36  # Force multi-line split below this
+    # Scale font size range proportionally to panel width
+    max_fs = max(72, int(panel_width * 0.10))
+    min_fs = max(28, int(panel_width * 0.04))
 
-    def _line_width(word_list: list[str], fs: int) -> float:
+    def _lw(word_list: list[str], fs: int) -> float:
         return sum(len(w) * char_w_ratio * fs for w in word_list) + max(
             0, len(word_list) - 1
         ) * space_w_ratio * fs
 
-    if font_size <= 0:
-        # Auto-compute: find largest font where title fits in one line
-        for fs in range(64, min_single_line_fs - 1, -1):
-            if _line_width(words, fs) <= usable_width:
-                return (fs, [title])
-
-        # Single line too small — split into 2 lines
-        mid = len(words) // 2
-        line1 = " ".join(words[:mid])
-        line2 = " ".join(words[mid:])
-
-        for fs in range(64, 27, -1):
-            w1 = _line_width(words[:mid], fs)
-            w2 = _line_width(words[mid:], fs)
-            if max(w1, w2) <= usable_width:
-                return (fs, [line1, line2])
-
-        return (28, [line1, line2])
-    else:
-        # Fixed font_size — check if it fits in one line
-        if _line_width(words, font_size) <= usable_width:
+    if font_size > 0:
+        if _lw(words, font_size) <= usable_width:
             return (font_size, [title])
-
         mid = len(words) // 2
         return (font_size, [" ".join(words[:mid]), " ".join(words[mid:])])
+
+    # --- Auto font size: pick layout that maximises font ---
+
+    best_fs = 0
+    best_lines: list[str] = []
+
+    # Try 1 line
+    single_min = max(40, int(panel_width * 0.055))
+    for fs in range(max_fs, single_min - 1, -1):
+        if _lw(words, fs) <= usable_width:
+            return (fs, [title])  # 1 line at large font is always best
+
+    # Try all 2-line splits
+    if len(words) >= 2:
+        for i in range(1, len(words)):
+            g1, g2 = words[:i], words[i:]
+            for fs in range(max_fs, min_fs - 1, -1):
+                if max(_lw(g1, fs), _lw(g2, fs)) <= usable_width:
+                    if fs > best_fs:
+                        best_fs = fs
+                        best_lines = [" ".join(g1), " ".join(g2)]
+                    break
+
+    # Try all 3-line splits — use if it gives a bigger font
+    if len(words) >= 3:
+        for i in range(1, len(words) - 1):
+            for j in range(i + 1, len(words)):
+                g1, g2, g3 = words[:i], words[i:j], words[j:]
+                for fs in range(max_fs, min_fs - 1, -1):
+                    mw = max(_lw(g1, fs), _lw(g2, fs), _lw(g3, fs))
+                    if mw <= usable_width:
+                        if fs > best_fs:
+                            best_fs = fs
+                            best_lines = [
+                                " ".join(g1), " ".join(g2), " ".join(g3)
+                            ]
+                        break
+
+    if best_fs > 0:
+        return (best_fs, best_lines)
+
+    mid = len(words) // 2
+    return (min_fs, [" ".join(words[:mid]), " ".join(words[mid:])])
 
 
 def _build_thumbnail_filters(
@@ -830,10 +855,10 @@ def _build_thumbnail_filters(
     font_size: int,
     highlight_words: list[str],
 ) -> str:
-    """Build thumbnail -vf chain: full-bleed image + centered text overlay.
+    """Build thumbnail -vf chain: full-bleed image + right-aligned text overlay.
 
-    The source image covers 100% of the canvas. Text is rendered in the
-    lower-center area with a thick shadow for readability.
+    The source image covers 100% of the canvas. Text is rendered on the
+    right side (~55%) with a thick shadow for readability.
     Returns a comma-separated -vf filter string.
     """
     filters: list[str] = []
@@ -844,7 +869,7 @@ def _build_thumbnail_filters(
     )
     filters.append(f"crop={width}:{height}")
 
-    # Text rendering
+    # Text rendering — positioned on the RIGHT side
     hl_set = {w.strip(".,!?:;'\"").lower() for w in highlight_words if w.strip()}
 
     char_w_ratio = 0.70
@@ -853,8 +878,12 @@ def _build_thumbnail_filters(
     line_height = font_size * 1.35
     total_text_h = num_lines * line_height
 
-    # Position text block at ~58% from top (lower-center)
-    base_y = int(height * 0.58 - total_text_h / 2)
+    # Text area: right 55% of the canvas
+    txt_x_start = int(width * 0.45)
+    txt_area_w = width - txt_x_start
+
+    # Center text block vertically (~50%)
+    base_y = int((height - total_text_h) / 2)
 
     for line_idx, line in enumerate(lines):
         words = line.split()
@@ -863,12 +892,12 @@ def _build_thumbnail_filters(
 
         y = int(base_y + line_idx * line_height)
 
-        # Calculate total line width to center horizontally on full canvas
+        # Calculate total line width to center in the right panel
         total_line_w = (
             sum(len(w) * char_w_ratio * font_size for w in words)
             + max(0, len(words) - 1) * space_w_ratio * font_size
         )
-        x_cursor = float((width - total_line_w) / 2)
+        x_cursor = float(txt_x_start + (txt_area_w - total_line_w) / 2)
 
         for word in words:
             escaped = _escape_drawtext(word)
@@ -878,13 +907,14 @@ def _build_thumbnail_filters(
             clean_word = word.strip(".,!?:;'\"").lower()
             color = HIGHLIGHT_COLOR if clean_word in hl_set else DEFAULT_COLOR
 
-            # Thick shadow for readability on raw image
+            # Thick shadow for readability — scales with font size
+            sh = max(4, font_size // 16)
             filters.append(
                 f"drawtext=fontfile={FONT_PATH}"
                 f":text='{escaped}'"
                 f":fontcolor={SHADOW_COLOR}"
                 f":fontsize={font_size}"
-                f":x={x_pos + 4}:y={y + 4}"
+                f":x={x_pos + sh}:y={y + sh}"
             )
             # Text
             filters.append(
@@ -908,8 +938,8 @@ async def thumbnail_create(
     image: UploadFile = File(...),
     title: str = Form(...),
     highlight_words: str = Form(""),
-    width: int = Form(1280),
-    height: int = Form(720),
+    width: int = Form(7680),
+    height: int = Form(4320),
     font_size: int = Form(0),
     output_format: str = Form("jpg"),
     x_api_key: str | None = Header(None),
@@ -919,7 +949,7 @@ async def thumbnail_create(
     - image: source image (JPG, PNG, WebP)
     - title: text to overlay on the image
     - highlight_words: comma-separated words to render in yellow (#FFD700)
-    - width/height: output dimensions (default 1280x720)
+    - width/height: output dimensions (default 7680x4320 / 8K)
     - font_size: font size in px (0 = auto-compute)
     - output_format: jpg or png (default jpg)
     """
@@ -936,7 +966,8 @@ async def thumbnail_create(
         upper_title = title.upper()
         upper_hl = [w.upper() for w in hl_words]
 
-        fs, lines = _auto_thumbnail_layout(upper_title, width, font_size)
+        txt_panel_w = int(width * 0.55)  # text on right 55%
+        fs, lines = _auto_thumbnail_layout(upper_title, txt_panel_w, font_size)
         vf = _build_thumbnail_filters(
             width, height, lines, fs, upper_hl
         )
