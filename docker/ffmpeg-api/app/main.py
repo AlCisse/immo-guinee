@@ -773,20 +773,23 @@ def _escape_drawtext(text: str) -> str:
 
 
 def _auto_thumbnail_layout(
-    title: str, width: int, font_size: int
+    title: str, panel_width: int, font_size: int
 ) -> tuple[int, list[str]]:
-    """Compute font_size and split title into lines for the thumbnail.
+    """Compute font_size and split title into lines for the text panel.
 
-    Returns (font_size, [line1, line2?]).
+    Args:
+        panel_width: width of the text area (right panel).
+
+    Returns (font_size, [line1, line2, ...]).
     """
     words = title.split()
     if not words:
         return (48, [title])
 
-    usable_width = width * 0.82  # conservative margin for proportional font variance
+    usable_width = panel_width * 0.80  # 80% of panel — generous padding
     char_w_ratio = 0.70  # DejaVu Sans Bold — over-estimate to prevent overlap
     space_w_ratio = 0.40
-    min_single_line_fs = 40  # Force 2-line split below this
+    min_single_line_fs = 36  # Force multi-line split below this
 
     def _line_width(word_list: list[str], fs: int) -> float:
         return sum(len(w) * char_w_ratio * fs for w in word_list) + max(
@@ -795,7 +798,7 @@ def _auto_thumbnail_layout(
 
     if font_size <= 0:
         # Auto-compute: find largest font where title fits in one line
-        for fs in range(72, min_single_line_fs - 1, -1):
+        for fs in range(64, min_single_line_fs - 1, -1):
             if _line_width(words, fs) <= usable_width:
                 return (fs, [title])
 
@@ -804,7 +807,7 @@ def _auto_thumbnail_layout(
         line1 = " ".join(words[:mid])
         line2 = " ".join(words[mid:])
 
-        for fs in range(72, 27, -1):
+        for fs in range(64, 27, -1):
             w1 = _line_width(words[:mid], fs)
             w2 = _line_width(words[mid:], fs)
             if max(w1, w2) <= usable_width:
@@ -826,74 +829,79 @@ def _build_thumbnail_filters(
     lines: list[str],
     font_size: int,
     highlight_words: list[str],
-) -> str:
-    """Build the full FFmpeg filter chain for the thumbnail."""
-    filters: list[str] = []
+) -> tuple[list[str], str]:
+    """Build split-layout filter_complex: image left, text right.
 
-    # Scale + crop to exact dimensions (cover mode)
-    filters.append(
-        f"scale={width}:{height}:force_original_aspect_ratio=increase"
+    Returns (extra_inputs, filter_complex_string).
+    extra_inputs: additional FFmpeg input args (e.g. color source).
+    """
+    img_w = int(width * 0.45)  # left 45% = image
+    txt_w = width - img_w      # right 55% = text panel
+
+    # [0:v] = source image → scale + crop to left panel
+    img_chain = (
+        f"[0:v]scale={img_w}:{height}:force_original_aspect_ratio=increase,"
+        f"crop={img_w}:{height},"
+        f"eq=brightness=-0.05:saturation=1.1[left]"
     )
-    filters.append(f"crop={width}:{height}")
 
-    # Slight darkening + saturation boost
-    filters.append("eq=brightness=-0.08:saturation=1.1")
+    # [1:v] = solid dark background for text panel
+    # Generate via color source input
+    extra_inputs = [
+        "-f", "lavfi", "-i",
+        f"color=c=0x1a1a2e:s={txt_w}x{height}:d=1",
+    ]
 
-    # Gradient overlay — 4 bands covering bottom ~45%
-    band_h = int(height * 0.45 / 4)
-    for i in range(4):
-        opacity = 0.15 + i * 0.15  # 0.15, 0.30, 0.45, 0.60
-        y_pos = height - band_h * (4 - i)
-        filters.append(
-            f"drawbox=x=0:y={y_pos}:w={width}:h={band_h}"
-            f":color=black@{opacity:.2f}:t=fill"
-        )
+    # Build drawtext filters on the text panel
+    txt_filters: list[str] = []
 
-    # Highlight words set for matching
+    # Subtle vertical accent line on left edge of text panel
+    txt_filters.append(
+        f"drawbox=x=0:y={int(height * 0.15)}:w=4"
+        f":h={int(height * 0.70)}:color={HIGHLIGHT_COLOR}@0.8:t=fill"
+    )
+
+    # Highlight words set
     hl_set = {w.lower() for w in highlight_words if w.strip()}
 
     char_w_ratio = 0.70
     space_w_ratio = 0.40
     num_lines = len(lines)
+    line_height = font_size * 1.4
+    total_text_h = num_lines * line_height
+
+    # Center text block vertically in the panel
+    base_y = int((height - total_text_h) / 2)
 
     for line_idx, line in enumerate(lines):
         words = line.split()
         if not words:
             continue
 
-        # Y position: center text at ~78% of height, adjust for multi-line
-        line_height = font_size * 1.3
-        total_text_h = num_lines * line_height
-        base_y = int(height * 0.78 - total_text_h / 2)
         y = int(base_y + line_idx * line_height)
 
-        # Compute total line width for centering
-        total_line_w = sum(
-            len(w) * char_w_ratio * font_size for w in words
-        ) + (len(words) - 1) * space_w_ratio * font_size
-
-        # Starting X to center the line
-        x_cursor = (width - total_line_w) / 2
+        # Compute line width for left-align with padding
+        x_padding = int(txt_w * 0.10)  # 10% left padding
+        x_cursor = float(x_padding)
 
         for word in words:
             escaped = _escape_drawtext(word)
             word_w = len(word) * char_w_ratio * font_size
             x_pos = int(x_cursor)
 
-            # Check if this word should be highlighted
             clean_word = word.strip(".,!?:;'\"").lower()
             color = HIGHLIGHT_COLOR if clean_word in hl_set else DEFAULT_COLOR
 
             # Shadow
-            filters.append(
+            txt_filters.append(
                 f"drawtext=fontfile={FONT_PATH}"
                 f":text='{escaped}'"
                 f":fontcolor={SHADOW_COLOR}"
                 f":fontsize={font_size}"
-                f":x={x_pos + 3}:y={y + 3}"
+                f":x={x_pos + 2}:y={y + 2}"
             )
             # Text
-            filters.append(
+            txt_filters.append(
                 f"drawtext=fontfile={FONT_PATH}"
                 f":text='{escaped}'"
                 f":fontcolor={color}"
@@ -903,7 +911,12 @@ def _build_thumbnail_filters(
 
             x_cursor += word_w + space_w_ratio * font_size
 
-    return ",".join(filters)
+    txt_chain = "[1:v]" + ",".join(txt_filters) + "[right]"
+
+    # Horizontal stack: image left + text right
+    fc = f"{img_chain};{txt_chain};[left][right]hstack=inputs=2[out]"
+
+    return (extra_inputs, fc)
 
 
 # ============================================
@@ -938,12 +951,18 @@ async def thumbnail_create(
             w.strip() for w in highlight_words.split(",") if w.strip()
         ]
 
-        fs, lines = _auto_thumbnail_layout(title, width, font_size)
-        filter_chain = _build_thumbnail_filters(
+        txt_panel_w = width - int(width * 0.45)  # right 55%
+        fs, lines = _auto_thumbnail_layout(title, txt_panel_w, font_size)
+        extra_inputs, filter_complex = _build_thumbnail_filters(
             width, height, lines, fs, hl_words
         )
 
-        args = ["-i", str(input_path), "-vf", filter_chain, "-frames:v", "1"]
+        args = (
+            ["-i", str(input_path)]
+            + extra_inputs
+            + ["-filter_complex", filter_complex, "-map", "[out]",
+               "-frames:v", "1"]
+        )
 
         if output_format == "jpg":
             args += ["-q:v", "2"]
