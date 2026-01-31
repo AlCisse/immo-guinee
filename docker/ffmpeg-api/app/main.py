@@ -22,10 +22,7 @@ API_KEY = os.environ.get("FFMPEG_API_KEY", "")
 FONT_PATH = "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf"
 HIGHLIGHT_COLOR = "FFD700"
 DEFAULT_COLOR = "FFFFFF"
-SHADOW_COLOR = "000000@0.7"
-PANEL_BG_COLOR = "2B2D42"
-SEPARATOR_COLOR = "FFD700"
-SEPARATOR_WIDTH = 3
+SHADOW_COLOR = "000000@0.8"
 
 
 def verify_api_key(x_api_key: str | None = Header(None)):
@@ -833,10 +830,10 @@ def _build_thumbnail_filters(
     font_size: int,
     highlight_words: list[str],
 ) -> str:
-    """Build thumbnail -vf chain: full-bleed image + dark overlay on right + text.
+    """Build thumbnail -vf chain: full-bleed image + centered text overlay.
 
-    The source image covers 100% of the canvas. A semi-transparent dark
-    gradient is drawn on the right ~55% so the text remains readable.
+    The source image covers 100% of the canvas. Text is rendered in the
+    lower-center area with a thick shadow for readability.
     Returns a comma-separated -vf filter string.
     """
     filters: list[str] = []
@@ -847,46 +844,17 @@ def _build_thumbnail_filters(
     )
     filters.append(f"crop={width}:{height}")
 
-    # Slight contrast boost on the full image
-    filters.append("eq=brightness=-0.03:saturation=1.1")
-
-    # Dark gradient overlay on the RIGHT ~55%
-    # Progressive bands: transparent → opaque (left to right)
-    grad_x_start = int(width * 0.40)
-    grad_w = width - grad_x_start
-    num_bands = 10
-    band_w = grad_w // num_bands
-
-    for i in range(num_bands):
-        opacity = 0.05 + i * (0.75 / (num_bands - 1))  # 0.05 → 0.80
-        x = grad_x_start + i * band_w
-        w = band_w if i < num_bands - 1 else (width - x)
-        filters.append(
-            f"drawbox=x={x}:y=0:w={w}:h={height}"
-            f":color=000000@{opacity:.2f}:t=fill"
-        )
-
-    # Gold vertical separator line at ~45%
-    sep_x = int(width * 0.45)
-    filters.append(
-        f"drawbox=x={sep_x}:y=0:w={SEPARATOR_WIDTH}:h={height}"
-        f":color={SEPARATOR_COLOR}:t=fill"
-    )
-
-    # Text area: right portion after the separator
-    txt_x_start = sep_x + SEPARATOR_WIDTH + 10
-    txt_area_w = width - txt_x_start
-
-    hl_set = {w.lower() for w in highlight_words if w.strip()}
+    # Text rendering
+    hl_set = {w.strip(".,!?:;'\"").lower() for w in highlight_words if w.strip()}
 
     char_w_ratio = 0.70
     space_w_ratio = 0.40
     num_lines = len(lines)
-    line_height = font_size * 1.4
+    line_height = font_size * 1.35
     total_text_h = num_lines * line_height
 
-    # Center text block vertically
-    base_y = int((height - total_text_h) / 2)
+    # Position text block at ~58% from top (lower-center)
+    base_y = int(height * 0.58 - total_text_h / 2)
 
     for line_idx, line in enumerate(lines):
         words = line.split()
@@ -895,12 +863,12 @@ def _build_thumbnail_filters(
 
         y = int(base_y + line_idx * line_height)
 
-        # Calculate total line width to center horizontally in right area
+        # Calculate total line width to center horizontally on full canvas
         total_line_w = (
             sum(len(w) * char_w_ratio * font_size for w in words)
             + max(0, len(words) - 1) * space_w_ratio * font_size
         )
-        x_cursor = float(txt_x_start + (txt_area_w - total_line_w) / 2)
+        x_cursor = float((width - total_line_w) / 2)
 
         for word in words:
             escaped = _escape_drawtext(word)
@@ -910,13 +878,13 @@ def _build_thumbnail_filters(
             clean_word = word.strip(".,!?:;'\"").lower()
             color = HIGHLIGHT_COLOR if clean_word in hl_set else DEFAULT_COLOR
 
-            # Shadow
+            # Thick shadow for readability on raw image
             filters.append(
                 f"drawtext=fontfile={FONT_PATH}"
                 f":text='{escaped}'"
                 f":fontcolor={SHADOW_COLOR}"
                 f":fontsize={font_size}"
-                f":x={x_pos + 3}:y={y + 3}"
+                f":x={x_pos + 4}:y={y + 4}"
             )
             # Text
             filters.append(
@@ -968,9 +936,7 @@ async def thumbnail_create(
         upper_title = title.upper()
         upper_hl = [w.upper() for w in hl_words]
 
-        sep_x = int(width * 0.45)
-        txt_panel_w = width - sep_x - SEPARATOR_WIDTH - 10
-        fs, lines = _auto_thumbnail_layout(upper_title, txt_panel_w, font_size)
+        fs, lines = _auto_thumbnail_layout(upper_title, width, font_size)
         vf = _build_thumbnail_filters(
             width, height, lines, fs, upper_hl
         )
