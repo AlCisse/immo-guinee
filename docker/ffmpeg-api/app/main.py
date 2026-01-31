@@ -606,6 +606,154 @@ def _compose_with_xfade(
 
 
 # ============================================
+# POST /mix-audio
+# ============================================
+@app.post("/mix-audio")
+async def mix_audio(
+    voice: UploadFile = File(...),
+    music: UploadFile = File(...),
+    voice_volume: float = Form(-3.0),
+    music_volume: float = Form(-25.0),
+    fade_in: float = Form(3.0),
+    fade_out: float = Form(5.0),
+    loop_music: bool = Form(True),
+    normalize: bool = Form(True),
+    output_format: str = Form("mp3"),
+    x_api_key: str | None = Header(None),
+):
+    """Mix a voice-over track with background music for YouTube-ready audio.
+
+    - voice: voice-over audio file (TTS output)
+    - music: background music file
+    - voice_volume: voice level in dB (default -3 dB, clear and dominant)
+    - music_volume: music level in dB (default -25 dB, subtle background)
+    - fade_in: music fade-in duration in seconds (default 3s)
+    - fade_out: music fade-out duration in seconds (default 5s)
+    - loop_music: loop music if shorter than voice (default true)
+    - normalize: apply EBU R128 loudness normalization (default true)
+    - output_format: output format (default "mp3")
+    """
+    verify_api_key(x_api_key)
+
+    voice_path = save_upload(voice)
+    music_path = save_upload(music)
+    output_path = DATA_DIR / f"{uuid.uuid4().hex}_mixed.{output_format}"
+
+    try:
+        result = _mix_audio_tracks(
+            voice_path, music_path, output_path,
+            voice_volume, music_volume,
+            fade_in, fade_out,
+            loop_music, normalize,
+            output_format,
+        )
+
+        if result.returncode != 0 or not output_path.exists():
+            raise HTTPException(422, f"Audio mixing failed: {result.stderr}")
+
+        return FileResponse(
+            str(output_path),
+            media_type=f"audio/{'mpeg' if output_format == 'mp3' else output_format}",
+            filename=f"mixed.{output_format}",
+            background=_cleanup_task(voice_path, music_path, output_path),
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        voice_path.unlink(missing_ok=True)
+        music_path.unlink(missing_ok=True)
+        output_path.unlink(missing_ok=True)
+        raise HTTPException(500, str(e))
+
+
+def _get_voice_duration(voice_path: Path) -> float:
+    """Get duration of voice file in seconds using ffprobe."""
+    result = run_ffprobe([
+        "-v", "quiet",
+        "-print_format", "json",
+        "-show_format",
+        str(voice_path),
+    ])
+    if result.returncode != 0:
+        return 0.0
+    info = json.loads(result.stdout)
+    return float(info.get("format", {}).get("duration", 0))
+
+
+def _mix_audio_tracks(
+    voice_path: Path,
+    music_path: Path,
+    output_path: Path,
+    voice_volume: float,
+    music_volume: float,
+    fade_in: float,
+    fade_out: float,
+    loop_music: bool,
+    normalize: bool,
+    output_format: str,
+) -> subprocess.CompletedProcess:
+    """Mix voice-over with background music using FFmpeg."""
+    voice_duration = _get_voice_duration(voice_path)
+    if voice_duration <= 0:
+        raise HTTPException(422, "Could not determine voice duration")
+
+    fade_out_start = max(0, voice_duration - fade_out)
+
+    # Build music filter: volume + fade in/out
+    music_filter = (
+        f"volume={music_volume}dB,"
+        f"afade=t=in:d={fade_in},"
+        f"afade=t=out:st={fade_out_start}:d={fade_out}"
+    )
+
+    # Build voice filter: volume
+    voice_filter = f"volume={voice_volume}dB"
+
+    # Input args
+    args = ["-i", str(voice_path)]
+
+    if loop_music:
+        # -stream_loop -1 loops the music indefinitely; -t trims to voice duration
+        args += ["-stream_loop", "-1", "-i", str(music_path)]
+    else:
+        args += ["-i", str(music_path)]
+
+    # Build filtergraph: apply filters then mix
+    if normalize:
+        filtergraph = (
+            f"[0:a]{voice_filter}[voice];"
+            f"[1:a]{music_filter}[music];"
+            f"[voice][music]amix=inputs=2:duration=first:dropout_transition=2[mixed];"
+            f"[mixed]loudnorm=I=-14:LRA=11:TP=-1[out]"
+        )
+    else:
+        filtergraph = (
+            f"[0:a]{voice_filter}[voice];"
+            f"[1:a]{music_filter}[music];"
+            f"[voice][music]amix=inputs=2:duration=first:dropout_transition=2[out]"
+        )
+
+    args += [
+        "-filter_complex", filtergraph,
+        "-map", "[out]",
+        "-t", str(voice_duration),
+    ]
+
+    # Output codec
+    if output_format == "mp3":
+        args += ["-c:a", "libmp3lame", "-b:a", "192k"]
+    elif output_format == "m4a":
+        args += ["-c:a", "aac", "-b:a", "192k"]
+    else:
+        args += ["-c:a", "aac", "-b:a", "192k"]
+
+    args.append(str(output_path))
+
+    timeout = max(120, int(voice_duration * 3))
+    return run_ffmpeg(args, timeout=timeout)
+
+
+# ============================================
 # POST /cleanup
 # ============================================
 @app.post("/cleanup")
