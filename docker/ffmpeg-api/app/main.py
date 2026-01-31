@@ -23,6 +23,9 @@ FONT_PATH = "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf"
 HIGHLIGHT_COLOR = "FFD700"
 DEFAULT_COLOR = "FFFFFF"
 SHADOW_COLOR = "000000@0.7"
+PANEL_BG_COLOR = "2B2D42"
+SEPARATOR_COLOR = "FFD700"
+SEPARATOR_WIDTH = 3
 
 
 def verify_api_key(x_api_key: str | None = Header(None)):
@@ -829,39 +832,51 @@ def _build_thumbnail_filters(
     lines: list[str],
     font_size: int,
     highlight_words: list[str],
-) -> tuple[list[str], str]:
-    """Build split-layout filter_complex: image left, text right.
+) -> str:
+    """Build thumbnail -vf chain: full-bleed image + dark overlay on right + text.
 
-    Returns (extra_inputs, filter_complex_string).
-    extra_inputs: additional FFmpeg input args (e.g. color source).
+    The source image covers 100% of the canvas. A semi-transparent dark
+    gradient is drawn on the right ~55% so the text remains readable.
+    Returns a comma-separated -vf filter string.
     """
-    img_w = int(width * 0.45)  # left 45% = image
-    txt_w = width - img_w      # right 55% = text panel
+    filters: list[str] = []
 
-    # [0:v] = source image → scale + crop to left panel
-    img_chain = (
-        f"[0:v]scale={img_w}:{height}:force_original_aspect_ratio=increase,"
-        f"crop={img_w}:{height},"
-        f"eq=brightness=-0.05:saturation=1.1[left]"
+    # Full-bleed: scale + crop to cover entire canvas
+    filters.append(
+        f"scale={width}:{height}:force_original_aspect_ratio=increase"
+    )
+    filters.append(f"crop={width}:{height}")
+
+    # Slight contrast boost on the full image
+    filters.append("eq=brightness=-0.03:saturation=1.1")
+
+    # Dark gradient overlay on the RIGHT ~55%
+    # Progressive bands: transparent → opaque (left to right)
+    grad_x_start = int(width * 0.40)
+    grad_w = width - grad_x_start
+    num_bands = 10
+    band_w = grad_w // num_bands
+
+    for i in range(num_bands):
+        opacity = 0.05 + i * (0.75 / (num_bands - 1))  # 0.05 → 0.80
+        x = grad_x_start + i * band_w
+        w = band_w if i < num_bands - 1 else (width - x)
+        filters.append(
+            f"drawbox=x={x}:y=0:w={w}:h={height}"
+            f":color=000000@{opacity:.2f}:t=fill"
+        )
+
+    # Gold vertical separator line at ~45%
+    sep_x = int(width * 0.45)
+    filters.append(
+        f"drawbox=x={sep_x}:y=0:w={SEPARATOR_WIDTH}:h={height}"
+        f":color={SEPARATOR_COLOR}:t=fill"
     )
 
-    # [1:v] = solid dark background for text panel
-    # Generate via color source input
-    extra_inputs = [
-        "-f", "lavfi", "-i",
-        f"color=c=0x1a1a2e:s={txt_w}x{height}:d=1",
-    ]
+    # Text area: right portion after the separator
+    txt_x_start = sep_x + SEPARATOR_WIDTH + 10
+    txt_area_w = width - txt_x_start
 
-    # Build drawtext filters on the text panel
-    txt_filters: list[str] = []
-
-    # Subtle vertical accent line on left edge of text panel
-    txt_filters.append(
-        f"drawbox=x=0:y={int(height * 0.15)}:w=4"
-        f":h={int(height * 0.70)}:color={HIGHLIGHT_COLOR}@0.8:t=fill"
-    )
-
-    # Highlight words set
     hl_set = {w.lower() for w in highlight_words if w.strip()}
 
     char_w_ratio = 0.70
@@ -870,7 +885,7 @@ def _build_thumbnail_filters(
     line_height = font_size * 1.4
     total_text_h = num_lines * line_height
 
-    # Center text block vertically in the panel
+    # Center text block vertically
     base_y = int((height - total_text_h) / 2)
 
     for line_idx, line in enumerate(lines):
@@ -880,9 +895,12 @@ def _build_thumbnail_filters(
 
         y = int(base_y + line_idx * line_height)
 
-        # Compute line width for left-align with padding
-        x_padding = int(txt_w * 0.10)  # 10% left padding
-        x_cursor = float(x_padding)
+        # Calculate total line width to center horizontally in right area
+        total_line_w = (
+            sum(len(w) * char_w_ratio * font_size for w in words)
+            + max(0, len(words) - 1) * space_w_ratio * font_size
+        )
+        x_cursor = float(txt_x_start + (txt_area_w - total_line_w) / 2)
 
         for word in words:
             escaped = _escape_drawtext(word)
@@ -893,15 +911,15 @@ def _build_thumbnail_filters(
             color = HIGHLIGHT_COLOR if clean_word in hl_set else DEFAULT_COLOR
 
             # Shadow
-            txt_filters.append(
+            filters.append(
                 f"drawtext=fontfile={FONT_PATH}"
                 f":text='{escaped}'"
                 f":fontcolor={SHADOW_COLOR}"
                 f":fontsize={font_size}"
-                f":x={x_pos + 2}:y={y + 2}"
+                f":x={x_pos + 3}:y={y + 3}"
             )
             # Text
-            txt_filters.append(
+            filters.append(
                 f"drawtext=fontfile={FONT_PATH}"
                 f":text='{escaped}'"
                 f":fontcolor={color}"
@@ -911,12 +929,7 @@ def _build_thumbnail_filters(
 
             x_cursor += word_w + space_w_ratio * font_size
 
-    txt_chain = "[1:v]" + ",".join(txt_filters) + "[right]"
-
-    # Horizontal stack: image left + text right
-    fc = f"{img_chain};{txt_chain};[left][right]hstack=inputs=2[out]"
-
-    return (extra_inputs, fc)
+    return ",".join(filters)
 
 
 # ============================================
@@ -951,18 +964,18 @@ async def thumbnail_create(
             w.strip() for w in highlight_words.split(",") if w.strip()
         ]
 
-        txt_panel_w = width - int(width * 0.45)  # right 55%
-        fs, lines = _auto_thumbnail_layout(title, txt_panel_w, font_size)
-        extra_inputs, filter_complex = _build_thumbnail_filters(
-            width, height, lines, fs, hl_words
+        # Uppercase title and highlight words for YouTube-style look
+        upper_title = title.upper()
+        upper_hl = [w.upper() for w in hl_words]
+
+        sep_x = int(width * 0.45)
+        txt_panel_w = width - sep_x - SEPARATOR_WIDTH - 10
+        fs, lines = _auto_thumbnail_layout(upper_title, txt_panel_w, font_size)
+        vf = _build_thumbnail_filters(
+            width, height, lines, fs, upper_hl
         )
 
-        args = (
-            ["-i", str(input_path)]
-            + extra_inputs
-            + ["-filter_complex", filter_complex, "-map", "[out]",
-               "-frames:v", "1"]
-        )
+        args = ["-i", str(input_path), "-vf", vf, "-frames:v", "1"]
 
         if output_format == "jpg":
             args += ["-q:v", "2"]
