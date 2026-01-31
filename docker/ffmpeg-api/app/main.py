@@ -422,13 +422,13 @@ def _get_zoompan_filter(
     elif effect == "pan_left":
         return (
             f"zoompan=z='{zf}':"
-            f"d={frames}:x='(iw/zoom)*(1-on/(d-1))':y='(ih-ih/zoom)/2':"
+            f"d={frames}:x='(iw/zoom)*(1-on/({frames}-1))':y='(ih-ih/zoom)/2':"
             f"s={width}x{height}:fps={fps}"
         )
     elif effect == "pan_right":
         return (
             f"zoompan=z='{zf}':"
-            f"d={frames}:x='(iw/zoom)*(on/(d-1))':y='(ih-ih/zoom)/2':"
+            f"d={frames}:x='(iw/zoom)*(on/({frames}-1))':y='(ih-ih/zoom)/2':"
             f"s={width}x{height}:fps={fps}"
         )
     else:
