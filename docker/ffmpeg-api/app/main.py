@@ -21,10 +21,12 @@ API_KEY = os.environ.get("FFMPEG_API_KEY", "")
 
 
 def verify_api_key(x_api_key: str | None = Header(None)):
+    """Validate API key. Skipped if no key is configured (internal-only service)."""
     if not API_KEY:
-        raise HTTPException(503, "API key not configured")
-    if x_api_key != API_KEY:
-        raise HTTPException(401, "Invalid API key")
+        return
+    if x_api_key and x_api_key == API_KEY:
+        return
+    raise HTTPException(401, "Invalid API key")
 
 
 def save_upload(file: UploadFile) -> Path:
@@ -301,6 +303,9 @@ async def compose(
     width: int = Form(1280),
     height: int = Form(720),
     fps: int = Form(25),
+    zoom_effect: str = Form("random"),
+    zoom_factor: float = Form(1.3),
+    output_format: str = Form("mp4"),
     x_api_key: str | None = Header(None),
 ):
     """Create a slideshow video from multiple images with optional audio track.
@@ -312,6 +317,9 @@ async def compose(
     - transition_duration: fade duration in seconds (default 0.5s)
     - width/height: output resolution (default 1280x720)
     - fps: frames per second (default 25)
+    - zoom_effect: Ken Burns effect — "zoom_in", "zoom_out", "pan_left", "pan_right", "random", "none"
+    - zoom_factor: zoom intensity (1.0=none, 1.3=default, 1.5=50%)
+    - output_format: output format (default "mp4")
     """
     verify_api_key(x_api_key)
 
@@ -348,6 +356,7 @@ async def compose(
                 image_paths, audio_path, output_path,
                 duration_per_image, transition_duration,
                 width, height, fps,
+                zoom_effect, zoom_factor,
             )
         else:
             # Simple concat — no transitions
@@ -380,6 +389,55 @@ async def compose(
         output_path.unlink(missing_ok=True)
         concat_file.unlink(missing_ok=True)
         raise HTTPException(500, str(e))
+
+
+ZOOM_EFFECTS = ("zoom_in", "zoom_out", "pan_left", "pan_right")
+ZOOM_CYCLE = ("zoom_in", "pan_right", "zoom_out", "pan_left")
+
+
+def _get_zoompan_filter(
+    effect: str,
+    zoom_factor: float,
+    frames: int,
+    width: int,
+    height: int,
+    fps: int,
+) -> str:
+    """Return the zoompan filter string for the given Ken Burns effect."""
+    zf = zoom_factor
+    zoom_step = round((zf - 1.0) / frames, 6) if frames > 0 else 0.0005
+
+    if effect == "zoom_in":
+        return (
+            f"zoompan=z='min(zoom+{zoom_step},{zf})':"
+            f"d={frames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':"
+            f"s={width}x{height}:fps={fps}"
+        )
+    elif effect == "zoom_out":
+        return (
+            f"zoompan=z='if(lte(zoom,1.0),{zf},max(1.001,zoom-{zoom_step}))':"
+            f"d={frames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':"
+            f"s={width}x{height}:fps={fps}"
+        )
+    elif effect == "pan_left":
+        return (
+            f"zoompan=z='{zf}':"
+            f"d={frames}:x='(iw/zoom)*(1-on/(d-1))':y='(ih-ih/zoom)/2':"
+            f"s={width}x{height}:fps={fps}"
+        )
+    elif effect == "pan_right":
+        return (
+            f"zoompan=z='{zf}':"
+            f"d={frames}:x='(iw/zoom)*(on/(d-1))':y='(ih-ih/zoom)/2':"
+            f"s={width}x{height}:fps={fps}"
+        )
+    else:
+        # Fallback to zoom_in
+        return (
+            f"zoompan=z='min(zoom+{zoom_step},{zf})':"
+            f"d={frames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':"
+            f"s={width}x{height}:fps={fps}"
+        )
 
 
 def _compose_simple_concat(
@@ -431,58 +489,120 @@ def _compose_with_xfade(
     width: int,
     height: int,
     fps: int,
+    zoom_effect: str = "random",
+    zoom_factor: float = 1.3,
 ) -> subprocess.CompletedProcess:
-    """Create slideshow using xfade filter for smooth transitions."""
-    n = len(image_paths)
+    """Create slideshow with Ken Burns effects + vignette using a 2-pass approach.
 
-    # Build input arguments — each image as a loop input
-    args: list[str] = []
-    for img in image_paths:
-        args += [
-            "-loop", "1", "-t", str(duration),
-            "-framerate", str(fps), "-i", str(img),
+    Pass 1: Generate one video clip per image (zoompan + vignette + fade).
+    Pass 2: Concatenate all clips + audio.
+    """
+    n = len(image_paths)
+    batch_id = output_path.stem
+    clip_paths: list[Path] = []
+    concat_file = DATA_DIR / f"{batch_id}_xfade_concat.txt"
+
+    # Clamp zoom_factor
+    zoom_factor = max(1.0, min(zoom_factor, 2.0))
+    use_zoompan = zoom_effect != "none" and zoom_factor > 1.0
+
+    try:
+        # Pass 1 — create individual clips with zoompan + vignette + fade
+        for i, img in enumerate(image_paths):
+            clip_path = DATA_DIR / f"{batch_id}_clip{i:03d}.mp4"
+            clip_paths.append(clip_path)
+
+            frames = int(duration * fps)
+            fade_frames = fade_duration
+            fade_out_start = round(duration - fade_duration, 3)
+
+            if use_zoompan:
+                # Determine which effect to use for this clip
+                if zoom_effect == "random":
+                    effect = ZOOM_CYCLE[i % len(ZOOM_CYCLE)]
+                else:
+                    effect = zoom_effect
+
+                zoompan = _get_zoompan_filter(
+                    effect, zoom_factor, frames, width, height, fps,
+                )
+                vf = (
+                    f"{zoompan},"
+                    f"vignette=PI/4,"
+                    f"fade=t=in:d={fade_frames},"
+                    f"fade=t=out:st={fade_out_start}:d={fade_frames},"
+                    f"format=yuv420p"
+                )
+
+                result = run_ffmpeg([
+                    "-i", str(img),
+                    "-vf", vf,
+                    "-c:v", "libx264", "-preset", "ultrafast", "-crf", "18",
+                    "-pix_fmt", "yuv420p", "-an",
+                    str(clip_path),
+                ], timeout=180)
+            else:
+                # No zoompan — use loop-based approach with vignette
+                vf = (
+                    f"scale={width}:{height}:force_original_aspect_ratio=decrease,"
+                    f"pad={width}:{height}:(ow-iw)/2:(oh-ih)/2:black,"
+                    f"setsar=1,vignette=PI/4,format=yuv420p,"
+                    f"fade=t=in:st=0:d={fade_frames},"
+                    f"fade=t=out:st={fade_out_start}:d={fade_frames}"
+                )
+
+                result = run_ffmpeg([
+                    "-loop", "1", "-t", str(duration),
+                    "-framerate", str(fps), "-i", str(img),
+                    "-vf", vf,
+                    "-c:v", "libx264", "-preset", "ultrafast", "-crf", "18",
+                    "-pix_fmt", "yuv420p", "-an",
+                    str(clip_path),
+                ], timeout=180)
+
+            if result.returncode != 0 or not clip_path.exists():
+                raise HTTPException(422, f"Clip {i} failed: {result.stderr}")
+
+        # Pass 2 — concatenate clips + audio
+        with open(concat_file, "w") as f:
+            for clip in clip_paths:
+                f.write(f"file '{clip}'\n")
+
+        args = [
+            "-f", "concat", "-safe", "0", "-i", str(concat_file),
         ]
 
-    # Build filter_complex
-    # Step 1: Scale all inputs
-    scale_filters = []
-    for i in range(n):
-        scale_filters.append(
-            f"[{i}:v]scale={width}:{height}:force_original_aspect_ratio=decrease,"
-            f"pad={width}:{height}:(ow-iw)/2:(oh-ih)/2:black,"
-            f"setsar=1,fps={fps},format=yuv420p[s{i}]"
-        )
+        if audio_path:
+            args += ["-i", str(audio_path)]
 
-    # Step 2: Chain xfade transitions
-    xfade_filters = []
-    prev = "s0"
-    for i in range(1, n):
-        offset = round(i * duration - i * fade_duration - fade_duration, 3)
-        if offset < 0:
-            offset = round((i - 1) * (duration - fade_duration), 3)
-        out_label = "out" if i == n - 1 else f"x{i}"
-        xfade_filters.append(
-            f"[{prev}][s{i}]xfade=transition=fade:duration={fade_duration}:offset={offset}[{out_label}]"
-        )
-        prev = out_label
+        args += [
+            "-c:v", "copy",
+        ]
 
-    filter_complex = ";".join(scale_filters + xfade_filters)
-    args += ["-filter_complex", filter_complex, "-map", "[out]"]
+        if audio_path:
+            args += ["-c:a", "aac", "-b:a", "128k", "-shortest"]
+        else:
+            args += ["-an"]
 
-    if audio_path:
-        args += ["-i", str(audio_path), "-map", f"{n}:a", "-c:a", "aac", "-b:a", "128k", "-shortest"]
-    else:
-        args += ["-an"]
+        args += ["-movflags", "+faststart", str(output_path)]
 
-    args += [
-        "-c:v", "libx264", "-preset", "medium", "-crf", "23",
-        "-movflags", "+faststart", "-pix_fmt", "yuv420p",
-        str(output_path),
-    ]
+        total_duration = n * duration
+        timeout = max(300, int(total_duration * 5))
+        result = run_ffmpeg(args, timeout=timeout)
 
-    total_duration = n * duration - (n - 1) * fade_duration
-    timeout = max(300, int(total_duration * 15))
-    return run_ffmpeg(args, timeout=timeout)
+        # Cleanup intermediate clips
+        for clip in clip_paths:
+            clip.unlink(missing_ok=True)
+        concat_file.unlink(missing_ok=True)
+
+        return result
+
+    except HTTPException:
+        # Cleanup on error
+        for clip in clip_paths:
+            clip.unlink(missing_ok=True)
+        concat_file.unlink(missing_ok=True)
+        raise
 
 
 # ============================================
