@@ -858,20 +858,29 @@ def _build_thumbnail_filters(
     lines: list[str],
     font_size: int,
     highlight_words: list[str],
+    crop_position: str = "left",
 ) -> str:
     """Build thumbnail -vf chain: full-bleed image + dark overlay right + text.
 
     The source image covers 100% of the canvas. A dark gradient overlay
     is drawn on the right ~50% to separate text from the subject.
+    crop_position: "left", "center", or "right" — controls horizontal crop.
     Returns a comma-separated -vf filter string.
     """
     filters: list[str] = []
 
-    # Full-bleed: scale + crop (left-aligned to keep subject on left)
+    # Full-bleed: scale to cover
     filters.append(
         f"scale={width}:{height}:force_original_aspect_ratio=increase"
     )
-    filters.append(f"crop={width}:{height}:0:(ih-{height})/2")
+
+    # Crop based on position — keeps subject on the desired side
+    crop_x = {
+        "left": "0",
+        "center": f"(iw-{width})/2",
+        "right": f"(iw-{width})",
+    }.get(crop_position, "0")
+    filters.append(f"crop={width}:{height}:{crop_x}:(ih-{height})/2")
 
     # Dark gradient overlay on the RIGHT ~50% for text readability
     grad_x = int(width * 0.40)
@@ -959,6 +968,7 @@ async def thumbnail_create(
     width: int = Form(7680),
     height: int = Form(4320),
     font_size: int = Form(0),
+    crop_position: str = Form("left"),
     output_format: str = Form("jpg"),
     x_api_key: str | None = Header(None),
 ):
@@ -969,6 +979,7 @@ async def thumbnail_create(
     - highlight_words: comma-separated words to render in yellow (#FFD700)
     - width/height: output dimensions (default 7680x4320 / 8K)
     - font_size: font size in px (0 = auto-compute)
+    - crop_position: horizontal crop alignment — "left", "center", or "right" (default "left")
     - output_format: jpg or png (default jpg)
     """
     verify_api_key(x_api_key)
@@ -986,8 +997,12 @@ async def thumbnail_create(
 
         txt_panel_w = int(width * 0.50)  # text on right 50%
         fs, lines = _auto_thumbnail_layout(upper_title, txt_panel_w, font_size)
+        crop_pos = crop_position.lower().strip()
+        if crop_pos not in ("left", "center", "right"):
+            crop_pos = "left"
+
         vf = _build_thumbnail_filters(
-            width, height, lines, fs, upper_hl
+            width, height, lines, fs, upper_hl, crop_pos
         )
 
         args = ["-i", str(input_path), "-vf", vf, "-frames:v", "1"]
