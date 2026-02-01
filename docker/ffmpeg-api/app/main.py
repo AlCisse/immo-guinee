@@ -752,9 +752,10 @@ def _mix_audio_tracks(
     voice_parts.append("equalizer=f=8000:t=o:w=1.0:g=-1.5")
 
     # 7. Dynamic compression — consistent level, natural transients
+    #    threshold is linear (0.125 ≈ -18 dB), makeup in dB
     if compress_voice:
         voice_parts.append(
-            "acompressor=threshold=-18:ratio=3:attack=10:release=100:makeup=2"
+            "acompressor=threshold=0.125:ratio=3:attack=10:release=100:makeup=2"
         )
 
     # 8. Hall reverb — multiple early/late reflections
