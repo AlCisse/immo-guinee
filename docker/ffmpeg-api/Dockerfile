@@ -13,6 +13,11 @@ RUN apk add --no-cache \
     font-dejavu \
     && rm -rf /var/cache/apk/*
 
+# Install Bebas Neue (condensed heavy font for YouTube thumbnails)
+RUN mkdir -p /usr/share/fonts/bebas && \
+    wget -q -O /usr/share/fonts/bebas/BebasNeue-Regular.ttf \
+    "https://github.com/google/fonts/raw/main/ofl/bebasneue/BebasNeue-Regular.ttf"
+
 # Create non-root user
 RUN addgroup -S ffmpeg && adduser -S ffmpeg -G ffmpeg
 

@@ -19,7 +19,7 @@ app = FastAPI(title="FFmpeg API", docs_url=None, redoc_url=None)
 DATA_DIR = Path("/data")
 API_KEY = os.environ.get("FFMPEG_API_KEY", "")
 
-FONT_PATH = "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf"
+FONT_PATH = "/usr/share/fonts/bebas/BebasNeue-Regular.ttf"
 HIGHLIGHT_COLOR = "FFD700"
 DEFAULT_COLOR = "FFFFFF"
 SHADOW_COLOR = "000000@0.8"
@@ -787,8 +787,8 @@ def _auto_thumbnail_layout(
         return (max(48, panel_width // 14), [title])
 
     usable_width = panel_width * 0.90
-    char_w_ratio = 0.70
-    space_w_ratio = 0.40
+    char_w_ratio = 0.38  # Bebas Neue condensed
+    space_w_ratio = 0.15  # Bebas Neue condensed
     # Scale font size range proportionally to panel width
     max_fs = max(72, int(panel_width * 0.10))
     min_fs = max(28, int(panel_width * 0.04))
@@ -876,8 +876,8 @@ def _build_thumbnail_filters(
     # Text rendering — positioned on the RIGHT side
     hl_set = {w.strip(".,!?:;'\"").lower() for w in highlight_words if w.strip()}
 
-    char_w_ratio = 0.70
-    space_w_ratio = 0.40
+    char_w_ratio = 0.38  # Bebas Neue condensed
+    space_w_ratio = 0.15  # Bebas Neue condensed
     num_lines = len(lines)
     line_height = font_size * 1.35
     total_text_h = num_lines * line_height
