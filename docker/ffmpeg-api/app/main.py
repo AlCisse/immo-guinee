@@ -787,8 +787,8 @@ def _auto_thumbnail_layout(
         return (max(48, panel_width // 14), [title])
 
     usable_width = panel_width * 0.90
-    char_w_ratio = 0.38  # Bebas Neue condensed
-    space_w_ratio = 0.15  # Bebas Neue condensed
+    char_w_ratio = 0.42  # Bebas Neue condensed
+    space_w_ratio = 0.18  # Bebas Neue condensed
     # Scale font size range proportionally to panel width
     max_fs = max(72, int(panel_width * 0.10))
     min_fs = max(28, int(panel_width * 0.04))
@@ -859,34 +859,48 @@ def _build_thumbnail_filters(
     font_size: int,
     highlight_words: list[str],
 ) -> str:
-    """Build thumbnail -vf chain: full-bleed image + right-aligned text overlay.
+    """Build thumbnail -vf chain: full-bleed image + dark overlay right + text.
 
-    The source image covers 100% of the canvas. Text is rendered on the
-    right side (~55%) with a thick shadow for readability.
+    The source image covers 100% of the canvas. A dark gradient overlay
+    is drawn on the right ~50% to separate text from the subject.
     Returns a comma-separated -vf filter string.
     """
     filters: list[str] = []
 
-    # Full-bleed: scale + crop to cover entire canvas
+    # Full-bleed: scale + crop (left-aligned to keep subject on left)
     filters.append(
         f"scale={width}:{height}:force_original_aspect_ratio=increase"
     )
     filters.append(f"crop={width}:{height}:0:(ih-{height})/2")
 
+    # Dark gradient overlay on the RIGHT ~50% for text readability
+    grad_x = int(width * 0.40)
+    grad_w = width - grad_x
+    num_bands = 8
+    band_w = grad_w // num_bands
+    for i in range(num_bands):
+        opacity = 0.03 + i * (0.55 / (num_bands - 1))
+        x = grad_x + i * band_w
+        w = band_w if i < num_bands - 1 else (width - x)
+        filters.append(
+            f"drawbox=x={x}:y=0:w={w}:h={height}"
+            f":color=000000@{opacity:.2f}:t=fill"
+        )
+
     # Text rendering — positioned on the RIGHT side
     hl_set = {w.strip(".,!?:;'\"").lower() for w in highlight_words if w.strip()}
 
-    char_w_ratio = 0.38  # Bebas Neue condensed
-    space_w_ratio = 0.15  # Bebas Neue condensed
+    char_w_ratio = 0.42  # Bebas Neue condensed
+    space_w_ratio = 0.18  # Bebas Neue condensed
     num_lines = len(lines)
-    line_height = font_size * 1.35
+    line_height = font_size * 1.30
     total_text_h = num_lines * line_height
 
-    # Text area: right 55% of the canvas
-    txt_x_start = int(width * 0.45)
+    # Text area: right 50% of the canvas
+    txt_x_start = int(width * 0.50)
     txt_area_w = width - txt_x_start
 
-    # Center text block vertically (~50%)
+    # Center text block vertically
     base_y = int((height - total_text_h) / 2)
 
     for line_idx, line in enumerate(lines):
@@ -911,8 +925,8 @@ def _build_thumbnail_filters(
             clean_word = word.strip(".,!?:;'\"").lower()
             color = HIGHLIGHT_COLOR if clean_word in hl_set else DEFAULT_COLOR
 
-            # Thick shadow for readability — scales with font size
-            sh = max(4, font_size // 16)
+            # Shadow — scales with font size
+            sh = max(4, font_size // 14)
             filters.append(
                 f"drawtext=fontfile={FONT_PATH}"
                 f":text='{escaped}'"
@@ -970,7 +984,7 @@ async def thumbnail_create(
         upper_title = title.upper()
         upper_hl = [w.upper() for w in hl_words]
 
-        txt_panel_w = int(width * 0.55)  # text on right 55%
+        txt_panel_w = int(width * 0.50)  # text on right 50%
         fs, lines = _auto_thumbnail_layout(upper_title, txt_panel_w, font_size)
         vf = _build_thumbnail_filters(
             width, height, lines, fs, upper_hl
