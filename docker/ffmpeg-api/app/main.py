@@ -805,15 +805,19 @@ def _auto_thumbnail_layout(
         return (font_size, [" ".join(words[:mid]), " ".join(words[mid:])])
 
     # --- Auto font size: pick layout that maximises font ---
+    # Try 1, 2, and 3 line layouts. Pick the LARGEST font regardless
+    # of line count. On tie, fewer lines wins (tried first).
 
     best_fs = 0
     best_lines: list[str] = []
 
     # Try 1 line
-    single_min = max(40, int(panel_width * 0.055))
-    for fs in range(max_fs, single_min - 1, -1):
+    for fs in range(max_fs, min_fs - 1, -1):
         if _lw(words, fs) <= usable_width:
-            return (fs, [title])  # 1 line at large font is always best
+            if fs > best_fs:
+                best_fs = fs
+                best_lines = [title]
+            break
 
     # Try all 2-line splits
     if len(words) >= 2:
@@ -826,7 +830,7 @@ def _auto_thumbnail_layout(
                         best_lines = [" ".join(g1), " ".join(g2)]
                     break
 
-    # Try all 3-line splits — use if it gives a bigger font
+    # Try all 3-line splits
     if len(words) >= 3:
         for i in range(1, len(words) - 1):
             for j in range(i + 1, len(words)):
@@ -867,7 +871,7 @@ def _build_thumbnail_filters(
     filters.append(
         f"scale={width}:{height}:force_original_aspect_ratio=increase"
     )
-    filters.append(f"crop={width}:{height}")
+    filters.append(f"crop={width}:{height}:0:(ih-{height})/2")
 
     # Text rendering — positioned on the RIGHT side
     hl_set = {w.strip(".,!?:;'\"").lower() for w in highlight_words if w.strip()}
