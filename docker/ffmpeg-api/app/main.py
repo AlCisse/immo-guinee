@@ -623,6 +623,10 @@ async def mix_audio(
     fade_out: float = Form(5.0),
     loop_music: bool = Form(True),
     normalize: bool = Form(True),
+    reverb_level: float = Form(0.3),
+    bass_boost: float = Form(3.0),
+    clarity_boost: float = Form(2.0),
+    compress_voice: bool = Form(True),
     output_format: str = Form("mp3"),
     x_api_key: str | None = Header(None),
 ):
@@ -636,6 +640,10 @@ async def mix_audio(
     - fade_out: music fade-out duration in seconds (default 5s)
     - loop_music: loop music if shorter than voice (default true)
     - normalize: apply EBU R128 loudness normalization (default true)
+    - reverb_level: hall reverb intensity (0.0=off, 0.3=subtle, 0.6=medium, 1.0=heavy)
+    - bass_boost: low-frequency boost in dB for warmth/depth (0=off, default 3)
+    - clarity_boost: presence-frequency boost in dB for clarity (0=off, default 2)
+    - compress_voice: apply dynamic compression for consistent level (default true)
     - output_format: output format (default "mp3")
     """
     verify_api_key(x_api_key)
@@ -651,6 +659,7 @@ async def mix_audio(
             fade_in, fade_out,
             loop_music, normalize,
             output_format,
+            reverb_level, bass_boost, clarity_boost, compress_voice,
         )
 
         if result.returncode != 0 or not output_path.exists():
@@ -696,8 +705,16 @@ def _mix_audio_tracks(
     loop_music: bool,
     normalize: bool,
     output_format: str,
+    reverb_level: float = 0.3,
+    bass_boost: float = 3.0,
+    clarity_boost: float = 2.0,
+    compress_voice: bool = True,
 ) -> subprocess.CompletedProcess:
-    """Mix voice-over with background music using FFmpeg."""
+    """Mix voice-over with background music using FFmpeg.
+
+    Voice chain: highpass → volume → EQ (bass/mud-cut/presence/treble-rolloff)
+    → compressor → hall reverb.
+    """
     voice_duration = _get_voice_duration(voice_path)
     if voice_duration <= 0:
         raise HTTPException(422, "Could not determine voice duration")
@@ -711,8 +728,47 @@ def _mix_audio_tracks(
         f"afade=t=out:st={fade_out_start}:d={fade_out}"
     )
 
-    # Build voice filter: volume
-    voice_filter = f"volume={voice_volume}dB"
+    # Build professional voice processing chain
+    voice_parts: list[str] = []
+
+    # 1. High-pass: remove rumble below 80 Hz
+    voice_parts.append("highpass=f=80")
+
+    # 2. Input volume adjustment
+    voice_parts.append(f"volume={voice_volume}dB")
+
+    # 3. Bass boost — adds body and depth ("voix grave")
+    if bass_boost > 0:
+        voice_parts.append(f"equalizer=f=150:t=o:w=1.0:g={bass_boost}")
+
+    # 4. Cut muddiness around 350 Hz
+    voice_parts.append("equalizer=f=350:t=o:w=1.0:g=-2")
+
+    # 5. Presence boost — clarity and intelligibility
+    if clarity_boost > 0:
+        voice_parts.append(f"equalizer=f=2500:t=o:w=1.5:g={clarity_boost}")
+
+    # 6. High-frequency rolloff — reduces harshness, keeps warmth
+    voice_parts.append("equalizer=f=8000:t=o:w=1.0:g=-1.5")
+
+    # 7. Dynamic compression — consistent level, natural transients
+    if compress_voice:
+        voice_parts.append(
+            "acompressor=threshold=-18:ratio=3:attack=10:release=100:makeup=2"
+        )
+
+    # 8. Hall reverb — multiple early/late reflections
+    if reverb_level > 0:
+        rl = max(0.0, min(reverb_level, 1.0))
+        decays = "|".join(
+            str(round(rl * d, 2))
+            for d in (0.50, 0.38, 0.28, 0.20, 0.12, 0.06)
+        )
+        voice_parts.append(
+            f"aecho=0.8:0.85:40|80|120|180|250|350:{decays}"
+        )
+
+    voice_filter = ",".join(voice_parts)
 
     # Input args
     args = ["-i", str(voice_path)]
