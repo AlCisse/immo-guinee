@@ -816,6 +816,172 @@ def _mix_audio_tracks(
 
 
 # ============================================
+# POST /concat-audio
+# ============================================
+
+
+def _build_concat_filtergraph(
+    n_files: int,
+    crossfade_duration: float,
+    trim_silence: bool,
+    voice_enhance: bool,
+    normalize: bool,
+) -> tuple[str, str]:
+    """Build filter_complex for audio concatenation with crossfade.
+
+    Returns (filtergraph_string, output_label).
+    """
+    parts: list[str] = []
+
+    # --- Per-segment processing chain ---
+    for i in range(n_files):
+        chain: list[str] = []
+
+        if trim_silence:
+            # Double-reverse trick: trims silence from both start and end
+            chain += [
+                "silenceremove=start_periods=1:start_silence=0.05"
+                ":start_threshold=-45dB",
+                "areverse",
+                "silenceremove=start_periods=1:start_silence=0.05"
+                ":start_threshold=-45dB",
+                "areverse",
+            ]
+
+        if voice_enhance:
+            chain += [
+                "highpass=f=60",
+                "equalizer=f=150:t=o:w=1.0:g=2",
+                "equalizer=f=350:t=o:w=1.0:g=-1.5",
+                "equalizer=f=2500:t=o:w=1.5:g=1.5",
+                "equalizer=f=8000:t=o:w=1.0:g=-1",
+                "acompressor=threshold=0.125:ratio=2.5"
+                ":attack=10:release=100:makeup=1",
+            ]
+
+        chain.append("asetpts=PTS-STARTPTS")
+        parts.append(f"[{i}:a]{','.join(chain)}[a{i}]")
+
+    # --- Concatenation / crossfade ---
+    if n_files == 1:
+        last_label = "a0"
+    elif crossfade_duration > 0:
+        # Chain acrossfade between each pair of segments
+        prev = "a0"
+        for i in range(1, n_files):
+            out_label = f"cf{i}"
+            parts.append(
+                f"[{prev}][a{i}]acrossfade=d={crossfade_duration}"
+                f":c1=tri:c2=tri[{out_label}]"
+            )
+            prev = out_label
+        last_label = prev
+    else:
+        # Hard cut: use concat filter
+        concat_in = "".join(f"[a{i}]" for i in range(n_files))
+        parts.append(f"{concat_in}concat=n={n_files}:v=0:a=1[merged]")
+        last_label = "merged"
+
+    # --- Final loudness normalization (EBU R128) ---
+    if normalize:
+        parts.append(f"[{last_label}]loudnorm=I=-14:LRA=11:TP=-1[out]")
+        return ";".join(parts), "out"
+
+    return ";".join(parts), last_label
+
+
+@app.post("/concat-audio")
+async def concat_audio(
+    files: list[UploadFile] = File(...),
+    crossfade_duration: float = Form(0.3),
+    normalize: bool = Form(True),
+    trim_silence: bool = Form(True),
+    voice_enhance: bool = Form(True),
+    output_format: str = Form("mp3"),
+    x_api_key: str | None = Header(None),
+):
+    """Concatenate multiple audio files into one with professional processing.
+
+    Produces natural, warm, non-robotic output ideal for TTS / voice-over.
+
+    - files: 1+ audio files to concatenate (in order)
+    - crossfade_duration: smooth overlap between segments in seconds (0 = hard cut)
+    - normalize: apply EBU R128 loudness normalization (default true)
+    - trim_silence: remove leading/trailing silence per segment (default true)
+    - voice_enhance: apply warmth/clarity EQ + gentle compression (default true)
+    - output_format: mp3, m4a, or wav (default "mp3")
+    """
+    verify_api_key(x_api_key)
+
+    if len(files) < 1:
+        raise HTTPException(422, "At least 1 audio file is required")
+
+    batch_id = uuid.uuid4().hex
+    file_paths: list[Path] = []
+    output_path = DATA_DIR / f"{batch_id}_concat.{output_format}"
+
+    try:
+        for i, f in enumerate(files):
+            ext = Path(f.filename or "audio.mp3").suffix or ".mp3"
+            p = DATA_DIR / f"{batch_id}_seg{i:03d}{ext}"
+            with open(p, "wb") as out:
+                for chunk in f.file:
+                    out.write(chunk)
+            file_paths.append(p)
+
+        filtergraph, out_label = _build_concat_filtergraph(
+            len(file_paths),
+            crossfade_duration,
+            trim_silence,
+            voice_enhance,
+            normalize,
+        )
+
+        args: list[str] = []
+        for p in file_paths:
+            args += ["-i", str(p)]
+
+        args += ["-filter_complex", filtergraph, "-map", f"[{out_label}]"]
+
+        if output_format == "mp3":
+            args += ["-c:a", "libmp3lame", "-b:a", "192k"]
+        elif output_format == "wav":
+            args += ["-c:a", "pcm_s16le"]
+        else:
+            args += ["-c:a", "aac", "-b:a", "192k"]
+
+        args.append(str(output_path))
+
+        timeout = max(120, len(file_paths) * 30)
+        result = run_ffmpeg(args, timeout=timeout)
+
+        if result.returncode != 0 or not output_path.exists():
+            raise HTTPException(
+                422, f"Audio concatenation failed: {result.stderr}"
+            )
+
+        media_type = {
+            "mp3": "audio/mpeg",
+            "m4a": "audio/mp4",
+            "wav": "audio/wav",
+        }.get(output_format, "audio/mpeg")
+
+        return FileResponse(
+            str(output_path),
+            media_type=media_type,
+            filename=f"concatenated.{output_format}",
+            background=_cleanup_task(*file_paths, output_path),
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        for p in file_paths:
+            p.unlink(missing_ok=True)
+        output_path.unlink(missing_ok=True)
+        raise HTTPException(500, str(e))
+
+
+# ============================================
 # Thumbnail helpers
 # ============================================
 
