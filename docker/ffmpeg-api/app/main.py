@@ -5,6 +5,7 @@ Internal service accessible from n8n via backend-network.
 
 import json
 import os
+import random
 import subprocess
 import time
 import uuid
@@ -317,7 +318,8 @@ async def compose(
 
     - images: 2+ image files (jpg, png, webp)
     - audio: optional audio file (mp3, m4a, wav) used as background track
-    - duration_per_image: seconds each image is displayed (default 3s)
+    - duration_per_image: seconds each image is displayed (default 3s).
+      Set to 0 with audio to auto-compute: images cycle to fill the entire audio duration.
     - transition: transition type — "fade" or "none" (default "fade")
     - transition_duration: fade duration in seconds (default 0.5s)
     - width/height: output resolution (default 1280x720)
@@ -354,6 +356,24 @@ async def compose(
             with open(audio_path, "wb") as f:
                 for chunk in audio.file:
                     f.write(chunk)
+
+        # Auto duration: cycle images to fill audio length
+        if duration_per_image <= 0 and audio_path:
+            audio_dur = _get_voice_duration(audio_path)
+            if audio_dur <= 0:
+                raise HTTPException(422, "Could not determine audio duration")
+            # Each image shown ~5s — repeat images to fill full audio
+            target_per_image = 5.0
+            total_slots = max(len(image_paths), int(audio_dur / target_per_image))
+            extended = [image_paths[i % len(image_paths)] for i in range(total_slots)]
+            # Shuffle for visual variety (keep first image first)
+            first = extended[0]
+            rest = extended[1:]
+            random.shuffle(rest)
+            image_paths = [first] + rest
+            duration_per_image = audio_dur / total_slots
+        elif duration_per_image <= 0:
+            duration_per_image = 3.0  # fallback if no audio
 
         if transition == "fade" and transition_duration > 0:
             # Build with xfade transitions between images
@@ -474,7 +494,7 @@ def _compose_simple_concat(
     ]
 
     if audio_path:
-        args += ["-i", str(audio_path), "-c:a", "aac", "-b:a", "128k", "-shortest"]
+        args += ["-i", str(audio_path), "-c:a", "aac", "-b:a", "128k"]
     else:
         args += ["-an"]
 
@@ -520,11 +540,12 @@ def _compose_with_xfade(
             frames = int(duration * fps)
             fade_frames = fade_duration
             fade_out_start = round(duration - fade_duration, 3)
+            clip_timeout = max(60, int(duration * 20))
 
             if use_zoompan:
                 # Determine which effect to use for this clip
                 if zoom_effect == "random":
-                    effect = ZOOM_CYCLE[i % len(ZOOM_CYCLE)]
+                    effect = random.choice(ZOOM_EFFECTS)
                 else:
                     effect = zoom_effect
 
@@ -545,7 +566,7 @@ def _compose_with_xfade(
                     "-c:v", "libx264", "-preset", "ultrafast", "-crf", "18",
                     "-pix_fmt", "yuv420p", "-an",
                     str(clip_path),
-                ], timeout=180)
+                ], timeout=clip_timeout)
             else:
                 # No zoompan — use loop-based approach with vignette
                 vf = (
@@ -563,7 +584,7 @@ def _compose_with_xfade(
                     "-c:v", "libx264", "-preset", "ultrafast", "-crf", "18",
                     "-pix_fmt", "yuv420p", "-an",
                     str(clip_path),
-                ], timeout=180)
+                ], timeout=clip_timeout)
 
             if result.returncode != 0 or not clip_path.exists():
                 raise HTTPException(422, f"Clip {i} failed: {result.stderr}")
@@ -585,14 +606,14 @@ def _compose_with_xfade(
         ]
 
         if audio_path:
-            args += ["-c:a", "aac", "-b:a", "128k", "-shortest"]
+            args += ["-c:a", "aac", "-b:a", "128k"]
         else:
             args += ["-an"]
 
         args += ["-movflags", "+faststart", str(output_path)]
 
         total_duration = n * duration
-        timeout = max(300, int(total_duration * 5))
+        timeout = max(300, int(total_duration * 5) + n * 2)
         result = run_ffmpeg(args, timeout=timeout)
 
         # Cleanup intermediate clips
