@@ -303,7 +303,7 @@ async def compress(
 async def compose(
     images: list[UploadFile] = File(...),
     audio: Optional[UploadFile] = File(None),
-    duration_per_image: float = Form(3.0),
+    duration_per_image: float = Form(0.0),
     transition: str = Form("fade"),
     transition_duration: float = Form(0.5),
     width: int = Form(1280),
@@ -318,8 +318,9 @@ async def compose(
 
     - images: 2+ image files (jpg, png, webp)
     - audio: optional audio file (mp3, m4a, wav) used as background track
-    - duration_per_image: seconds each image is displayed (default 3s).
-      Set to 0 with audio to auto-compute: images cycle to fill the entire audio duration.
+    - duration_per_image: seconds each image is displayed (default 0 = auto).
+      When 0 and audio is provided, images cycle to fill the entire audio duration.
+      When 0 without audio, falls back to 3s. Set explicitly (e.g. 5) to override.
     - transition: transition type — "fade" or "none" (default "fade")
     - transition_duration: fade duration in seconds (default 0.5s)
     - width/height: output resolution (default 1280x720)
