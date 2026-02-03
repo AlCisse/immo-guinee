@@ -357,6 +357,9 @@ async def compose(
                 for chunk in audio.file:
                     f.write(chunk)
 
+        # Keep original uploaded paths for cleanup (before cycling extends the list)
+        original_image_paths = list(image_paths)
+
         # Auto duration: cycle images to fill audio length
         if duration_per_image <= 0 and audio_path:
             audio_dur = _get_voice_duration(audio_path)
@@ -375,9 +378,10 @@ async def compose(
         elif duration_per_image <= 0:
             duration_per_image = 3.0  # fallback if no audio
 
+        temp_paths: list[Path] = []
         if transition == "fade" and transition_duration > 0:
             # Build with xfade transitions between images
-            result = _compose_with_xfade(
+            result, temp_paths = _compose_with_xfade(
                 image_paths, audio_path, output_path,
                 duration_per_image, transition_duration,
                 width, height, fps,
@@ -393,7 +397,8 @@ async def compose(
         if result.returncode != 0 or not output_path.exists():
             raise HTTPException(422, f"Slideshow creation failed: {result.stderr}")
 
-        cleanup_paths = image_paths + [output_path, concat_file]
+        # Cleanup: original uploads + output + intermediates (after response sent)
+        cleanup_paths = original_image_paths + [output_path, concat_file] + temp_paths
         if audio_path:
             cleanup_paths.append(audio_path)
 
@@ -516,11 +521,13 @@ def _compose_with_xfade(
     fps: int,
     zoom_effect: str = "random",
     zoom_factor: float = 1.3,
-) -> subprocess.CompletedProcess:
+) -> tuple[subprocess.CompletedProcess, list[Path]]:
     """Create slideshow with Ken Burns effects + vignette using a 2-pass approach.
 
     Pass 1: Generate one video clip per image (zoompan + vignette + fade).
     Pass 2: Concatenate all clips + audio.
+
+    Returns (result, temp_paths) — caller is responsible for cleaning up temp_paths.
     """
     n = len(image_paths)
     batch_id = output_path.stem
@@ -616,15 +623,11 @@ def _compose_with_xfade(
         timeout = max(300, int(total_duration * 5) + n * 2)
         result = run_ffmpeg(args, timeout=timeout)
 
-        # Cleanup intermediate clips
-        for clip in clip_paths:
-            clip.unlink(missing_ok=True)
-        concat_file.unlink(missing_ok=True)
-
-        return result
+        # Return temp paths for caller to clean up after response is sent
+        return result, clip_paths + [concat_file]
 
     except HTTPException:
-        # Cleanup on error
+        # Cleanup on error only — no response to serve
         for clip in clip_paths:
             clip.unlink(missing_ok=True)
         concat_file.unlink(missing_ok=True)
