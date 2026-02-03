@@ -361,23 +361,27 @@ async def compose(
         # Keep original uploaded paths for cleanup (before cycling extends the list)
         original_image_paths = list(image_paths)
 
-        # Auto duration: cycle images to fill audio length
-        if duration_per_image <= 0 and audio_path:
+        # Fallback duration when no audio
+        if duration_per_image <= 0:
+            duration_per_image = 5.0
+
+        # When audio is provided, ALWAYS cycle images to fill the full audio
+        if audio_path:
             audio_dur = _get_voice_duration(audio_path)
             if audio_dur <= 0:
                 raise HTTPException(422, "Could not determine audio duration")
-            # Each image shown ~5s — repeat images to fill full audio
-            target_per_image = 5.0
-            total_slots = max(len(image_paths), int(audio_dur / target_per_image))
-            extended = [image_paths[i % len(image_paths)] for i in range(total_slots)]
-            # Shuffle for visual variety (keep first image first)
-            first = extended[0]
-            rest = extended[1:]
-            random.shuffle(rest)
-            image_paths = [first] + rest
-            duration_per_image = audio_dur / total_slots
-        elif duration_per_image <= 0:
-            duration_per_image = 3.0  # fallback if no audio
+            total_video = duration_per_image * len(image_paths)
+            if total_video < audio_dur:
+                # Need more slots to cover the audio
+                total_slots = max(len(image_paths), int(audio_dur / duration_per_image))
+                extended = [image_paths[i % len(image_paths)] for i in range(total_slots)]
+                # Shuffle for visual variety (keep first image first)
+                first = extended[0]
+                rest = extended[1:]
+                random.shuffle(rest)
+                image_paths = [first] + rest
+                # Adjust duration to match audio exactly
+                duration_per_image = audio_dur / total_slots
 
         temp_paths: list[Path] = []
         if transition == "fade" and transition_duration > 0:
