@@ -514,8 +514,15 @@ def _compose_simple_concat(
         # Repeat last image to avoid cut
         f.write(f"file '{image_paths[-1]}'\n")
 
+    # All inputs first, then output options (ffmpeg argument order matters)
     args = [
         "-f", "concat", "-safe", "0", "-i", str(concat_file),
+    ]
+
+    if audio_path:
+        args += ["-i", str(audio_path)]
+
+    args += [
         "-vf", f"scale={width}:{height}:force_original_aspect_ratio=decrease,"
                f"pad={width}:{height}:(ow-iw)/2:(oh-ih)/2:black,"
                f"fps={fps},format=yuv420p",
@@ -525,7 +532,7 @@ def _compose_simple_concat(
     ]
 
     if audio_path:
-        args += ["-i", str(audio_path), "-c:a", "aac", "-b:a", "128k"]
+        args += ["-c:a", "aac", "-b:a", "128k"]
     else:
         args += ["-an"]
 
