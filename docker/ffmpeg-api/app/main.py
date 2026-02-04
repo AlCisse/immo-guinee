@@ -360,6 +360,7 @@ async def compose(
 
         # Keep original uploaded paths for cleanup (before cycling extends the list)
         original_image_paths = list(image_paths)
+        cycling = False
 
         # Fallback duration when no audio
         if duration_per_image <= 0:
@@ -372,16 +373,22 @@ async def compose(
                 raise HTTPException(422, "Could not determine audio duration")
             total_video = duration_per_image * len(image_paths)
             if total_video < audio_dur:
-                # Need more slots to cover the audio
+                cycling = True
                 total_slots = max(len(image_paths), int(audio_dur / duration_per_image))
                 # Simple ordered loop: img0, img1, ..., img9, img0, img1, ...
                 image_paths = [image_paths[i % len(original_image_paths)] for i in range(total_slots)]
-                # Adjust duration to match audio exactly
                 duration_per_image = audio_dur / total_slots
 
         temp_paths: list[Path] = []
-        if transition == "fade" and transition_duration > 0:
-            # Build with xfade transitions between images
+
+        if cycling:
+            # Audio-driven cycling: use simple concat (single ffmpeg pass, fast)
+            result = _compose_simple_concat(
+                image_paths, audio_path, output_path, concat_file,
+                duration_per_image, width, height, fps,
+            )
+        elif transition == "fade" and transition_duration > 0:
+            # Few images, no cycling: use xfade with Ken Burns effects
             result, temp_paths = _compose_with_xfade(
                 image_paths, audio_path, output_path,
                 duration_per_image, transition_duration,
@@ -411,6 +418,7 @@ async def compose(
                 "X-Images-Uploaded": str(len(original_image_paths)),
                 "X-Total-Clips": str(len(image_paths)),
                 "X-Duration-Per-Image": f"{duration_per_image:.2f}",
+                "X-Cycling": str(cycling),
             },
             background=_cleanup_task(*cleanup_paths),
         )
@@ -574,8 +582,7 @@ def _compose_with_xfade(
                 )
 
                 result = run_ffmpeg([
-                    "-loop", "1", "-t", str(duration),
-                    "-framerate", str(fps), "-i", str(img),
+                    "-i", str(img),
                     "-vf", vf,
                     "-c:v", "libx264", "-preset", "ultrafast", "-crf", "18",
                     "-pix_fmt", "yuv420p", "-an",
