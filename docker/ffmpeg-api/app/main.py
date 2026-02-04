@@ -374,12 +374,8 @@ async def compose(
             if total_video < audio_dur:
                 # Need more slots to cover the audio
                 total_slots = max(len(image_paths), int(audio_dur / duration_per_image))
-                extended = [image_paths[i % len(image_paths)] for i in range(total_slots)]
-                # Shuffle for visual variety (keep first image first)
-                first = extended[0]
-                rest = extended[1:]
-                random.shuffle(rest)
-                image_paths = [first] + rest
+                # Simple ordered loop: img0, img1, ..., img9, img0, img1, ...
+                image_paths = [image_paths[i % len(original_image_paths)] for i in range(total_slots)]
                 # Adjust duration to match audio exactly
                 duration_per_image = audio_dur / total_slots
 
@@ -411,6 +407,11 @@ async def compose(
             str(output_path),
             media_type="video/mp4",
             filename="slideshow.mp4",
+            headers={
+                "X-Images-Uploaded": str(len(original_image_paths)),
+                "X-Total-Clips": str(len(image_paths)),
+                "X-Duration-Per-Image": f"{duration_per_image:.2f}",
+            },
             background=_cleanup_task(*cleanup_paths),
         )
     except HTTPException:
@@ -573,7 +574,8 @@ def _compose_with_xfade(
                 )
 
                 result = run_ffmpeg([
-                    "-i", str(img),
+                    "-loop", "1", "-t", str(duration),
+                    "-framerate", str(fps), "-i", str(img),
                     "-vf", vf,
                     "-c:v", "libx264", "-preset", "ultrafast", "-crf", "18",
                     "-pix_fmt", "yuv420p", "-an",
