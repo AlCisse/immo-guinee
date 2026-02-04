@@ -4,6 +4,7 @@ Internal service accessible from n8n via backend-network.
 """
 
 import json
+import logging
 import os
 import random
 import subprocess
@@ -11,6 +12,8 @@ import time
 import uuid
 from pathlib import Path
 from typing import Optional
+
+logger = logging.getLogger("ffmpeg-api")
 
 from fastapi import FastAPI, File, Form, Header, HTTPException, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
@@ -331,6 +334,9 @@ async def compose(
     """
     verify_api_key(x_api_key)
 
+    logger.info("compose: images=%d, audio=%s, duration_per_image=%s, transition=%s",
+                len(images), audio is not None, duration_per_image, transition)
+
     if len(images) < 2:
         raise HTTPException(422, "At least 2 images are required")
 
@@ -379,6 +385,10 @@ async def compose(
                 image_paths = [image_paths[i % len(original_image_paths)] for i in range(total_slots)]
                 duration_per_image = audio_dur / total_slots
 
+        if cycling:
+            logger.info("cycling: audio_dur=%.1f, total_slots=%d, duration_per_image=%.2f",
+                         audio_dur, len(image_paths), duration_per_image)
+
         temp_paths: list[Path] = []
 
         if cycling:
@@ -403,6 +413,8 @@ async def compose(
             )
 
         if result.returncode != 0 or not output_path.exists():
+            logger.error("compose failed: returncode=%s, exists=%s, stderr=%s",
+                         result.returncode, output_path.exists(), result.stderr)
             raise HTTPException(422, f"Slideshow creation failed: {result.stderr}")
 
         # Cleanup: original uploads + output + intermediates (after response sent)
