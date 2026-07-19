@@ -125,20 +125,29 @@
 **Garantir une expérience fluide même avec forte croissance**
 - Support de 100,000+ annonces actives simultanées
 - Temps de recherche < 500ms (Elasticsearch)
-- Optimisation images automatique (Sharp, WebP, lazy loading)
+- Optimisation images automatique (crate `image`/`imageproc`, WebP, lazy loading)
 - Cache intelligent (Redis + Varnish)
 - CDN pour assets statiques (DigitalOcean Spaces)
 - Base de données répliquée PostgreSQL avec PostGIS
+- Backend Rust natif (Axum + Tokio) : faible empreinte mémoire, latence prévisible, pas de GC
 - Docker Swarm pour haute disponibilité
 
-### IX. Automatisation via n8n (NON-NÉGOCIABLE)
-**Orchestrer tous les workflows automatisés avec n8n**
-- **Plateforme centrale** : n8n (open source) pour tous les workflows
-- **Workflows implémentés** :
+### IX. Automatisation : n8n (métier) + apalis (technique)
+**Orchestrer les workflows métier avec n8n ; les jobs applicatifs avec le scheduler Rust**
+- **Séparation des responsabilités** (NON-NÉGOCIABLE) :
+  - **n8n** = workflows **métier / multi-système**, modifiables par des non-développeurs :
+    notifications multi-canal, intégrations (WAHA, Telegram, email), quittances, alertes ops.
+  - **apalis + tokio-cron-scheduler** = jobs **techniques in-process** du backend Rust,
+    transactionnels ou couplés au domaine : déblocage escrow (48h/72h), expiration annonces,
+    optimisation photos, backups, rafraîchissement de vues, calculs de badges/notes, rétention légale.
+  - **Règle** : une automatisation **manipulant l'état métier de façon transactionnelle** (paiements,
+    escrow, contrats) vit dans le code Rust (garanties ACID) ; une automatisation de **notification
+    ou d'intégration** vit dans n8n.
+- **Workflows n8n** :
   - `send-otp-whatsapp.json` : Envoi OTP via WhatsApp
   - `paiement-quittance.json` : Génération quittance après paiement
   - `signature-contrat-pdf.json` : Workflow signature contrat
-  - `escrow-timeout.json` : Gestion timeout escrow
+  - `escrow-relances.json` : Relances de notification escrow (le **déblocage** est un job Rust)
   - `nouveau-message-alerts.json` : Alertes nouveaux messages
   - `docker-ops-telegram.json` : Alertes ops via Telegram
 - **Intégrations n8n** :
@@ -153,12 +162,12 @@
 **Privilégier les solutions open source pour indépendance et pérennité**
 - **Stack 100% open source** :
   - Frontend : Next.js 15, React 18, TailwindCSS
-  - Backend : Laravel 12, PHP 8.2+
+  - Backend : Rust 1.85+ (Axum + Tokio), édition 2024
   - Base de données : PostgreSQL 15+, Redis 7+
   - Search : Elasticsearch 8.17
   - Automation : n8n
-  - Messaging : WAHA (WhatsApp), Socket.io, Laravel Reverb
-  - Infrastructure : Docker, Docker Swarm, Traefik
+  - Messaging : WAHA (WhatsApp), Socket.io / Pusher-compat, Axum WebSocket
+  - Infrastructure : Docker, Docker Swarm, Traefik, Vault (secrets)
 - **Avantages** :
   - Pas de vendor lock-in
   - Coûts maîtrisés (pas de licences)
@@ -192,18 +201,30 @@ HTTP Client     : Axios 1.7.9
 Date            : date-fns 3.3.1
 ```
 
-### Backend (Laravel 12)
+### Backend (Rust 1.85+ — édition 2024)
 ```
-Framework       : Laravel 12.40 (PHP 8.2 || 8.3)
-API Auth        : Laravel Passport 12.4 + Sanctum 4.0
-WebSocket       : Laravel Reverb 1.0
-Queue           : Redis + Laravel Horizon 5.30
-Search          : Elasticsearch 8.17 + Laravel Scout 10.12
-PDF             : barryvdh/laravel-dompdf 3.0
-Images          : Intervention/image 3.10
-Permissions     : Spatie/laravel-permission 6.4
-2FA             : PragmaRX/google2fa-laravel 2.2
-Storage         : AWS SDK PHP 3.368 (S3-compatible)
+Framework       : Axum 0.8 + Tower / tower-http (routing, middleware, WS)
+Runtime         : Tokio 1 (async multi-thread)
+ORM             : SeaORM 1.1 (sur SQLx 0.8, PostgreSQL) — remplace Eloquent
+Migrations      : sea-orm-migration 1.1 (bin `immog-migrate`)
+API Auth        : jsonwebtoken 9 (JWT) + oxide-auth (OAuth2) — remplace Passport
+Sessions        : tower-sessions / axum-login — équivalent Sanctum stateful
+WebSocket       : Axum WS + pusher-compat — remplace Reverb/Echo
+Queue / Jobs    : apalis 0.6 (Redis) + tokio-cron-scheduler — remplace Horizon
+Search          : elasticsearch 8.5 (client Rust) — remplace Scout
+PDF             : headless-chrome (HTML → PDF) — remplace DomPDF/Blade
+Images          : image 0.25 + imageproc (watermarks) — remplace Intervention
+Permissions     : garde RBAC natif (table statique) — remplace Spatie Permission
+2FA             : totp-rs 5 (RFC 6238) — remplace pragmarx/google2fa
+Validation      : validator 0.18 (derive) — remplace FormRequests
+Password        : bcrypt 0.17 (compat hashes existants, aucun re-hash)
+Storage         : rust-s3 0.35 (S3-compatible : MinIO / DO Spaces)
+HTTP client     : reqwest 0.12 (Twilio, WAHA, Orange/MTN, Expo) — remplace Guzzle
+Config          : figment 0.10 (env + toml) — remplace config/*.php + env()
+Logging         : tracing + tracing-subscriber (JSON) + Sentry — remplace Telescope
+Secrets         : vaultrs (Vault KV + Transit) — remplace Docker Secrets/EncryptionService
+Erreurs         : thiserror + anyhow (AppError → réponses JSON structurées)
+Tests           : cargo test + axum-test + mockall — remplace PHPUnit
 ```
 
 ### Base de Données
@@ -221,11 +242,11 @@ Backup          : MinIO (local cache) + DO Spaces (production)
 Orchestration   : Docker Swarm (production)
 Reverse Proxy   : Traefik v2.11 (SSL/TLS auto via Let's Encrypt)
 Cache HTTP      : Varnish 7.6
-WebSocket       : Laravel Reverb
+WebSocket       : Axum WebSocket (pusher-compat)
 Automation      : n8n
 WhatsApp        : WAHA
 Antivirus       : ClamAV (scan fichiers uploadés)
-Secrets         : Docker Secrets
+Secrets         : HashiCorp Vault (KV + Transit)
 ```
 
 ### Monitoring & Observabilité
@@ -245,26 +266,29 @@ DB Admin        : PgAdmin 4
 ## Architecture
 
 ### Pattern Architectural
-- **Backend** : MVC + Service Layer + Repository Pattern
+- **Backend** : Handlers Axum + Service Layer + `AppState` (service container) + extracteurs typés
 - **Frontend** : Components + Custom Hooks + Context API
 - **API** : RESTful JSON avec pagination et filtering
-- **Real-time** : WebSocket via Reverb + Socket.io + Laravel Echo
-- **Async** : Queue Redis avec Horizon monitoring
+- **Real-time** : WebSocket via Axum WS (pusher-compat) + Socket.io client
+- **Async** : Jobs apalis (Redis) + tokio-cron-scheduler
 
-### Modules Backend
+### Modules Backend (crate `immog-backend`, `src/`)
 ```
-app/
-├── Actions/          → Logique métier réutilisable
-├── Channels/         → Notification channels (Email, SMS, WhatsApp)
-├── Console/Commands/ → Artisan commands
-├── Events/           → Events (BadgeUpgraded, PaymentReceived, etc.)
-├── Http/Controllers/ → 26 contrôleurs API
-├── Jobs/             → 11+ jobs asynchrones
-├── Models/           → 24 modèles Eloquent
-├── Notifications/    → Classes de notification
-├── Policies/         → Authorization policies
-├── Repositories/     → Data access layer
-└── Services/         → 20+ services métier
+src/
+├── main.rs           → entrypoint (boot Axum + AppState)
+├── bin/migrate.rs    → binaire immog-migrate (sea-orm-migration)
+├── config.rs         → figment (env + toml + defaults) — remplace config/*.php
+├── state.rs          → AppState = service container (DB, Redis, Vault, JWT, S3)
+├── error.rs          → AppError → réponses JSON structurées
+├── routes/           → router Axum (26 domaines de contrôleurs)
+├── middleware/       → Tower layers (security headers, rate limit, sanitize)
+├── extractors/       → ValidatedJson, AuthUser, Locale, policies (remplace FormRequests/Policies)
+├── db/               → entités SeaORM + migrations + scopes (remplace Models Eloquent)
+├── auth/             → jwt, oauth2, sessions, totp, rbac (RBAC natif)
+├── domain/           → logique métier par domaine (listings, visits, contracts, payments…)
+├── services/         → 20+ services métier (voir table ci-dessous)
+├── jobs/             → 11+ jobs apalis + scheduler
+└── notifications/    → Notifiable + channels (SMS/WhatsApp/Push/Email)
 ```
 
 ### Modules Frontend
@@ -291,8 +315,8 @@ lib/
 | OtpService | Génération/validation OTP |
 | MessageNotificationService | Notifications multi-canal |
 | ContentModerationService | Modération automatique |
-| ListingPhotoService | Optimisation images |
-| EncryptionService | Chiffrement E2E |
+| ListingPhotoService | Optimisation images (crate `image`) |
+| VaultCryptoService | Chiffrement E2E via Vault Transit (remplace l'ancien EncryptionService) |
 | SignatureService | Signature électronique |
 | OrangeMoneyService | Intégration Orange Money |
 | MtnMomoService | Intégration MTN MoMo |
@@ -307,9 +331,9 @@ lib/
 ### Authentification & Sécurité
 - [x] Inscription/Connexion avec OTP SMS/WhatsApp
 - [x] Normalisation numéros téléphone (Guinée + international)
-- [x] 2FA Google Authenticator (admins)
-- [x] OAuth2 via Laravel Passport
-- [x] Rate limiting par endpoint
+- [x] 2FA TOTP / Google Authenticator (admins) — crate `totp-rs`
+- [x] OAuth2 via `oxide-auth` + JWT (`jsonwebtoken`) — secret signé chargé depuis Vault
+- [x] Rate limiting par endpoint (Tower layer)
 - [x] Tokens refresh automatique
 
 ### Gestion des Annonces
@@ -483,7 +507,7 @@ pending → confirmed → completed
 ### n8n (Automation)
 - Port : 5678
 - 6 workflows actifs
-- Webhooks Laravel → n8n
+- Webhooks backend Rust → n8n
 
 ### Mobile Money
 - Orange Money : REST API
@@ -508,15 +532,15 @@ pending → confirmed → completed
 
 ### Mesures Implémentées
 - HTTPS obligatoire (Let's Encrypt via Traefik)
-- Headers sécurisés (Helmet équivalent Laravel)
-- Rate limiting multi-niveau
-- CORS strict
-- Sanitisation inputs
-- Protection CSRF
-- Chiffrement données sensibles (AES-256)
+- Headers sécurisés (Tower layer `security_headers` + tower-http)
+- Rate limiting multi-niveau (Tower)
+- CORS strict (tower-http `cors`)
+- Sanitisation inputs (validator + extracteurs typés)
+- Protection CSRF (sessions tower-sessions pour endpoints stateful)
+- Chiffrement données sensibles via Vault Transit (AES-256)
 - 2FA pour admins
 - Chiffrement E2E messages
-- Docker Secrets pour credentials
+- HashiCorp Vault (KV + Transit) pour credentials — remplace Docker Secrets
 - ClamAV scan fichiers uploadés
 
 ### Authentification
@@ -530,15 +554,16 @@ pending → confirmed → completed
 ## Testing & Qualité
 
 ### Tests Requis
-- **Unitaires** : PHPUnit + Jest (70% coverage min)
-- **Intégration** : Laravel Feature Tests
+- **Unitaires** : `cargo test` + mockall (backend) + Jest (frontend) — 70% coverage min
+- **Intégration** : axum-test (tests HTTP end-to-end du backend)
+- **Contrats API** : tests des handlers contre les contrats `specs/.../contracts/` (réponses stables)
 - **E2E** : Playwright (parcours critiques)
 - **Performance** : k6 / Artillery
-- **Sécurité** : OWASP ZAP
+- **Sécurité** : OWASP ZAP + `cargo audit` (vulnérabilités des dépendances)
 
 ### Qualité Code
 - ESLint + Prettier (frontend)
-- PHP CS Fixer (backend)
+- `cargo fmt` (rustfmt) + `cargo clippy` (lints, `-D warnings`) (backend)
 - TypeScript strict mode
 - Pre-commit hooks
 - Code review obligatoire
@@ -565,6 +590,17 @@ pending → confirmed → completed
 - Toute déviation doit être justifiée et documentée
 - La simplicité prime sur la complexité : "KISS > YAGNI"
 - Question clé : *"Est-ce que ça aide un Guinéen à trouver un logement ?"*
+
+### Backend Rust (remplacement full-Rust)
+- Le backend est écrit en **Rust (Axum + Tokio)** — voir `rust-backend/README.md` et
+  `specs/001-immog-platform/plan.md`.
+- Un prototype backend **Laravel 12 (PHP)** existait mais **n'a jamais été déployé en production** :
+  il est **remplacé directement** par le backend Rust (pas de cohabitation, pas de migration de
+  données de production, pas de tests de parité). Le dossier `backend/` (Laravel) est archivé.
+- Le schéma **PostgreSQL** est défini et possédé par les **migrations Rust** (`sea-orm-migration`).
+- **Auth** : JWT signé via secret chargé depuis **Vault** ; mots de passe hachés avec **bcrypt**,
+  2FA TOTP (`totp-rs`). Aucune contrainte d'interopérabilité avec l'ancien backend.
+- **Mise en production** : première mise en ligne du backend Rust. Aucun déploiement sans le mot `deploy`.
 
 ### Priorités
 1. **Sécurité** : Pas de compromis sur données utilisateurs
@@ -621,4 +657,15 @@ pending → confirmed → completed
 
 ---
 
-**Version**: 2.0.0 | **Ratified**: 2026-01-05 | **Last Amended**: 2026-01-05 | **Next Review**: 2026-04-05
+**Version**: 3.1.0 | **Ratified**: 2026-01-05 | **Last Amended**: 2026-07-19 | **Next Review**: 2026-10-19
+
+> **Changelog v3.1.0 (2026-07-19)** — Amendement du **Principe IX** : l'automatisation est désormais
+> répartie entre **n8n** (workflows métier/multi-système, modifiables sans code) et **apalis +
+> tokio-cron-scheduler** (jobs techniques in-process transactionnels du backend Rust). Le déblocage
+> escrow devient un job Rust ; n8n ne gère que les relances de notification. Aligne la constitution
+> avec l'architecture Rust (résout le conflit `/speckit.analyze` C1).
+>
+> **Changelog v3.0.0 (2026-07-18)** — Passage du backend à Rust (Axum + Tokio, SeaORM, apalis, Vault)
+> en **remplacement full-Rust** du prototype Laravel (jamais déployé). Adaptation des sections Stack
+> Technologique, Architecture, Modules Backend, Services, Sécurité, Testing/Qualité et Gouvernance. Les
+> principes métier, le contexte guinéen, les rôles, statuts et le frontend Next.js restent inchangés.

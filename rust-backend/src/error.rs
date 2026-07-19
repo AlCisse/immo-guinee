@@ -33,6 +33,9 @@ pub enum AppError {
     #[error("Erreur base de données: {0}")]
     Database(#[from] sea_orm::DbErr),
 
+    #[error("Erreur cache: {0}")]
+    Cache(#[from] redis::RedisError),
+
     #[error("Erreur interne: {0}")]
     Internal(#[from] anyhow::Error),
 }
@@ -54,6 +57,10 @@ impl IntoResponse for AppError {
             AppError::Database(e) => {
                 tracing::error!(error = ?e, "database error");
                 (StatusCode::INTERNAL_SERVER_ERROR, "DB_ERROR", "Erreur base de données".into(), None)
+            }
+            AppError::Cache(e) => {
+                tracing::error!(error = ?e, "cache error");
+                (StatusCode::INTERNAL_SERVER_ERROR, "CACHE_ERROR", "Erreur cache".into(), None)
             }
             AppError::Internal(e) => {
                 tracing::error!(error = ?e, "internal error");

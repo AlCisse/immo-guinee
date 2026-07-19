@@ -23,6 +23,13 @@ pub struct Config {
     /// Redis connection URL (dev: with creds; prod: Vault-fetched).
     pub redis_url: String,
 
+    /// S3-compatible endpoint (MinIO in dev, DO Spaces in prod).
+    pub s3_endpoint: String,
+    /// S3 region label (MinIO ignores it; DO Spaces uses e.g. "fra1").
+    pub s3_region: String,
+    /// Bucket for listing photos and documents.
+    pub s3_bucket: String,
+
     /// Vault address (prod). Empty in dev -> Vault client disabled.
     pub vault_addr: String,
 
@@ -50,6 +57,9 @@ impl Default for Config {
             port: 8000,
             database_url: "postgres://immog_user:immog@localhost:5433/immog_db".into(),
             redis_url: "redis://:immog_redis_secret@localhost:6379".into(),
+            s3_endpoint: "http://localhost:9000".into(),
+            s3_region: "us-east-1".into(),
+            s3_bucket: "immoguinee-images".into(),
             vault_addr: String::new(),
             vault_approle_role_id: String::new(),
             jwt_secret_vault_path: "secret/immoguinee/app".into(),

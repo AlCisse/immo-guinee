@@ -40,8 +40,9 @@
 // pub mod contract;
 // pub mod payment;
 // pub mod media;
-// pub mod storage;
-// pub mod otp;
+pub mod storage;
+pub mod listing_photo;
+pub mod otp;
 // pub mod sms;
 // pub mod messaging;
 // pub mod facebook;

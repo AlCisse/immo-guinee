@@ -2,23 +2,33 @@
 
 **Feature**: ImmoGuinée - Plateforme Immobilière pour la Guinée
 **Branch**: `001-immog-platform`
-**Date**: 2025-01-28
+**Date**: 2025-01-28 (schéma) · **Stack Rust/SeaORM**: 2026-07-19
 **Phase**: 1 (Design)
 
 ---
 
 ## Overview
 
-This document defines the complete database schema for ImmoGuinée using **Laravel 11 Eloquent ORM** with **PostgreSQL 15+**. The schema implements all 11 key entities from the feature specification with proper relations, constraints, and indexes for performance.
+This document defines the complete database schema for ImmoGuinée using **SeaORM 1.1** (sur SQLx 0.8)
+with **PostgreSQL 15+**. The schema implements all 11 key entities from the feature specification with
+proper relations, constraints, and indexes for performance.
 
-**Total Entities**: 11
-**Total Enums**: 12
-**Estimated Tables**: 11 core + 3 junction tables (many-to-many)
+> **Note stack (backend Rust)** : le **modèle de données** (tables, colonnes, types, enums natifs,
+> index, contraintes) est conçu pour **PostgreSQL** et **possédé par le backend Rust** : il est défini
+> par les **migrations `sea-orm-migration`**, l'accès se fait via **SeaORM/SQLx**, et le seeding via des
+> **seeds Rust** (`fake`). Un prototype Laravel/Eloquent définissait auparavant ce schéma, mais il n'a
+> jamais été déployé : les migrations Rust sont désormais la **source de vérité** unique du schéma.
+> Les entités peuvent être écrites à la main ou **générées** avec `sea-orm-cli generate entity` après
+> une première application des migrations.
+
+**Total Entities**: 12 (dont Visit)
+**Total Enums**: 13 (types PostgreSQL natifs, mappés en Rust via `DeriveActiveEnum`)
+**Estimated Tables**: 12 core + 3 junction tables (many-to-many)
 **Indexes Strategy**: 25+ indexes for search, filtering, and performance (FR-094: <500ms search)
 
-**ORM**: Laravel Eloquent (Active Record pattern)
-**Migration System**: Laravel Database Migrations
-**Seeding**: Laravel Factories + DatabaseSeeder
+**ORM**: SeaORM (Active Record + Entity pattern, sur SQLx)
+**Migration System**: `sea-orm-migration` (binaire `immog-migrate`)
+**Seeding**: seeds Rust (`fake` crate) + binaire `immog-seed`
 
 ---
 
@@ -28,6 +38,8 @@ This document defines the complete database schema for ImmoGuinée using **Larav
 User (Utilisateur)
  │
  ├──< Listing (Annonce) [1:N]
+ │    │
+ │    ├──< Visit (Visite) [1:N]
  │    │
  │    └──< Contract [1:N]
  │         │
@@ -51,1278 +63,833 @@ User (Utilisateur)
 
 ## Database Enums (PostgreSQL Native)
 
-Laravel 11 supports PostgreSQL native enums. Define them in migrations:
+Le schéma utilise des **types ENUM PostgreSQL natifs**. Dans SeaORM, on les crée via SQL brut dans la
+migration (`execute_unprepared`) — approche idiomatique pour un schéma à enums natifs — puis on les
+mappe en enums Rust côté entités (voir section « SeaORM Entities »).
 
-```php
-// database/migrations/2025_01_28_000001_create_enums.php
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\DB;
+```rust
+// rust-backend/src/db/migration/m20250128_000001_create_enums.rs
+use sea_orm_migration::prelude::*;
 
-return new class extends Migration
-{
-    public function up(): void
-    {
-        // Badge enum
-        DB::statement("CREATE TYPE badge AS ENUM ('BRONZE', 'ARGENT', 'OR', 'DIAMANT')");
+#[derive(DeriveMigrationName)]
+pub struct Migration;
 
-        // TypeCompte enum
-        DB::statement("CREATE TYPE type_compte AS ENUM ('PARTICULIER', 'AGENCE', 'DIASPORA')");
+const ENUMS_UP: &str = r#"
+    CREATE TYPE badge AS ENUM ('BRONZE', 'ARGENT', 'OR', 'DIAMANT');
+    CREATE TYPE type_compte AS ENUM ('PARTICULIER', 'AGENCE', 'DIASPORA');
+    CREATE TYPE statut_verification AS ENUM ('NON_VERIFIE', 'CNI_VERIFIEE', 'TITRE_FONCIER_VERIFIE');
+    CREATE TYPE statut_compte AS ENUM ('ACTIF', 'SUSPENDU', 'BANNI', 'SUPPRIME');
+    CREATE TYPE type_operation AS ENUM ('LOCATION', 'VENTE');
+    CREATE TYPE type_bien AS ENUM ('VILLA', 'APPARTEMENT', 'STUDIO', 'TERRAIN', 'COMMERCE', 'BUREAU', 'ENTREPOT');
+    CREATE TYPE quartier AS ENUM ('KALOUM', 'DIXINN', 'RATOMA', 'MATAM', 'MATOTO', 'DUBREKA_CENTRE', 'DUBREKA_PERIPHERIE', 'COYAH_CENTRE', 'COYAH_PERIPHERIE');
+    CREATE TYPE statut_listing AS ENUM ('DISPONIBLE', 'EN_NEGOCIATION', 'LOUE_VENDU', 'EXPIRE', 'ARCHIVE', 'SUSPENDU');
+    CREATE TYPE type_contrat AS ENUM ('BAIL_LOCATION_RESIDENTIEL', 'BAIL_LOCATION_COMMERCIAL', 'PROMESSE_VENTE_TERRAIN', 'MANDAT_GESTION', 'ATTESTATION_CAUTION');
+    CREATE TYPE statut_contrat AS ENUM ('BROUILLON', 'EN_ATTENTE_SIGNATURE', 'PARTIELLEMENT_SIGNE', 'SIGNE_ARCHIVE', 'ANNULE');
+    CREATE TYPE type_paiement AS ENUM ('CAUTION', 'LOYER_MENSUEL', 'COMMISSION_PLATEFORME', 'VENTE', 'FRAIS_PREMIUM');
+    CREATE TYPE methode_paiement AS ENUM ('ORANGE_MONEY', 'MTN_MOMO', 'ESPECES', 'VIREMENT_BANCAIRE');
+    CREATE TYPE statut_paiement AS ENUM ('INITIE', 'EN_ATTENTE_OTP', 'EN_ESCROW', 'COMMISSION_COLLECTEE', 'CONFIRME', 'ECHOUE', 'REMBOURSE');
+    CREATE TYPE type_document AS ENUM ('CNI', 'TITRE_FONCIER', 'PASSEPORT');
+    CREATE TYPE statut_verification_doc AS ENUM ('EN_ATTENTE', 'APPROUVE', 'REJETE');
+    CREATE TYPE type_message AS ENUM ('TEXTE', 'VOCAL', 'PHOTO', 'LOCALISATION_GPS');
+    CREATE TYPE statut_lecture AS ENUM ('ENVOYE', 'LIVRE', 'LU');
+    CREATE TYPE statut_conversation AS ENUM ('ACTIVE', 'ARCHIVEE');
+    CREATE TYPE type_litige AS ENUM ('IMPAYE', 'DEGATS', 'EXPULSION_ABUSIVE', 'CAUTION_NON_REMBOURSEE', 'AUTRE');
+    CREATE TYPE statut_litige AS ENUM ('OUVERT', 'EN_COURS', 'RESOLU_AMIABLE', 'RESOLU_COMPENSATION', 'ECHOUE_ESCALADE');
+    CREATE TYPE type_assurance AS ENUM ('SEJOUR_SEREIN', 'LOYER_GARANTI');
+    CREATE TYPE statut_assurance AS ENUM ('ACTIVE', 'RESILIEE', 'SUSPENDUE');
+    CREATE TYPE statut_transaction AS ENUM ('EN_COURS', 'COMPLETEE', 'ANNULEE');
+    CREATE TYPE statut_visite AS ENUM ('EN_ATTENTE', 'CONFIRMEE', 'COMPLETEE', 'ANNULEE');
+"#;
 
-        // StatutVerification enum
-        DB::statement("CREATE TYPE statut_verification AS ENUM ('NON_VERIFIE', 'CNI_VERIFIEE', 'TITRE_FONCIER_VERIFIE')");
+const ENUMS_DOWN: &str = r#"
+    DROP TYPE IF EXISTS statut_visite;
+    DROP TYPE IF EXISTS statut_transaction;
+    DROP TYPE IF EXISTS statut_assurance;
+    DROP TYPE IF EXISTS type_assurance;
+    DROP TYPE IF EXISTS statut_litige;
+    DROP TYPE IF EXISTS type_litige;
+    DROP TYPE IF EXISTS statut_conversation;
+    DROP TYPE IF EXISTS statut_lecture;
+    DROP TYPE IF EXISTS type_message;
+    DROP TYPE IF EXISTS statut_verification_doc;
+    DROP TYPE IF EXISTS type_document;
+    DROP TYPE IF EXISTS statut_paiement;
+    DROP TYPE IF EXISTS methode_paiement;
+    DROP TYPE IF EXISTS type_paiement;
+    DROP TYPE IF EXISTS statut_contrat;
+    DROP TYPE IF EXISTS type_contrat;
+    DROP TYPE IF EXISTS statut_listing;
+    DROP TYPE IF EXISTS quartier;
+    DROP TYPE IF EXISTS type_bien;
+    DROP TYPE IF EXISTS type_operation;
+    DROP TYPE IF EXISTS statut_compte;
+    DROP TYPE IF EXISTS statut_verification;
+    DROP TYPE IF EXISTS type_compte;
+    DROP TYPE IF EXISTS badge;
+"#;
 
-        // StatutCompte enum
-        DB::statement("CREATE TYPE statut_compte AS ENUM ('ACTIF', 'SUSPENDU', 'BANNI', 'SUPPRIME')");
-
-        // TypeOperation enum
-        DB::statement("CREATE TYPE type_operation AS ENUM ('LOCATION', 'VENTE')");
-
-        // TypeBien enum
-        DB::statement("CREATE TYPE type_bien AS ENUM ('VILLA', 'APPARTEMENT', 'STUDIO', 'TERRAIN', 'COMMERCE', 'BUREAU', 'ENTREPOT')");
-
-        // Quartier enum
-        DB::statement("CREATE TYPE quartier AS ENUM ('KALOUM', 'DIXINN', 'RATOMA', 'MATAM', 'MATOTO', 'DUBREKA_CENTRE', 'DUBREKA_PERIPHERIE', 'COYAH_CENTRE', 'COYAH_PERIPHERIE')");
-
-        // StatutListing enum
-        DB::statement("CREATE TYPE statut_listing AS ENUM ('DISPONIBLE', 'EN_NEGOCIATION', 'LOUE_VENDU', 'EXPIRE', 'ARCHIVE', 'SUSPENDU')");
-
-        // TypeContrat enum
-        DB::statement("CREATE TYPE type_contrat AS ENUM ('BAIL_LOCATION_RESIDENTIEL', 'BAIL_LOCATION_COMMERCIAL', 'PROMESSE_VENTE_TERRAIN', 'MANDAT_GESTION', 'ATTESTATION_CAUTION')");
-
-        // StatutContrat enum
-        DB::statement("CREATE TYPE statut_contrat AS ENUM ('BROUILLON', 'EN_ATTENTE_SIGNATURE', 'PARTIELLEMENT_SIGNE', 'SIGNE_ARCHIVE', 'ANNULE')");
-
-        // TypePaiement enum
-        DB::statement("CREATE TYPE type_paiement AS ENUM ('CAUTION', 'LOYER_MENSUEL', 'COMMISSION_PLATEFORME', 'VENTE', 'FRAIS_PREMIUM')");
-
-        // MethodePaiement enum
-        DB::statement("CREATE TYPE methode_paiement AS ENUM ('ORANGE_MONEY', 'MTN_MOMO', 'ESPECES', 'VIREMENT_BANCAIRE')");
-
-        // StatutPaiement enum
-        DB::statement("CREATE TYPE statut_paiement AS ENUM ('INITIE', 'EN_ATTENTE_OTP', 'EN_ESCROW', 'COMMISSION_COLLECTEE', 'CONFIRME', 'ECHOUE', 'REMBOURSE')");
-
-        // TypeDocument enum
-        DB::statement("CREATE TYPE type_document AS ENUM ('CNI', 'TITRE_FONCIER', 'PASSEPORT')");
-
-        // StatutVerificationDoc enum
-        DB::statement("CREATE TYPE statut_verification_doc AS ENUM ('EN_ATTENTE', 'APPROUVE', 'REJETE')");
-
-        // TypeMessage enum
-        DB::statement("CREATE TYPE type_message AS ENUM ('TEXTE', 'VOCAL', 'PHOTO', 'LOCALISATION_GPS')");
-
-        // StatutLecture enum
-        DB::statement("CREATE TYPE statut_lecture AS ENUM ('ENVOYE', 'LIVRE', 'LU')");
-
-        // StatutConversation enum
-        DB::statement("CREATE TYPE statut_conversation AS ENUM ('ACTIVE', 'ARCHIVEE')");
-
-        // TypeLitige enum
-        DB::statement("CREATE TYPE type_litige AS ENUM ('IMPAYE', 'DEGATS', 'EXPULSION_ABUSIVE', 'CAUTION_NON_REMBOURSEE', 'AUTRE')");
-
-        // StatutLitige enum
-        DB::statement("CREATE TYPE statut_litige AS ENUM ('OUVERT', 'EN_COURS', 'RESOLU_AMIABLE', 'RESOLU_COMPENSATION', 'ECHOUE_ESCALADE')");
-
-        // TypeAssurance enum
-        DB::statement("CREATE TYPE type_assurance AS ENUM ('SEJOUR_SEREIN', 'LOYER_GARANTI')");
-
-        // StatutAssurance enum
-        DB::statement("CREATE TYPE statut_assurance AS ENUM ('ACTIVE', 'RESILIEE', 'SUSPENDUE')");
-
-        // StatutTransaction enum
-        DB::statement("CREATE TYPE statut_transaction AS ENUM ('EN_COURS', 'COMPLETEE', 'ANNULEE')");
+#[async_trait::async_trait]
+impl MigrationTrait for Migration {
+    async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        manager.get_connection().execute_unprepared(ENUMS_UP).await?;
+        Ok(())
     }
 
-    public function down(): void
-    {
-        DB::statement("DROP TYPE IF EXISTS statut_transaction");
-        DB::statement("DROP TYPE IF EXISTS statut_assurance");
-        DB::statement("DROP TYPE IF EXISTS type_assurance");
-        DB::statement("DROP TYPE IF EXISTS statut_litige");
-        DB::statement("DROP TYPE IF EXISTS type_litige");
-        DB::statement("DROP TYPE IF EXISTS statut_conversation");
-        DB::statement("DROP TYPE IF EXISTS statut_lecture");
-        DB::statement("DROP TYPE IF EXISTS type_message");
-        DB::statement("DROP TYPE IF EXISTS statut_verification_doc");
-        DB::statement("DROP TYPE IF EXISTS type_document");
-        DB::statement("DROP TYPE IF EXISTS statut_paiement");
-        DB::statement("DROP TYPE IF EXISTS methode_paiement");
-        DB::statement("DROP TYPE IF EXISTS type_paiement");
-        DB::statement("DROP TYPE IF EXISTS statut_contrat");
-        DB::statement("DROP TYPE IF EXISTS type_contrat");
-        DB::statement("DROP TYPE IF EXISTS statut_listing");
-        DB::statement("DROP TYPE IF EXISTS quartier");
-        DB::statement("DROP TYPE IF EXISTS type_bien");
-        DB::statement("DROP TYPE IF EXISTS type_operation");
-        DB::statement("DROP TYPE IF EXISTS statut_compte");
-        DB::statement("DROP TYPE IF EXISTS statut_verification");
-        DB::statement("DROP TYPE IF EXISTS type_compte");
-        DB::statement("DROP TYPE IF EXISTS badge");
+    async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        manager.get_connection().execute_unprepared(ENUMS_DOWN).await?;
+        Ok(())
     }
-};
+}
 ```
 
 ---
 
-## Laravel Migrations
+## SeaORM Migrations (SQL DDL)
+
+Les migrations de tables sont écrites en **SQL DDL brut** via `execute_unprepared` (le schéma s'appuie
+lourdement sur les enums PG natifs, ce qui rend le SQL plus lisible et fidèle au schéma que le
+Query Builder). Toutes les tables utilisent des **UUID** en clé primaire, `TIMESTAMPTZ`, et `BIGINT` pour
+les montants GNF. Chaque migration expose `up()`/`down()` (structure identique à l'exemple des enums).
 
 ### 1. Users Table
 
-```php
-// database/migrations/2025_01_28_000002_create_users_table.php
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('users', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-
-            // Authentication
-            $table->string('telephone', 20)->unique();  // +224 6XX XXX XXX
-            $table->string('email', 255)->nullable();
-            $table->string('mot_de_passe_hash', 255);
-
-            // Profile
-            $table->string('nom_complet', 255);
-            $table->text('photo_profil_url')->nullable();
-            $table->string('bio', 500)->nullable();
-
-            // Type & Status (PostgreSQL enums)
-            $table->addColumn('type_compte', 'type_compte')->default('PARTICULIER');
-            $table->addColumn('badge_certification', 'badge')->default('BRONZE');
-            $table->addColumn('statut_verification', 'statut_verification')->default('NON_VERIFIE');
-            $table->addColumn('statut_compte', 'statut_compte')->default('ACTIF');
-
-            // Metrics (calculated fields)
-            $table->float('note_moyenne')->default(0);
-            $table->integer('nombre_transactions')->default(0);
-            $table->integer('nombre_litiges')->default(0);
-
-            // Notifications Preferences (JSON)
-            // Structure: { "push": true, "sms": true, "email": true, "whatsapp": false }
-            $table->json('preferences_notification')->default(json_encode([
-                'push' => true,
-                'sms' => true,
-                'email' => true,
-                'whatsapp' => false
-            ]));
-
-            // Timestamps
-            $table->timestampTz('date_inscription')->useCurrent();
-            $table->timestampTz('derniere_connexion')->nullable();
-            $table->timestampTz('date_suppression')->nullable();  // Soft delete
-            $table->timestamps();
-
-            // Indexes for performance
-            $table->index('telephone');
-            $table->index('badge_certification');
-            $table->index('note_moyenne');
-            $table->index('statut_compte');
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('users');
-    }
-};
+```sql
+-- rust-backend/src/db/migration/m20250128_000002_create_users.rs (execute_unprepared)
+CREATE TABLE users (
+    id                       UUID PRIMARY KEY,
+    -- Authentication
+    telephone                VARCHAR(20) UNIQUE NOT NULL,          -- +224 6XX XXX XXX
+    email                    VARCHAR(255),
+    mot_de_passe_hash        VARCHAR(255) NOT NULL,                -- bcrypt (crate `bcrypt`)
+    -- Profile
+    nom_complet              VARCHAR(255) NOT NULL,
+    photo_profil_url         TEXT,
+    bio                      VARCHAR(500),
+    -- Type & Status (enums PG natifs)
+    type_compte              type_compte NOT NULL DEFAULT 'PARTICULIER',
+    badge_certification      badge NOT NULL DEFAULT 'BRONZE',
+    statut_verification      statut_verification NOT NULL DEFAULT 'NON_VERIFIE',
+    statut_compte            statut_compte NOT NULL DEFAULT 'ACTIF',
+    -- Metrics (calculated fields)
+    note_moyenne             REAL NOT NULL DEFAULT 0,
+    nombre_transactions      INTEGER NOT NULL DEFAULT 0,
+    nombre_litiges           INTEGER NOT NULL DEFAULT 0,
+    -- Notifications Preferences (JSONB): {"push":true,"sms":true,"email":true,"whatsapp":false}
+    preferences_notification JSONB NOT NULL DEFAULT '{"push":true,"sms":true,"email":true,"whatsapp":false}',
+    -- Timestamps
+    date_inscription         TIMESTAMPTZ NOT NULL DEFAULT now(),
+    derniere_connexion       TIMESTAMPTZ,
+    date_suppression         TIMESTAMPTZ,                          -- Soft delete
+    created_at               TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at               TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_users_telephone           ON users(telephone);
+CREATE INDEX idx_users_badge_certification ON users(badge_certification);
+CREATE INDEX idx_users_note_moyenne        ON users(note_moyenne);
+CREATE INDEX idx_users_statut_compte       ON users(statut_compte);
 ```
 
 ### 2. Listings Table
 
-```php
-// database/migrations/2025_01_28_000003_create_listings_table.php
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('listings', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-
-            // Owner
-            $table->foreignUuid('createur_id')->constrained('users')->onDelete('cascade');
-
-            // Basics (PostgreSQL enums)
-            $table->addColumn('type_operation', 'type_operation');
-            $table->addColumn('type_bien', 'type_bien');
-            $table->string('titre', 100);
-            $table->string('description', 2000);
-            $table->bigInteger('prix_gnf');  // Use bigInteger for large GNF amounts
-
-            // Location
-            $table->addColumn('quartier', 'quartier');
-            $table->string('adresse_complete', 500)->nullable();
-
-            // Details
-            $table->integer('superficie_m2')->nullable();  // For terrains/villas
-            $table->integer('nombre_chambres')->nullable();
-            $table->integer('nombre_salons')->nullable();
-            $table->integer('caution_mois')->nullable();  // 1-6 months for locations (FR-012)
-
-            // Equipements (JSON array)
-            // Example: ["Climatisation", "Eau courante", "Électricité", "Internet"]
-            $table->json('equipements')->nullable()->default(json_encode([]));
-
-            // Photos (JSON array of S3 URLs)
-            // Structure: [{ "original": "s3://...", "large": "s3://...", "medium": "s3://...", "thumbnail": "s3://..." }]
-            $table->json('photos')->default(json_encode([]));
-
-            // Status & Metrics
-            $table->addColumn('statut', 'statut_listing')->default('DISPONIBLE');
-            $table->integer('nombre_vues')->default(0);
-
-            // Premium Options (JSON)
-            // Structure: { "badge_urgent": false, "remontee_48h": false, "photos_pro": false }
-            $table->json('options_premium')->default(json_encode([
-                'badge_urgent' => false,
-                'remontee_48h' => false,
-                'photos_pro' => false
-            ]));
-
-            // Timestamps
-            $table->timestampTz('date_publication')->useCurrent();
-            $table->timestampTz('date_derniere_maj')->nullable();
-            $table->timestampTz('date_expiration');  // publication + 90 days (FR-014)
-            $table->timestamps();
-
-            // Indexes for performance (FR-094: <500ms)
-            $table->index(['quartier', 'statut']);
-            $table->index(['type_bien', 'statut']);
-            $table->index(['prix_gnf', 'statut']);
-            $table->index('date_publication');
-            $table->index('nombre_vues');
-        });
-
-        // Full-text search index (PostgreSQL GIN)
-        DB::statement("CREATE INDEX listings_fulltext_idx ON listings USING GIN(to_tsvector('french', titre || ' ' || description))");
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('listings');
-    }
-};
+```sql
+-- rust-backend/src/db/migration/m20250128_000003_create_listings.rs
+CREATE TABLE listings (
+    id                UUID PRIMARY KEY,
+    createur_id       UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    -- Basics (enums PG natifs)
+    type_operation    type_operation NOT NULL,
+    type_bien         type_bien NOT NULL,
+    titre             VARCHAR(100) NOT NULL,
+    description       VARCHAR(2000) NOT NULL,
+    prix_gnf          BIGINT NOT NULL,                             -- BIGINT pour les gros montants GNF
+    -- Location
+    quartier          quartier NOT NULL,
+    adresse_complete  VARCHAR(500),
+    -- Details
+    superficie_m2     INTEGER,                                    -- terrains/villas
+    nombre_chambres   INTEGER,
+    nombre_salons     INTEGER,
+    caution_mois      INTEGER,                                    -- 1-6 mois pour locations (FR-012)
+    -- Equipements (JSONB array): ["Climatisation","Eau courante",...]
+    equipements       JSONB NOT NULL DEFAULT '[]',
+    -- Photos (JSONB array): [{"original":"s3://","large":"...","medium":"...","thumbnail":"..."}]
+    photos            JSONB NOT NULL DEFAULT '[]',
+    -- Status & Metrics
+    statut            statut_listing NOT NULL DEFAULT 'DISPONIBLE',
+    nombre_vues       INTEGER NOT NULL DEFAULT 0,
+    -- Premium Options (JSONB): {"badge_urgent":false,"remontee_48h":false,"photos_pro":false}
+    options_premium   JSONB NOT NULL DEFAULT '{"badge_urgent":false,"remontee_48h":false,"photos_pro":false}',
+    -- Timestamps
+    date_publication  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    date_derniere_maj TIMESTAMPTZ,
+    date_expiration   TIMESTAMPTZ NOT NULL,                       -- publication + 90 jours (FR-014)
+    created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at        TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+-- Indexes de performance (FR-094: <500ms)
+CREATE INDEX idx_listings_quartier_statut ON listings(quartier, statut);
+CREATE INDEX idx_listings_typebien_statut ON listings(type_bien, statut);
+CREATE INDEX idx_listings_prix_statut     ON listings(prix_gnf, statut);
+CREATE INDEX idx_listings_date_pub        ON listings(date_publication);
+CREATE INDEX idx_listings_nombre_vues     ON listings(nombre_vues);
+-- Full-text search (PostgreSQL GIN)
+CREATE INDEX listings_fulltext_idx ON listings USING GIN(to_tsvector('french', titre || ' ' || description));
 ```
 
 ### 3. Contracts Table
 
-```php
-// database/migrations/2025_01_28_000004_create_contracts_table.php
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('contracts', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-
-            // Type
-            $table->addColumn('type_contrat', 'type_contrat');
-
-            // Parties
-            $table->foreignUuid('annonce_id')->nullable()->constrained('listings')->onDelete('set null');
-            $table->foreignUuid('proprietaire_id')->constrained('users')->onDelete('restrict');
-            $table->foreignUuid('locataire_acheteur_id')->constrained('users')->onDelete('restrict');
-
-            // Contract Data (JSON - customizable per type)
-            // Structure varies by type_contrat:
-            // BAIL_LOCATION: { "duree_bail_mois": 12, "montant_loyer_gnf": 2500000, "montant_caution_gnf": 7500000, "date_debut": "2025-02-01", "clauses_specifiques": [] }
-            // PROMESSE_VENTE: { "prix_vente_gnf": 500000000, "superficie_m2": 500, ... }
-            $table->json('donnees_personnalisees');
-
-            // Status & PDF
-            $table->addColumn('statut', 'statut_contrat')->default('BROUILLON');
-            $table->text('fichier_pdf_url')->nullable();  // S3 URL
-            $table->string('hash_sha256', 64)->unique()->nullable();  // Integrity check (FR-030)
-
-            // Signatures (JSON array)
-            // Structure: [{ "user_id": "uuid", "nom": "string", "timestamp": "2025-01-28T14:30:00Z", "otp_valide": true }]
-            $table->json('signatures')->default(json_encode([]));
-
-            // Timestamps
-            $table->timestampTz('date_creation')->useCurrent();
-            $table->timestampTz('date_signature_complete')->nullable();
-            $table->timestampTz('delai_retractation_expire')->nullable();  // signature_complete + 48h (FR-033)
-            $table->timestamps();
-
-            // Indexes
-            $table->index('statut');
-            $table->index('proprietaire_id');
-            $table->index('locataire_acheteur_id');
-            $table->index('date_creation');
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('contracts');
-    }
-};
+```sql
+-- rust-backend/src/db/migration/m20250128_000004_create_contracts.rs
+CREATE TABLE contracts (
+    id                        UUID PRIMARY KEY,
+    type_contrat              type_contrat NOT NULL,
+    -- Parties
+    annonce_id                UUID REFERENCES listings(id) ON DELETE SET NULL,
+    proprietaire_id           UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+    locataire_acheteur_id     UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+    -- Contract Data (JSONB, customizable per type_contrat)
+    -- BAIL_LOCATION: {"duree_bail_mois":12,"montant_loyer_gnf":2500000,"montant_caution_gnf":7500000,"date_debut":"2025-02-01","clauses_specifiques":[]}
+    donnees_personnalisees    JSONB NOT NULL,
+    -- Status & PDF
+    statut                    statut_contrat NOT NULL DEFAULT 'BROUILLON',
+    fichier_pdf_url           TEXT,                               -- S3 URL
+    hash_sha256               VARCHAR(64) UNIQUE,                 -- integrity check (FR-030)
+    -- Signatures (JSONB array): [{"user_id":"uuid","nom":"...","timestamp":"...","otp_valide":true}]
+    signatures                JSONB NOT NULL DEFAULT '[]',
+    -- Timestamps
+    date_creation             TIMESTAMPTZ NOT NULL DEFAULT now(),
+    date_signature_complete   TIMESTAMPTZ,
+    delai_retractation_expire TIMESTAMPTZ,                        -- signature_complete + 48h (FR-033)
+    created_at                TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at                TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_contracts_statut        ON contracts(statut);
+CREATE INDEX idx_contracts_proprietaire  ON contracts(proprietaire_id);
+CREATE INDEX idx_contracts_locataire     ON contracts(locataire_acheteur_id);
+CREATE INDEX idx_contracts_date_creation ON contracts(date_creation);
 ```
 
 ### 4. Payments Table
 
-```php
-// database/migrations/2025_01_28_000005_create_payments_table.php
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('payments', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-
-            // Parties
-            $table->foreignUuid('payeur_id')->constrained('users')->onDelete('restrict');
-            $table->foreignUuid('beneficiaire_id')->constrained('users')->onDelete('restrict');
-            $table->foreignUuid('contrat_id')->nullable()->constrained('contracts')->onDelete('set null');
-
-            // Payment Details
-            $table->addColumn('type_paiement', 'type_paiement');
-            $table->bigInteger('montant_gnf');
-            $table->bigInteger('commission_plateforme_gnf')->default(0);  // FR-040: Calculated based on type
-            $table->bigInteger('montant_total_gnf');  // montant + commission
-
-            $table->addColumn('methode_paiement', 'methode_paiement');
-            $table->addColumn('statut', 'statut_paiement')->default('INITIE');
-
-            // External Transaction
-            $table->string('numero_transaction_externe', 255)->nullable();  // Orange Money or MTN transaction ID
-
-            // Quittance (Receipt PDF)
-            $table->text('quittance_pdf_url')->nullable();  // S3 URL (FR-046)
-
-            // Retry Logic (FR-051)
-            $table->integer('tentatives_paiement')->default(0);  // Max 3 attempts
-
-            // Timestamps
-            $table->timestampTz('date_creation')->useCurrent();
-            $table->timestampTz('date_confirmation')->nullable();  // Webhook received
-            $table->timestampTz('date_validation_beneficiaire')->nullable();  // Landlord validated (FR-044)
-            $table->timestampTz('date_deblocage_escrow')->nullable();  // Money released from escrow
-            $table->timestamps();
-
-            // Indexes
-            $table->index('statut');
-            $table->index('payeur_id');
-            $table->index('beneficiaire_id');
-            $table->index('contrat_id');
-            $table->index('date_creation');
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('payments');
-    }
-};
+```sql
+-- rust-backend/src/db/migration/m20250128_000005_create_payments.rs
+CREATE TABLE payments (
+    id                          UUID PRIMARY KEY,
+    -- Parties
+    payeur_id                   UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+    beneficiaire_id             UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+    contrat_id                  UUID REFERENCES contracts(id) ON DELETE SET NULL,
+    -- Payment Details
+    type_paiement               type_paiement NOT NULL,
+    montant_gnf                 BIGINT NOT NULL,
+    commission_plateforme_gnf   BIGINT NOT NULL DEFAULT 0,        -- FR-040 (calculée selon le type)
+    montant_total_gnf           BIGINT NOT NULL,                  -- montant + commission
+    methode_paiement            methode_paiement NOT NULL,
+    statut                      statut_paiement NOT NULL DEFAULT 'INITIE',
+    -- External Transaction
+    numero_transaction_externe  VARCHAR(255),                    -- ID transaction Orange/MTN
+    -- Quittance (Receipt PDF)
+    quittance_pdf_url           TEXT,                            -- S3 URL (FR-046)
+    -- Retry Logic (FR-051)
+    tentatives_paiement         INTEGER NOT NULL DEFAULT 0,      -- max 3
+    -- Timestamps
+    date_creation               TIMESTAMPTZ NOT NULL DEFAULT now(),
+    date_confirmation           TIMESTAMPTZ,                     -- webhook reçu
+    date_validation_beneficiaire TIMESTAMPTZ,                    -- validation propriétaire (FR-044)
+    date_deblocage_escrow       TIMESTAMPTZ,                     -- déblocage escrow
+    created_at                  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at                  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_payments_statut        ON payments(statut);
+CREATE INDEX idx_payments_payeur        ON payments(payeur_id);
+CREATE INDEX idx_payments_beneficiaire  ON payments(beneficiaire_id);
+CREATE INDEX idx_payments_contrat       ON payments(contrat_id);
+CREATE INDEX idx_payments_date_creation ON payments(date_creation);
 ```
 
 ### 5. Certification Documents Table
 
-```php
-// database/migrations/2025_01_28_000006_create_certification_documents_table.php
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('certification_documents', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-
-            // User
-            $table->foreignUuid('utilisateur_id')->constrained('users')->onDelete('cascade');
-
-            // Document Type
-            $table->addColumn('type_document', 'type_document');
-
-            // File
-            $table->text('fichier_url');  // S3 URL (encrypted)
-
-            // Verification
-            $table->addColumn('statut_verification', 'statut_verification_doc')->default('EN_ATTENTE');
-            $table->string('commentaire_verification', 500)->nullable();  // If rejected
-            $table->uuid('verifie_par_admin_id')->nullable();
-
-            // Timestamps
-            $table->timestampTz('date_upload')->useCurrent();
-            $table->timestampTz('date_verification')->nullable();
-            $table->timestamps();
-
-            // Indexes
-            $table->index('utilisateur_id');
-            $table->index('statut_verification');
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('certification_documents');
-    }
-};
+```sql
+-- rust-backend/src/db/migration/m20250128_000006_create_certification_documents.rs
+CREATE TABLE certification_documents (
+    id                     UUID PRIMARY KEY,
+    utilisateur_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    type_document          type_document NOT NULL,
+    fichier_url            TEXT NOT NULL,                         -- S3 URL (chiffré via Vault Transit)
+    statut_verification    statut_verification_doc NOT NULL DEFAULT 'EN_ATTENTE',
+    commentaire_verification VARCHAR(500),                       -- si rejeté
+    verifie_par_admin_id   UUID,
+    date_upload            TIMESTAMPTZ NOT NULL DEFAULT now(),
+    date_verification      TIMESTAMPTZ,
+    created_at             TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at             TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_certdocs_utilisateur ON certification_documents(utilisateur_id);
+CREATE INDEX idx_certdocs_statut      ON certification_documents(statut_verification);
 ```
 
 ### 6. Ratings Table
 
-```php
-// database/migrations/2025_01_28_000007_create_ratings_table.php
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('ratings', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-
-            // Parties
-            $table->foreignUuid('evaluateur_id')->constrained('users')->onDelete('cascade');
-            $table->foreignUuid('evalue_id')->constrained('users')->onDelete('cascade');
-            $table->foreignUuid('transaction_id')->unique()->constrained('transactions')->onDelete('cascade');
-
-            // Rating (1-5 stars)
-            $table->smallInteger('note_globale');  // Average of 3 criteria
-            $table->smallInteger('critere_1_note');  // Varies by role (landlord vs tenant)
-            $table->smallInteger('critere_2_note');
-            $table->smallInteger('critere_3_note');
-
-            // Comment
-            $table->string('commentaire', 500);  // 20-500 chars (FR-068)
-
-            // Moderation
-            $table->addColumn('statut_moderation', 'statut_verification_doc')->default('EN_ATTENTE');
-            $table->json('mots_cles_detectes')->nullable()->default(json_encode([]));  // Array of flagged keywords
-
-            // Timestamps
-            $table->timestampTz('date_creation')->useCurrent();
-            $table->timestampTz('date_publication')->nullable();
-            $table->timestamps();
-
-            // Indexes
-            $table->index('evalue_id');
-            $table->index('note_globale');
-            $table->index('statut_moderation');
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('ratings');
-    }
-};
+```sql
+-- rust-backend/src/db/migration/m20250128_000007_create_ratings.rs
+CREATE TABLE ratings (
+    id                UUID PRIMARY KEY,
+    evaluateur_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    evalue_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    transaction_id    UUID UNIQUE NOT NULL REFERENCES transactions(id) ON DELETE CASCADE,
+    -- Rating (1-5 stars)
+    note_globale      SMALLINT NOT NULL,                          -- moyenne des 3 critères
+    critere_1_note    SMALLINT NOT NULL,
+    critere_2_note    SMALLINT NOT NULL,
+    critere_3_note    SMALLINT NOT NULL,
+    commentaire       VARCHAR(500) NOT NULL,                      -- 20-500 chars (FR-068)
+    -- Moderation
+    statut_moderation statut_verification_doc NOT NULL DEFAULT 'EN_ATTENTE',
+    mots_cles_detectes JSONB NOT NULL DEFAULT '[]',
+    date_creation     TIMESTAMPTZ NOT NULL DEFAULT now(),
+    date_publication  TIMESTAMPTZ,
+    created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at        TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_ratings_evalue      ON ratings(evalue_id);
+CREATE INDEX idx_ratings_note        ON ratings(note_globale);
+CREATE INDEX idx_ratings_moderation  ON ratings(statut_moderation);
 ```
 
 ### 7. Conversations Table
 
-```php
-// database/migrations/2025_01_28_000008_create_conversations_table.php
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('conversations', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-
-            // Listing Context
-            $table->uuid('annonce_id')->nullable();
-
-            // Participants
-            $table->foreignUuid('participant_1_id')->constrained('users')->onDelete('cascade');
-            $table->foreignUuid('participant_2_id')->constrained('users')->onDelete('cascade');
-
-            // Privacy
-            $table->boolean('numeros_partages')->default(false);  // FR-060: Phone numbers revealed after mutual consent
-
-            // Status
-            $table->addColumn('statut', 'statut_conversation')->default('ACTIVE');
-
-            // Timestamps
-            $table->timestampTz('date_creation')->useCurrent();
-            $table->timestampTz('date_dernier_message')->nullable();
-            $table->timestamps();
-
-            // Unique constraint: One conversation per listing per pair
-            $table->unique(['participant_1_id', 'participant_2_id', 'annonce_id']);
-
-            // Indexes
-            $table->index('participant_1_id');
-            $table->index('participant_2_id');
-            $table->index('date_dernier_message');
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('conversations');
-    }
-};
+```sql
+-- rust-backend/src/db/migration/m20250128_000008_create_conversations.rs
+CREATE TABLE conversations (
+    id                   UUID PRIMARY KEY,
+    annonce_id           UUID,
+    participant_1_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    participant_2_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    numeros_partages     BOOLEAN NOT NULL DEFAULT false,          -- FR-060
+    statut               statut_conversation NOT NULL DEFAULT 'ACTIVE',
+    date_creation        TIMESTAMPTZ NOT NULL DEFAULT now(),
+    date_dernier_message TIMESTAMPTZ,
+    created_at           TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at           TIMESTAMPTZ NOT NULL DEFAULT now(),
+    -- One conversation per listing per pair
+    UNIQUE (participant_1_id, participant_2_id, annonce_id)
+);
+CREATE INDEX idx_conversations_p1            ON conversations(participant_1_id);
+CREATE INDEX idx_conversations_p2            ON conversations(participant_2_id);
+CREATE INDEX idx_conversations_dernier_msg   ON conversations(date_dernier_message);
 ```
 
 ### 8. Messages Table
 
-```php
-// database/migrations/2025_01_28_000009_create_messages_table.php
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('messages', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-
-            // Conversation
-            $table->foreignUuid('conversation_id')->constrained('conversations')->onDelete('cascade');
-
-            // Sender
-            $table->foreignUuid('expediteur_id')->constrained('users')->onDelete('cascade');
-
-            // Content
-            $table->addColumn('type_message', 'type_message');
-            $table->string('contenu_texte', 2000)->nullable();  // For TEXTE type
-            $table->text('fichier_url')->nullable();  // For VOCAL/PHOTO types (S3 URL)
-            $table->string('localisation_lat_lng', 50)->nullable();  // For LOCALISATION_GPS type (format: "lat,lng")
-
-            // Status
-            $table->timestampTz('horodatage')->useCurrent();
-            $table->addColumn('statut_lecture', 'statut_lecture')->default('ENVOYE');
-
-            // Moderation
-            $table->boolean('signale')->default(false);
-            $table->string('raison_signalement', 255)->nullable();
-
-            $table->timestamps();
-
-            // Indexes
-            $table->index(['conversation_id', 'horodatage']);
-            $table->index('expediteur_id');
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('messages');
-    }
-};
+```sql
+-- rust-backend/src/db/migration/m20250128_000009_create_messages.rs
+CREATE TABLE messages (
+    id                  UUID PRIMARY KEY,
+    conversation_id     UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+    expediteur_id       UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    type_message        type_message NOT NULL,
+    contenu_texte       VARCHAR(2000),                            -- type TEXTE
+    fichier_url         TEXT,                                     -- type VOCAL/PHOTO (S3 URL)
+    localisation_lat_lng VARCHAR(50),                            -- type LOCALISATION_GPS ("lat,lng")
+    horodatage          TIMESTAMPTZ NOT NULL DEFAULT now(),
+    statut_lecture      statut_lecture NOT NULL DEFAULT 'ENVOYE',
+    signale             BOOLEAN NOT NULL DEFAULT false,
+    raison_signalement  VARCHAR(255),
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_messages_conv_horodatage ON messages(conversation_id, horodatage);
+CREATE INDEX idx_messages_expediteur      ON messages(expediteur_id);
 ```
 
 ### 9. Disputes Table
 
-```php
-// database/migrations/2025_01_28_000010_create_disputes_table.php
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('disputes', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('reference', 20)->unique();  // e.g., "LIT-1234"
-
-            // Transaction Context
-            $table->foreignUuid('transaction_id')->nullable()->constrained('transactions')->onDelete('set null');
-
-            // Parties
-            $table->foreignUuid('demandeur_id')->constrained('users')->onDelete('restrict');
-            $table->foreignUuid('defendeur_id')->constrained('users')->onDelete('restrict');
-
-            // Details
-            $table->addColumn('type_litige', 'type_litige');
-            $table->string('description', 2000);  // 200-2000 chars (FR-072)
-
-            // Preuves (JSON array of S3 URLs)
-            // Structure: [{ "type": "photo"|"document", "url": "s3://...", "nom_fichier": "file.jpg" }]
-            $table->json('preuves_urls')->default(json_encode([]));
-
-            // Status & Resolution
-            $table->addColumn('statut', 'statut_litige')->default('OUVERT');
-            $table->uuid('mediateur_assigne_id')->nullable();
-
-            // Resolution (JSON)
-            // Structure: { "issue": "amiable"|"compensation"|"echec", "montant_compensation_gnf": 1000000, "accord_parties": true, "notes": "..." }
-            $table->json('resolution')->nullable();
-
-            // Timestamps
-            $table->timestampTz('date_ouverture')->useCurrent();
-            $table->timestampTz('date_assignation_mediateur')->nullable();
-            $table->timestampTz('date_resolution')->nullable();
-            $table->timestamps();
-
-            // Indexes
-            $table->index('statut');
-            $table->index('demandeur_id');
-            $table->index('defendeur_id');
-            $table->index('date_ouverture');
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('disputes');
-    }
-};
+```sql
+-- rust-backend/src/db/migration/m20250128_000010_create_disputes.rs
+CREATE TABLE disputes (
+    id                       UUID PRIMARY KEY,
+    reference                VARCHAR(20) UNIQUE NOT NULL,          -- ex: "LIT-1234"
+    transaction_id           UUID REFERENCES transactions(id) ON DELETE SET NULL,
+    demandeur_id             UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+    defendeur_id             UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+    type_litige              type_litige NOT NULL,
+    description              VARCHAR(2000) NOT NULL,               -- 200-2000 chars (FR-072)
+    -- Preuves (JSONB array): [{"type":"photo|document","url":"s3://","nom_fichier":"file.jpg"}]
+    preuves_urls             JSONB NOT NULL DEFAULT '[]',
+    statut                   statut_litige NOT NULL DEFAULT 'OUVERT',
+    mediateur_assigne_id     UUID,
+    -- Resolution (JSONB): {"issue":"amiable|compensation|echec","montant_compensation_gnf":1000000,"accord_parties":true,"notes":"..."}
+    resolution               JSONB,
+    date_ouverture           TIMESTAMPTZ NOT NULL DEFAULT now(),
+    date_assignation_mediateur TIMESTAMPTZ,
+    date_resolution          TIMESTAMPTZ,
+    created_at               TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at               TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_disputes_statut     ON disputes(statut);
+CREATE INDEX idx_disputes_demandeur  ON disputes(demandeur_id);
+CREATE INDEX idx_disputes_defendeur  ON disputes(defendeur_id);
+CREATE INDEX idx_disputes_ouverture  ON disputes(date_ouverture);
 ```
 
 ### 10. Transactions Table
 
-```php
-// database/migrations/2025_01_28_000011_create_transactions_table.php
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('transactions', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-
-            // Listing Context
-            $table->uuid('annonce_id')->nullable();
-
-            // Parties
-            $table->foreignUuid('proprietaire_id')->constrained('users')->onDelete('restrict');
-            $table->foreignUuid('locataire_acheteur_id')->constrained('users')->onDelete('restrict');
-
-            // Contract
-            $table->foreignUuid('contrat_id')->unique()->constrained('contracts')->onDelete('restrict');
-
-            // Payments (JSON array of payment IDs)
-            // Structure: ["uuid1", "uuid2", ...]
-            $table->json('paiements_ids')->default(json_encode([]));
-
-            // Type & Amounts
-            $table->addColumn('type_transaction', 'type_operation');  // LOCATION or VENTE
-            $table->bigInteger('montant_total_gnf');
-            $table->bigInteger('commission_plateforme_gnf');
-
-            // Status
-            $table->addColumn('statut', 'statut_transaction')->default('EN_COURS');
-
-            // Timestamps
-            $table->timestampTz('date_debut')->useCurrent();
-            $table->timestampTz('date_completion')->nullable();
-            $table->timestamps();
-
-            // Indexes
-            $table->index('proprietaire_id');
-            $table->index('locataire_acheteur_id');
-            $table->index('statut');
-            $table->index('date_completion');
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('transactions');
-    }
-};
+```sql
+-- rust-backend/src/db/migration/m20250128_000011_create_transactions.rs
+CREATE TABLE transactions (
+    id                        UUID PRIMARY KEY,
+    annonce_id                UUID,
+    proprietaire_id           UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+    locataire_acheteur_id     UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+    contrat_id                UUID UNIQUE NOT NULL REFERENCES contracts(id) ON DELETE RESTRICT,
+    -- Payments (JSONB array of payment IDs): ["uuid1","uuid2",...]
+    paiements_ids             JSONB NOT NULL DEFAULT '[]',
+    type_transaction          type_operation NOT NULL,            -- LOCATION ou VENTE
+    montant_total_gnf         BIGINT NOT NULL,
+    commission_plateforme_gnf BIGINT NOT NULL,
+    statut                    statut_transaction NOT NULL DEFAULT 'EN_COURS',
+    date_debut                TIMESTAMPTZ NOT NULL DEFAULT now(),
+    date_completion           TIMESTAMPTZ,
+    created_at                TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at                TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_transactions_proprietaire ON transactions(proprietaire_id);
+CREATE INDEX idx_transactions_locataire    ON transactions(locataire_acheteur_id);
+CREATE INDEX idx_transactions_statut       ON transactions(statut);
+CREATE INDEX idx_transactions_completion   ON transactions(date_completion);
 ```
 
 ### 11. Insurances Table (Phase 2)
 
-```php
-// database/migrations/2025_01_28_000012_create_insurances_table.php
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
+```sql
+-- rust-backend/src/db/migration/m20250128_000012_create_insurances.rs
+CREATE TABLE insurances (
+    id                UUID PRIMARY KEY,
+    utilisateur_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    contrat_id        UUID UNIQUE NOT NULL REFERENCES contracts(id) ON DELETE RESTRICT,
+    type_assurance    type_assurance NOT NULL,
+    numero_police     VARCHAR(50) UNIQUE NOT NULL,                -- ex: "ASSUR-SS-1234"
+    prime_mensuelle_gnf INTEGER NOT NULL,
+    -- Couvertures (JSONB) — SEJOUR_SEREIN: {"expulsion_abusive":true,"caution":true,"assistance_juridique":true}
+    couvertures       JSONB NOT NULL,
+    -- Plafonds (JSONB): {"expulsion":"3_mois_loyer","degats":1000000}
+    plafonds          JSONB NOT NULL,
+    statut            statut_assurance NOT NULL DEFAULT 'ACTIVE',
+    date_souscription TIMESTAMPTZ NOT NULL DEFAULT now(),
+    date_expiration   TIMESTAMPTZ NOT NULL,                       -- souscription + 1 an
+    created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at        TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_insurances_utilisateur ON insurances(utilisateur_id);
+CREATE INDEX idx_insurances_statut      ON insurances(statut);
+```
 
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('insurances', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+### 12. Visits Table
 
-            // User
-            $table->foreignUuid('utilisateur_id')->constrained('users')->onDelete('cascade');
-
-            // Contract Context
-            $table->foreignUuid('contrat_id')->unique()->constrained('contracts')->onDelete('restrict');
-
-            // Insurance Details
-            $table->addColumn('type_assurance', 'type_assurance');
-            $table->string('numero_police', 50)->unique();  // e.g., "ASSUR-SS-1234"
-            $table->integer('prime_mensuelle_gnf');
-
-            // Couvertures (JSON)
-            // Structure for SEJOUR_SEREIN: { "expulsion_abusive": true, "caution": true, "assistance_juridique": true }
-            // Structure for LOYER_GARANTI: { "impayes": true, "degats_locatifs": true }
-            $table->json('couvertures');
-
-            // Plafonds (JSON)
-            // Structure: { "expulsion": "3_mois_loyer", "degats": 1000000 }
-            $table->json('plafonds');
-
-            // Status
-            $table->addColumn('statut', 'statut_assurance')->default('ACTIVE');
-
-            // Timestamps
-            $table->timestampTz('date_souscription')->useCurrent();
-            $table->timestampTz('date_expiration');  // souscription + 1 year
-            $table->timestamps();
-
-            // Indexes
-            $table->index('utilisateur_id');
-            $table->index('statut');
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('insurances');
-    }
-};
+```sql
+-- rust-backend/src/db/migration/m20250128_000015_create_visits.rs
+CREATE TABLE visits (
+    id                UUID PRIMARY KEY,
+    annonce_id        UUID NOT NULL REFERENCES listings(id) ON DELETE CASCADE,
+    demandeur_id      UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,   -- chercheur
+    proprietaire_id   UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,   -- créateur de l'annonce
+    date_visite       TIMESTAMPTZ NOT NULL,                                   -- créneau proposé/confirmé
+    statut            statut_visite NOT NULL DEFAULT 'EN_ATTENTE',
+    message           VARCHAR(500),                                           -- note optionnelle du demandeur
+    lien_public_token VARCHAR(64) UNIQUE,                                     -- réponse via lien public (sans compte)
+    date_creation     TIMESTAMPTZ NOT NULL DEFAULT now(),
+    date_confirmation TIMESTAMPTZ,
+    created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at        TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_visits_annonce      ON visits(annonce_id);
+CREATE INDEX idx_visits_demandeur    ON visits(demandeur_id);
+CREATE INDEX idx_visits_proprietaire ON visits(proprietaire_id);
+CREATE INDEX idx_visits_statut       ON visits(statut);
+CREATE INDEX idx_visits_date         ON visits(date_visite);
 ```
 
 ---
 
-## Eloquent Model Examples
+## SeaORM Entities
 
-### User Model
+Les entités peuvent être **générées** depuis la base après application des migrations (`immog-migrate up`) :
 
-```php
-// app/Models/User.php
-namespace App\Models;
+```bash
+sea-orm-cli generate entity \
+  -u "$IMMOG_DATABASE_URL" \
+  -o rust-backend/src/db/entities \
+  --with-serde both
+```
 
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
+Chaque enum PG natif est mappé en enum Rust via `DeriveActiveEnum`. Exemples représentatifs
+(User, Listing, Contract) — les 8 autres suivent le même patron.
 
-class User extends Authenticatable
-{
-    use HasApiTokens, HasFactory, Notifiable, HasUuids;
+### Enums Rust (mapping des types PG natifs)
 
-    protected $keyType = 'string';
-    public $incrementing = false;
+```rust
+// rust-backend/src/db/entities/sea_orm_active_enums.rs (généré)
+use sea_orm::entity::prelude::*;
+use serde::{Deserialize, Serialize};
 
-    protected $fillable = [
-        'telephone',
-        'email',
-        'mot_de_passe_hash',
-        'nom_complet',
-        'photo_profil_url',
-        'bio',
-        'type_compte',
-        'badge_certification',
-        'statut_verification',
-        'statut_compte',
-        'preferences_notification',
-    ];
+#[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize, Deserialize)]
+#[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "badge")]
+pub enum Badge {
+    #[sea_orm(string_value = "BRONZE")]  Bronze,
+    #[sea_orm(string_value = "ARGENT")]  Argent,
+    #[sea_orm(string_value = "OR")]      Or,
+    #[sea_orm(string_value = "DIAMANT")] Diamant,
+}
 
-    protected $hidden = [
-        'mot_de_passe_hash',
-    ];
+#[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize, Deserialize)]
+#[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "statut_listing")]
+pub enum StatutListing {
+    #[sea_orm(string_value = "DISPONIBLE")]      Disponible,
+    #[sea_orm(string_value = "EN_NEGOCIATION")]  EnNegociation,
+    #[sea_orm(string_value = "LOUE_VENDU")]      LoueVendu,
+    #[sea_orm(string_value = "EXPIRE")]          Expire,
+    #[sea_orm(string_value = "ARCHIVE")]         Archive,
+    #[sea_orm(string_value = "SUSPENDU")]        Suspendu,
+}
+// … idem pour les 20 autres enums (type_compte, statut_paiement, statut_contrat, …)
+```
 
-    protected $casts = [
-        'preferences_notification' => 'array',
-        'note_moyenne' => 'float',
-        'date_inscription' => 'datetime',
-        'derniere_connexion' => 'datetime',
-        'date_suppression' => 'datetime',
-    ];
+### User Entity
 
-    // Relationships
-    public function listings()
-    {
-        return $this->hasMany(Listing::class, 'createur_id');
+```rust
+// rust-backend/src/db/entities/user.rs (généré, puis relations/scopes ajoutés)
+use sea_orm::entity::prelude::*;
+use serde::{Deserialize, Serialize};
+use super::sea_orm_active_enums::{Badge, StatutCompte, StatutVerification, TypeCompte};
+
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
+#[sea_orm(table_name = "users")]
+pub struct Model {
+    #[sea_orm(primary_key, auto_increment = false)]
+    pub id: Uuid,
+    #[sea_orm(unique)]
+    pub telephone: String,
+    pub email: Option<String>,
+    #[serde(skip_serializing)]                 // équivalent Eloquent $hidden
+    pub mot_de_passe_hash: String,
+    pub nom_complet: String,
+    pub photo_profil_url: Option<String>,
+    pub bio: Option<String>,
+    pub type_compte: TypeCompte,
+    pub badge_certification: Badge,
+    pub statut_verification: StatutVerification,
+    pub statut_compte: StatutCompte,
+    pub note_moyenne: f32,
+    pub nombre_transactions: i32,
+    pub nombre_litiges: i32,
+    pub preferences_notification: Json,        // {"push":bool,"sms":bool,"email":bool,"whatsapp":bool}
+    pub date_inscription: DateTimeWithTimeZone,
+    pub derniere_connexion: Option<DateTimeWithTimeZone>,
+    pub date_suppression: Option<DateTimeWithTimeZone>,   // soft delete
+    pub created_at: DateTimeWithTimeZone,
+    pub updated_at: DateTimeWithTimeZone,
+}
+
+#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
+pub enum Relation {
+    #[sea_orm(has_many = "super::listing::Entity")]
+    Listings,
+    #[sea_orm(has_many = "super::certification_document::Entity")]
+    Certifications,
+    // Contracts/Payments/Ratings/Transactions ont plusieurs FK vers users :
+    // les liens landlord/tenant, payeur/beneficiaire, evaluateur/evalue se font
+    // via des `Related`/`Linked` dédiés (voir impl ci-dessous) plutôt qu'une seule Relation.
+}
+
+impl Related<super::listing::Entity> for Entity {
+    fn to() -> RelationDef { Relation::Listings.def() }
+}
+
+impl ActiveModelBehavior for ActiveModel {}
+```
+
+```rust
+// rust-backend/src/db/entities/user_query.rs — scopes/accessors (remplacent scopes Eloquent)
+use sea_orm::*;
+use super::sea_orm_active_enums::{Badge, StatutCompte, StatutVerification};
+use super::user::{Column, Entity, Model};
+
+impl Entity {
+    /// scopeActive : comptes actifs
+    pub fn active() -> Select<Entity> {
+        Entity::find().filter(Column::StatutCompte.eq(StatutCompte::Actif))
     }
-
-    public function contractsAsLandlord()
-    {
-        return $this->hasMany(Contract::class, 'proprietaire_id');
+    /// scopeByBadge
+    pub fn by_badge(badge: Badge) -> Select<Entity> {
+        Entity::find().filter(Column::BadgeCertification.eq(badge))
     }
-
-    public function contractsAsTenant()
-    {
-        return $this->hasMany(Contract::class, 'locataire_acheteur_id');
+    /// scopeHighRated (défaut 4.0)
+    pub fn high_rated(min: f32) -> Select<Entity> {
+        Entity::find().filter(Column::NoteMoyenne.gte(min))
     }
+}
 
-    public function paymentsSent()
-    {
-        return $this->hasMany(Payment::class, 'payeur_id');
-    }
-
-    public function paymentsReceived()
-    {
-        return $this->hasMany(Payment::class, 'beneficiaire_id');
-    }
-
-    public function certifications()
-    {
-        return $this->hasMany(CertificationDocument::class, 'utilisateur_id');
-    }
-
-    public function ratingsGiven()
-    {
-        return $this->hasMany(Rating::class, 'evaluateur_id');
-    }
-
-    public function ratingsReceived()
-    {
-        return $this->hasMany(Rating::class, 'evalue_id');
-    }
-
-    public function transactionsAsLandlord()
-    {
-        return $this->hasMany(Transaction::class, 'proprietaire_id');
-    }
-
-    public function transactionsAsTenant()
-    {
-        return $this->hasMany(Transaction::class, 'locataire_acheteur_id');
-    }
-
-    // Scopes
-    public function scopeActive($query)
-    {
-        return $query->where('statut_compte', 'ACTIF');
-    }
-
-    public function scopeByBadge($query, $badge)
-    {
-        return $query->where('badge_certification', $badge);
-    }
-
-    public function scopeHighRated($query, $minRating = 4.0)
-    {
-        return $query->where('note_moyenne', '>=', $minRating);
-    }
-
-    // Accessors
-    public function getIsCertifiedAttribute()
-    {
-        return in_array($this->statut_verification, ['CNI_VERIFIEE', 'TITRE_FONCIER_VERIFIE']);
-    }
-
-    // Mutators
-    public function setMotDePasseHashAttribute($value)
-    {
-        $this->attributes['mot_de_passe_hash'] = bcrypt($value);
+impl Model {
+    /// accessor is_certified
+    pub fn is_certified(&self) -> bool {
+        matches!(
+            self.statut_verification,
+            StatutVerification::CniVerifiee | StatutVerification::TitreFoncierVerifie
+        )
     }
 }
 ```
 
-### Listing Model
+> **Mot de passe** : le hachage se fait **explicitement** dans le service d'auth avec la crate `bcrypt`
+> (à l'inscription et au changement de mot de passe ; vérification à la connexion). Voir
+> `rust-backend/src/auth/`.
 
-```php
-// app/Models/Listing.php
-namespace App\Models;
+### Listing Entity (extrait — relations & scopes)
 
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-
-class Listing extends Model
-{
-    use HasFactory, HasUuids;
-
-    protected $keyType = 'string';
-    public $incrementing = false;
-
-    protected $fillable = [
-        'createur_id',
-        'type_operation',
-        'type_bien',
-        'titre',
-        'description',
-        'prix_gnf',
-        'quartier',
-        'adresse_complete',
-        'superficie_m2',
-        'nombre_chambres',
-        'nombre_salons',
-        'caution_mois',
-        'equipements',
-        'photos',
-        'statut',
-        'options_premium',
-        'date_expiration',
-    ];
-
-    protected $casts = [
-        'equipements' => 'array',
-        'photos' => 'array',
-        'options_premium' => 'array',
-        'prix_gnf' => 'integer',
-        'date_publication' => 'datetime',
-        'date_derniere_maj' => 'datetime',
-        'date_expiration' => 'datetime',
-    ];
-
-    // Relationships
-    public function creator()
-    {
-        return $this->belongsTo(User::class, 'createur_id');
-    }
-
-    public function contracts()
-    {
-        return $this->hasMany(Contract::class, 'annonce_id');
-    }
-
-    // Scopes
-    public function scopeAvailable($query)
-    {
-        return $query->where('statut', 'DISPONIBLE')
-                     ->where('date_expiration', '>', now());
-    }
-
-    public function scopeByQuartier($query, $quartier)
-    {
-        return $query->where('quartier', $quartier);
-    }
-
-    public function scopeByType($query, $type)
-    {
-        return $query->where('type_bien', $type);
-    }
-
-    public function scopePriceRange($query, $min, $max)
-    {
-        return $query->whereBetween('prix_gnf', [$min, $max]);
-    }
-
-    public function scopeFullTextSearch($query, $searchTerm)
-    {
-        return $query->whereRaw(
-            "to_tsvector('french', titre || ' ' || description) @@ plainto_tsquery('french', ?)",
-            [$searchTerm]
-        );
-    }
-
-    // Accessors
-    public function getIsExpiredAttribute()
-    {
-        return $this->date_expiration < now();
-    }
-
-    public function getHasPremiumAttribute()
-    {
-        $options = $this->options_premium;
-        return $options['badge_urgent'] || $options['remontee_48h'] || $options['photos_pro'];
-    }
+```rust
+// rust-backend/src/db/entities/listing.rs (généré)
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
+#[sea_orm(table_name = "listings")]
+pub struct Model {
+    #[sea_orm(primary_key, auto_increment = false)]
+    pub id: Uuid,
+    pub createur_id: Uuid,
+    pub type_operation: TypeOperation,
+    pub type_bien: TypeBien,
+    pub titre: String,
+    pub description: String,
+    pub prix_gnf: i64,                         // BIGINT
+    pub quartier: Quartier,
+    pub adresse_complete: Option<String>,
+    pub superficie_m2: Option<i32>,
+    pub nombre_chambres: Option<i32>,
+    pub nombre_salons: Option<i32>,
+    pub caution_mois: Option<i32>,
+    pub equipements: Json,                      // array
+    pub photos: Json,                           // array d'objets {original,large,medium,thumbnail}
+    pub statut: StatutListing,
+    pub nombre_vues: i32,
+    pub options_premium: Json,
+    pub date_publication: DateTimeWithTimeZone,
+    pub date_derniere_maj: Option<DateTimeWithTimeZone>,
+    pub date_expiration: DateTimeWithTimeZone,
+    pub created_at: DateTimeWithTimeZone,
+    pub updated_at: DateTimeWithTimeZone,
 }
 ```
 
-### Contract Model
-
-```php
-// app/Models/Contract.php
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-
-class Contract extends Model
-{
-    use HasFactory, HasUuids;
-
-    protected $keyType = 'string';
-    public $incrementing = false;
-
-    protected $fillable = [
-        'type_contrat',
-        'annonce_id',
-        'proprietaire_id',
-        'locataire_acheteur_id',
-        'donnees_personnalisees',
-        'statut',
-        'fichier_pdf_url',
-        'hash_sha256',
-        'signatures',
-        'date_signature_complete',
-        'delai_retractation_expire',
-    ];
-
-    protected $casts = [
-        'donnees_personnalisees' => 'array',
-        'signatures' => 'array',
-        'date_creation' => 'datetime',
-        'date_signature_complete' => 'datetime',
-        'delai_retractation_expire' => 'datetime',
-    ];
-
-    // Relationships
-    public function listing()
-    {
-        return $this->belongsTo(Listing::class, 'annonce_id');
+```rust
+// scopes Listing (remplacent scopeAvailable/byQuartier/byType/priceRange/fullTextSearch)
+impl Entity {
+    pub fn available() -> Select<Entity> {
+        Entity::find()
+            .filter(Column::Statut.eq(StatutListing::Disponible))
+            .filter(Column::DateExpiration.gt(chrono::Utc::now()))
     }
-
-    public function landlord()
-    {
-        return $this->belongsTo(User::class, 'proprietaire_id');
+    pub fn by_quartier(q: Quartier) -> Select<Entity> {
+        Entity::find().filter(Column::Quartier.eq(q))
     }
-
-    public function tenant()
-    {
-        return $this->belongsTo(User::class, 'locataire_acheteur_id');
+    pub fn price_range(min: i64, max: i64) -> Select<Entity> {
+        Entity::find().filter(Column::PrixGnf.between(min, max))
     }
-
-    public function payments()
-    {
-        return $this->hasMany(Payment::class, 'contrat_id');
+    /// full-text search (GIN) — SQL brut car fonction PG spécifique
+    pub fn full_text_search(term: &str) -> Select<Entity> {
+        Entity::find().filter(Expr::cust_with_values(
+            "to_tsvector('french', titre || ' ' || description) @@ plainto_tsquery('french', $1)",
+            [term],
+        ))
     }
+}
 
-    public function transaction()
-    {
-        return $this->hasOne(Transaction::class, 'contrat_id');
+impl Model {
+    pub fn is_expired(&self) -> bool { self.date_expiration < chrono::Utc::now() }
+}
+```
+
+### Contract Entity (extrait — accessors métier)
+
+```rust
+// scopes/accessors Contract (remplacent pendingSignature/fullySigned/isFullySigned/canRetract)
+impl Entity {
+    pub fn pending_signature() -> Select<Entity> {
+        Entity::find().filter(
+            Column::Statut.is_in([StatutContrat::EnAttenteSignature, StatutContrat::PartiellementSigne]),
+        )
     }
-
-    public function insurance()
-    {
-        return $this->hasOne(Insurance::class, 'contrat_id');
+    pub fn fully_signed() -> Select<Entity> {
+        Entity::find().filter(Column::Statut.eq(StatutContrat::SigneArchive))
     }
+}
 
-    // Scopes
-    public function scopePendingSignature($query)
-    {
-        return $query->whereIn('statut', ['EN_ATTENTE_SIGNATURE', 'PARTIELLEMENT_SIGNE']);
+impl Model {
+    /// signatures est un JSON array ; parse puis compte
+    pub fn is_fully_signed(&self) -> bool {
+        self.signatures.as_array().map(|s| s.len() >= 2).unwrap_or(false)
     }
-
-    public function scopeFullySigned($query)
-    {
-        return $query->where('statut', 'SIGNE_ARCHIVE');
-    }
-
-    // Accessors
-    public function getIsFullySignedAttribute()
-    {
-        return count($this->signatures) >= 2;
-    }
-
-    public function getCanRetractAttribute()
-    {
-        if (!$this->delai_retractation_expire) {
-            return false;
+    pub fn can_retract(&self) -> bool {
+        match self.delai_retractation_expire {
+            Some(deadline) => chrono::Utc::now() < deadline,
+            None => false,
         }
-        return now() < $this->delai_retractation_expire;
     }
 }
 ```
+
+Les entités **Payment, CertificationDocument, Rating, Conversation, Message, Dispute, Transaction,
+Insurance** suivent exactement le même patron (`DeriveEntityModel` + enums `DeriveActiveEnum` + relations
+`DeriveRelation` + scopes en `impl Entity`).
 
 ---
 
 ## Additional Indexes for Performance
 
-```php
-// database/migrations/2025_01_28_000013_add_performance_indexes.php
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\DB;
+```sql
+-- rust-backend/src/db/migration/m20250128_000013_add_performance_indexes.rs (execute_unprepared)
 
-return new class extends Migration
-{
-    public function up(): void
-    {
-        // Composite index for common listing searches (FR-094: <500ms)
-        DB::statement('CREATE INDEX idx_listings_search_composite ON listings(quartier, type_bien, prix_gnf, statut, date_publication DESC) WHERE statut = \'DISPONIBLE\'');
+-- Composite index for common listing searches (FR-094: <500ms)
+CREATE INDEX idx_listings_search_composite
+    ON listings(quartier, type_bien, prix_gnf, statut, date_publication DESC)
+    WHERE statut = 'DISPONIBLE';
 
-        // User rating filtering
-        DB::statement('CREATE INDEX idx_users_rating ON users(note_moyenne) WHERE note_moyenne >= 4.0');
+-- User rating filtering
+CREATE INDEX idx_users_rating ON users(note_moyenne) WHERE note_moyenne >= 4.0;
 
-        // Payment escrow queries (FR-043, FR-044)
-        DB::statement("CREATE INDEX idx_payments_escrow ON payments(statut, date_confirmation) WHERE statut IN ('EN_ESCROW', 'COMMISSION_COLLECTEE')");
+-- Payment escrow queries (FR-043, FR-044)
+CREATE INDEX idx_payments_escrow ON payments(statut, date_confirmation)
+    WHERE statut IN ('EN_ESCROW', 'COMMISSION_COLLECTEE');
 
-        // Contract signing status
-        DB::statement("CREATE INDEX idx_contracts_pending_signature ON contracts(statut, date_creation) WHERE statut IN ('EN_ATTENTE_SIGNATURE', 'PARTIELLEMENT_SIGNE')");
-    }
-
-    public function down(): void
-    {
-        DB::statement('DROP INDEX IF EXISTS idx_contracts_pending_signature');
-        DB::statement('DROP INDEX IF EXISTS idx_payments_escrow');
-        DB::statement('DROP INDEX IF EXISTS idx_users_rating');
-        DB::statement('DROP INDEX IF EXISTS idx_listings_search_composite');
-    }
-};
+-- Contract signing status
+CREATE INDEX idx_contracts_pending_signature ON contracts(statut, date_creation)
+    WHERE statut IN ('EN_ATTENTE_SIGNATURE', 'PARTIELLEMENT_SIGNE');
 ```
+
+`down()` : `DROP INDEX IF EXISTS` sur chacun (ordre inverse).
 
 ---
 
-## Laravel Factories for Testing
+## Seeds Rust for Testing
 
-### User Factory
+Les factories Laravel (`UserFactory`, `ListingFactory`) sont remplacées par des **fonctions de fabrique**
+Rust utilisant la crate `fake`, retournant des `ActiveModel` SeaORM.
 
-```php
-// database/factories/UserFactory.php
-namespace Database\Factories;
+### User seed factory
 
-use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
+```rust
+// rust-backend/src/db/seed/users.rs
+use fake::{Fake, faker::{internet::fr_fr::SafeEmail, name::fr_fr::Name}};
+use sea_orm::{ActiveValue::Set, ActiveModelTrait, DatabaseConnection};
+use uuid::Uuid;
+use crate::db::entities::{user, sea_orm_active_enums::*};
 
-class UserFactory extends Factory
-{
-    public function definition(): array
-    {
-        return [
-            'id' => Str::uuid(),
-            'telephone' => '+224' . $this->faker->numerify('6########'),
-            'email' => $this->faker->unique()->safeEmail(),
-            'mot_de_passe_hash' => bcrypt('password'),
-            'nom_complet' => $this->faker->name(),
-            'type_compte' => $this->faker->randomElement(['PARTICULIER', 'AGENCE', 'DIASPORA']),
-            'badge_certification' => 'BRONZE',
-            'statut_verification' => 'NON_VERIFIE',
-            'statut_compte' => 'ACTIF',
-            'note_moyenne' => 0,
-            'nombre_transactions' => 0,
-            'nombre_litiges' => 0,
-        ];
+/// équivalent de UserFactory::definition()
+pub fn user_factory() -> user::ActiveModel {
+    let phone = format!("+2246{:08}", (10_000_000..99_999_999).fake::<u32>());
+    user::ActiveModel {
+        id: Set(Uuid::new_v4()),
+        telephone: Set(phone),
+        email: Set(Some(SafeEmail().fake())),
+        mot_de_passe_hash: Set(bcrypt::hash("password", bcrypt::DEFAULT_COST).unwrap()),
+        nom_complet: Set(Name().fake()),
+        type_compte: Set([TypeCompte::Particulier, TypeCompte::Agence, TypeCompte::Diaspora].into_iter().nth((0..3).fake()).unwrap()),
+        badge_certification: Set(Badge::Bronze),
+        statut_verification: Set(StatutVerification::NonVerifie),
+        statut_compte: Set(StatutCompte::Actif),
+        note_moyenne: Set(0.0),
+        nombre_transactions: Set(0),
+        nombre_litiges: Set(0),
+        ..Default::default()
     }
+}
 
-    public function certified(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'badge_certification' => 'OR',
-            'statut_verification' => 'TITRE_FONCIER_VERIFIE',
-            'note_moyenne' => 4.5,
-            'nombre_transactions' => 8,
-        ]);
-    }
+/// état "certified" (équivalent ->certified())
+pub fn as_certified(mut m: user::ActiveModel) -> user::ActiveModel {
+    m.badge_certification = Set(Badge::Or);
+    m.statut_verification = Set(StatutVerification::TitreFoncierVerifie);
+    m.note_moyenne = Set(4.5);
+    m.nombre_transactions = Set(8);
+    m
+}
 
-    public function diamond(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'badge_certification' => 'DIAMANT',
-            'statut_verification' => 'TITRE_FONCIER_VERIFIE',
-            'note_moyenne' => 4.8,
-            'nombre_transactions' => 25,
-        ]);
-    }
+/// état "diamond"
+pub fn as_diamond(mut m: user::ActiveModel) -> user::ActiveModel {
+    m.badge_certification = Set(Badge::Diamant);
+    m.statut_verification = Set(StatutVerification::TitreFoncierVerifie);
+    m.note_moyenne = Set(4.8);
+    m.nombre_transactions = Set(25);
+    m
 }
 ```
 
-### Listing Factory
+### Listing seed factory
 
-```php
-// database/factories/ListingFactory.php
-namespace Database\Factories;
-
-use App\Models\User;
-use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
-
-class ListingFactory extends Factory
-{
-    public function definition(): array
-    {
-        return [
-            'id' => Str::uuid(),
-            'createur_id' => User::factory(),
-            'type_operation' => $this->faker->randomElement(['LOCATION', 'VENTE']),
-            'type_bien' => $this->faker->randomElement(['VILLA', 'APPARTEMENT', 'STUDIO']),
-            'titre' => $this->faker->sentence(6),
-            'description' => $this->faker->paragraph(3),
-            'prix_gnf' => $this->faker->numberBetween(1000000, 10000000),
-            'quartier' => $this->faker->randomElement(['KALOUM', 'DIXINN', 'RATOMA', 'MATAM']),
-            'adresse_complete' => $this->faker->address(),
-            'nombre_chambres' => $this->faker->numberBetween(1, 5),
-            'nombre_salons' => $this->faker->numberBetween(1, 2),
-            'caution_mois' => 3,
-            'equipements' => ['Climatisation', 'Eau courante', 'Électricité'],
-            'photos' => [],
-            'statut' => 'DISPONIBLE',
-            'nombre_vues' => $this->faker->numberBetween(0, 500),
-            'date_expiration' => now()->addDays(90),
-        ];
-    }
-
-    public function premium(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'options_premium' => [
-                'badge_urgent' => true,
-                'remontee_48h' => true,
-                'photos_pro' => true,
-            ],
-        ]);
+```rust
+// rust-backend/src/db/seed/listings.rs — équivalent ListingFactory
+pub fn listing_factory(createur_id: Uuid) -> listing::ActiveModel {
+    listing::ActiveModel {
+        id: Set(Uuid::new_v4()),
+        createur_id: Set(createur_id),
+        type_operation: Set([TypeOperation::Location, TypeOperation::Vente][..].choose()),
+        type_bien: Set([TypeBien::Villa, TypeBien::Appartement, TypeBien::Studio][..].choose()),
+        titre: Set(Sentence(6..7).fake()),
+        description: Set(Paragraph(3..4).fake()),
+        prix_gnf: Set((1_000_000..10_000_000).fake()),
+        quartier: Set([Quartier::Kaloum, Quartier::Dixinn, Quartier::Ratoma, Quartier::Matam][..].choose()),
+        nombre_chambres: Set(Some((1..5).fake())),
+        nombre_salons: Set(Some((1..2).fake())),
+        caution_mois: Set(Some(3)),
+        equipements: Set(json!(["Climatisation", "Eau courante", "Électricité"])),
+        photos: Set(json!([])),
+        statut: Set(StatutListing::Disponible),
+        nombre_vues: Set((0..500).fake()),
+        date_expiration: Set((chrono::Utc::now() + chrono::Duration::days(90)).into()),
+        ..Default::default()
     }
 }
 ```
 
 ---
 
-## DatabaseSeeder
+## Seeder (binaire `immog-seed`)
 
-```php
-// database/seeders/DatabaseSeeder.php
-namespace Database\Seeders;
+```rust
+// rust-backend/src/bin/seed.rs — remplace DatabaseSeeder
+use sea_orm::{ActiveModelTrait, ActiveValue::Set, Database};
+use immog_backend::db::{entities::*, seed::{users::*, listings::*}};
 
-use App\Models\User;
-use App\Models\Listing;
-use Illuminate\Database\Seeder;
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    let db = Database::connect(std::env::var("IMMOG_DATABASE_URL")?).await?;
 
-class DatabaseSeeder extends Seeder
-{
-    public function run(): void
-    {
-        // Create admin user
-        $admin = User::create([
-            'telephone' => '+224622000000',
-            'email' => 'admin@immoguinee.com',
-            'mot_de_passe_hash' => bcrypt('admin123'),
-            'nom_complet' => 'Admin ImmoGuinée',
-            'type_compte' => 'PARTICULIER',
-            'badge_certification' => 'DIAMANT',
-            'statut_verification' => 'TITRE_FONCIER_VERIFIE',
-            'note_moyenne' => 5.0,
-            'nombre_transactions' => 50,
-        ]);
+    // Admin
+    let mut admin = user_factory();
+    admin.telephone = Set("+224622000000".into());
+    admin.email = Set(Some("admin@immoguinee.com".into()));
+    admin.mot_de_passe_hash = Set(bcrypt::hash("admin123", bcrypt::DEFAULT_COST)?);
+    admin.nom_complet = Set("Admin ImmoGuinée".into());
+    admin.badge_certification = Set(sea_orm_active_enums::Badge::Diamant);
+    admin.statut_verification = Set(sea_orm_active_enums::StatutVerification::TitreFoncierVerifie);
+    admin.note_moyenne = Set(5.0);
+    admin.nombre_transactions = Set(50);
+    admin.insert(&db).await?;
 
-        // Create certified landlords
-        $landlords = User::factory()
-            ->count(5)
-            ->certified()
-            ->create();
-
-        // Create listings for each landlord
-        foreach ($landlords as $landlord) {
-            Listing::factory()
-                ->count(4)
-                ->for($landlord, 'creator')
-                ->create();
+    // 5 propriétaires certifiés + 4 annonces chacun
+    for _ in 0..5 {
+        let landlord = as_certified(user_factory()).insert(&db).await?;
+        for _ in 0..4 {
+            listing_factory(landlord.id).insert(&db).await?;
         }
-
-        // Create premium listings
-        Listing::factory()
-            ->count(10)
-            ->premium()
-            ->create();
-
-        $this->command->info('Database seeded successfully!');
     }
+
+    // 10 annonces premium
+    for _ in 0..10 {
+        let owner = user_factory().insert(&db).await?;
+        let mut l = listing_factory(owner.id);
+        l.options_premium = Set(serde_json::json!({"badge_urgent":true,"remontee_48h":true,"photos_pro":true}));
+        l.insert(&db).await?;
+    }
+
+    tracing::info!("Database seeded successfully!");
+    Ok(())
 }
 ```
 
@@ -1333,35 +900,38 @@ class DatabaseSeeder extends Seeder
 ### Development
 
 ```bash
-# Run all migrations (creates enums + tables)
-php artisan migrate
+# Appliquer toutes les migrations (enums + tables) — source de vérité du schéma
+cargo run --bin immog-migrate -- up
 
-# Seed database with test data
-php artisan db:seed
+# (Optionnel) régénérer les entités depuis la base après migrations
+sea-orm-cli generate entity -u "$IMMOG_DATABASE_URL" -o rust-backend/src/db/entities --with-serde both
 
-# Reset and re-run migrations + seed
-php artisan migrate:fresh --seed
+# Seeder la base avec des données de test
+cargo run --bin immog-seed
+
+# Réinitialiser (drop + up) puis seed
+cargo run --bin immog-migrate -- fresh && cargo run --bin immog-seed
 ```
 
-### Creating New Migrations
+### Créer une nouvelle migration
 
 ```bash
-# Add new field to users table
-php artisan make:migration add_whatsapp_number_to_users_table
-
-# Create new table
-php artisan make:migration create_admin_logs_table
+# Générer un squelette de migration horodaté
+sea-orm-cli migrate generate add_whatsapp_number_to_users
 ```
 
 ### Production Deployment
 
 ```bash
-# Run migrations in production (no rollback!)
-php artisan migrate --force
+# Appliquer les migrations en production
+cargo run --bin immog-migrate -- up
 
-# Check migration status
-php artisan migrate:status
+# Statut des migrations
+cargo run --bin immog-migrate -- status
 ```
+
+> ⚠️ Les migrations `sea-orm-migration` sont l'**unique source de vérité** du schéma. Aucune migration
+> destructive en production sans le mot `deploy`.
 
 ---
 
@@ -1369,116 +939,86 @@ php artisan migrate:status
 
 ### Materialized View for Popular Listings (FR-095)
 
-```php
-// database/migrations/2025_01_28_000014_create_popular_listings_view.php
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\DB;
+```sql
+-- rust-backend/src/db/migration/m20250128_000014_create_popular_listings_view.rs (execute_unprepared)
+CREATE MATERIALIZED VIEW popular_listings AS
+    SELECT l.*, u.badge_certification, u.note_moyenne
+    FROM listings l
+    JOIN users u ON l.createur_id = u.id
+    WHERE l.statut = 'DISPONIBLE' AND l.nombre_vues > 100
+    ORDER BY l.nombre_vues DESC
+    LIMIT 100;
 
-return new class extends Migration
-{
-    public function up(): void
-    {
-        DB::statement('
-            CREATE MATERIALIZED VIEW popular_listings AS
-            SELECT l.*, u.badge_certification, u.note_moyenne
-            FROM listings l
-            JOIN users u ON l.createur_id = u.id
-            WHERE l.statut = \'DISPONIBLE\' AND l.nombre_vues > 100
-            ORDER BY l.nombre_vues DESC
-            LIMIT 100
-        ');
-
-        DB::statement('CREATE UNIQUE INDEX popular_listings_id_idx ON popular_listings(id)');
-    }
-
-    public function down(): void
-    {
-        DB::statement('DROP MATERIALIZED VIEW IF EXISTS popular_listings');
-    }
-};
+CREATE UNIQUE INDEX popular_listings_id_idx ON popular_listings(id);
+-- down(): DROP MATERIALIZED VIEW IF EXISTS popular_listings;
 ```
 
-**Refresh Command** (run via Laravel Scheduler or n8n cron):
-```php
-// app/Console/Commands/RefreshPopularListings.php
-namespace App\Console\Commands;
+**Refresh job** (apalis + tokio-cron-scheduler, remplace la commande Artisan) :
 
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
+```rust
+// rust-backend/src/jobs/refresh_popular_listings.rs
+use sea_orm::{ConnectionTrait, DatabaseConnection, Statement, DbBackend};
 
-class RefreshPopularListings extends Command
-{
-    protected $signature = 'listings:refresh-popular';
-    protected $description = 'Refresh popular listings materialized view';
-
-    public function handle()
-    {
-        DB::statement('REFRESH MATERIALIZED VIEW CONCURRENTLY popular_listings');
-        $this->info('Popular listings view refreshed!');
-    }
+/// exécuté toutes les 10 minutes par le scheduler (voir src/jobs/mod.rs)
+pub async fn refresh_popular_listings(db: &DatabaseConnection) -> anyhow::Result<()> {
+    db.execute(Statement::from_string(
+        DbBackend::Postgres,
+        "REFRESH MATERIALIZED VIEW CONCURRENTLY popular_listings".to_owned(),
+    ))
+    .await?;
+    tracing::info!("Popular listings view refreshed!");
+    Ok(())
 }
 ```
 
-**Schedule in `app/Console/Kernel.php`**:
-```php
-protected function schedule(Schedule $schedule)
-{
-    $schedule->command('listings:refresh-popular')->everyTenMinutes();
-}
+```rust
+// rust-backend/src/jobs/mod.rs — planification (remplace app/Console/Kernel.php)
+sched.add(Job::new_async("0 */10 * * * *", move |_, _| {
+    let db = db.clone();
+    Box::pin(async move { let _ = refresh_popular_listings(&db).await; })
+})?)?;
 ```
 
 ---
 
 ## Table Partitioning (When > 500K Listings - FR-097)
 
-```php
-// database/migrations/2025_06_01_create_listings_partitioned.php
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\DB;
+```sql
+-- rust-backend/src/db/migration/m20250601_000001_create_listings_partitioned.rs (execute_unprepared)
+CREATE TABLE listings_partitioned (LIKE listings INCLUDING ALL) PARTITION BY LIST (quartier);
 
-return new class extends Migration
-{
-    public function up(): void
-    {
-        DB::statement('
-            CREATE TABLE listings_partitioned (LIKE listings INCLUDING ALL)
-            PARTITION BY LIST (quartier)
-        ');
+CREATE TABLE listings_kaloum  PARTITION OF listings_partitioned FOR VALUES IN ('KALOUM');
+CREATE TABLE listings_dixinn  PARTITION OF listings_partitioned FOR VALUES IN ('DIXINN');
+CREATE TABLE listings_ratoma  PARTITION OF listings_partitioned FOR VALUES IN ('RATOMA');
+CREATE TABLE listings_matam   PARTITION OF listings_partitioned FOR VALUES IN ('MATAM');
+CREATE TABLE listings_matoto  PARTITION OF listings_partitioned FOR VALUES IN ('MATOTO');
 
-        DB::statement('CREATE TABLE listings_kaloum PARTITION OF listings_partitioned FOR VALUES IN (\'KALOUM\')');
-        DB::statement('CREATE TABLE listings_dixinn PARTITION OF listings_partitioned FOR VALUES IN (\'DIXINN\')');
-        DB::statement('CREATE TABLE listings_ratoma PARTITION OF listings_partitioned FOR VALUES IN (\'RATOMA\')');
-        DB::statement('CREATE TABLE listings_matam PARTITION OF listings_partitioned FOR VALUES IN (\'MATAM\')');
-        DB::statement('CREATE TABLE listings_matoto PARTITION OF listings_partitioned FOR VALUES IN (\'MATOTO\')');
-
-        // Migrate data from listings to listings_partitioned
-        DB::statement('INSERT INTO listings_partitioned SELECT * FROM listings');
-
-        // Rename tables
-        DB::statement('ALTER TABLE listings RENAME TO listings_old');
-        DB::statement('ALTER TABLE listings_partitioned RENAME TO listings');
-    }
-};
+-- Migration des données puis renommage
+INSERT INTO listings_partitioned SELECT * FROM listings;
+ALTER TABLE listings RENAME TO listings_old;
+ALTER TABLE listings_partitioned RENAME TO listings;
 ```
 
 ---
 
 ## Data Model Completeness Checklist
 
-- [x] All 11 entities modeled (User, Listing, Contract, Payment, Certification, Rating, Conversation, Message, Dispute, Transaction, Insurance)
-- [x] All 12 enums defined as PostgreSQL native types with correct values from FR specs
-- [x] Foreign key relations with proper onDelete behaviors (cascade, restrict, set null)
+- [x] All 12 entities modeled (User, Listing, Visit, Contract, Payment, Certification, Rating, Conversation, Message, Dispute, Transaction, Insurance)
+- [x] All 12 enums defined as PostgreSQL native types with correct values from FR specs (mappés en Rust via `DeriveActiveEnum`)
+- [x] Foreign key relations with proper ON DELETE behaviors (CASCADE, RESTRICT, SET NULL)
 - [x] All mandatory fields from FR-001 to FR-098 included
-- [x] JSON fields for flexible data (equipements, photos, signatures, etc.)
+- [x] JSONB fields for flexible data (equipements, photos, signatures, etc.) — typés `Json` / `serde_json::Value`
 - [x] Proper indexes for search performance (FR-094 <500ms target)
 - [x] Unique constraints (telephone, hash_sha256, reference, etc.)
-- [x] BigInteger for GNF amounts (up to 999 billion GNF supported)
-- [x] Timestamps with timezone support (timestampTz)
+- [x] BIGINT for GNF amounts (`i64`, up to 999 billion GNF supported)
+- [x] Timestamps with timezone support (`TIMESTAMPTZ` / `DateTimeWithTimeZone`)
 - [x] Soft delete support (date_suppression, statut_compte = SUPPRIME)
-- [x] Laravel Eloquent models with relationships, scopes, accessors/mutators
-- [x] Factory classes for testing and seeding
-- [x] Database seeder with admin user and test data
+- [x] SeaORM entities with relations, scopes (`impl Entity`), accessors (`impl Model`)
+- [x] Seed factory functions (`fake`) for testing and seeding
+- [x] Seeder binary (`immog-seed`) with admin user and test data
+- [x] Schema owned by Rust `sea-orm-migration` (source de vérité unique)
 
-**Status**: ✅ Data model complete with Laravel Eloquent. Ready for implementation.
+**Status**: ✅ Data model complete with SeaORM/PostgreSQL. Ready for implementation.
 
-**Next Steps**: Rewrite API contracts in `contracts/` directory for Laravel routes (Phase 1).
+**Next Steps**: Rewrite API contracts in `contracts/` directory for Axum routes (Phase 1). Appliquer les
+migrations (`immog-migrate up`), puis (optionnel) générer les entités avec `sea-orm-cli generate entity`.

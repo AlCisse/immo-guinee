@@ -12,15 +12,16 @@
 **Critical Requirement**: Commission (50% of monthly rent) must be paid THE SAME DAY as the security deposit (caution) by the tenant, collected by the platform BEFORE transferring caution to landlord.
 
 **Technical Approach** (from research.md):
-- **Architecture**: Decoupled API-first (Laravel 12 backend + Next.js 16 frontend)
-- **Backend**: Laravel 12 (PHP 8.2+), Eloquent ORM, Laravel Passport (auth), Laravel Queue (Redis), Laravel Echo (broadcasting)
-- **Backend Packages**: Laravel Socialite, Laravel PDF, Laravel Notifications, Laravel CRUD, Spatie Permission, Laravel Scout, Laravel User-verification, Laravel Two-factor-auth, Laravel Brute-force, Laravel Cache, Laravel Image, Imageoptim, Geocoder
+- **Architecture**: Decoupled API-first (Rust/Axum backend + Next.js 16 frontend). Backend écrit en Rust, **remplaçant** un prototype Laravel jamais déployé (voir `rust-backend/README.md`).
+- **Backend**: Rust 1.85+ (Axum + Tokio, édition 2024), SeaORM/SQLx (ORM), oxide-auth + JWT (auth), apalis (jobs Redis), Axum WebSocket (broadcasting)
+- **Backend Crates**: axum, tower/tower-http, sea-orm, sqlx, jsonwebtoken, oxide-auth, totp-rs, bcrypt, validator, elasticsearch, headless-chrome (PDF), image/imageproc, reqwest, figment, tracing, vaultrs, apalis, rust-s3 (+ RBAC natif in-code)
 - **Frontend**: Next.js 16 (React 18, TypeScript, TailwindCSS), React Query (data fetching), PWA, Framer Motion, React Leaflet
 - **Database**: PostgreSQL 15+ with PostGIS (primary + read replicas), Redis 7+ (cache/queue/sessions), Elasticsearch (advanced search), PgAdmin, Varnish (cache)
-- **Real-Time**: Laravel Echo + Socket.IO (messaging, notifications)
-- **Automation**: n8n (workflows), Laravel Queue (async jobs)
-- **Messaging**: WAHA (WhatsApp), Twilio API (SMS), Telegram Bot API
-- **Monitoring**: Laravel Telescope, Grafana, Prometheus, Sentry, Logrocket, OSSEC
+- **Real-Time**: Axum WebSocket (pusher-compat) + Socket.IO client (messaging, notifications)
+- **Automation**: n8n (workflows), apalis + tokio-cron-scheduler (async jobs)
+- **Messaging**: WAHA (WhatsApp), Twilio API (SMS), Telegram Bot API — via reqwest
+- **Monitoring**: tracing + Sentry, Grafana, Prometheus, Logrocket, OSSEC
+- **Secrets**: HashiCorp Vault (KV + Transit) — remplace Docker Secrets
 - **DevOps**: Docker, Docker Compose, Docker Swarm, Traefik (reverse proxy), Nginx, Certbot (SSL), CapRover
 - **Development Tools**: VS Code, Git, GitHub/GitLab, Postman, DBeaver
 - **100% Open Source** (except Twilio, Mobile Money APIs)
@@ -28,18 +29,18 @@
 
 ## Technical Context
 
-**Backend Language/Version**: PHP 8.2+ (Laravel 12)
+**Backend Language/Version**: Rust 1.85+ (édition 2024) — crate `immog-backend` (Axum + Tokio)
 **Frontend Language/Version**: TypeScript 5+ (strict mode), Node.js 20 LTS (Next.js 16)
-**Backend Dependencies**: Laravel Passport, Laravel Queue, Laravel Echo, Laravel Notifications, Laravel PDF, Laravel Socialite, Laravel CRUD, Spatie Permission, Laravel Scout, Laravel User-verification, Laravel Two-factor-auth, Laravel Brute-force, Laravel Cache, Laravel Image, Imageoptim, Geocoder, Eloquent ORM
+**Backend Dependencies**: axum, axum-extra, tower, tower-http, sea-orm, sea-orm-migration, sqlx, jsonwebtoken, oxide-auth, totp-rs, bcrypt, validator, elasticsearch, headless-chrome, image, imageproc, reqwest, redis, deadpool-redis, figment, tracing, tracing-subscriber, vaultrs, apalis, tokio-cron-scheduler, rust-s3, thiserror, anyhow, uuid, chrono, serde (RBAC natif in-code, no crate)
 **Frontend Dependencies**: React 18, React Query, Framer Motion, TailwindCSS 3, PWA Plugin, Socket.IO Client, React Leaflet
 **Storage**: PostgreSQL 15+ with PostGIS (primary + read replicas), Redis 7+ (cache, queue, sessions, broadcasting), Elasticsearch (search engine), Varnish (HTTP cache), MinIO/S3 (files)
 **Database Tools**: PgAdmin (PostgreSQL management), DBeaver (universal DB tool)
 **Testing**:
-- Backend: PHPUnit (Laravel feature/unit tests), Pest (modern PHP testing)
+- Backend: `cargo test` (unit) + axum-test (intégration HTTP) + mockall (mocks)
 - Frontend: Vitest (unit), Playwright (E2E), React Testing Library
 - Load: k6 (performance testing)
 **Target Platform**: Web (responsive PWA for mobile-first, 3G optimized), Linux server (Ubuntu 22.04 LTS + Docker)
-**Project Type**: Decoupled API-first architecture (separate repos: `backend/` Laravel API + `frontend/` Next.js PWA)
+**Project Type**: Decoupled API-first architecture (`rust-backend/` Rust API + `frontend/` Next.js PWA). Le prototype Laravel `backend/` (jamais déployé) est archivé et remplacé par `rust-backend/`.
 **Performance Goals**:
 - Page load < 3 seconds on 3G (FR-093)
 - Search results < 500ms (FR-094)
@@ -59,11 +60,11 @@
 **Scale/Scope**:
 - **Phase 1 (0-6 months)**: 1,000-10,000 active users, 5,000-50,000 listings, 100-500 transactions/month
 - **Phase 2 (6-18 months)**: 10,000-100,000 active users, 50,000-500,000 listings, 500-5,000 transactions/month
-- **Code**: Estimated 60,000-90,000 lines total
-  - Backend (Laravel): 30,000-40,000 lines PHP (controllers, models, services, tests)
+- **Code**: Estimated 55,000-85,000 lines total
+  - Backend (Rust): 25,000-35,000 lines (handlers, entités SeaORM, services, jobs, tests) — plus concis que le PHP à périmètre égal
   - Frontend (Next.js): 25,000-35,000 lines TypeScript (components, pages, hooks, tests)
   - Config/DevOps: 5,000-15,000 lines (Docker, CI/CD, migrations, seeds)
-- **API Endpoints**: ~52 REST endpoints (Laravel routes)
+- **API Endpoints**: ~52 REST endpoints (router Axum)
 - **UI Screens**: ~40 unique screens (public: 10, authenticated: 20, admin: 10)
 
 ## Constitution Check
@@ -89,19 +90,20 @@
 
 **Compliance**:
 - ✅ Frontend: Next.js 16 (MIT), React 18 (MIT), TailwindCSS (MIT), React Leaflet (BSD-2-Clause)
-- ✅ Backend: Laravel 12 (MIT), PHP 8.2+ (PHP License)
+- ✅ Backend: Rust (MIT/Apache-2.0), Axum (MIT), Tokio (MIT), SeaORM (MIT/Apache-2.0), SQLx (MIT/Apache-2.0)
 - ✅ Database: PostgreSQL 15+ (PostgreSQL License), PostGIS (GPL-2.0), Elasticsearch (SSPL/Elastic License)
 - ✅ Cache: Redis (BSD-3), Varnish (BSD-2-Clause)
-- ✅ Real-time: Socket.io (MIT), Laravel Echo (MIT)
+- ✅ Real-time: Axum WebSocket (MIT), Socket.io (MIT)
 - ✅ Automation: n8n (Fair-code - Source Available)
 - ✅ WhatsApp: WAHA (MIT - self-hosted)
 - ✅ Storage: MinIO dev (AGPL v3), AWS S3 prod (proprietary but standard)
-- ✅ PDF: Laravel PDF (MIT)
-- ✅ Monitoring: Grafana (AGPL v3), Prometheus (Apache 2.0), Laravel Telescope (MIT)
+- ✅ PDF: headless-chrome (MIT/Apache-2.0)
+- ✅ Monitoring: Grafana (AGPL v3), Prometheus (Apache 2.0), tracing (MIT)
 - ✅ DevOps: Docker (Apache 2.0), Traefik (MIT), Nginx (BSD-2-Clause), CapRover (Apache 2.0)
-- ✅ Auth: Laravel Passport (MIT - OAuth2 server)
-- ✅ Permissions: Spatie Permission (MIT)
-- ✅ Images: Imageoptim (GPL-2.0), Laravel Image (MIT)
+- ✅ Secrets: HashiCorp Vault (BUSL-1.1 - self-hosted), vaultrs (MIT/Apache-2.0)
+- ✅ Auth: oxide-auth (MIT/Apache-2.0 - OAuth2 server), jsonwebtoken (MIT)
+- ✅ Permissions: RBAC natif (code applicatif, aucune dépendance externe)
+- ✅ Images: image / imageproc (MIT/Apache-2.0)
 
 **Proprietary Dependencies** (justified):
 - ⚠️ Twilio SMS: No open source SMS gateway supports Guinea (+224) reliably
@@ -115,20 +117,23 @@
 
 ---
 
-### ✅ GATE 3: Automatisation via n8n (NON-NÉGOCIABLE)
-**Constitution Requirement**: "TOUS les workflows automatisés DOIVENT utiliser n8n. Aucune automatisation ne doit être codée en dur dans l'application."
+### ✅ GATE 3: Automatisation n8n (métier) + apalis (technique)
+**Constitution Requirement (IX, v3.1.0)**: workflows **métier/multi-système** via n8n ; jobs **techniques transactionnels** via apalis/tokio-cron-scheduler (backend Rust).
 
-**Compliance**:
+**Compliance — n8n (métier / notifications / intégrations)**:
 - ✅ Nouvelle annonce → Notifications matching utilisateurs (n8n workflow)
 - ✅ Nouveau message → Notifications multicanales (n8n workflow)
-- ✅ Signature contrat → Génération PDF + Archivage (n8n workflow)
-- ✅ Paiement reçu → Quittance + Mise à jour DB (n8n workflow)
+- ✅ Paiement reçu → Quittance + alertes (n8n workflow)
 - ✅ Rappels paiement loyer J-3, J-1, J-0 (n8n cron)
-- ✅ Expiration annonces J-7, J-1, J-0 (n8n cron)
-- ✅ Escrow timeout 48h check (n8n schedule)
-- ✅ Backups quotidiens 2h GMT (n8n cron)
+- ✅ Relances de notification escrow (n8n)
+- ✅ Alertes ops Telegram (n8n)
 
-**No hardcoded automation**: All cron jobs, notifications, and async tasks delegated to n8n
+**Compliance — apalis / scheduler Rust (jobs techniques transactionnels)**:
+- ✅ Déblocage escrow 48h/72h (transactionnel, ACID) — job Rust
+- ✅ Expiration annonces J-7, J-1, J-0 — job Rust
+- ✅ Optimisation photos, backups DB 2h GMT, refresh vues, calcul badges/notes, rétention légale — jobs Rust
+
+**Séparation respectée** : l'état métier transactionnel (paiements/escrow/contrats) reste dans le code Rust ; les notifications/intégrations restent dans n8n.
 
 **Status**: PASSED
 
@@ -157,12 +162,12 @@
 **Constitution Requirement**: "Pas de sur-ingénierie. Implémenter uniquement ce qui est spécifié. Pas d'abstractions prématurées."
 
 **Compliance**:
-- ✅ No microservices in Phase 1 (decoupled Laravel API + Next.js frontend)
+- ✅ No microservices in Phase 1 (decoupled Rust/Axum API + Next.js frontend)
 - ✅ No GraphQL in Phase 1 (REST API sufficient)
 - ✅ No Kubernetes in Phase 1 (Docker Compose/Swarm sufficient for <10K users)
-- ✅ Repository pattern ONLY for complex queries (not for simple CRUD)
-- ✅ No custom ORM (Laravel Eloquent handles all use cases)
-- ✅ No custom authentication (Laravel Passport OAuth2 server)
+- ✅ Repository/domain layer ONLY for complex queries (not for simple CRUD — SeaORM ActiveModel direct)
+- ✅ No custom ORM (SeaORM sur SQLx handles all use cases)
+- ✅ No custom authentication (oxide-auth OAuth2 server + JWT)
 
 **Status**: PASSED
 
@@ -176,7 +181,7 @@
 | 2 | Open Source First | ✅ PASSED | 85% OSS (15% justified exceptions) |
 | 3 | n8n Automation | ✅ PASSED | All workflows delegated to n8n |
 | 4 | 3G Performance | ✅ PASSED | <3s load time (to validate in testing) |
-| 5 | No Complexity Creep | ✅ PASSED | Monolith Phase 1, microservices Phase 2 |
+| 5 | No Complexity Creep | ✅ PASSED | Backend Rust monolithique Phase 1, microservices Phase 2 |
 
 **Overall Gate Status**: ✅ **ALL GATES PASSED**
 
@@ -190,16 +195,16 @@ No constitution violations. Implementation can proceed to Phase 1.
 specs/001-immog-platform/
 ├── spec.md              # Feature specification (user stories, requirements, success criteria)
 ├── plan.md              # This file (implementation plan)
-├── research.md          # ✅ Phase 0: Technology decisions and research (Laravel 12 + Next.js 16)
-├── data-model.md        # ✅ Phase 1: Database schema (Laravel Eloquent migrations) from 11 entities
-├── quickstart.md        # ✅ Phase 1: Developer onboarding guide (Laravel Sail)
-├── contracts/           # ✅ Phase 1: API contracts (Laravel REST endpoints)
-│   ├── README.md        # API overview with Laravel patterns
-│   ├── auth.md          # Laravel Passport authentication
+├── research.md          # ✅ Phase 0: Technology decisions and research (Rust/Axum + Next.js 16)
+├── data-model.md        # ✅ Phase 1: Database schema (entités SeaORM + migrations) from 12 entities
+├── quickstart.md        # ✅ Phase 1: Developer onboarding guide (cargo + docker compose)
+├── contracts/           # ✅ Phase 1: API contracts (Axum REST endpoints)
+│   ├── README.md        # API overview (Axum patterns, format JSON)
+│   ├── auth.md          # oxide-auth + JWT authentication
 │   ├── listings.md      # Elasticsearch search integration
-│   ├── contracts.md     # Laravel PDF generation
+│   ├── contracts.md     # PDF generation (headless-chrome)
 │   ├── payments.md      # Mobile Money webhooks
-│   ├── messaging.md     # Laravel Echo + Socket.IO
+│   ├── messaging.md     # Axum WebSocket + Socket.IO
 │   ├── certifications.md
 │   └── admin.md
 ├── tasks.md             # ✅ Phase 2: Actionable tasks (300 tasks generated)
@@ -209,164 +214,121 @@ specs/001-immog-platform/
 
 ### Source Code (repository root)
 
-**Selected Structure**: Decoupled API-first architecture (Laravel 12 backend + Next.js 16 frontend)
+**Selected Structure**: Decoupled API-first architecture (Rust/Axum backend + Next.js 16 frontend). Le dossier `backend/` (prototype Laravel jamais déployé) est archivé/supprimé au profit de `rust-backend/`.
 
 ```text
 ImmoG/
-├── backend/                     # Laravel 12 API (PHP 8.2+)
-│   ├── app/
-│   │   ├── Console/
-│   │   │   ├── Commands/        # Artisan commands
-│   │   │   │   ├── CheckExpiredListingsCommand.php
-│   │   │   │   ├── CheckEscrowTimeoutsCommand.php
-│   │   │   │   ├── CheckBadgeUpgradesCommand.php
-│   │   │   │   ├── AssignMediatorCommand.php
-│   │   │   │   ├── BackupDatabaseCommand.php
-│   │   │   │   └── IndexListingsInElasticsearch.php
-│   │   │   └── Kernel.php
-│   │   ├── Events/              # Laravel Broadcasting events
-│   │   │   ├── NewMessageEvent.php
-│   │   │   ├── TypingIndicatorEvent.php
-│   │   │   └── MessageReadEvent.php
-│   │   ├── Exceptions/
-│   │   │   └── Handler.php      # Global exception handler
-│   │   ├── Helpers/
-│   │   │   ├── SanitizeHelper.php
-│   │   │   └── JwtHelper.php
-│   │   ├── Http/
-│   │   │   ├── Controllers/
-│   │   │   │   └── Api/
-│   │   │   │       ├── AuthController.php          # Laravel Passport auth
-│   │   │   │       ├── ListingController.php       # CRUD + Elasticsearch search
-│   │   │   │       ├── ContractController.php      # PDF generation (Laravel PDF)
-│   │   │   │       ├── PaymentController.php       # Mobile Money + Escrow
-│   │   │   │       ├── MessagingController.php     # Real-time messaging
-│   │   │   │       ├── CertificationController.php # Badge system
-│   │   │   │       ├── RatingController.php        # Reviews
-│   │   │   │       ├── DisputeController.php       # Mediation
-│   │   │   │       ├── InsuranceController.php     # Phase 2
-│   │   │   │       ├── AdminController.php         # Admin panel
-│   │   │   │       └── WebhookController.php       # Orange/MTN webhooks
-│   │   │   ├── Middleware/
-│   │   │   │   ├── Authenticate.php
-│   │   │   │   ├── CheckAdmin.php    # Spatie Permission
-│   │   │   │   └── SecurityHeaders.php
-│   │   │   └── Requests/        # Form validation requests
-│   │   ├── Jobs/                # Laravel Queue jobs
-│   │   │   ├── OptimizeListingPhotosJob.php
-│   │   │   ├── LockSignedContractJob.php
-│   │   │   └── ProcessPaymentConfirmationJob.php
-│   │   ├── Models/              # Eloquent ORM models
-│   │   │   ├── User.php         # HasApiTokens, HasRoles, HasUuids
-│   │   │   ├── Listing.php      # Searchable (Laravel Scout)
-│   │   │   ├── Contract.php
-│   │   │   ├── Payment.php
-│   │   │   ├── CertificationDocument.php
-│   │   │   ├── Conversation.php
-│   │   │   ├── Message.php
-│   │   │   ├── Dispute.php
-│   │   │   ├── Transaction.php
-│   │   │   ├── Rating.php
-│   │   │   └── Insurance.php    # Phase 2
-│   │   ├── Notifications/       # Laravel Notifications (multi-channel)
-│   │   │   ├── OtpNotification.php
-│   │   │   ├── ContractSentNotification.php
-│   │   │   └── PaymentConfirmationNotification.php
-│   │   ├── Repositories/        # Data access layer
-│   │   │   ├── UserRepository.php
-│   │   │   ├── ListingRepository.php
-│   │   │   ├── ContractRepository.php
-│   │   │   ├── PaymentRepository.php
-│   │   │   └── MessageRepository.php
-│   │   └── Services/            # Business logic layer
-│   │       ├── OtpService.php
-│   │       ├── CertificationService.php
-│   │       ├── CommissionCalculatorService.php
-│   │       ├── EscrowService.php
-│   │       ├── QuittanceService.php
-│   │       ├── SignatureService.php
-│   │       ├── EncryptionService.php
-│   │       ├── MessageNotificationService.php
-│   │       ├── FraudDetectionService.php
-│   │       ├── ContentModerationService.php
-│   │       ├── InsuranceCertificateService.php
-│   │       ├── TimezoneService.php
-│   │       ├── SmsService.php           # Twilio
-│   │       ├── WhatsAppService.php      # WAHA
-│   │       ├── OrangeMoneyService.php
-│   │       └── MtnMomoService.php
-│   ├── bootstrap/
-│   ├── config/
-│   │   ├── app.php
-│   │   ├── auth.php
-│   │   ├── broadcasting.php     # Laravel Echo + Socket.IO config
-│   │   ├── cache.php            # Redis config
-│   │   ├── cors.php
-│   │   ├── database.php         # PostgreSQL + PostGIS
-│   │   ├── filesystems.php      # MinIO/S3
-│   │   ├── passport.php         # Laravel Passport OAuth2
-│   │   ├── pdf.php              # Laravel PDF (DomPDF/Snappy)
-│   │   ├── permission.php       # Spatie Permission
-│   │   ├── queue.php            # Redis queue
-│   │   ├── scout.php            # Elasticsearch (Laravel Scout)
-│   │   ├── sentry.php
-│   │   └── telescope.php        # Laravel Telescope
-│   ├── database/
-│   │   ├── factories/           # Model factories
-│   │   │   ├── UserFactory.php
-│   │   │   └── ListingFactory.php
-│   │   ├── migrations/          # Laravel migrations
-│   │   │   ├── 2025_01_28_000001_create_enums.php
-│   │   │   ├── 2025_01_28_000002_create_users_table.php
-│   │   │   ├── 2025_01_28_000003_create_listings_table.php
-│   │   │   ├── 2025_01_28_000004_create_contracts_table.php
-│   │   │   └── ... (11 entities total)
-│   │   └── seeders/
-│   │       └── DatabaseSeeder.php
-│   ├── public/
-│   │   └── index.php
-│   ├── resources/
-│   │   ├── lang/                # Translations (fr, ar - Phase 2)
-│   │   └── views/
-│   │       ├── contracts/       # Blade templates for PDFs
-│   │       │   ├── bail-location-residentiel.blade.php
-│   │       │   ├── bail-location-commercial.blade.php
-│   │       │   ├── promesse-vente-terrain.blade.php
-│   │       │   ├── mandat-gestion.blade.php
-│   │       │   └── attestation-caution.blade.php
-│   │       ├── payments/
-│   │       │   └── quittance.blade.php
-│   │       └── insurances/
-│   │           └── certificat.blade.php
-│   ├── routes/
-│   │   ├── api.php              # API routes (Laravel Passport protected)
-│   │   ├── channels.php         # Broadcasting channels
-│   │   ├── console.php
-│   │   └── web.php
-│   ├── storage/
-│   │   ├── app/
-│   │   ├── framework/
-│   │   └── logs/
-│   ├── tests/
-│   │   ├── Feature/             # PHPUnit feature tests
-│   │   │   ├── AuthTest.php
-│   │   │   ├── ListingPublicationTest.php
-│   │   │   ├── ContractGenerationTest.php
-│   │   │   ├── ContractSignatureTest.php
-│   │   │   ├── PaymentFlowTest.php
-│   │   │   ├── CertificationTest.php
-│   │   │   ├── MessagingTest.php
-│   │   │   ├── RatingTest.php
-│   │   │   ├── DisputeTest.php
-│   │   │   └── InsuranceTest.php
-│   │   ├── Unit/
-│   │   └── TestCase.php
-│   ├── vendor/
-│   ├── .env.example
-│   ├── artisan
-│   ├── composer.json
-│   ├── composer.lock
-│   └── README.md
+├── rust-backend/                # Rust API (crate `immog-backend`, Axum + Tokio)
+│   ├── src/
+│   │   ├── main.rs              # entrypoint (boot Axum + AppState)
+│   │   ├── config.rs            # figment (env + toml + defaults) — remplace config/*.php
+│   │   ├── state.rs             # AppState = service container (DB, Redis, Vault, JWT, S3)
+│   │   ├── error.rs             # AppError → réponses JSON structurées
+│   │   ├── bin/
+│   │   │   └── migrate.rs       # binaire immog-migrate (sea-orm-migration)
+│   │   ├── routes/              # router Axum (remplace routes/api.php + Controllers)
+│   │   │   ├── mod.rs           # assemblage du router + protection JWT
+│   │   │   ├── health.rs        # /api/health
+│   │   │   ├── auth.rs          # oxide-auth + JWT (remplace AuthController)
+│   │   │   ├── listings.rs      # CRUD + recherche Elasticsearch
+│   │   │   ├── visits.rs        # planification de visites (lien public)
+│   │   │   ├── contracts.rs     # génération PDF (headless-chrome)
+│   │   │   ├── payments.rs      # Mobile Money + Escrow
+│   │   │   ├── messaging.rs     # messagerie temps réel (Axum WS)
+│   │   │   ├── certifications.rs# système de badges
+│   │   │   ├── ratings.rs       # avis
+│   │   │   ├── disputes.rs      # médiation
+│   │   │   ├── insurances.rs    # Phase 2
+│   │   │   ├── admin.rs         # panel admin
+│   │   │   └── webhooks.rs      # webhooks Orange/MTN/WAHA
+│   │   ├── middleware/          # Tower layers (remplace Http/Middleware)
+│   │   │   ├── mod.rs
+│   │   │   ├── security_headers.rs
+│   │   │   ├── rate_limit.rs
+│   │   │   └── sanitize.rs
+│   │   ├── extractors/          # ValidatedJson, AuthUser, Locale, policies (remplace Requests + Policies)
+│   │   │   └── mod.rs
+│   │   ├── auth/                # jwt, oauth2, sessions, totp, rbac (RBAC natif)
+│   │   │   └── mod.rs
+│   │   ├── db/                  # entités SeaORM + migrations + scopes (remplace Models Eloquent)
+│   │   │   ├── mod.rs
+│   │   │   ├── entities/        # généré par sea-orm-cli depuis le schéma PG
+│   │   │   │   ├── user.rs      # UUIDs, soft deletes, relations
+│   │   │   │   ├── listing.rs
+│   │   │   │   ├── visit.rs
+│   │   │   │   ├── contract.rs
+│   │   │   │   ├── payment.rs
+│   │   │   │   ├── certification_document.rs
+│   │   │   │   ├── conversation.rs
+│   │   │   │   ├── message.rs
+│   │   │   │   ├── dispute.rs
+│   │   │   │   ├── transaction.rs
+│   │   │   │   ├── rating.rs
+│   │   │   │   └── insurance.rs # Phase 2
+│   │   │   └── migration/       # sea-orm-migration (12 entités + enums)
+│   │   │       ├── m20250128_000001_create_enums.rs
+│   │   │       ├── m20250128_000002_create_users.rs
+│   │   │       ├── m20250128_000003_create_listings.rs
+│   │   │       └── ... (12 entities total)
+│   │   ├── domain/              # logique métier par domaine (remplace Actions/Events)
+│   │   │   └── mod.rs           # listings, visits, messaging, contracts, payments, admin…
+│   │   ├── services/            # Business logic layer (remplace app/Services)
+│   │   │   ├── mod.rs
+│   │   │   ├── otp.rs
+│   │   │   ├── certification.rs
+│   │   │   ├── commission_calculator.rs
+│   │   │   ├── escrow.rs
+│   │   │   ├── quittance.rs
+│   │   │   ├── signature.rs
+│   │   │   ├── vault_crypto.rs        # Vault Transit (remplace EncryptionService)
+│   │   │   ├── message_notification.rs
+│   │   │   ├── fraud_detection.rs
+│   │   │   ├── content_moderation.rs
+│   │   │   ├── insurance_certificate.rs
+│   │   │   ├── sms.rs                 # Twilio (reqwest)
+│   │   │   ├── whatsapp.rs            # WAHA (reqwest)
+│   │   │   ├── orange_money.rs        # reqwest
+│   │   │   └── mtn_momo.rs            # reqwest
+│   │   ├── jobs/                # apalis jobs + scheduler (remplace Jobs + Artisan cron)
+│   │   │   ├── mod.rs
+│   │   │   ├── optimize_listing_photos.rs
+│   │   │   ├── lock_signed_contract.rs
+│   │   │   ├── process_payment_confirmation.rs
+│   │   │   ├── check_expired_listings.rs      # ex-Artisan command
+│   │   │   ├── check_escrow_timeouts.rs
+│   │   │   ├── check_badge_upgrades.rs
+│   │   │   ├── index_listings_elasticsearch.rs
+│   │   │   └── backup_database.rs
+│   │   └── notifications/       # Notifiable + channels (remplace Notifications/Channels)
+│   │       ├── mod.rs           # OTP, ContractSent, PaymentConfirmation…
+│   │       └── channels/        # SMS / WhatsApp / Push / Email
+│   ├── templates/               # templates HTML pour PDF (remplace resources/views Blade)
+│   │   ├── contracts/
+│   │   │   ├── bail-location-residentiel.html
+│   │   │   ├── bail-location-commercial.html
+│   │   │   ├── promesse-vente-terrain.html
+│   │   │   ├── mandat-gestion.html
+│   │   │   └── attestation-caution.html
+│   │   ├── payments/
+│   │   │   └── quittance.html
+│   │   └── insurances/
+│   │       └── certificat.html
+│   ├── tests/                   # tests d'intégration (axum-test)
+│   │   ├── auth.rs
+│   │   ├── listing_publication.rs
+│   │   ├── contract_generation.rs
+│   │   ├── contract_signature.rs
+│   │   ├── payment_flow.rs
+│   │   ├── certification.rs
+│   │   ├── messaging.rs
+│   │   ├── rating.rs
+│   │   ├── dispute.rs
+│   │   └── insurance.rs
+│   ├── config.toml              # config non-secret (override IMMOG_* env)
+│   ├── .env.example             # dev (prod = Vault)
+│   ├── Cargo.toml
+│   ├── Cargo.lock
+│   └── README.md                # stack + phases de construction
 ├── frontend/                    # Next.js 16 PWA (TypeScript 5+)
 │   ├── app/                     # Next.js 16 App Router
 │   │   ├── (public)/            # Public routes (no auth)
@@ -396,7 +358,7 @@ ImmoG/
 │   │   │   └── assurances/
 │   │   │       ├── souscrire/page.tsx
 │   │   │       └── reclamations/page.tsx
-│   │   ├── (admin)/             # Admin panel (Spatie Permission check)
+│   │   ├── (admin)/             # Admin panel (contrôle rôle via claim JWT, RBAC RBAC natif backend)
 │   │   │   └── admin/
 │   │   │       ├── dashboard/page.tsx        # FR-084 Analytics
 │   │   │       ├── moderation/page.tsx       # FR-081
@@ -463,12 +425,12 @@ ImmoG/
 │   │   └── ErrorBoundary.tsx
 │   ├── lib/                     # Utilities and hooks
 │   │   ├── api/
-│   │   │   └── client.ts        # Axios with Laravel Sanctum CSRF
+│   │   │   └── client.ts        # Axios + JWT Bearer
 │   │   ├── auth/
 │   │   │   ├── AuthContext.tsx
 │   │   │   └── useAuth.ts
 │   │   ├── socket/
-│   │   │   └── echo.ts          # Laravel Echo client
+│   │   │   └── echo.ts          # client Echo/Socket.io → Axum WS (pusher-compat)
 │   │   ├── hooks/
 │   │   │   ├── useListings.ts   # React Query
 │   │   │   ├── useContracts.ts
@@ -510,7 +472,7 @@ ImmoG/
 │   ├── tsconfig.json
 │   └── README.md
 ├── docker/
-│   ├── backend.Dockerfile       # Laravel API container
+│   ├── rust-backend.Dockerfile  # Rust API container (build multi-stage cargo)
 │   ├── frontend.Dockerfile      # Next.js PWA container
 │   ├── docker-compose.yml       # Full stack (15+ services)
 │   ├── docker-compose.prod.yml  # Production config
@@ -518,7 +480,7 @@ ImmoG/
 │       └── traefik.yml          # Reverse proxy + SSL
 ├── .github/
 │   └── workflows/
-│       ├── backend-ci.yml       # Laravel tests
+│       ├── rust-backend-ci.yml  # cargo fmt + clippy + test + audit
 │       ├── frontend-ci.yml      # Next.js tests
 │       └── deploy.yml           # Deployment
 ├── n8n/
@@ -528,8 +490,8 @@ ImmoG/
 │       ├── signature-contrat-pdf.json
 │       ├── paiement-quittance.json
 │       ├── rappels-paiement.json
-│       ├── expiration-annonces.json
-│       └── escrow-timeout.json
+│       ├── expiration-annonces.json    # relances de notification (marquage = job Rust)
+│       └── escrow-relances.json         # relances escrow (déblocage = job Rust)
 ├── monitoring/
 │   ├── grafana/
 │   │   └── dashboards/          # Grafana dashboard JSON
@@ -543,31 +505,32 @@ ImmoG/
 
 **Structure Decision**:
 
-Chosen **Decoupled API-First Architecture** (Laravel 12 backend + Next.js 16 frontend in separate directories).
+Chosen **Decoupled API-First Architecture** (Rust/Axum backend + Next.js 16 frontend in separate directories). Le backend est **écrit en Rust**, en remplacement full-Rust d'un prototype Laravel jamais déployé (dossier `backend/` archivé).
 
 **Rationale**:
-1. **Clear Separation**: Backend API (PHP) and Frontend (TypeScript) have distinct responsibilities
+1. **Clear Separation**: Backend API (Rust) and Frontend (TypeScript) have distinct responsibilities
 2. **Independent Scaling**: Can scale backend (API requests) and frontend (static serving) independently
-3. **Team Specialization**: PHP developers focus on backend/, JS developers on frontend/
-4. **Technology Flexibility**: Laravel 12 provides Eloquent ORM, Passport auth, Queue, Broadcasting out-of-the-box
-5. **Production Ready**: Laravel for API + Next.js for PWA = proven production pattern for high-traffic apps
-6. **Security**: API-first approach with Laravel Passport OAuth2 server provides enterprise-grade security
+3. **Team Specialization**: Rust developers focus on rust-backend/, JS developers on frontend/
+4. **Technology Flexibility**: Axum + SeaORM + oxide-auth + apalis + Axum WS provide ORM, OAuth2 auth, jobs, broadcasting
+5. **Production Ready**: Rust for API + Next.js for PWA = performance native, faible empreinte mémoire, latence prévisible
+6. **Security**: API-first with oxide-auth OAuth2 server + JWT + sûreté mémoire Rust (pas de classes entières de vulnérabilités)
+7. **Greenfield backend**: aucune contrainte de compatibilité descendante (pas de prod existante) → schéma et API possédés directement par le code Rust
 
 **Key Directories**:
-- **backend/**: Laravel 12 API server (PHP 8.2+)
-  - `app/Models/`: Eloquent ORM models (11 entities)
-  - `app/Http/Controllers/Api/`: REST API controllers (~52 endpoints)
-  - `app/Services/`: Business logic layer (escrow, certification, payments, etc.)
-  - `database/migrations/`: Version-controlled Laravel migrations
-  - `resources/views/`: Blade templates for PDF generation
-  - `tests/Feature/`: PHPUnit feature tests for each user story
+- **rust-backend/**: Rust API server (crate `immog-backend`, Axum + Tokio)
+  - `src/db/entities/`: entités SeaORM (12 entities)
+  - `src/routes/`: handlers Axum REST (~52 endpoints)
+  - `src/services/`: Business logic layer (escrow, certification, payments, etc.)
+  - `src/db/migration/`: migrations sea-orm-migration versionnées
+  - `templates/`: templates HTML pour génération PDF (headless-chrome)
+  - `tests/`: tests d'intégration axum-test (par user story)
 - **frontend/**: Next.js 16 PWA (TypeScript 5+)
   - `app/`: Next.js App Router (public, auth, admin routes)
   - `components/`: React components organized by domain
   - `lib/hooks/`: React Query custom hooks for API integration
-  - `lib/socket/`: Laravel Echo client for real-time messaging
+  - `lib/socket/`: client Echo/Socket.io → Axum WS (pusher-compat)
   - `tests/e2e/`: Playwright end-to-end tests
-- **docker/**: Multi-service orchestration (PostgreSQL, Redis, Elasticsearch, MinIO, n8n, WAHA, etc.)
+- **docker/**: Multi-service orchestration (PostgreSQL, Redis, Elasticsearch, MinIO, Vault, n8n, WAHA, etc.)
 - **n8n/**: Automated workflows (notifications, escrow timeouts, backups)
 - **monitoring/**: Grafana dashboards + Prometheus scraping config
 
@@ -581,17 +544,19 @@ Chosen **Decoupled API-First Architecture** (Laravel 12 backend + Next.js 16 fro
 
 | Pattern/Tool | Reason | Simpler Alternative | Why Rejected |
 |--------------|--------|---------------------|--------------|
-| Repository Pattern | Complex payment escrow queries (FR-043) with transactions spanning multiple tables (payments, contracts, users) | Direct Eloquent calls in controllers | Escrow logic requires atomic database transactions across 3+ tables. Repository centralizes transaction management and enables unit testing of escrow workflow without mocking database. |
-| n8n Automation | Constitution requirement (Section IX: NON-NÉGOCIABLE) | Hardcoded cron jobs in Laravel scheduler | Constitution mandates n8n for ALL automation. Non-technical admins must be able to modify workflows without code changes. |
-| Laravel Echo + Socket.io | Real-time messaging (FR-059) with <2s latency (SC-003) | HTTP polling every 5 seconds | Polling generates 10x more requests (performance issue). Laravel Broadcasting with WebSocket reduces server load and enables instant message delivery even on 3G connections. |
-| Laravel Eloquent ORM | Type safety across 11 entities with complex relations | Raw SQL with manual query building | 98 functional requirements → 200+ database queries. Eloquent provides relationship management, query builder, eager loading, and migrations. Prevents SQL injection vulnerabilities. |
+| Domain/service layer (escrow) | Complex payment escrow queries (FR-043) with transactions spanning multiple tables (payments, contracts, users) | Direct SeaORM calls in handlers | Escrow logic requires atomic DB transactions across 3+ tables. Un module domaine centralise la gestion transactionnelle (SeaORM `TransactionTrait`) et permet le test unitaire du workflow escrow via mockall. |
+| n8n + apalis (split) | Constitution IX (v3.1.0) : n8n pour workflows métier/notifications ; apalis/scheduler Rust pour jobs techniques transactionnels | Tout en n8n, ou tout en Rust | n8n permet aux admins non-devs de modifier notifications/intégrations sans code ; apalis garantit l'ACID pour l'état métier (escrow/paiements). Le split combine les deux atouts sans dupliquer l'exécution. |
+| Axum WebSocket + Socket.io | Real-time messaging (FR-059) with <2s latency (SC-003) | HTTP polling every 5 seconds | Polling generates 10x more requests (performance issue). Le broadcasting WebSocket (pusher-compat) réduit la charge serveur et permet la livraison instantanée même en 3G. |
+| SeaORM (sur SQLx) | Type safety across 12 entities with complex relations | Raw SQL with manual query building | 101 functional requirements → 200+ database queries. SeaORM fournit relations, query builder typé, eager loading et migrations. SQLx vérifie les requêtes à la compilation et prévient les injections SQL. |
+| Vault (KV + Transit) | Gestion centralisée des secrets + chiffrement applicatif (E2E messages, docs) | `.env` + clé applicative | Vault centralise secrets et clés de chiffrement (Transit), évite les secrets en clair dans l'environnement et fournit rotation/audit — préférable à une clé statique en `.env` pour une plateforme manipulant paiements et documents légaux. |
 
-**Total Abstractions**: 4 (all justified by requirements or constitution)
+**Total Abstractions**: 5 (all justified by requirements or constitution)
 
 **Avoided Complexity** (good decisions):
 - ❌ No microservices in Phase 1 (decoupled monolith sufficient for <10K users)
-- ❌ No GraphQL (Laravel REST API handles all use cases)
-- ❌ No custom framework (Laravel 12 + Next.js 16 provides everything needed)
+- ❌ No GraphQL (Axum REST API handles all use cases)
+- ❌ No custom framework (Axum + SeaORM + Next.js 16 provides everything needed)
+- ❌ No custom async runtime (Tokio is the standard)
 - ❌ No state management library beyond React Query (no Redux, Zustand)
 - ❌ No custom CSS framework (TailwindCSS + shadcn/ui sufficient)
 - ❌ No Kubernetes in Phase 1 (Docker Compose/Swarm sufficient)

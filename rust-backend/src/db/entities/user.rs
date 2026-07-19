@@ -13,6 +13,11 @@ pub struct Model {
     pub email: Option<String>,
     #[serde(skip_serializing)]
     pub mot_de_passe_hash: String,
+    /// Base32 TOTP secret for 2FA (RFC 6238, Google Authenticator compatible).
+    /// `None` until the user enables 2FA (enable-2FA endpoint TBD). Stored as
+    /// plaintext — like the password hash, it is a credential protected at rest
+    /// by DB access controls (Vault-managed DB creds).
+    pub two_factor_secret: Option<String>,
     pub nom_complet: String,
     pub photo_profil_url: Option<String>,
     pub bio: Option<String>,

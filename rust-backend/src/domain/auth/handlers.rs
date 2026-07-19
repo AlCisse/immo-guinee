@@ -1,0 +1,140 @@
+//! Auth endpoints (T078-T083): register, login, 2FA TOTP verification.
+//!
+//! - register : bcrypt-hash the password (compatible with existing hashes) and
+//!               insert the user. Field validation runs in the `ValidatedJson`
+//!               extractor. Rate-limited per telephone.
+//! - login    : verify telephone + password, check account status, issue a JWT
+//!               pair — or, if 2FA is enabled, return a `requires_2fa` marker.
+//! - otp      : validate a 6-digit TOTP (RFC 6238, totp-rs) against the user's
+//!               stored base32 secret, then issue the JWT pair.
+//!
+//! The SMS 6-digit OTP (services::otp, FR-001 phone verification) is a *different*
+//! flow and is not wired here — it belongs to the phone-verification step.
+
+use std::sync::Arc;
+
+use axum::extract::State;
+use axum::routing::post;
+use axum::Json;
+use axum::Router;
+use sea_orm::{ActiveModelTrait, ActiveValue::Set, ColumnTrait, EntityTrait, QueryFilter};
+use uuid::Uuid;
+
+use crate::auth::jwt;
+use crate::db::entities::sea_orm_active_enums::{StatutCompte, TypeCompte};
+use crate::db::entities::user;
+use crate::error::{AppError, AppResult};
+use crate::extractors::ValidatedJson;
+use crate::middleware::rate_limit;
+use crate::state::AppState;
+
+use super::dto::{
+    role_for, Envelope, LoginRequest, LoginResponse, LoginSuccess, OtpRequest, RegisterRequest,
+    UserPublic,
+};
+
+pub fn routes() -> Router<Arc<AppState>> {
+    Router::new()
+        .route("/auth/register", post(register))
+        .route("/auth/login", post(login))
+        .route("/auth/otp", post(otp))
+}
+
+async fn register(
+    State(state): State<Arc<AppState>>,
+    ValidatedJson(req): ValidatedJson<RegisterRequest>,
+) -> AppResult<Json<Envelope<UserPublic>>> {
+    rate_limit::limit_login(&state.redis, &req.telephone).await?;
+
+    let existing = user::Entity::find()
+        .filter(user::Column::Telephone.eq(req.telephone.as_str()))
+        .one(&state.db)
+        .await?;
+    if existing.is_some() {
+        return Err(AppError::Conflict("Téléphone déjà enregistré".into()));
+    }
+
+    let hash = bcrypt::hash(req.mot_de_passe.as_bytes(), 12)
+        .map_err(|e| AppError::Internal(anyhow::anyhow!("bcrypt hash: {e}")))?;
+    let type_compte = req.type_compte.unwrap_or(TypeCompte::Particulier);
+
+    let model = user::ActiveModel {
+        id: Set(Uuid::new_v4()),
+        telephone: Set(req.telephone.clone()),
+        mot_de_passe_hash: Set(hash),
+        nom_complet: Set(req.nom_complet.clone()),
+        email: Set(req.email.clone()),
+        type_compte: Set(type_compte),
+        ..Default::default()
+    }
+    .insert(&state.db)
+    .await?;
+
+    Ok(Json(Envelope { success: true, data: UserPublic::from(model) }))
+}
+
+async fn login(
+    State(state): State<Arc<AppState>>,
+    ValidatedJson(req): ValidatedJson<LoginRequest>,
+) -> AppResult<Json<Envelope<LoginResponse>>> {
+    rate_limit::limit_login(&state.redis, &req.telephone).await?;
+
+    let user = user::Entity::find()
+        .filter(user::Column::Telephone.eq(req.telephone.as_str()))
+        .one(&state.db)
+        .await?
+        .ok_or(AppError::Unauthorized)?; // generic 401 to avoid leaking account existence
+
+    let valid = bcrypt::verify(req.mot_de_passe.as_bytes(), user.mot_de_passe_hash.as_str())
+        .map_err(|e| AppError::Internal(anyhow::anyhow!("bcrypt verify: {e}")))?;
+    if !valid {
+        return Err(AppError::Unauthorized);
+    }
+
+    // Reject suspended / banned / soft-deleted accounts.
+    if !matches!(user.statut_compte, StatutCompte::Actif) {
+        return Err(AppError::Forbidden("Compte suspendu ou banni".into()));
+    }
+
+    if user.two_factor_secret.is_some() {
+        return Ok(Json(Envelope {
+            success: true,
+            data: LoginResponse::Requires2Fa(super::dto::LoginRequires2Fa {
+                requires_2fa: true,
+                telephone: user.telephone.clone(),
+            }),
+        }));
+    }
+
+    let tokens = jwt::issue_pair(&state.jwt_secret, user.id, role_for(user.type_compte))?;
+    Ok(Json(Envelope {
+        success: true,
+        data: LoginResponse::Tokens(LoginSuccess { tokens }),
+    }))
+}
+
+async fn otp(
+    State(state): State<Arc<AppState>>,
+    ValidatedJson(req): ValidatedJson<OtpRequest>,
+) -> AppResult<Json<Envelope<LoginSuccess>>> {
+    rate_limit::limit_login(&state.redis, &req.telephone).await?;
+
+    let user = user::Entity::find()
+        .filter(user::Column::Telephone.eq(req.telephone.as_str()))
+        .one(&state.db)
+        .await?
+        .ok_or(AppError::Unauthorized)?;
+
+    let secret = user
+        .two_factor_secret
+        .as_ref()
+        .ok_or_else(|| AppError::Forbidden("2FA non activée pour ce compte".into()))?;
+    // Reuse the TOTP primitive (auth::totp). The account label is irrelevant to
+    // verification (check_current only uses the secret) — pass the telephone.
+    if !crate::auth::totp::verify(secret, &user.telephone, &req.code)? {
+        return Err(AppError::Validation("Code TOTP incorrect".into()));
+    }
+
+    let tokens = jwt::issue_pair(&state.jwt_secret, user.id, role_for(user.type_compte))?;
+    Ok(Json(Envelope { success: true, data: LoginSuccess { tokens } }))
+}

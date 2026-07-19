@@ -8,6 +8,9 @@ macro_rules! pg_enum {
     ($name:literal, $rust:ident { $($variant:ident => $val:literal),+ $(,)? }) => {
         #[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize, Deserialize)]
         #[sea_orm(rs_type = "String", db_type = "Enum", enum_name = $name)]
+        // JSON uses the DB string values (e.g. `KALOUM`), matching the API contract.
+        // SCREAMING_SNAKE_CASE of each PascalCase variant equals its `string_value`.
+        #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
         pub enum $rust {
             $( #[sea_orm(string_value = $val)] $variant ),+
         }

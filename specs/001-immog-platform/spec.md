@@ -2,9 +2,15 @@
 
 **Feature Branch**: `001-immog-platform`
 **Created**: 2025-01-28
-**Updated**: 2025-01-28
+**Updated**: 2026-07-19
 **Status**: Draft
 **Input**: Plateforme d'annonces immobilières pour la Guinée avec publication gratuite, contrats automatiques, signatures électroniques, paiements Mobile Money et système de confiance
+
+> **Note stack (backend Rust)** : cette spécification est **agnostique de l'implémentation**
+> (elle décrit le *quoi*, pas le *comment*) et s'applique **intégralement** au backend Rust (Axum).
+> Les seules mentions techniques (WebSocket, PostgreSQL, Redis, chiffrement AES-256/SHA-256, GIN index,
+> pg_dump, Grafana/Prometheus) relèvent de l'infrastructure et de la cryptographie, indépendantes du
+> framework backend. Les détails de stack backend figurent dans `plan.md` et `rust-backend/README.md`.
 
 ---
 
@@ -200,6 +206,23 @@ Après une transaction complétée, les deux parties se notent mutuellement (1-5
 
 ---
 
+### User Story 10 - Planification de Visites (Priority: P6 - liée à la Messagerie)
+
+Un chercheur intéressé par une annonce peut demander une visite physique du bien en proposant un ou plusieurs créneaux (date/heure). Le propriétaire confirme, propose un autre créneau ou refuse. Les deux parties reçoivent des notifications multi-canal, et le propriétaire peut répondre via un lien public (sans se connecter). Les statuts évoluent `EN_ATTENTE → CONFIRMEE → COMPLETEE` (ou `ANNULEE`). Chaque annonce affiche des statistiques de visites.
+
+**Why this priority**: La visite est l'étape naturelle entre la prise de contact (messagerie) et la génération du contrat. Elle réduit les déplacements inutiles et sécurise la rencontre. Elle s'appuie sur les annonces (US1) et la messagerie (US6).
+
+**Independent Test**: Un chercheur demande une visite pour un appartement à Kaloum le samedi 10h. Le propriétaire reçoit une notification, confirme via le lien public, les deux parties reçoivent une confirmation, et le statut passe à `CONFIRMEE`. Après la visite, elle est marquée `COMPLETEE` et apparaît dans les statistiques de l'annonce.
+
+**Acceptance Scenarios**:
+
+1. **Given** un chercheur consulte une annonce, **When** il clique sur "Demander une visite" et propose "Samedi 10h", **Then** une visite est créée en statut `EN_ATTENTE`, le propriétaire reçoit une notification multi-canal (Push, SMS, Email, WhatsApp si opt-in), ET les numéros de téléphone restent masqués
+2. **Given** le propriétaire reçoit la demande, **When** il clique sur "Confirmer" (dans l'app ou via le lien public), **Then** le statut passe à `CONFIRMEE`, ET les deux parties reçoivent une confirmation avec la date
+3. **Given** une visite confirmée est passée, **When** le propriétaire (ou le système) la marque "Effectuée", **Then** le statut passe à `COMPLETEE` ET la visite est comptabilisée dans les statistiques de l'annonce
+4. **Given** une visite `EN_ATTENTE` ou `CONFIRMEE`, **When** l'une des parties clique sur "Annuler", **Then** le statut passe à `ANNULEE` et l'autre partie est notifiée
+
+---
+
 ### Edge Cases
 
 - **Que se passe-t-il si un locataire tente de payer uniquement la caution sans la commission ?** Le système détecte automatiquement que le montant est incomplet (caution seule) et affiche un message d'erreur "Montant incorrect. Vous devez payer Caution (X GNF) + Commission plateforme (Y GNF) = Total Z GNF". Le paiement est rejeté et le locataire doit recommencer avec le montant correct.
@@ -364,11 +387,19 @@ Après une transaction complétée, les deux parties se notent mutuellement (1-5
 - **FR-097**: Le système DOIT supporter 100 000+ annonces actives simultanées sans dégradation de performance avec architecture : Base de données PostgreSQL avec réplication master-slave (read replicas pour lectures), Partitionnement de table annonces si > 500 000 lignes (partition par quartier), Load balancing sur plusieurs serveurs backend (Nginx ou AWS ALB), Monitoring continu avec alertes si temps de réponse > 500ms (Grafana + Prometheus)
 - **FR-098**: Le système DOIT monitorer en temps réel les métriques de performance avec dashboard : Temps de réponse moyen par endpoint (ms), Taux d'erreurs 5xx (%), Nombre de requêtes/seconde, Utilisation CPU/RAM serveurs (%), Connexions base de données actives, Taille cache Redis (Mo), Latence API Mobile Money (ms), Taux de succès paiements (%), Alertes automatiques si seuils dépassés (ex: temps réponse > 1s, erreurs > 1%, CPU > 80%)
 
+**MODULE 15 : PLANIFICATION DE VISITES**
+
+- **FR-099**: Le système DOIT permettre à un chercheur authentifié de demander une visite d'une annonce en proposant un créneau (date + heure), avec un message optionnel (max 500 caractères). La visite est créée en statut "EN_ATTENTE" et le propriétaire est notifié via les 4 canaux (Push, SMS, Email, WhatsApp si opt-in). Les numéros de téléphone restent masqués.
+- **FR-100**: Le système DOIT permettre au propriétaire de confirmer, annuler ou marquer une visite comme effectuée, avec transitions de statut : EN_ATTENTE → CONFIRMEE → COMPLETEE, ou → ANNULEE (par l'une des parties). Le propriétaire peut répondre via un lien public sécurisé (token unique) sans se connecter. Chaque changement de statut notifie l'autre partie.
+- **FR-101**: Le système DOIT afficher, pour chaque annonce, des statistiques de visites (nombre de demandes, confirmées, complétées) visibles par le propriétaire, et empêcher les créneaux dans le passé.
+
 ### Key Entities
 
 - **Utilisateur (User)** : Représente une personne inscrite. Attributs clés : id (UUID), nom_complet, numéro_téléphone (format +224 6XX XXX XXX unique), email (optionnel), mot_de_passe_hash (bcrypt), type_compte (particulier/agence/diaspora), badge_certification (bronze/argent/or/diamant), statut_vérification (non_vérifié/cni_vérifiée/titre_foncier_vérifié), préférences_notification (JSON : {push: true, sms: true, email: true, whatsapp: false}), date_inscription, dernière_connexion, note_moyenne (calculée), nombre_transactions, nombre_litiges, statut_compte (actif/suspendu/banni)
 
 - **Annonce (Listing)** : Représente un bien immobilier. Attributs clés : id (UUID), créateur_id (FK User), type_opération (location/vente), type_bien (villa/appartement/studio/terrain/commerce/bureau/entrepôt), titre (50-100 caractères), description (200-2000 caractères), prix_gnf (integer), quartier (enum : kaloum/dixinn/ratoma/matam/matoto/dubreka_centre/dubreka_peripherie/coyah_centre/coyah_peripherie), superficie_m2 (pour terrains/villas), nombre_chambres, nombre_salons, caution_mois (1-6 pour locations), équipements (JSON array), photos (JSON array URLs S3), statut (disponible/en_négociation/loué_vendu/expiré/archivé), nombre_vues, options_premium (JSON : {badge_urgent: false, remontée_48h: false, photos_pro: false}), date_publication, date_dernière_mise_à_jour, date_expiration (publication + 90 jours)
+
+- **Visite (Visit)** : Représente une demande de visite d'un bien. Attributs clés : id (UUID), annonce_id (FK Listing), demandeur_id (FK User - chercheur), propriétaire_id (FK User - créateur annonce), date_visite (créneau proposé/confirmé), statut (en_attente/confirmée/complétée/annulée), message (optionnel, max 500 caractères), lien_public_token (réponse sans compte), date_création, date_confirmation
 
 - **Contrat (Contract)** : Représente un document légal. Attributs clés : id (UUID), type_contrat (bail_location_residentiel/bail_location_commercial/promesse_vente_terrain/mandat_gestion/attestation_caution), annonce_id (FK Listing), propriétaire_id (FK User), locataire_acheteur_id (FK User), données_personnalisées (JSON : durée_bail, montant_loyer_gnf, montant_caution_gnf, date_début, date_fin, clauses_spécifiques), statut (brouillon/en_attente_signature/partiellement_signé/signé_archivé/annulé), fichier_pdf_url (S3), hash_sha256 (intégrité), signatures (JSON array : [{user_id, timestamp, otp_validé, signature_base64}]), date_création, date_signature_complète, délai_rétractation_expire_à (signature_complète + 48h)
 

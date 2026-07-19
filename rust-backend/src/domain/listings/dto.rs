@@ -3,9 +3,10 @@
 //! Responses are wrapped in `Envelope { success, data }` to match the existing
 //! API contract shape (`{ "success": true, "data": { ... } }`).
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sea_orm::entity::prelude::DateTimeWithTimeZone;
 use uuid::Uuid;
+use validator::Validate;
 
 use crate::db::entities::listing;
 use crate::db::entities::sea_orm_active_enums::{Quartier, StatutListing, TypeBien, TypeOperation};
@@ -81,4 +82,40 @@ pub struct Pagination {
 pub struct ListingSearchResponse {
     pub listings: Vec<ListingResponse>,
     pub pagination: Pagination,
+}
+
+/// Create-listing payload (FR-011). Mandatory fields validated by `ValidatedJson`.
+///
+/// NOTE (spec discrepancy): FR-011 states titre 50-100 and description 200-2000
+/// chars, but the US1 example title is 29 chars. We use pragmatic minimums
+/// (titre ≥ 5, description ≥ 20) with the FR-011 maximums; tighten if desired.
+#[derive(Debug, Deserialize, Validate)]
+pub struct CreateListingRequest {
+    pub type_operation: TypeOperation,
+    pub type_bien: TypeBien,
+    #[validate(length(min = 5, max = 100, message = "titre : 5 à 100 caractères"))]
+    pub titre: String,
+    #[validate(length(min = 20, max = 2000, message = "description : 20 à 2000 caractères"))]
+    pub description: String,
+    #[validate(range(min = 1, message = "prix invalide"))]
+    pub prix_gnf: i64,
+    pub quartier: Quartier,
+    #[validate(length(max = 500))]
+    pub adresse_complete: Option<String>,
+    #[validate(range(min = 1))]
+    pub superficie_m2: Option<i32>,
+    #[validate(range(min = 0, max = 50))]
+    pub nombre_chambres: Option<i32>,
+    #[validate(range(min = 0, max = 20))]
+    pub nombre_salons: Option<i32>,
+    #[validate(range(min = 1, max = 6, message = "caution : 1 à 6 mois"))]
+    pub caution_mois: Option<i32>,
+    pub equipements: Option<Vec<String>>,
+}
+
+/// Response after uploading photos to a listing.
+#[derive(Debug, Serialize)]
+pub struct PhotoUploadResponse {
+    pub count: usize,
+    pub photos: serde_json::Value,
 }

@@ -9,6 +9,6 @@
 
 pub mod jwt;
 pub mod rbac;
+pub mod totp;
 // pub mod oauth2;   // enabled in the OAuth2 section
 // pub mod sessions; // enabled in the sessions section
-// pub mod totp;     // enabled in the 2FA section

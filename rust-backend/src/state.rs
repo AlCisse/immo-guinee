@@ -11,6 +11,7 @@ use sea_orm::DatabaseConnection;
 
 use crate::config::Config;
 use crate::error::AppResult;
+use crate::services::storage::S3Storage;
 
 /// Holds long-lived, shareable dependencies.
 pub struct AppState {
@@ -19,7 +20,9 @@ pub struct AppState {
     pub cfg: Config,
     /// JWT signing/verification key (fetched from Vault in prod, env in dev).
     pub jwt_secret: Vec<u8>,
-    // Filled in later phases: vault_client, s3_client, notifier, queue, ...
+    /// S3-compatible object storage (listing photos, documents).
+    pub storage: S3Storage,
+    // Filled in later phases: vault_client, notifier, queue, ...
 }
 
 impl AppState {
@@ -40,11 +43,14 @@ impl AppState {
         // value from IMMOG_JWT_SECRET env or a dev-only constant.
         let jwt_secret = load_jwt_secret(cfg).await?;
 
+        let storage = S3Storage::from_config(cfg)?;
+
         Ok(Self {
             db,
             redis,
             cfg: cfg.clone(),
             jwt_secret,
+            storage,
         })
     }
 }

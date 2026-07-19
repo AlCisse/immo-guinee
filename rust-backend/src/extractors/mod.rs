@@ -1,42 +1,36 @@
-//! Extractors (replace Laravel request injection + FormRequest validation +
-//! route model binding + policy authorization + middleware like SetLocale).
-//!
-//! Idioms (wired incrementally per phase):
-//! - `ValidatedJson<T>`   — deserialize + `validator` check before handler (FormRequest)
-//! - `AuthUser`           — resolve the authenticated user from JWT/cookie (AuthContext)
-//! - `Locale`             — parse Accept-Language (replaces SetLocale middleware)
-//! - `Resolve<T>`         — fetch an entity by path id + run its policy (route model binding + authorize)
+//! Request extractors (replace Laravel FormRequest validation + middleware).
 
-use std::sync::Arc;
-
-use axum::extract::FromRequestParts;
-use axum::http::request::Parts;
+use axum::body::Body;
+use axum::extract::FromRequest;
+use axum::http::Request;
 use serde::de::DeserializeOwned;
 use validator::Validate;
 
 use crate::error::AppError;
-use crate::state::AppState;
 
 mod auth_user;
 pub use auth_user::AuthUser;
 
-/// Deserialize + validate a JSON body (replaces Laravel FormRequest rules()).
+/// Deserialize a JSON body and run `validator` rules before the handler sees it
+/// (replaces Laravel FormRequest `rules()` + `validated()`). Reuses `axum::Json`
+/// for the (battle-tested) body reader, then validates.
 pub struct ValidatedJson<T>(pub T);
 
-impl<T, S> FromRequestParts<S> for ValidatedJson<T>
+impl<T, S> FromRequest<S> for ValidatedJson<T>
 where
-    T: DeserializeOwned + Validate + Send,
+    T: DeserializeOwned + Validate + Send + Sync + 'static,
     S: Send + Sync,
-    Arc<AppState>: FromRequestParts<S>,
 {
     type Rejection = AppError;
 
-    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
-        // We need the full body, so go through axum::Json via the State<Body> approach.
-        // Simplest: require the caller to use `axum::Json` then validate in handler.
-        // This extractor is a placeholder scaffold; full impl in Phase 1.
-        let _ = (parts, state);
-        Err(AppError::Internal(anyhow::anyhow!("ValidatedJson extractor not yet implemented (Phase 1)")))
+    async fn from_request(req: Request<Body>, state: &S) -> Result<Self, Self::Rejection> {
+        let json = axum::Json::<T>::from_request(req, state)
+            .await
+            .map_err(|rej| AppError::Validation(format!("JSON invalide: {rej}")))?;
+        json.0
+            .validate()
+            .map_err(|e| AppError::Validation(e.to_string()))?;
+        Ok(ValidatedJson(json.0))
     }
 }
 

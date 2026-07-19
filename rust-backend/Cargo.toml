@@ -19,7 +19,7 @@ path = "src/bin/migrate.rs"
 # Only foundational deps are uncommented so `cargo check` stays green early.
 [dependencies]
 # --- Web / API ---
-axum = { version = "0.8", features = ["macros", "ws"] }
+axum = { version = "0.8", features = ["macros", "ws", "multipart"] }
 axum-extra = { version = "0.10", features = ["typed-header"] }
 tower = { version = "0.5", features = ["util", "limit", "timeout"] }
 tower-http = { version = "0.6", features = ["trace", "cors", "compression-gzip", "timeout", "set-header", "limit"] }
@@ -49,7 +49,7 @@ serde_json = "1"
 # --- Auth (replaces Passport / Sanctum / 2FA) ---
 jsonwebtoken = "9"          # JWT signing/verification (interop with Laravel JWT_SECRET via Vault)
 bcrypt = "0.17"             # password hash compat (existing bcrypt hashes)
-totp-rs = { version = "5", features = ["gen_secret"] }  # 2FA (replaces pragmarx/google2fa)
+totp-rs = { version = "5", features = ["gen_secret", "otpauth"] }  # 2FA TOTP (RFC 6238)
 # oxide-auth = "0.6"        # OAuth2 server (replaces Passport) — uncomment in Phase 0 auth step
 # tower-sessions = "0.13"  # Sanctum-like cookie sessions — uncomment when wiring frontend stateful auth
 # axum-login = "0.13"
@@ -57,9 +57,10 @@ totp-rs = { version = "5", features = ["gen_secret"] }  # 2FA (replaces pragmarx
 # --- Validation (replaces FormRequests) ---
 validator = { version = "0.18", features = ["derive"] }
 
-# --- IDs / time ---
+# --- IDs / time / random ---
 uuid = { version = "1", features = ["v4", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
+rand = "0.8"   # CSPRNG for OTP codes
 
 # --- HTTP client (replaces Guzzle: Twilio, WAHA, Orange/MTN, Expo, Facebook) ---
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "stream", "multipart"] }
@@ -88,9 +89,8 @@ regex = "1"
 # apalis = { version = "0.6", features = ["redis"] }
 # tokio-cron-scheduler = "0.11"
 #
-# # Storage S3 / DO Spaces / MinIO (replaces AWS SDK PHP / flysystem) — Phase 1
-# aws-sdk-s3 = "1"
-# aws-config = { version = "1", features = ["behavior-version-latest"] }
+# --- Storage S3 / MinIO / DO Spaces (rust-s3, lighter than aws-sdk) — Phase 1 ---
+s3 = { package = "rust-s3", version = "0.35", default-features = false, features = ["tokio-rustls-tls"] }
 #
 # # Vault (replaces Docker Secrets / SecretHelper / EncryptionService) — Phase 0 auth+secrets
 # vaultrs = "0.7"
@@ -109,9 +109,9 @@ regex = "1"
 # headless-chrome = "1"        # HTML template -> PDF (closest to Blade -> DOMPDF)
 # # printpdf = "0.7"           # programmatic PDF alt
 #
-# # Images / watermarks (replaces Intervention Image) — Phase 1
-# image = "0.25"
-# imageproc = "0.25"
+# --- Images: resize + WebP (replaces Intervention Image) — Phase 1 ---
+image = "0.25"
+# imageproc = "0.25"   # watermarks — added with the watermark feature
 #
 # # Broadcasting / Pusher compat (replaces Reverb + Echo server) — Phase 2
 # pusher = "0.3"
@@ -121,11 +121,15 @@ regex = "1"
 # metrics-exporter-prometheus = "0.15"
 
 [dev-dependencies]
-axum-test = "16"
+axum-test = "17"   # 17.x targets axum 0.8 (16.x is axum 0.7)
 tower = { version = "0.5", features = ["util"] }
 mockall = "0.13"
 pretty_assertions = "1"
 tokio-test = "0.4"
+# Integration tests: ephemeral Postgres / Redis / MinIO via Docker.
+testcontainers = "0.24"
+testcontainers-modules = { version = "0.12", features = ["postgres", "redis", "minio"] }
+image = "0.25"   # generate a sample PNG for the photo-upload test
 
 [profile.release]
 opt-level = 3

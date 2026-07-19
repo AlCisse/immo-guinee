@@ -25,7 +25,8 @@ pub fn router(state: Arc<AppState>, cfg: &Config) -> Router {
     // Stateful API router; domains are merged in per phase.
     let api: Router<Arc<AppState>> = Router::new()
         .merge(health::routes())
-        .merge(crate::domain::listings::routes()); // Phase 1 (read-only)
+        .merge(crate::domain::listings::routes()) // Phase 1 (read-only)
+        .merge(crate::domain::auth::routes());     // T078-T083 (auth)
     // Phase 2: .merge(crate::domain::messaging::routes())
     // Phase 3: .merge(crate::domain::contracts::routes())
     // Phase 4: .merge(crate::domain::payments::routes())

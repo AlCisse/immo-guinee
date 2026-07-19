@@ -28,6 +28,7 @@
 //!   FacebookController 577 l.  -> domain::facebook
 
 pub mod listings;   // Phase 1 (read-only: search + public detail)
+pub mod auth;        // T078-T083 (register / login / 2FA TOTP)
 // pub mod visits;     // Phase 2
 // pub mod messaging;  // Phase 2
 // pub mod contracts;  // Phase 3
