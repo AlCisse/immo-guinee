@@ -8,9 +8,9 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use axum::Router;
+use axum::extract::DefaultBodyLimit;
 use tower_http::{
     cors::{AllowOrigin, CorsLayer},
-    limit::RequestBodyLimitLayer,
     timeout::TimeoutLayer,
     trace::TraceLayer,
 };
@@ -33,11 +33,13 @@ pub fn router(state: Arc<AppState>, cfg: &Config) -> Router {
 
     let cors = build_cors(cfg);
 
-    // Convert the stateful router to a stateless one by providing the state,
-    // then apply state-agnostic layers.
-    let app = api
+    // Everything is mounted under /api (matches the spec + frontend). Then provide
+    // the state and apply state-agnostic layers. DefaultBodyLimit is the global
+    // default; specific routes (e.g. photo upload) raise it via a route layer.
+    let app = Router::new()
+        .nest("/api", api)
         .with_state(state)
-        .layer(RequestBodyLimitLayer::new(cfg.body_limit_bytes))
+        .layer(DefaultBodyLimit::max(cfg.body_limit_bytes))
         .layer(TimeoutLayer::new(Duration::from_secs(cfg.request_timeout_secs)))
         .layer(cors)
         .layer(TraceLayer::new_for_http());

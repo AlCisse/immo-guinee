@@ -5,7 +5,7 @@
 
 use std::sync::Arc;
 
-use axum::extract::{Multipart, Path, Query, State};
+use axum::extract::{DefaultBodyLimit, Multipart, Path, Query, State};
 use axum::routing::{get, post};
 use axum::Json;
 use axum::Router;
@@ -29,12 +29,19 @@ use super::dto::{
 };
 use super::query::{apply_filters, normalize_pagination, ListingSearchQuery};
 
+/// Photo uploads may carry up to 10 photos × 5 MB (FR-009); raise the body limit
+/// for this route only (the global default stays modest).
+const PHOTOS_BODY_LIMIT: usize = 55 * 1024 * 1024;
+
 pub fn routes() -> Router<Arc<AppState>> {
     Router::new()
         .route("/listings/search", get(search))
         .route("/listings", post(create))
         .route("/listings/{id}", get(show))
-        .route("/listings/{id}/photos", post(upload_photos))
+        .route(
+            "/listings/{id}/photos",
+            post(upload_photos).layer(DefaultBodyLimit::max(PHOTOS_BODY_LIMIT)),
+        )
 }
 
 async fn search(

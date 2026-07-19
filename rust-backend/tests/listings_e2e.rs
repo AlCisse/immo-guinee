@@ -1,6 +1,6 @@
 //! End-to-end US1 flow over the real router + Postgres/Redis/MinIO (testcontainers).
 //!
-//! Paths have no `/api` prefix (that is how the router currently mounts them).
+//! Routes are mounted under `/api` (see routes::router).
 
 mod common;
 
@@ -29,14 +29,14 @@ async fn register_login_create_search_show_flow() {
 
     // 1. register
     let reg = s
-        .post("/auth/register")
+        .post("/api/auth/register")
         .json(&json!({ "telephone": PHONE, "mot_de_passe": PASSWORD, "nom_complet": "Awa Diallo" }))
         .await;
     reg.assert_status_ok();
 
     // 2. login → access token
     let login = s
-        .post("/auth/login")
+        .post("/api/auth/login")
         .json(&json!({ "telephone": PHONE, "mot_de_passe": PASSWORD }))
         .await;
     login.assert_status_ok();
@@ -47,7 +47,7 @@ async fn register_login_create_search_show_flow() {
 
     // 3. create listing
     let create = s
-        .post("/listings")
+        .post("/api/listings")
         .add_header(AUTHORIZATION, bearer(&token))
         .json(&json!({
             "type_operation": "LOCATION",
@@ -65,7 +65,7 @@ async fn register_login_create_search_show_flow() {
     assert_eq!(created["data"]["statut"], "DISPONIBLE");
 
     // 4. public search finds it
-    let search = s.get("/listings/search?quartier=KALOUM").await;
+    let search = s.get("/api/listings/search?quartier=KALOUM").await;
     search.assert_status_ok();
     let total = search.json::<serde_json::Value>()["data"]["pagination"]["total"]
         .as_u64()
@@ -73,7 +73,7 @@ async fn register_login_create_search_show_flow() {
     assert!(total >= 1, "search should find the created listing");
 
     // 5. detail increments the view counter
-    let show = s.get(&format!("/listings/{id}")).await;
+    let show = s.get(&format!("/api/listings/{id}")).await;
     show.assert_status_ok();
     assert_eq!(show.json::<serde_json::Value>()["data"]["nombre_vues"], 1);
 }
@@ -84,12 +84,12 @@ async fn upload_photo_stores_in_minio() {
     let app = setup().await;
     let s = &app.server;
 
-    s.post("/auth/register")
+    s.post("/api/auth/register")
         .json(&json!({ "telephone": PHONE, "mot_de_passe": PASSWORD, "nom_complet": "Awa Diallo" }))
         .await
         .assert_status_ok();
     let login = s
-        .post("/auth/login")
+        .post("/api/auth/login")
         .json(&json!({ "telephone": PHONE, "mot_de_passe": PASSWORD }))
         .await;
     let token = login.json::<serde_json::Value>()["data"]["access_token"]
@@ -98,7 +98,7 @@ async fn upload_photo_stores_in_minio() {
         .to_owned();
 
     let create = s
-        .post("/listings")
+        .post("/api/listings")
         .add_header(AUTHORIZATION, bearer(&token))
         .json(&json!({
             "type_operation": "VENTE",
@@ -122,7 +122,7 @@ async fn upload_photo_stores_in_minio() {
     );
 
     let upload = s
-        .post(&format!("/listings/{id}/photos"))
+        .post(&format!("/api/listings/{id}/photos"))
         .add_header(AUTHORIZATION, bearer(&token))
         .multipart(form)
         .await;
