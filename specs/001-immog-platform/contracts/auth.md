@@ -24,10 +24,11 @@ token via a Redis deny-list.
 caller via the `AuthUser` extractor (verifies signature, expiry, and a Redis
 deny-list of revoked tokens).
 
-> **Note (design)**: registration is password-based and returns the created user
-> (the client then logs in). SMS phone verification and password reset are separate
-> flows (`services::otp`, tasks T083a/b) — **planned**, not in this contract yet. A
-> dedicated `/refresh` endpoint is also planned (login already issues a refresh token).
+> **Note (design)**: registration is password-based and delivers a 6-digit phone
+> **verification OTP over WhatsApp** (Evolution API); the client confirms it via
+> `POST /auth/otp/verify` to obtain tokens (register → OTP → tokens). Password reset
+> (tasks T083a/b) is still **planned**. A dedicated `/refresh` endpoint is also planned
+> (login already issues a refresh token).
 
 ---
 
@@ -37,7 +38,9 @@ deny-list of revoked tokens).
 Router::new()
     .route("/auth/register", post(register))
     .route("/auth/login", post(login))
-    .route("/auth/otp", post(otp))             // TOTP 2nd factor
+    .route("/auth/otp", post(otp))                   // TOTP 2nd factor (login)
+    .route("/auth/otp/send", post(otp_send))         // (re)send phone OTP (WhatsApp)
+    .route("/auth/otp/verify", post(otp_verify))     // verify phone OTP → tokens
     .route("/auth/me", get(me).patch(update_me))
     .route("/auth/logout", post(logout))
 // mounted under /api
@@ -182,6 +185,50 @@ async fn otp(State(state), ValidatedJson(req): ValidatedJson<OtpRequest>) -> App
 ```
 
 **Errors**: 400 (bad code), 401 (unknown phone), 403 (2FA not enabled), 429.
+
+---
+
+### 3b. Phone OTP — send `POST /api/auth/otp/send`, verify `POST /api/auth/otp/verify`
+
+Phone-verification OTP delivered over **WhatsApp** (Evolution API). `register`
+auto-sends the first code; `/otp/send` resends it; `/otp/verify` confirms it and issues
+the JWT pair (register → OTP → tokens). Distinct from `/auth/otp` (TOTP login 2FA).
+
+Delivery is handled by `services::notify` (bridges `services::otp` + `services::whatsapp`).
+When Evolution API is not configured (dev/tests), the code is **logged** instead of sent,
+so the flow runs without a live WhatsApp instance.
+
+**Anti-fraud** (`services::otp`, FR-001/FR-029): code valid 5 min; 60 s resend throttle
+(429); 3 wrong tries → 5 min block (429).
+
+**`POST /auth/otp/send`** — request/resend a code.
+```json
+{ "telephone": "+224622123456" }
+```
+Response (200): `{ "success": true, "data": { "message": "Si ce numéro est enregistré, un code a été envoyé par WhatsApp." } }`
+(identical whether or not the number is registered — anti-enumeration; a code is only
+issued/sent for an existing account).
+
+**`POST /auth/otp/verify`** — confirm a code, receive tokens.
+```json
+{ "telephone": "+224622123456", "code": "123456" }
+```
+Response (200): the same token pair as login.
+
+```rust
+async fn otp_verify(State(state), ValidatedJson(req): ValidatedJson<OtpRequest>)
+    -> AppResult<Json<Envelope<LoginSuccess>>> {
+    rate_limit::limit_login(&state.redis, &req.telephone).await?;
+    services::otp::verify(&state.redis, &req.telephone, &req.code).await?;   // 400 / 429 (block)
+    let user = /* find by telephone */.ok_or(AppError::Unauthorized)?;
+    if !matches!(user.statut_compte, StatutCompte::Actif) { return Err(AppError::Forbidden(..)); }
+    let tokens = jwt::issue_pair(&state.jwt_secret, user.id, role_for(user.type_compte))?;
+    // ...
+}
+```
+
+**Errors**: 400 (wrong/expired code), 401 (unknown phone on verify), 403 (suspended),
+429 (resend throttle or 3-try block).
 
 ---
 

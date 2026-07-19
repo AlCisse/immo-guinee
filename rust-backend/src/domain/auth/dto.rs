@@ -56,13 +56,21 @@ pub struct LoginRequest {
     pub mot_de_passe: String,
 }
 
-/// TOTP second-factor payload (RFC 6238, 6 digits).
+/// TOTP second-factor payload (RFC 6238, 6 digits). Also reused by the phone
+/// OTP verification endpoint (`POST /auth/otp/verify`), same `{telephone, code}` shape.
 #[derive(Debug, Deserialize, Validate)]
 pub struct OtpRequest {
     #[validate(length(min = 8, max = 20))]
     pub telephone: String,
     #[validate(length(equal = 6))]
     pub code: String,
+}
+
+/// Phone OTP send/resend payload (`POST /auth/otp/send`).
+#[derive(Debug, Deserialize, Validate)]
+pub struct OtpSendRequest {
+    #[validate(length(min = 8, max = 20))]
+    pub telephone: String,
 }
 
 /// Public user shape (no password hash, no 2FA secret).

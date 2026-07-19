@@ -32,6 +32,13 @@ impl WhatsAppClient {
         format!("{}/message/sendText/{}", self.base_url, self.instance)
     }
 
+    /// Whether Evolution API is usable (base URL + API key present). When false,
+    /// callers fall back to a dev-safe path (e.g. logging the OTP) instead of a
+    /// failed HTTP call. Lets the OTP/notification flow run without a live instance.
+    pub fn is_configured(&self) -> bool {
+        !self.base_url.is_empty() && !self.api_key.is_empty()
+    }
+
     /// Send a text message to `phone`. Returns Ok when Evolution API accepts it; a
     /// non-2xx response or transport error is surfaced.
     pub async fn send_text(&self, phone: &str, text: &str) -> AppResult<()> {

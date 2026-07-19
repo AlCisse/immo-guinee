@@ -31,8 +31,8 @@ use crate::middleware::rate_limit;
 use crate::state::AppState;
 
 use super::dto::{
-    role_for, Envelope, LoginRequest, LoginResponse, LoginSuccess, OtpRequest, RegisterRequest,
-    UpdateProfileRequest, UserPublic,
+    role_for, Envelope, LoginRequest, LoginResponse, LoginSuccess, OtpRequest, OtpSendRequest,
+    RegisterRequest, UpdateProfileRequest, UserPublic,
 };
 
 pub fn routes() -> Router<Arc<AppState>> {
@@ -40,6 +40,8 @@ pub fn routes() -> Router<Arc<AppState>> {
         .route("/auth/register", post(register))
         .route("/auth/login", post(login))
         .route("/auth/otp", post(otp))
+        .route("/auth/otp/send", post(otp_send))
+        .route("/auth/otp/verify", post(otp_verify))
         .route("/auth/me", get(me).patch(update_me))
         .route("/auth/logout", post(logout))
 }
@@ -142,7 +144,64 @@ async fn register(
     .insert(&state.db)
     .await?;
 
+    // FR-001: deliver a phone-verification OTP over WhatsApp (Evolution API).
+    // Delivery failure must not fail registration — the account exists and the
+    // user can request a resend via POST /auth/otp/send.
+    if let Err(e) = crate::services::notify::issue_and_send_otp(&state, &model.telephone).await {
+        tracing::warn!(error = %e, telephone = %model.telephone, "envoi OTP à l'inscription échoué");
+    }
+
     Ok(Json(Envelope { success: true, data: UserPublic::from(model) }))
+}
+
+/// `POST /api/auth/otp/send` — (re)send a phone-verification OTP over WhatsApp.
+///
+/// Anti-enumeration: the response is identical whether or not the number is
+/// registered; a code is only issued/sent for an existing account. The OTP
+/// service still enforces its 60 s resend throttle (429).
+async fn otp_send(
+    State(state): State<Arc<AppState>>,
+    ValidatedJson(req): ValidatedJson<OtpSendRequest>,
+) -> AppResult<Json<Envelope<serde_json::Value>>> {
+    rate_limit::limit_login(&state.redis, &req.telephone).await?;
+
+    let user = user::Entity::find()
+        .filter(user::Column::Telephone.eq(req.telephone.as_str()))
+        .one(&state.db)
+        .await?;
+    if user.is_some() {
+        crate::services::notify::issue_and_send_otp(&state, &req.telephone).await?;
+    }
+
+    Ok(Json(Envelope {
+        success: true,
+        data: json!({ "message": "Si ce numéro est enregistré, un code a été envoyé par WhatsApp." }),
+    }))
+}
+
+/// `POST /api/auth/otp/verify` — verify a phone-verification OTP and, on success,
+/// issue a JWT pair (register → OTP → tokens flow). The 6-digit code is checked
+/// against Redis (services::otp), which enforces the 3-try / 5 min block.
+async fn otp_verify(
+    State(state): State<Arc<AppState>>,
+    ValidatedJson(req): ValidatedJson<OtpRequest>,
+) -> AppResult<Json<Envelope<LoginSuccess>>> {
+    rate_limit::limit_login(&state.redis, &req.telephone).await?;
+
+    crate::services::otp::verify(&state.redis, &req.telephone, &req.code).await?;
+
+    let user = user::Entity::find()
+        .filter(user::Column::Telephone.eq(req.telephone.as_str()))
+        .one(&state.db)
+        .await?
+        .ok_or(AppError::Unauthorized)?;
+
+    if !matches!(user.statut_compte, StatutCompte::Actif) {
+        return Err(AppError::Forbidden("Compte suspendu ou banni".into()));
+    }
+
+    let tokens = jwt::issue_pair(&state.jwt_secret, user.id, role_for(user.type_compte))?;
+    Ok(Json(Envelope { success: true, data: LoginSuccess { tokens } }))
 }
 
 async fn login(

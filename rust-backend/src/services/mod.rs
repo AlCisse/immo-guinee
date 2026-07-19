@@ -42,6 +42,7 @@
 // pub mod media;
 pub mod storage;
 pub mod listing_photo;
+pub mod notify;
 pub mod otp;
 pub mod whatsapp;
 // pub mod sms;
