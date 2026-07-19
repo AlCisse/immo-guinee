@@ -23,7 +23,7 @@
 //!   VisitController 865 l.     -> domain::visits
 //!   PaymentController 771 l.  -> domain::payments
 //!   ModeratorController 762 l. -> domain::moderator
-//!   WahaWebhookController 691 l. -> domain::webhooks::waha
+//!   EvolutionWebhookController 691 l. -> domain::webhooks::evolution
 //!   MessagingController 628 l. -> domain::messaging
 //!   FacebookController 577 l.  -> domain::facebook
 
@@ -36,4 +36,4 @@ pub mod auth;        // T078-T083 (register / login / 2FA TOTP)
 // pub mod admin;      // Phase 5
 // pub mod moderator;  // Phase 5
 // pub mod facebook;   // Phase 5
-// pub mod webhooks;   // Phase 5 (orange/mtn/waha webhooks)
+// pub mod webhooks;   // Phase 5 (orange/mtn/evolution webhooks)

@@ -7,7 +7,7 @@
 //!
 //! Channel -> provider mapping:
 //!   SMS        -> sms::TwilioSmsService   (reqwest, secret from Vault secret/immoguinee/twilio)
-//!   WhatsApp   -> messaging::WahaService  (reqwest, secret from Vault secret/immoguinee/waha)
+//!   WhatsApp   -> messaging::EvolutionService  (reqwest, secret from Vault secret/immoguinee/evolution)
 //!   Push       -> push::ExpoPushService   (reqwest)
 //!   Email      -> lettre::SmtpTransport   (secret from Vault secret/immoguinee/mail)
 //!

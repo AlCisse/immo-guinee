@@ -19,7 +19,7 @@
 - **Database**: PostgreSQL 15+ with PostGIS (primary + read replicas), Redis 7+ (cache/queue/sessions), Elasticsearch (advanced search), PgAdmin, Varnish (cache)
 - **Real-Time**: Axum WebSocket (pusher-compat) + Socket.IO client (messaging, notifications)
 - **Automation**: n8n (workflows), apalis + tokio-cron-scheduler (async jobs)
-- **Messaging**: WAHA (WhatsApp), Twilio API (SMS), Telegram Bot API — via reqwest
+- **Messaging**: Evolution API (WhatsApp), Twilio API (SMS), Telegram Bot API — via reqwest
 - **Monitoring**: tracing + Sentry, Grafana, Prometheus, Logrocket, OSSEC
 - **Secrets**: HashiCorp Vault (KV + Transit) — remplace Docker Secrets
 - **DevOps**: Docker, Docker Compose, Docker Swarm, Traefik (reverse proxy), Nginx, Certbot (SSL), CapRover
@@ -95,7 +95,7 @@
 - ✅ Cache: Redis (BSD-3), Varnish (BSD-2-Clause)
 - ✅ Real-time: Axum WebSocket (MIT), Socket.io (MIT)
 - ✅ Automation: n8n (Fair-code - Source Available)
-- ✅ WhatsApp: WAHA (MIT - self-hosted)
+- ✅ WhatsApp: Evolution API (MIT - self-hosted)
 - ✅ Storage: MinIO dev (AGPL v3), AWS S3 prod (proprietary but standard)
 - ✅ PDF: headless-chrome (MIT/Apache-2.0)
 - ✅ Monitoring: Grafana (AGPL v3), Prometheus (Apache 2.0), tracing (MIT)
@@ -240,7 +240,7 @@ ImmoG/
 │   │   │   ├── disputes.rs      # médiation
 │   │   │   ├── insurances.rs    # Phase 2
 │   │   │   ├── admin.rs         # panel admin
-│   │   │   └── webhooks.rs      # webhooks Orange/MTN/WAHA
+│   │   │   └── webhooks.rs      # webhooks Orange/MTN/Evolution API
 │   │   ├── middleware/          # Tower layers (remplace Http/Middleware)
 │   │   │   ├── mod.rs
 │   │   │   ├── security_headers.rs
@@ -286,7 +286,7 @@ ImmoG/
 │   │   │   ├── content_moderation.rs
 │   │   │   ├── insurance_certificate.rs
 │   │   │   ├── sms.rs                 # Twilio (reqwest)
-│   │   │   ├── whatsapp.rs            # WAHA (reqwest)
+│   │   │   ├── whatsapp.rs            # Evolution API (reqwest)
 │   │   │   ├── orange_money.rs        # reqwest
 │   │   │   └── mtn_momo.rs            # reqwest
 │   │   ├── jobs/                # apalis jobs + scheduler (remplace Jobs + Artisan cron)
@@ -530,7 +530,7 @@ Chosen **Decoupled API-First Architecture** (Rust/Axum backend + Next.js 16 fron
   - `lib/hooks/`: React Query custom hooks for API integration
   - `lib/socket/`: client Echo/Socket.io → Axum WS (pusher-compat)
   - `tests/e2e/`: Playwright end-to-end tests
-- **docker/**: Multi-service orchestration (PostgreSQL, Redis, Elasticsearch, MinIO, Vault, n8n, WAHA, etc.)
+- **docker/**: Multi-service orchestration (PostgreSQL, Redis, Elasticsearch, MinIO, Vault, n8n, Evolution API, etc.)
 - **n8n/**: Automated workflows (notifications, escrow timeouts, backups)
 - **monitoring/**: Grafana dashboards + Prometheus scraping config
 

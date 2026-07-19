@@ -856,7 +856,7 @@ public function updatePreferences(Request $request)
 
     // If WhatsApp changed from false to true, send test message
     if (!$oldPrefs['whatsapp'] && $validated['preferences_notification']['whatsapp']) {
-        // Send test WhatsApp via WAHA
+        // Send test WhatsApp via Evolution API
         // $request->user()->notify(new WhatsAppTestNotification());
     }
 
@@ -870,7 +870,7 @@ public function updatePreferences(Request $request)
 
 **Side Effects**:
 1. Update `preferences_notification` JSON field
-2. If `whatsapp` changed from `false` to `true`, send test WhatsApp message via WAHA
+2. If `whatsapp` changed from `false` to `true`, send test WhatsApp message via Evolution API
 
 ---
 
@@ -1063,7 +1063,7 @@ public function render($request, Throwable $exception)
 - [ ] Rate limiting blocks excessive requests (Laravel throttle middleware)
 - [ ] Phone number uniqueness is enforced (database unique constraint)
 - [ ] Notification preferences update correctly
-- [ ] WhatsApp opt-in sends test message via WAHA
+- [ ] WhatsApp opt-in sends test message via Evolution API
 
 **PHPUnit Test Example**:
 ```php

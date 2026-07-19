@@ -25,7 +25,7 @@ This document resolves all technology decisions for the ImmoGuinée platform wit
 - **Cache/Queue**: Redis 7+ (cache, queue, sessions, broadcasting)
 - **Real-Time**: Laravel Echo (broadcasting) + Socket.IO (client)
 - **Automation**: n8n (workflows) + Laravel Queue (async jobs)
-- **Messaging**: WAHA (WhatsApp), Twilio (SMS), Telegram Bot API
+- **Messaging**: Evolution API (WhatsApp), Twilio (SMS), Telegram Bot API
 - **Payments**: Orange Money API + MTN Mobile Money API
 - **PDF**: Laravel PDF (DomPDF or Snappy/wkhtmltopdf)
 - **AI/ML**: Ollama (LLM for recommendations), TensorFlow.js (fraud detection), Hugging Face (content moderation)
@@ -1065,7 +1065,7 @@ Storage::disk('s3')->put("contracts/{$contract->id}.pdf", $pdfOutput, 'private')
 **Channels**:
 1. **SMS**: Twilio (via `laravel-twilio-channel`)
 2. **Email**: Laravel Mail (SMTP or Resend API)
-3. **WhatsApp**: WAHA (custom channel)
+3. **WhatsApp**: Evolution API (custom channel)
 4. **Telegram**: Telegram Bot API (custom channel)
 5. **Push**: Firebase Cloud Messaging (web push)
 6. **Database**: Store in `notifications` table for in-app
@@ -1149,7 +1149,7 @@ class PaymentConfirmed extends Notification implements ShouldQueue
 }
 ```
 
-**Custom WAHA Channel** (`app/Channels/WahaChannel.php`):
+**Custom Evolution API Channel** (`app/Channels/WahaChannel.php`):
 ```php
 namespace App\Channels;
 
@@ -1163,8 +1163,8 @@ class WahaChannel
         $message = $notification->toWaha($notifiable);
 
         Http::withHeaders([
-            'X-Api-Key' => config('services.waha.api_key'),
-        ])->post(config('services.waha.url') . '/api/sendText', [
+            'X-Api-Key' => config('services.evolution.api_key'),
+        ])->post(config('services.evolution.url') . '/api/sendText', [
             'chatId' => $notifiable->telephone . '@c.us',  // WhatsApp format
             'text' => $message,
         ]);
@@ -1704,10 +1704,10 @@ services:
     networks:
       - immog-network
 
-  # WAHA (WhatsApp)
-  waha:
-    image: devlikeapro/waha:latest
-    container_name: immog-waha
+  # Evolution API (WhatsApp)
+  evolution:
+    image: devlikeapro/evolution:latest
+    container_name: immog-evolution
     ports:
       - "3001:3000"
     environment:
@@ -1917,7 +1917,7 @@ CMD ["node", "server.js"]
 | **PDF Generation** | Laravel PDF (DomPDF) | Latest | LGPL | Or Snappy (wkhtmltopdf) |
 | **SMS** | Twilio | N/A | Proprietary | OTP, notifications |
 | **Email** | Resend | N/A | Proprietary | Transactional emails |
-| **WhatsApp** | WAHA | Latest | MIT | Self-hosted WhatsApp API |
+| **WhatsApp** | Evolution API | Latest | MIT | Self-hosted WhatsApp API |
 | **Telegram** | Telegram Bot API | N/A | Proprietary | Notifications |
 | **Payments (Guinea)** | Orange Money + MTN MoMo | N/A | Proprietary | Mobile Money APIs |
 | **Automation** | n8n | Latest | Fair-code | Workflow automation |

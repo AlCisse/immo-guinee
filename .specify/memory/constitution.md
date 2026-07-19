@@ -136,7 +136,7 @@
 **Orchestrer les workflows métier avec n8n ; les jobs applicatifs avec le scheduler Rust**
 - **Séparation des responsabilités** (NON-NÉGOCIABLE) :
   - **n8n** = workflows **métier / multi-système**, modifiables par des non-développeurs :
-    notifications multi-canal, intégrations (WAHA, Telegram, email), quittances, alertes ops.
+    notifications multi-canal, intégrations (Evolution API, Telegram, email), quittances, alertes ops.
   - **apalis + tokio-cron-scheduler** = jobs **techniques in-process** du backend Rust,
     transactionnels ou couplés au domaine : déblocage escrow (48h/72h), expiration annonces,
     optimisation photos, backups, rafraîchissement de vues, calculs de badges/notes, rétention légale.
@@ -151,7 +151,7 @@
   - `nouveau-message-alerts.json` : Alertes nouveaux messages
   - `docker-ops-telegram.json` : Alertes ops via Telegram
 - **Intégrations n8n** :
-  - WAHA (WhatsApp) : Notifications opt-in
+  - Evolution API (WhatsApp) : Notifications opt-in
   - Twilio SMS : Messages critiques
   - PostgreSQL : Lecture/écriture base de données
   - S3 : Upload/download documents
@@ -166,7 +166,7 @@
   - Base de données : PostgreSQL 15+, Redis 7+
   - Search : Elasticsearch 8.17
   - Automation : n8n
-  - Messaging : WAHA (WhatsApp), Socket.io / Pusher-compat, Axum WebSocket
+  - Messaging : Evolution API (WhatsApp), Socket.io / Pusher-compat, Axum WebSocket
   - Infrastructure : Docker, Docker Swarm, Traefik, Vault (secrets)
 - **Avantages** :
   - Pas de vendor lock-in
@@ -219,7 +219,7 @@ Permissions     : garde RBAC natif (table statique) — remplace Spatie Permissi
 Validation      : validator 0.18 (derive) — remplace FormRequests
 Password        : bcrypt 0.17 (compat hashes existants, aucun re-hash)
 Storage         : rust-s3 0.35 (S3-compatible : MinIO / DO Spaces)
-HTTP client     : reqwest 0.12 (Twilio, WAHA, Orange/MTN, Expo) — remplace Guzzle
+HTTP client     : reqwest 0.12 (Twilio, Evolution API, Orange/MTN, Expo) — remplace Guzzle
 Config          : figment 0.10 (env + toml) — remplace config/*.php + env()
 Logging         : tracing + tracing-subscriber (JSON) + Sentry — remplace Telescope
 Secrets         : vaultrs (Vault KV + Transit) — remplace Docker Secrets/EncryptionService
@@ -244,7 +244,7 @@ Reverse Proxy   : Traefik v2.11 (SSL/TLS auto via Let's Encrypt)
 Cache HTTP      : Varnish 7.6
 WebSocket       : Axum WebSocket (pusher-compat)
 Automation      : n8n
-WhatsApp        : WAHA
+WhatsApp        : Evolution API
 Antivirus       : ClamAV (scan fichiers uploadés)
 Secrets         : HashiCorp Vault (KV + Transit)
 ```
@@ -378,7 +378,7 @@ lib/
 
 ### Notifications
 - [x] Email (SMTP)
-- [x] WhatsApp (WAHA)
+- [x] WhatsApp (Evolution API)
 - [x] SMS (Twilio)
 - [x] Telegram (bot)
 - [x] Push (Expo)
@@ -498,9 +498,9 @@ pending → confirmed → completed
 
 ## Intégrations Externes
 
-### WAHA (WhatsApp)
-- Endpoint : http://waha:3000
-- Webhook : /api/webhooks/waha
+### Evolution API (WhatsApp)
+- Endpoint : http://evolution:8080
+- Webhook : /api/webhooks/evolution
 - Events : message, message.ack, session.status
 - Usage : OTP, notifications, messages commerciaux
 
@@ -639,7 +639,7 @@ pending → confirmed → completed
 
 ### Court terme (1-3 mois)
 - [ ] Application mobile React Native (iOS + Android)
-- [ ] Chatbot WhatsApp via WAHA
+- [ ] Chatbot WhatsApp via Evolution API
 - [ ] Visite virtuelle 360°
 - [ ] Amélioration SEO
 

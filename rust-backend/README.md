@@ -24,7 +24,7 @@ Backend de la plateforme ImmoGuinée, écrit en **Rust (Axum + Tokio)**.
 | RBAC | **natif** — table statique rôles/permissions dans `src/auth/rbac.rs` (aucune crate) |
 | Jobs / scheduler | `apalis` (Redis) + `tokio-cron-scheduler` |
 | Broadcasting temps réel | Axum WebSocket (pusher-compat) |
-| Notifications multi-canal | `reqwest` (Twilio SMS / WAHA WhatsApp / Expo Push) + `lettre` (email) |
+| Notifications multi-canal | `reqwest` (Twilio SMS / Evolution API WhatsApp / Expo Push) + `lettre` (email) |
 | Validation | `validator` |
 | Recherche | `elasticsearch` |
 | PDF | `headless-chrome` (HTML → PDF) |
@@ -64,7 +64,7 @@ rust-backend/
 │   │   └── migration/      # migrations sea-orm (enums + 12 tables) — source de vérité du schéma
 │   ├── auth/               # jwt, rbac (natif) ; totp, oauth2, sessions à venir
 │   ├── domain/             # logique métier par domaine (listings, visits, contracts, payments…)
-│   ├── services/           # services métier (Escrow, OTP, Twilio, WAHA, Orange/MTN MoMo…)
+│   ├── services/           # services métier (Escrow, OTP, Twilio, Evolution API, Orange/MTN MoMo…)
 │   ├── jobs/               # jobs apalis + scheduler
 │   └── notifications/      # Notifiable + channels (SMS/WhatsApp/Push/Email)
 └── Dockerfile              # (à ajouter)

@@ -239,7 +239,7 @@ Un chercheur intéressé par une annonce peut demander une visite physique du bi
 
 - **Comment gérer les annonces de biens situés hors des zones couvertes (ex: Kankan, N'Zérékoré) ?** Lors de la publication, si l'utilisateur sélectionne un quartier non listé (hors Conakry, Dubréka, Coyah), un message s'affiche "Cette zone n'est pas encore couverte par ImmoGuinée. Nous prévoyons d'étendre nos services à [ville] en [date estimée]. Inscrivez-vous à notre liste d'attente pour être notifié du lancement." L'annonce n'est pas publiée mais l'utilisateur peut s'inscrire sur une liste d'attente.
 
-- **Que se passe-t-il si la connexion WAHA (WhatsApp Business API) est déconnectée pendant 24h ?** Le système détecte automatiquement la déconnexion WAHA via un healthcheck toutes les 5 minutes. Si la connexion échoue, une alerte est envoyée aux administrateurs ImmoGuinée par email + SMS. Les notifications WhatsApp échouent gracieusement (fallback automatique vers SMS + Push + Email uniquement) sans bloquer les autres fonctionnalités. Un message d'état s'affiche dans le dashboard admin "WhatsApp indisponible depuis X heures - Notifications basculées sur SMS/Email/Push".
+- **Que se passe-t-il si la connexion Evolution API (WhatsApp Business API) est déconnectée pendant 24h ?** Le système détecte automatiquement la déconnexion Evolution API via un healthcheck toutes les 5 minutes. Si la connexion échoue, une alerte est envoyée aux administrateurs ImmoGuinée par email + SMS. Les notifications WhatsApp échouent gracieusement (fallback automatique vers SMS + Push + Email uniquement) sans bloquer les autres fonctionnalités. Un message d'état s'affiche dans le dashboard admin "WhatsApp indisponible depuis X heures - Notifications basculées sur SMS/Email/Push".
 
 ---
 

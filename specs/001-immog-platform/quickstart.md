@@ -18,7 +18,7 @@ This guide walks you through setting up the ImmoGuinée development environment 
 - Redis 7 cache + queue
 - Meilisearch (advanced search)
 - n8n automation workflows
-- WAHA (WhatsApp) local instance
+- Evolution API (WhatsApp) local instance
 - MinIO (S3-compatible storage)
 - Grafana + Prometheus monitoring
 - Laravel Echo Server (WebSocket)
@@ -178,9 +178,9 @@ TWILIO_PHONE_NUMBER=+1234567890
 MAIL_MAILER=resend
 RESEND_API_KEY=re_xxx
 
-# WAHA (WhatsApp)
-WAHA_URL=http://waha:3001
-WAHA_API_KEY=your-waha-secret
+# Evolution API (WhatsApp)
+WAHA_URL=http://evolution:3001
+WAHA_API_KEY=your-evolution-secret
 
 # Orange Money (Sandbox)
 ORANGE_MONEY_API_KEY=sandbox-key
@@ -431,13 +431,13 @@ docker-compose up -d n8n
 
 ---
 
-### 4.2 Start WAHA (WhatsApp)
+### 4.2 Start Evolution API (WhatsApp)
 
 ```bash
-docker-compose up -d waha
+docker-compose up -d evolution
 ```
 
-1. Open WAHA: http://localhost:3001
+1. Open Evolution API: http://localhost:3001
 2. Scan QR code with WhatsApp
 3. Update `.env` with your API key
 

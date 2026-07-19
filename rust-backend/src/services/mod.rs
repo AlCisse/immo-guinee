@@ -18,7 +18,7 @@
 //!   OrangeMoneyService         -> services::payment::OrangeMoneyService (reqwest)
 //!   OtpService                 -> services::otp::OtpService (Redis TTL + Twilio)
 //!   SmsService                  -> services::sms::TwilioSmsService (reqwest)
-//!   WhatsAppService            -> services::messaging::WahaService (reqwest)
+//!   WhatsAppService            -> services::messaging::EvolutionService (reqwest)
 //!   FacebookOAuthService        -> services::facebook::FacebookOAuthService
 //!   FacebookPagePublisher       -> services::facebook::PagePublisher
 //!   ContentModerationService    -> services::moderation::ContentModerationService

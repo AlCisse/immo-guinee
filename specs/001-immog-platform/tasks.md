@@ -85,7 +85,7 @@ Le dossier `backend/` (prototype Laravel) est **archivé/supprimé** au profit d
 
 - [x] T001 Initialize Rust backend crate at rust-backend/ (Cargo.toml, `immog-backend` + `immog-migrate` bins, Axum boot) — scaffold en place
 - [x] T002 [P] Initialize Next.js 16 project structure at frontend/ with TypeScript, TailwindCSS, PWA plugin, React Leaflet
-- [ ] T003 [P] Configure Docker Compose multi-service stack in docker/docker-compose.yml (PostgreSQL+PostGIS, Redis, Elasticsearch, Varnish, MinIO, Vault, n8n, WAHA) — ajouter service `rust-backend` (+ worker apalis, scheduler)
+- [ ] T003 [P] Configure Docker Compose multi-service stack in docker/docker-compose.yml (PostgreSQL+PostGIS, Redis, Elasticsearch, Varnish, MinIO, Vault, n8n, Evolution API) — ajouter service `rust-backend` (+ worker apalis, scheduler)
 - [ ] T004 [P] Setup environment configuration files: rust-backend/.env.example + config.toml, frontend/.env.example with all required variables (prod = Vault)
 - [x] T005 [P] Configure ESLint + Prettier for frontend in frontend/.eslintrc.json and frontend/.prettierrc
 - [ ] T006 [P] Configure rustfmt + clippy for backend in rust-backend/rustfmt.toml + `#![deny(warnings)]` CI (remplace PHP CS Fixer)
@@ -679,7 +679,7 @@ Le dossier `backend/` (prototype Laravel) est **archivé/supprimé** au profit d
 
 ### Docker & Orchestration
 
-- [ ] T276 [P] Finalize docker/docker-compose.yml with all services (PostgreSQL+PostGIS, Redis, Elasticsearch, Varnish, MinIO, Vault, n8n, WAHA, Traefik, Grafana, Prometheus, PgAdmin, rust-backend, apalis-worker, scheduler, etc.)
+- [ ] T276 [P] Finalize docker/docker-compose.yml with all services (PostgreSQL+PostGIS, Redis, Elasticsearch, Varnish, MinIO, Vault, n8n, Evolution API, Traefik, Grafana, Prometheus, PgAdmin, rust-backend, apalis-worker, scheduler, etc.)
 - [ ] T277 [P] Create docker/docker-compose.prod.yml for production environment
 - [ ] T278 [P] Create docker/docker-swarm.yml for Docker Swarm orchestration
 - [ ] T279 [P] Create rust-backend.Dockerfile (multi-stage: cargo build --release → distroless/debian-slim runtime) for CapRover deployment
