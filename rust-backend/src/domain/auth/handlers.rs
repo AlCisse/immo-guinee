@@ -14,17 +14,19 @@
 use std::sync::Arc;
 
 use axum::extract::State;
-use axum::routing::post;
+use axum::routing::{get, post};
 use axum::Json;
 use axum::Router;
+use redis::AsyncCommands;
 use sea_orm::{ActiveModelTrait, ActiveValue::Set, ColumnTrait, EntityTrait, QueryFilter};
+use serde_json::json;
 use uuid::Uuid;
 
 use crate::auth::jwt;
 use crate::db::entities::sea_orm_active_enums::{StatutCompte, TypeCompte};
 use crate::db::entities::user;
 use crate::error::{AppError, AppResult};
-use crate::extractors::ValidatedJson;
+use crate::extractors::{revoked_key, AuthUser, ValidatedJson};
 use crate::middleware::rate_limit;
 use crate::state::AppState;
 
@@ -38,6 +40,32 @@ pub fn routes() -> Router<Arc<AppState>> {
         .route("/auth/register", post(register))
         .route("/auth/login", post(login))
         .route("/auth/otp", post(otp))
+        .route("/auth/me", get(me))
+        .route("/auth/logout", post(logout))
+}
+
+/// `GET /api/auth/me` — the authenticated user's profile.
+async fn me(
+    auth: AuthUser,
+    State(state): State<Arc<AppState>>,
+) -> AppResult<Json<Envelope<UserPublic>>> {
+    let user = user::Entity::find_by_id(auth.id)
+        .one(&state.db)
+        .await?
+        .ok_or(AppError::Unauthorized)?;
+    Ok(Json(Envelope { success: true, data: UserPublic::from(user) }))
+}
+
+/// `POST /api/auth/logout` — revoke the current access token (Redis deny-list,
+/// TTL = the token's remaining lifetime).
+async fn logout(
+    auth: AuthUser,
+    State(state): State<Arc<AppState>>,
+) -> AppResult<Json<Envelope<serde_json::Value>>> {
+    let ttl = auth.exp.saturating_sub(jsonwebtoken::get_current_timestamp()).max(1);
+    let mut conn = state.redis.clone();
+    let _: () = conn.set_ex(revoked_key(auth.jti), 1, ttl).await?;
+    Ok(Json(Envelope { success: true, data: json!({ "message": "Déconnecté" }) }))
 }
 
 async fn register(

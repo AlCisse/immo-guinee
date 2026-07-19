@@ -7,6 +7,7 @@ use std::sync::Arc;
 use axum::extract::{FromRef, FromRequestParts};
 use axum::http::header::AUTHORIZATION;
 use axum::http::request::Parts;
+use redis::AsyncCommands;
 use uuid::Uuid;
 
 use crate::auth::jwt::{self, TokenType};
@@ -14,12 +15,21 @@ use crate::auth::rbac::{Permission, Role};
 use crate::error::{AppError, AppResult};
 use crate::state::AppState;
 
+/// Redis key for a revoked (logged-out) token id.
+pub fn revoked_key(jti: Uuid) -> String {
+    format!("revoked:{jti}")
+}
+
 /// The authenticated caller, injected into handlers that require a valid token.
 #[derive(Debug, Clone)]
 pub struct AuthUser {
     pub id: Uuid,
     /// Role carried in the token; authorization checks go through `rbac`.
     pub role: String,
+    /// Token id (for logout/revocation).
+    pub jti: Uuid,
+    /// Token expiry (unix seconds), used to size the revocation TTL.
+    pub exp: u64,
 }
 
 impl AuthUser {
@@ -66,6 +76,14 @@ where
         let app = Arc::<AppState>::from_ref(state);
         let token = bearer_token(parts).ok_or(AppError::Unauthorized)?;
         let claims = jwt::verify(&app.jwt_secret, token, TokenType::Access)?;
-        Ok(AuthUser { id: claims.sub, role: claims.role })
+
+        // Reject tokens revoked via logout (Redis deny-list).
+        let mut conn = app.redis.clone();
+        let revoked: bool = conn.exists(revoked_key(claims.jti)).await?;
+        if revoked {
+            return Err(AppError::Unauthorized);
+        }
+
+        Ok(AuthUser { id: claims.sub, role: claims.role, jti: claims.jti, exp: claims.exp })
     }
 }

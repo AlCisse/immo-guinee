@@ -119,3 +119,13 @@ pub struct PhotoUploadResponse {
     pub count: usize,
     pub photos: serde_json::Value,
 }
+
+/// Update-listing payload (FR-013): only titre and description are editable —
+/// prix, quartier and type are immutable; photos have their own endpoint.
+#[derive(Debug, Deserialize, Validate)]
+pub struct UpdateListingRequest {
+    #[validate(length(min = 5, max = 100, message = "titre : 5 à 100 caractères"))]
+    pub titre: Option<String>,
+    #[validate(length(min = 20, max = 2000, message = "description : 20 à 2000 caractères"))]
+    pub description: Option<String>,
+}

@@ -7,6 +7,7 @@ mod common;
 use std::io::Cursor;
 
 use axum::http::HeaderValue;
+use axum::http::StatusCode;
 use axum::http::header::AUTHORIZATION;
 use axum_test::multipart::{MultipartForm, Part};
 use image::{DynamicImage, ImageFormat, RgbImage};
@@ -76,6 +77,29 @@ async fn register_login_create_search_show_flow() {
     let show = s.get(&format!("/api/listings/{id}")).await;
     show.assert_status_ok();
     assert_eq!(show.json::<serde_json::Value>()["data"]["nombre_vues"], 1);
+
+    // 6. owner edits the title (FR-013)
+    let patch = s
+        .patch(&format!("/api/listings/{id}"))
+        .add_header(AUTHORIZATION, bearer(&token))
+        .json(&json!({ "titre": "Appartement rénové 2 chambres" }))
+        .await;
+    patch.assert_status_ok();
+    assert_eq!(
+        patch.json::<serde_json::Value>()["data"]["titre"],
+        "Appartement rénové 2 chambres"
+    );
+
+    // 7. owner soft-deletes → archived listing leaves the public search
+    s.delete(&format!("/api/listings/{id}"))
+        .add_header(AUTHORIZATION, bearer(&token))
+        .await
+        .assert_status_ok();
+    let search2 = s.get("/api/listings/search?quartier=KALOUM").await;
+    let total2 = search2.json::<serde_json::Value>()["data"]["pagination"]["total"]
+        .as_u64()
+        .unwrap();
+    assert_eq!(total2, 0, "archived listing must not appear in public search");
 }
 
 /// Upload a photo → optimized to WebP → stored in MinIO → listing.photos updated.
@@ -137,4 +161,39 @@ async fn upload_photo_stores_in_minio() {
         assert!(url.contains("immoguinee-images/listings/"), "unexpected url: {url}");
         assert!(url.ends_with(".webp"));
     }
+}
+
+/// `/me` returns the profile; `/logout` revokes the token so `/me` then fails.
+#[tokio::test]
+async fn me_and_logout_revoke_token() {
+    let app = setup().await;
+    let s = &app.server;
+
+    s.post("/api/auth/register")
+        .json(&json!({ "telephone": PHONE, "mot_de_passe": PASSWORD, "nom_complet": "Awa Diallo" }))
+        .await
+        .assert_status_ok();
+    let login = s
+        .post("/api/auth/login")
+        .json(&json!({ "telephone": PHONE, "mot_de_passe": PASSWORD }))
+        .await;
+    let token = login.json::<serde_json::Value>()["data"]["access_token"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+
+    // /me works with a valid token
+    let me = s.get("/api/auth/me").add_header(AUTHORIZATION, bearer(&token)).await;
+    me.assert_status_ok();
+    assert_eq!(me.json::<serde_json::Value>()["data"]["telephone"], PHONE);
+
+    // logout revokes the token
+    s.post("/api/auth/logout")
+        .add_header(AUTHORIZATION, bearer(&token))
+        .await
+        .assert_status_ok();
+
+    // /me is now rejected (token in the deny-list)
+    let me2 = s.get("/api/auth/me").add_header(AUTHORIZATION, bearer(&token)).await;
+    me2.assert_status(StatusCode::UNAUTHORIZED);
 }

@@ -18,6 +18,7 @@ use serde_json::json;
 use uuid::Uuid;
 
 use crate::db::entities::listing;
+use crate::db::entities::sea_orm_active_enums::StatutListing;
 use crate::error::{AppError, AppResult};
 use crate::extractors::{AuthUser, ValidatedJson};
 use crate::services::listing_photo;
@@ -25,7 +26,7 @@ use crate::state::AppState;
 
 use super::dto::{
     CreateListingRequest, Envelope, ListingResponse, ListingSearchResponse, Pagination,
-    PhotoUploadResponse,
+    PhotoUploadResponse, UpdateListingRequest,
 };
 use super::query::{apply_filters, normalize_pagination, ListingSearchQuery};
 
@@ -37,7 +38,7 @@ pub fn routes() -> Router<Arc<AppState>> {
     Router::new()
         .route("/listings/search", get(search))
         .route("/listings", post(create))
-        .route("/listings/{id}", get(show))
+        .route("/listings/{id}", get(show).patch(update).delete(destroy))
         .route(
             "/listings/{id}/photos",
             post(upload_photos).layer(DefaultBodyLimit::max(PHOTOS_BODY_LIMIT)),
@@ -166,4 +167,54 @@ async fn upload_photos(
     am.update(&state.db).await?;
 
     Ok(Json(Envelope { success: true, data: PhotoUploadResponse { count, photos: photos_json } }))
+}
+
+/// `PATCH /api/listings/{id}` — owner-only edit of titre / description (FR-013).
+async fn update(
+    auth: AuthUser,
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<Uuid>,
+    ValidatedJson(req): ValidatedJson<UpdateListingRequest>,
+) -> AppResult<Json<Envelope<ListingResponse>>> {
+    let listing = owned_listing(&state.db, id, auth.id).await?;
+
+    let mut am: listing::ActiveModel = listing.into();
+    if let Some(titre) = req.titre {
+        am.titre = Set(titre);
+    }
+    if let Some(description) = req.description {
+        am.description = Set(description);
+    }
+    am.date_derniere_maj = Set(Some(chrono::Utc::now().fixed_offset()));
+
+    let updated = am.update(&state.db).await?;
+    Ok(Json(Envelope { success: true, data: ListingResponse::from(updated) }))
+}
+
+/// `DELETE /api/listings/{id}` — owner-only soft delete (statut → ARCHIVE).
+async fn destroy(
+    auth: AuthUser,
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<Uuid>,
+) -> AppResult<Json<Envelope<serde_json::Value>>> {
+    let listing = owned_listing(&state.db, id, auth.id).await?;
+
+    let mut am: listing::ActiveModel = listing.into();
+    am.statut = Set(StatutListing::Archive);
+    am.update(&state.db).await?;
+
+    Ok(Json(Envelope { success: true, data: json!({ "message": "Annonce archivée" }) }))
+}
+
+/// Fetch a listing and ensure `user_id` owns it (`404` if missing, `403` if not owner).
+async fn owned_listing(
+    db: &sea_orm::DatabaseConnection,
+    id: Uuid,
+    user_id: Uuid,
+) -> AppResult<listing::Model> {
+    let listing = listing::Entity::find_by_id(id).one(db).await?.ok_or(AppError::NotFound)?;
+    if listing.createur_id != user_id {
+        return Err(AppError::Forbidden("Vous n'êtes pas le propriétaire de cette annonce".into()));
+    }
+    Ok(listing)
 }

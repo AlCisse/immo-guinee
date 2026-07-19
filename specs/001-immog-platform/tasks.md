@@ -221,8 +221,8 @@ Le dossier `backend/` (prototype Laravel) est **archivé/supprimé** au profit d
 - [x] T078 [P] [US1] Create POST /api/auth/register handler in rust-backend/src/routes/auth.rs::register() with JWT token generation (FR-001 OTP SMS)
 - [x] T079 [P] [US1] Create POST /api/auth/otp/verify handler in auth.rs::verify_otp() (FR-001 OTP validation)
 - [x] T080 [P] [US1] Create POST /api/auth/login handler in auth.rs::login() with JWT token response (FR-003 phone + password, bcrypt compat)
-- [ ] T081 [P] [US1] Create POST /api/auth/logout handler in auth.rs::logout() with token revocation
-- [ ] T082 [P] [US1] Create GET /api/auth/me handler in auth.rs::me() to fetch authenticated user
+- [x] T081 [P] [US1] Create POST /api/auth/logout handler in auth.rs::logout() with token revocation
+- [x] T082 [P] [US1] Create GET /api/auth/me handler in auth.rs::me() to fetch authenticated user
 - [ ] T083 [P] [US1] Create PATCH /api/auth/me handler in auth.rs::update_profile() (FR-005 notification preferences, FR-062 4 toggles indépendants push/sms/email/whatsapp)
 - [ ] T083a [P] [US1] Create POST /api/auth/password/forgot handler in auth.rs::forgot_password() — envoi OTP SMS (FR-004, SMS uniquement, pas d'email)
 - [ ] T083b [P] [US1] Create POST /api/auth/password/reset handler in auth.rs::reset_password() — vérif OTP + nouveau hash bcrypt (FR-004)
@@ -232,10 +232,10 @@ Le dossier `backend/` (prototype Laravel) est **archivé/supprimé** au profit d
 - [x] T084 [US1] Create POST /api/listings (create, AuthUser+ValidatedJson) + POST /api/listings/{id}/photos (owner-only, multipart → optimize → S3) handlers in domain/listings/handlers.rs (FR-006, FR-009, FR-011, FR-012). NB: geolocation/PostGIS différé.
 - [ ] T085 [US1] Create optimize_listing_photos apalis job in rust-backend/src/jobs/optimize_listing_photos.rs using image + imageproc (FR-010 WebP conversion)
 - [x] T086 [P] [US1] Create GET /api/listings/{id} handler in domain/listings/handlers.rs::show() with atomic view counter increment
-- [ ] T087 [P] [US1] Create PATCH /api/listings/{id} handler in listings.rs::update() (FR-013 title/description/photos only)
-- [ ] T088 [P] [US1] Create DELETE /api/listings/{id} handler in listings.rs::destroy() with soft delete
+- [x] T087 [P] [US1] Create PATCH /api/listings/{id} handler in listings.rs::update() (FR-013 title/description/photos only)
+- [x] T088 [P] [US1] Create DELETE /api/listings/{id} handler in listings.rs::destroy() with soft delete
 - [ ] T089 [US1] Create check_expired_listings scheduled job in rust-backend/src/jobs/check_expired_listings.rs (FR-014 auto-expire after 90 days)
-- [ ] T090 [P] [US1] Create POST /api/listings/{id}/premium handler in listings.rs::apply_premium() for badge URGENT, remontée 48h, photos pro (FR-015)
+- [ ] T090 [P] [US1] Create POST /api/listings/{id}/premium handler for badge URGENT, remontée 48h, photos pro (FR-015). ⏸️ DIFFÉRÉ : fonctionnalité payante → dépend du domaine Paiements (Phase 4). `options_premium` (JSONB) déjà en place, piloté par le flux de paiement.
 
 ### Backend - Search & Filters with Elasticsearch (FR-016 to FR-021)
 

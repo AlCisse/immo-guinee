@@ -8,8 +8,8 @@ use validator::Validate;
 
 use crate::error::AppError;
 
-mod auth_user;
-pub use auth_user::AuthUser;
+pub mod auth_user;
+pub use auth_user::{revoked_key, AuthUser};
 
 /// Deserialize a JSON body and run `validator` rules before the handler sees it
 /// (replaces Laravel FormRequest `rules()` + `validated()`). Reuses `axum::Json`
