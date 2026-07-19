@@ -1,0 +1,134 @@
+[package]
+name = "immog-backend"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "ImmoGuinée platform — Rust backend (migration from Laravel 12)"
+license = "proprietary"
+publish = false
+
+[[bin]]
+name = "immog-backend"
+path = "src/main.rs"
+
+[[bin]]
+name = "immog-migrate"
+path = "src/bin/migrate.rs"
+
+# See README.md for the full intended stack (added incrementally per migration phase).
+# Only foundational deps are uncommented so `cargo check` stays green early.
+[dependencies]
+# --- Web / API ---
+axum = { version = "0.8", features = ["macros", "ws"] }
+axum-extra = { version = "0.10", features = ["typed-header"] }
+tower = { version = "0.5", features = ["util", "limit", "timeout"] }
+tower-http = { version = "0.6", features = ["trace", "cors", "compression-gzip", "timeout", "set-header", "limit"] }
+hyper = "1"
+
+# --- Async runtime ---
+tokio = { version = "1", features = ["full"] }
+tokio-util = "0.7"
+async-trait = "0.1"
+futures = "0.3"
+
+# --- ORM / DB (replaces Eloquent) ---
+# SeaORM: entities + relations + migrations (ActiveModel, close to Eloquent).
+sea-orm = { version = "1.1", features = ["sqlx-postgres", "runtime-tokio-rustls", "macros", "with-uuid", "with-chrono", "with-json"] }
+sea-orm-migration = "1.1"
+# SQLx: compile-time checked raw SQL for hot paths / ad-hoc queries.
+sqlx = { version = "0.8", default-features = false, features = ["postgres", "runtime-tokio-rustls", "uuid", "chrono", "json", "macros"] }
+
+# --- Redis / cache (replaces Laravel Cache/Redis facade) ---
+redis = { version = "0.27", features = ["tokio-comp", "connection-manager"] }
+deadpool-redis = "0.18"
+
+# --- Serde ---
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# --- Auth (replaces Passport / Sanctum / 2FA) ---
+jsonwebtoken = "9"          # JWT signing/verification (interop with Laravel JWT_SECRET via Vault)
+bcrypt = "0.17"             # password hash compat (existing bcrypt hashes)
+totp-rs = { version = "5", features = ["gen_secret"] }  # 2FA (replaces pragmarx/google2fa)
+# oxide-auth = "0.6"        # OAuth2 server (replaces Passport) — uncomment in Phase 0 auth step
+# tower-sessions = "0.13"  # Sanctum-like cookie sessions — uncomment when wiring frontend stateful auth
+# axum-login = "0.13"
+
+# --- Validation (replaces FormRequests) ---
+validator = { version = "0.18", features = ["derive"] }
+
+# --- IDs / time ---
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+
+# --- HTTP client (replaces Guzzle: Twilio, WAHA, Orange/MTN, Expo, Facebook) ---
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "stream", "multipart"] }
+
+# --- Config / env (replaces Laravel config/*.php + env()) ---
+figment = { version = "0.10", features = ["env", "toml"] }
+dotenvy = "0.15"
+
+# --- Tracing / logging (replaces Laravel logging + Telescope) ---
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+# sentry = { version = "0.34", features = ["tracing"] }   # Phase 5
+
+# --- Error handling ---
+thiserror = "2"
+anyhow = "1"
+
+# --- Misc ---
+once_cell = "1"
+url = "2"
+bytes = "1"
+regex = "1"
+
+# ===== Phase-specific deps (uncomment when the phase starts) =====
+# # Jobs / queues (replaces Laravel Queue + Horizon) — Phase 5
+# apalis = { version = "0.6", features = ["redis"] }
+# tokio-cron-scheduler = "0.11"
+#
+# # Storage S3 / DO Spaces / MinIO (replaces AWS SDK PHP / flysystem) — Phase 1
+# aws-sdk-s3 = "1"
+# aws-config = { version = "1", features = ["behavior-version-latest"] }
+#
+# # Vault (replaces Docker Secrets / SecretHelper / EncryptionService) — Phase 0 auth+secrets
+# vaultrs = "0.7"
+# vaultrs-login = "0.7"
+#
+# RBAC (replaces Spatie Permission): implemented natively in src/auth/rbac.rs
+# (fixed roles/permissions, static table) — no external crate needed.
+#
+# # Search (replaces Scout + Elasticsearch) — Phase 1
+# elasticsearch = { version = "8.5", default-features = false, features = ["rustls-tls"] }
+#
+# # Email (replaces Laravel Mail) — Phase 5
+# lettre = { version = "0.11", default-features = false, features = ["rustls-tls", "smtp", "tokio1"] }
+#
+# # PDF (replaces DOMPDF / Blade) — Phase 3 (contracts)
+# headless-chrome = "1"        # HTML template -> PDF (closest to Blade -> DOMPDF)
+# # printpdf = "0.7"           # programmatic PDF alt
+#
+# # Images / watermarks (replaces Intervention Image) — Phase 1
+# image = "0.25"
+# imageproc = "0.25"
+#
+# # Broadcasting / Pusher compat (replaces Reverb + Echo server) — Phase 2
+# pusher = "0.3"
+#
+# # Metrics (replaces Horizon dashboard / prometheus exporters) — Phase 5
+# metrics = "0.23"
+# metrics-exporter-prometheus = "0.15"
+
+[dev-dependencies]
+axum-test = "16"
+tower = { version = "0.5", features = ["util"] }
+mockall = "0.13"
+pretty_assertions = "1"
+tokio-test = "0.4"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = true
