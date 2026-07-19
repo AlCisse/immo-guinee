@@ -72,10 +72,12 @@ pub struct UserPublic {
     pub telephone: String,
     pub email: Option<String>,
     pub nom_complet: String,
+    pub bio: Option<String>,
     pub type_compte: TypeCompte,
     pub badge_certification: Badge,
     pub statut_verification: StatutVerification,
     pub statut_compte: StatutCompte,
+    pub preferences_notification: serde_json::Value,
     pub date_inscription: DateTimeWithTimeZone,
 }
 
@@ -86,10 +88,12 @@ impl From<crate::db::entities::user::Model> for UserPublic {
             telephone: m.telephone,
             email: m.email,
             nom_complet: m.nom_complet,
+            bio: m.bio,
             type_compte: m.type_compte,
             badge_certification: m.badge_certification,
             statut_verification: m.statut_verification,
             statut_compte: m.statut_compte,
+            preferences_notification: m.preferences_notification,
             date_inscription: m.date_inscription,
         }
     }
@@ -115,6 +119,28 @@ pub struct LoginRequires2Fa {
 pub enum LoginResponse {
     Tokens(LoginSuccess),
     Requires2Fa(LoginRequires2Fa),
+}
+
+/// Partial notification preferences (FR-005): each channel is toggled
+/// independently. WhatsApp is opt-in.
+#[derive(Debug, Deserialize)]
+pub struct NotificationPrefs {
+    pub push: Option<bool>,
+    pub sms: Option<bool>,
+    pub email: Option<bool>,
+    pub whatsapp: Option<bool>,
+}
+
+/// Profile update payload (PATCH /api/auth/me). All fields optional.
+#[derive(Debug, Deserialize, Validate)]
+pub struct UpdateProfileRequest {
+    #[validate(length(min = 2, max = 255, message = "nom complet invalide"))]
+    pub nom_complet: Option<String>,
+    #[validate(length(max = 500))]
+    pub bio: Option<String>,
+    #[validate(email(message = "email invalide"))]
+    pub email: Option<String>,
+    pub notifications: Option<NotificationPrefs>,
 }
 
 /// Map the account type to the JWT `role` claim used by RBAC.

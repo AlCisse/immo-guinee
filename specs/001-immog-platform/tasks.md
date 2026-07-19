@@ -160,7 +160,7 @@ Le dossier `backend/` (prototype Laravel) est **archivé/supprimé** au profit d
 ### External Integrations
 
 - [ ] T048 Create Twilio SMS client in rust-backend/src/services/sms.rs (reqwest) (FR-061 Canal 3)
-- [ ] T049 [P] Create WAHA WhatsApp client in rust-backend/src/services/whatsapp.rs (reqwest) (FR-061 Canal 2)
+- [x] T049 [P] Create WhatsApp client (Evolution API v2, sendText + apikey) in rust-backend/src/services/whatsapp.rs (reqwest) — send_text + number normalization (FR-061 Canal 2). NB: envoi réel = session WhatsApp connectée (staging) ; wiring OTP/notifications = W2.
 - [ ] T050 [P] Create email channel (lettre SMTP) in rust-backend/src/notifications/channels/email.rs
 - [ ] T051 Create Orange Money API client in rust-backend/src/services/orange_money.rs (reqwest) (FR-039)
 - [ ] T052 [P] Create MTN Mobile Money API client in rust-backend/src/services/mtn_momo.rs (reqwest) (FR-039)
@@ -223,7 +223,7 @@ Le dossier `backend/` (prototype Laravel) est **archivé/supprimé** au profit d
 - [x] T080 [P] [US1] Create POST /api/auth/login handler in auth.rs::login() with JWT token response (FR-003 phone + password, bcrypt compat)
 - [x] T081 [P] [US1] Create POST /api/auth/logout handler in auth.rs::logout() with token revocation
 - [x] T082 [P] [US1] Create GET /api/auth/me handler in auth.rs::me() to fetch authenticated user
-- [ ] T083 [P] [US1] Create PATCH /api/auth/me handler in auth.rs::update_profile() (FR-005 notification preferences, FR-062 4 toggles indépendants push/sms/email/whatsapp)
+- [x] T083 [P] [US1] Create PATCH /api/auth/me handler in auth.rs::update_profile() (FR-005 notification preferences, FR-062 4 toggles indépendants push/sms/email/whatsapp)
 - [ ] T083a [P] [US1] Create POST /api/auth/password/forgot handler in auth.rs::forgot_password() — envoi OTP SMS (FR-004, SMS uniquement, pas d'email)
 - [ ] T083b [P] [US1] Create POST /api/auth/password/reset handler in auth.rs::reset_password() — vérif OTP + nouveau hash bcrypt (FR-004)
 

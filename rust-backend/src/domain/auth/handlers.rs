@@ -32,7 +32,7 @@ use crate::state::AppState;
 
 use super::dto::{
     role_for, Envelope, LoginRequest, LoginResponse, LoginSuccess, OtpRequest, RegisterRequest,
-    UserPublic,
+    UpdateProfileRequest, UserPublic,
 };
 
 pub fn routes() -> Router<Arc<AppState>> {
@@ -40,7 +40,7 @@ pub fn routes() -> Router<Arc<AppState>> {
         .route("/auth/register", post(register))
         .route("/auth/login", post(login))
         .route("/auth/otp", post(otp))
-        .route("/auth/me", get(me))
+        .route("/auth/me", get(me).patch(update_me))
         .route("/auth/logout", post(logout))
 }
 
@@ -66,6 +66,50 @@ async fn logout(
     let mut conn = state.redis.clone();
     let _: () = conn.set_ex(revoked_key(auth.jti), 1, ttl).await?;
     Ok(Json(Envelope { success: true, data: json!({ "message": "Déconnecté" }) }))
+}
+
+/// `PATCH /api/auth/me` — update the profile and notification preferences (FR-005).
+async fn update_me(
+    auth: AuthUser,
+    State(state): State<Arc<AppState>>,
+    ValidatedJson(req): ValidatedJson<UpdateProfileRequest>,
+) -> AppResult<Json<Envelope<UserPublic>>> {
+    let user = user::Entity::find_by_id(auth.id)
+        .one(&state.db)
+        .await?
+        .ok_or(AppError::Unauthorized)?;
+
+    // Merge the partial notification toggles into the stored JSON object.
+    let mut prefs = user.preferences_notification.clone();
+    if let (Some(n), Some(obj)) = (req.notifications, prefs.as_object_mut()) {
+        if let Some(v) = n.push {
+            obj.insert("push".into(), json!(v));
+        }
+        if let Some(v) = n.sms {
+            obj.insert("sms".into(), json!(v));
+        }
+        if let Some(v) = n.email {
+            obj.insert("email".into(), json!(v));
+        }
+        if let Some(v) = n.whatsapp {
+            obj.insert("whatsapp".into(), json!(v));
+        }
+    }
+
+    let mut am: user::ActiveModel = user.into();
+    if let Some(nom) = req.nom_complet {
+        am.nom_complet = Set(nom);
+    }
+    if let Some(bio) = req.bio {
+        am.bio = Set(Some(bio));
+    }
+    if let Some(email) = req.email {
+        am.email = Set(Some(email));
+    }
+    am.preferences_notification = Set(prefs);
+
+    let updated = am.update(&state.db).await?;
+    Ok(Json(Envelope { success: true, data: UserPublic::from(updated) }))
 }
 
 async fn register(

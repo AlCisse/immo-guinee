@@ -12,6 +12,7 @@ use sea_orm::DatabaseConnection;
 use crate::config::Config;
 use crate::error::AppResult;
 use crate::services::storage::S3Storage;
+use crate::services::whatsapp::WhatsAppClient;
 
 /// Holds long-lived, shareable dependencies.
 pub struct AppState {
@@ -22,6 +23,8 @@ pub struct AppState {
     pub jwt_secret: Vec<u8>,
     /// S3-compatible object storage (listing photos, documents).
     pub storage: S3Storage,
+    /// WhatsApp sender (Evolution API).
+    pub whatsapp: WhatsAppClient,
     // Filled in later phases: vault_client, notifier, queue, ...
 }
 
@@ -44,6 +47,7 @@ impl AppState {
         let jwt_secret = load_jwt_secret(cfg).await?;
 
         let storage = S3Storage::from_config(cfg)?;
+        let whatsapp = WhatsAppClient::from_config(cfg);
 
         Ok(Self {
             db,
@@ -51,6 +55,7 @@ impl AppState {
             cfg: cfg.clone(),
             jwt_secret,
             storage,
+            whatsapp,
         })
     }
 }

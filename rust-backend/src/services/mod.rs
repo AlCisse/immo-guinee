@@ -43,6 +43,7 @@
 pub mod storage;
 pub mod listing_photo;
 pub mod otp;
+pub mod whatsapp;
 // pub mod sms;
 // pub mod messaging;
 // pub mod facebook;

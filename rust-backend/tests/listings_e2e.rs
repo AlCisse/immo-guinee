@@ -187,6 +187,18 @@ async fn me_and_logout_revoke_token() {
     me.assert_status_ok();
     assert_eq!(me.json::<serde_json::Value>()["data"]["telephone"], PHONE);
 
+    // PATCH /me updates profile + notification preferences (FR-005)
+    let patch = s
+        .patch("/api/auth/me")
+        .add_header(AUTHORIZATION, bearer(&token))
+        .json(&json!({ "nom_complet": "Awa D.", "notifications": { "whatsapp": true } }))
+        .await;
+    patch.assert_status_ok();
+    let pv = patch.json::<serde_json::Value>();
+    assert_eq!(pv["data"]["nom_complet"], "Awa D.");
+    assert_eq!(pv["data"]["preferences_notification"]["whatsapp"], true);
+    assert_eq!(pv["data"]["preferences_notification"]["sms"], true); // unchanged default
+
     // logout revokes the token
     s.post("/api/auth/logout")
         .add_header(AUTHORIZATION, bearer(&token))

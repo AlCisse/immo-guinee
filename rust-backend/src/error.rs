@@ -36,6 +36,9 @@ pub enum AppError {
     #[error("Erreur cache: {0}")]
     Cache(#[from] redis::RedisError),
 
+    #[error("Erreur service externe: {0}")]
+    External(#[from] reqwest::Error),
+
     #[error("Erreur interne: {0}")]
     Internal(#[from] anyhow::Error),
 }
@@ -61,6 +64,10 @@ impl IntoResponse for AppError {
             AppError::Cache(e) => {
                 tracing::error!(error = ?e, "cache error");
                 (StatusCode::INTERNAL_SERVER_ERROR, "CACHE_ERROR", "Erreur cache".into(), None)
+            }
+            AppError::External(e) => {
+                tracing::error!(error = ?e, "external service error");
+                (StatusCode::BAD_GATEWAY, "EXTERNAL", "Service externe indisponible".into(), None)
             }
             AppError::Internal(e) => {
                 tracing::error!(error = ?e, "internal error");
