@@ -44,6 +44,7 @@ pub mod storage;
 pub mod listing_photo;
 pub mod notify;
 pub mod otp;
+pub mod vault;
 pub mod whatsapp;
 // pub mod sms;
 // pub mod messaging;

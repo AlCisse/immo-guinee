@@ -29,6 +29,7 @@
 
 pub mod listings;   // Phase 1 (read-only: search + public detail)
 pub mod auth;        // T078-T083 (register / login / 2FA TOTP)
+pub mod webhooks;    // W3 (evolution WhatsApp; orange/mtn payments later)
 // pub mod visits;     // Phase 2
 // pub mod messaging;  // Phase 2
 // pub mod contracts;  // Phase 3
@@ -36,4 +37,3 @@ pub mod auth;        // T078-T083 (register / login / 2FA TOTP)
 // pub mod admin;      // Phase 5
 // pub mod moderator;  // Phase 5
 // pub mod facebook;   // Phase 5
-// pub mod webhooks;   // Phase 5 (orange/mtn/evolution webhooks)

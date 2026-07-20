@@ -131,6 +131,17 @@ testcontainers = "0.24"
 testcontainers-modules = { version = "0.12", features = ["postgres", "redis", "minio"] }
 image = "0.25"   # generate a sample PNG for the photo-upload test
 
+[profile.dev]
+# Cut compile time + memory: line-tables-only keeps backtrace line numbers
+# without full variable debug info. Incremental stays on (default).
+debug = "line-tables-only"
+incremental = true
+
+[profile.test]
+# Faster test-cfg compile (was the long pole behind the 44 min cold test build).
+debug = "line-tables-only"
+incremental = true
+
 [profile.release]
 opt-level = 3
 lto = "thin"

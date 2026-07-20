@@ -34,6 +34,9 @@ pub struct Config {
     pub evolution_base_url: String,
     /// Evolution API instance name (the connected WhatsApp business number).
     pub evolution_instance: String,
+    /// Shared token authenticating inbound Evolution webhooks (compared against
+    /// the `apikey` / `x-webhook-token` header). Empty accepts all (dev only).
+    pub evolution_webhook_token: String,
 
     /// Vault address (prod). Empty in dev -> Vault client disabled.
     pub vault_addr: String,
@@ -67,6 +70,7 @@ impl Default for Config {
             s3_bucket: "immoguinee-images".into(),
             evolution_base_url: "http://localhost:8080".into(),
             evolution_instance: "immoguinee".into(),
+            evolution_webhook_token: String::new(),
             vault_addr: String::new(),
             vault_approle_role_id: String::new(),
             jwt_secret_vault_path: "secret/immoguinee/app".into(),

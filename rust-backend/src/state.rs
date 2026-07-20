@@ -10,8 +10,9 @@ use redis::aio::ConnectionManager;
 use sea_orm::DatabaseConnection;
 
 use crate::config::Config;
-use crate::error::AppResult;
+use crate::error::{AppError, AppResult};
 use crate::services::storage::S3Storage;
+use crate::services::vault::VaultClient;
 use crate::services::whatsapp::WhatsAppClient;
 
 /// Holds long-lived, shareable dependencies.
@@ -25,7 +26,9 @@ pub struct AppState {
     pub storage: S3Storage,
     /// WhatsApp sender (Evolution API).
     pub whatsapp: WhatsAppClient,
-    // Filled in later phases: vault_client, notifier, queue, ...
+    /// HashiCorp Vault client (AppRole). `None` in dev (env/local fallback).
+    pub vault: Option<VaultClient>,
+    // Filled in later phases: notifier, queue, ...
 }
 
 impl AppState {
@@ -41,10 +44,13 @@ impl AppState {
             .await
             .map_err(|e| crate::error::AppError::Internal(anyhow::anyhow!("Redis manager: {e}")))?;
 
-        // In production the JWT secret (and all other secrets) come from Vault
-        // (secret/immoguinee/app -> jwt_secret). For local dev we fall back to a
-        // value from IMMOG_JWT_SECRET env or a dev-only constant.
-        let jwt_secret = load_jwt_secret(cfg).await?;
+        // Vault (prod): authenticate via AppRole and load secrets from KV v2.
+        // `None` in dev → callers fall back to env/local values.
+        let vault = VaultClient::connect(cfg).await?;
+
+        // JWT secret: from Vault KV (secret/immoguinee/app -> jwt_secret) in prod,
+        // or `IMMOG_JWT_SECRET` / a dev-only constant locally.
+        let jwt_secret = load_jwt_secret(cfg, vault.as_ref()).await?;
 
         let storage = S3Storage::from_config(cfg)?;
         let whatsapp = WhatsAppClient::from_config(cfg);
@@ -56,21 +62,22 @@ impl AppState {
             jwt_secret,
             storage,
             whatsapp,
+            vault,
         })
     }
 }
 
 /// Load the JWT secret from Vault (secret/immoguinee/app -> jwt_secret) in prod,
 /// or from `IMMOG_JWT_SECRET` / a dev-only constant locally.
-///
-/// The `vaultrs` AppRole wiring lands in the Vault section. For now, dev fallback.
-async fn load_jwt_secret(cfg: &Config) -> AppResult<Vec<u8>> {
-    if !cfg.vault_addr.is_empty() && !cfg.vault_approle_role_id.is_empty() {
-        // TODO (Phase 0): authenticate via AppRole (secret_id from
-        // /run/secrets/vault_approle_secret_id), read KV cfg.jwt_secret_vault_path,
-        // return the `jwt_secret` field. See contracts/secrets.md.
-        tracing::warn!("Vault configured but client not yet wired — using env/dev fallback for JWT secret");
+async fn load_jwt_secret(cfg: &Config, vault: Option<&VaultClient>) -> AppResult<Vec<u8>> {
+    if let Some(v) = vault {
+        let data = v.read_kv(&cfg.jwt_secret_vault_path).await?;
+        let secret = data["jwt_secret"]
+            .as_str()
+            .ok_or_else(|| AppError::Internal(anyhow::anyhow!("jwt_secret absent dans Vault {}", cfg.jwt_secret_vault_path)))?;
+        return Ok(secret.as_bytes().to_vec());
     }
+    // Dev fallback (no Vault configured): env var or a dev-only constant.
     let from_env = std::env::var("IMMOG_JWT_SECRET").unwrap_or_else(|_| "immog-dev-jwt-secret-change-me".into());
     Ok(from_env.into_bytes())
 }
