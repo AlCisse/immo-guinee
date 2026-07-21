@@ -21,7 +21,7 @@ pg_enum!("badge", Badge { Bronze => "BRONZE", Argent => "ARGENT", Or => "OR", Di
 pg_enum!("type_compte", TypeCompte { Particulier => "PARTICULIER", Agence => "AGENCE", Diaspora => "DIASPORA" });
 pg_enum!("statut_verification", StatutVerification { NonVerifie => "NON_VERIFIE", CniVerifiee => "CNI_VERIFIEE", TitreFoncierVerifie => "TITRE_FONCIER_VERIFIE" });
 pg_enum!("statut_compte", StatutCompte { Actif => "ACTIF", Suspendu => "SUSPENDU", Banni => "BANNI", Supprime => "SUPPRIME" });
-pg_enum!("type_operation", TypeOperation { Location => "LOCATION", Vente => "VENTE" });
+pg_enum!("type_operation", TypeOperation { Location => "LOCATION", LocationCourte => "LOCATION_COURTE", Vente => "VENTE" });
 pg_enum!("type_bien", TypeBien { Villa => "VILLA", Appartement => "APPARTEMENT", Studio => "STUDIO", Terrain => "TERRAIN", Commerce => "COMMERCE", Bureau => "BUREAU", Entrepot => "ENTREPOT" });
 pg_enum!("quartier", Quartier {
     Kaloum => "KALOUM", Dixinn => "DIXINN", Ratoma => "RATOMA", Matam => "MATAM", Matoto => "MATOTO",

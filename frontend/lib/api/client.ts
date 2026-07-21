@@ -22,8 +22,8 @@ function mapSearchParams(params: Record<string, any>): Record<string, any> {
   }
 
   if (p.type_transaction) {
-    const t = String(p.type_transaction).toUpperCase();
-    p.type_operation = t === 'LOCATION_COURTE' ? 'LOCATION' : t;
+    // LOCATION / LOCATION_COURTE / VENTE are all valid type_operation values.
+    p.type_operation = String(p.type_transaction).toUpperCase();
     delete p.type_transaction;
   }
 
@@ -249,7 +249,7 @@ function formDataToCreateBody(fd: FormData): Record<string, unknown> {
 
   const op = (s('type_transaction') || '').toUpperCase();
   const body: Record<string, unknown> = {
-    type_operation: op === 'LOCATION_COURTE' ? 'LOCATION' : op || 'LOCATION',
+    type_operation: op || 'LOCATION',
     type_bien: TYPE_BIEN_MAP[(s('type_propriete') || '').toLowerCase()] || 'APPARTEMENT',
     titre: s('titre'),
     description: s('description'),
