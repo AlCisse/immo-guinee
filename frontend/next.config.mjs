@@ -81,7 +81,16 @@ const nextConfig = {
     ];
   },
 
-  // Note: No rewrites needed - API calls go directly through Traefik
+  // Same-origin API proxy for the container/dev stack: the browser calls
+  // /api/* on this origin and Next forwards it to the backend server-side. This
+  // avoids CORS and works even when the browser cannot reach the backend port
+  // directly. Local Next routes (e.g. /api/health) win — rewrites run afterFiles.
+  // In production Traefik routes /api instead (BACKEND_INTERNAL_URL unset -> no-op).
+  async rewrites() {
+    const backend = process.env.BACKEND_INTERNAL_URL;
+    if (!backend) return [];
+    return [{ source: '/api/:path*', destination: `${backend}/api/:path*` }];
+  },
 
   // Webpack configuration
   webpack: (config, { isServer }) => {

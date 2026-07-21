@@ -106,8 +106,14 @@ services:
     environment:
       NODE_ENV: development
       NEXT_TELEMETRY_DISABLED: "1"
-      # The browser (host) calls the backend on the published host port.
-      NEXT_PUBLIC_API_URL: http://localhost:8000/api
+      # Browser calls same-origin /api/* ; Next proxies to the backend server-side
+      # (rewrites → BACKEND_INTERNAL_URL). Avoids CORS and needs no backend port
+      # reachable from the browser.
+      NEXT_PUBLIC_API_URL: /api
+      BACKEND_INTERNAL_URL: http://backend:8000
+    # NOTE: source is baked into the image (COPY). A bind mount for hot reload is
+    # avoided — Docker Desktop on macOS raises EAGAIN (errno -35) on shared files.
+    # Rebuild the image to pick up frontend code changes.
     ports: ["3005:3005"]
     depends_on:
       - backend

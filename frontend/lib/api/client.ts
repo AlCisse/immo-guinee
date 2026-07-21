@@ -2,6 +2,19 @@ import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
+// --- JWT auth (Rust backend is stateless: Bearer token, no cookie session) ---
+const TOKEN_KEY = 'auth_token';
+
+export function getAuthToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(TOKEN_KEY);
+}
+export function setAuthToken(token: string | null) {
+  if (typeof window === 'undefined') return;
+  if (token) localStorage.setItem(TOKEN_KEY, token);
+  else localStorage.removeItem(TOKEN_KEY);
+}
+
 // Create axios instance with default config
 const apiClient: AxiosInstance = axios.create({
   baseURL: API_URL,
@@ -10,15 +23,19 @@ const apiClient: AxiosInstance = axios.create({
     'Accept': 'application/json',
     'X-Requested-With': 'XMLHttpRequest',
   },
-  withCredentials: true, // CRITICAL: Send httpOnly cookies with requests
+  // JWT Bearer flow — no cross-site cookies needed.
+  withCredentials: false,
   timeout: 30000, // 30 seconds timeout
 });
 
-// Request interceptor - No need to add token manually, httpOnly cookie is sent automatically
+// Request interceptor - attach the JWT access token as a Bearer header.
 apiClient.interceptors.request.use(
   (config) => {
-    // Token is now stored in httpOnly cookie and sent automatically
-    // No localStorage access needed - this protects against XSS attacks
+    const token = getAuthToken();
+    if (token) {
+      config.headers = config.headers ?? {};
+      (config.headers as Record<string, string>).Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => {
@@ -29,6 +46,12 @@ apiClient.interceptors.request.use(
 // Response interceptor - Handle errors globally
 apiClient.interceptors.response.use(
   (response) => {
+    // Capture the JWT access token from login / OTP-verify responses
+    // (Rust envelope: { success, data: { access_token, refresh_token, ... } }).
+    const token = response?.data?.data?.access_token;
+    if (typeof token === 'string' && token.length > 0) {
+      setAuthToken(token);
+    }
     return response;
   },
   async (error: AxiosError) => {
@@ -44,6 +67,7 @@ apiClient.interceptors.response.use(
       // Note: httpOnly cookie will be cleared by the server on logout
       if (typeof window !== 'undefined') {
         localStorage.removeItem('user');
+        setAuthToken(null); // drop the (now invalid) JWT
 
         // Only redirect to login if NOT on auth endpoints (to avoid loops)
         // /auth/me returns 401/404 for unauthenticated users - this is expected
@@ -137,8 +161,17 @@ export const api = {
 
   // Listings endpoints
   listings: {
-    list: (params?: Record<string, any>) =>
-      apiClient.get('/listings', { params }),
+    // The Rust API exposes GET /listings/search (there is no GET /listings list).
+    // Normalize legacy params: limit -> per_page. Unknown params (sort_by/sort_order,
+    // commune, type_transaction) are ignored by the backend's query extractor.
+    list: (params?: Record<string, any>) => {
+      const p: Record<string, any> = { ...(params || {}) };
+      if (p.limit != null && p.per_page == null) {
+        p.per_page = p.limit;
+        delete p.limit;
+      }
+      return apiClient.get('/listings/search', { params: p });
+    },
 
     my: (params?: Record<string, any>) =>
       apiClient.get('/listings/my', { params }),
