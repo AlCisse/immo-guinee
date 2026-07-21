@@ -12,7 +12,7 @@ use axum::Router;
 use sea_orm::sea_query::Expr;
 use sea_orm::{
     ActiveModelTrait, ActiveValue::Set, ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter,
-    QuerySelect,
+    QueryOrder, QuerySelect,
 };
 use serde_json::json;
 use uuid::Uuid;
@@ -37,6 +37,7 @@ const PHOTOS_BODY_LIMIT: usize = 55 * 1024 * 1024;
 pub fn routes() -> Router<Arc<AppState>> {
     Router::new()
         .route("/listings/search", get(search))
+        .route("/listings/my", get(my_listings))
         .route("/listings", post(create))
         .route("/listings/{id}", get(show).patch(update).delete(destroy))
         .route(
@@ -51,6 +52,34 @@ async fn search(
 ) -> AppResult<Json<Envelope<ListingSearchResponse>>> {
     let (page, per_page) = normalize_pagination(q.page, q.per_page);
     let select = apply_filters(&q);
+
+    let total = select.clone().count(&state.db).await?;
+    let offset = ((page - 1) * per_page) as u64;
+    let rows = select.offset(offset).limit(per_page as u64).all(&state.db).await?;
+
+    let listings = rows.into_iter().map(ListingResponse::from).collect::<Vec<_>>();
+    let total_pages = ((total as u32) + per_page - 1) / per_page;
+
+    Ok(Json(Envelope {
+        success: true,
+        data: ListingSearchResponse {
+            listings,
+            pagination: Pagination { page, per_page, total, total_pages },
+        },
+    }))
+}
+
+/// `GET /api/listings/my` — the authenticated caller's own listings (all statuses,
+/// including archived/expired), newest first, paginated.
+async fn my_listings(
+    auth: AuthUser,
+    State(state): State<Arc<AppState>>,
+    Query(q): Query<ListingSearchQuery>,
+) -> AppResult<Json<Envelope<ListingSearchResponse>>> {
+    let (page, per_page) = normalize_pagination(q.page, q.per_page);
+    let select = listing::Entity::find()
+        .filter(listing::Column::CreateurId.eq(auth.id))
+        .order_by_desc(listing::Column::DatePublication);
 
     let total = select.clone().count(&state.db).await?;
     let offset = ((page - 1) * per_page) as u64;

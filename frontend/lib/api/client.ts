@@ -277,8 +277,11 @@ export const api = {
       return res;
     },
 
-    my: (params?: Record<string, any>) =>
-      apiClient.get('/listings/my', { params }),
+    my: async (params?: Record<string, any>) => {
+      const res = await apiClient.get('/listings/my', { params });
+      normalizeListingsResponse(res);
+      return res;
+    },
 
     get: async (id: string) => {
       const res = await apiClient.get(`/listings/${id}`);
