@@ -88,8 +88,13 @@ const nextConfig = {
   // In production Traefik routes /api instead (BACKEND_INTERNAL_URL unset -> no-op).
   async rewrites() {
     const backend = process.env.BACKEND_INTERNAL_URL;
-    if (!backend) return [];
-    return [{ source: '/api/:path*', destination: `${backend}/api/:path*` }];
+    const media = process.env.MEDIA_INTERNAL_URL; // MinIO (S3) internal endpoint
+    const rules = [];
+    if (backend) rules.push({ source: '/api/:path*', destination: `${backend}/api/:path*` });
+    // Same-origin proxy for listing photos so the browser and the Next Image
+    // optimizer both reach MinIO through this origin (dev; prod uses a CDN).
+    if (media) rules.push({ source: '/media/:path*', destination: `${media}/:path*` });
+    return rules;
   },
 
   // Webpack configuration

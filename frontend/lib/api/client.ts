@@ -118,10 +118,21 @@ apiClient.interceptors.response.use(
 // The Rust API returns prix_gnf / type_operation / superficie_m2 and photos as
 // objects ({thumbnail,medium,large}); UI components read prix / type_transaction /
 // surface_m2 and photos as string[]. Map without dropping the original fields.
+// Photo URLs are built by the backend from the internal S3 endpoint
+// (http://minio:9000/…), which the browser can't reach. Rewrite to a same-origin
+// path proxied to MinIO by Next (see next.config rewrites) — works for both the
+// browser and the server-side Next Image optimizer. No-op in prod (real CDN URLs).
+function publicPhotoUrl(url?: string): string | undefined {
+  if (!url) return url;
+  return url.replace(/https?:\/\/minio:9000\//, '/media/');
+}
+
 function mapRustListing(l: any): any {
   if (!l || typeof l !== 'object') return l;
   const photos = Array.isArray(l.photos)
-    ? l.photos.map((p: any) => (typeof p === 'string' ? p : p?.medium || p?.large || p?.thumbnail)).filter(Boolean)
+    ? l.photos
+        .map((p: any) => publicPhotoUrl(typeof p === 'string' ? p : p?.medium || p?.large || p?.thumbnail))
+        .filter(Boolean)
     : l.photos;
   const prix = l.prix ?? l.prix_gnf;
   const mainPhoto = l.main_photo_url ?? (Array.isArray(photos) && photos.length ? photos[0] : undefined);
@@ -139,6 +150,11 @@ function mapRustListing(l: any): any {
     surface_m2: l.surface_m2 ?? l.superficie_m2,
     photos,
     main_photo_url: mainPhoto,
+    photo_principale: l.photo_principale ?? mainPhoto,
+    // The detail gallery reads listing_photos[{url,medium_url,large_url}].
+    listing_photos: Array.isArray(photos)
+      ? photos.map((u: string) => ({ url: u, medium_url: u, large_url: u }))
+      : l.listing_photos,
     is_premium: isPremium,
     vues_count: l.vues_count ?? l.nombre_vues,
     created_at: l.created_at ?? l.date_publication,
