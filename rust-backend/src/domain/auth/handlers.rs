@@ -200,7 +200,16 @@ async fn otp_verify(
         return Err(AppError::Forbidden("Compte suspendu ou banni".into()));
     }
 
-    let tokens = jwt::issue_pair(&state.jwt_secret, user.id, role_for(user.type_compte))?;
+    // FR-001: confirming the OTP marks the phone as verified (first time only).
+    let user_id = user.id;
+    let role = role_for(user.type_compte.clone());
+    if user.telephone_verifie_at.is_none() {
+        let mut am: user::ActiveModel = user.into();
+        am.telephone_verifie_at = Set(Some(chrono::Utc::now().fixed_offset()));
+        am.update(&state.db).await?;
+    }
+
+    let tokens = jwt::issue_pair(&state.jwt_secret, user_id, role)?;
     Ok(Json(Envelope { success: true, data: LoginSuccess { tokens } }))
 }
 

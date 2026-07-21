@@ -18,6 +18,8 @@ pub struct Model {
     /// plaintext — like the password hash, it is a credential protected at rest
     /// by DB access controls (Vault-managed DB creds).
     pub two_factor_secret: Option<String>,
+    /// Set when the user confirms the phone OTP (FR-001). `None` = phone not verified.
+    pub telephone_verifie_at: Option<DateTimeWithTimeZone>,
     pub nom_complet: String,
     pub photo_profil_url: Option<String>,
     pub bio: Option<String>,

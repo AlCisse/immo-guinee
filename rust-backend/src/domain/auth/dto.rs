@@ -85,6 +85,8 @@ pub struct UserPublic {
     pub badge_certification: Badge,
     pub statut_verification: StatutVerification,
     pub statut_compte: StatutCompte,
+    /// Phone-verification timestamp (FR-001); `null` until the phone OTP is confirmed.
+    pub telephone_verified_at: Option<DateTimeWithTimeZone>,
     pub preferences_notification: serde_json::Value,
     pub date_inscription: DateTimeWithTimeZone,
 }
@@ -101,6 +103,7 @@ impl From<crate::db::entities::user::Model> for UserPublic {
             badge_certification: m.badge_certification,
             statut_verification: m.statut_verification,
             statut_compte: m.statut_compte,
+            telephone_verified_at: m.telephone_verifie_at,
             preferences_notification: m.preferences_notification,
             date_inscription: m.date_inscription,
         }

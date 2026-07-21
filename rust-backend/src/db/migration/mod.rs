@@ -22,6 +22,7 @@ mod m20250128_000010_create_disputes;
 mod m20250128_000012_create_insurances;
 mod m20250128_000015_create_visits;
 mod m20250128_000016_add_two_factor_to_users;
+mod m20250128_000017_add_telephone_verifie;
 
 pub struct Migrator;
 
@@ -44,6 +45,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20250128_000012_create_insurances::Migration),
             Box::new(m20250128_000015_create_visits::Migration),
             Box::new(m20250128_000016_add_two_factor_to_users::Migration),
+            Box::new(m20250128_000017_add_telephone_verifie::Migration),
         ]
     }
 }
