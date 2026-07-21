@@ -114,6 +114,42 @@ apiClient.interceptors.response.use(
   }
 );
 
+// --- Rust listing shape → UI (ListingCard/detail) shape -------------------
+// The Rust API returns prix_gnf / type_operation / superficie_m2 and photos as
+// objects ({thumbnail,medium,large}); UI components read prix / type_transaction /
+// surface_m2 and photos as string[]. Map without dropping the original fields.
+function mapRustListing(l: any): any {
+  if (!l || typeof l !== 'object') return l;
+  const photos = Array.isArray(l.photos)
+    ? l.photos.map((p: any) => (typeof p === 'string' ? p : p?.medium || p?.large || p?.thumbnail)).filter(Boolean)
+    : l.photos;
+  const prix = l.prix ?? l.prix_gnf;
+  const mainPhoto = l.main_photo_url ?? (Array.isArray(photos) && photos.length ? photos[0] : undefined);
+  const isPremium = l.options_premium && typeof l.options_premium === 'object'
+    ? Object.values(l.options_premium).some(Boolean)
+    : (l.is_premium ?? false);
+  return {
+    ...l,
+    prix,
+    prix_gnf: l.prix_gnf ?? prix,
+    // Different cards read loyer_mensuel (location) or prix_vente (sale); set both.
+    loyer_mensuel: l.loyer_mensuel ?? prix,
+    prix_vente: l.prix_vente ?? prix,
+    type_transaction: l.type_transaction ?? l.type_operation,
+    surface_m2: l.surface_m2 ?? l.superficie_m2,
+    photos,
+    main_photo_url: mainPhoto,
+    is_premium: isPremium,
+  };
+}
+
+function normalizeListingsResponse(res: any): void {
+  const listings = res?.data?.data?.listings;
+  if (Array.isArray(listings)) {
+    res.data.data.listings = listings.map(mapRustListing);
+  }
+}
+
 // API Methods
 export const api = {
   // Auth endpoints
@@ -164,20 +200,26 @@ export const api = {
     // The Rust API exposes GET /listings/search (there is no GET /listings list).
     // Normalize legacy params: limit -> per_page. Unknown params (sort_by/sort_order,
     // commune, type_transaction) are ignored by the backend's query extractor.
-    list: (params?: Record<string, any>) => {
+    // Response listings are normalized to the shape UI components expect.
+    list: async (params?: Record<string, any>) => {
       const p: Record<string, any> = { ...(params || {}) };
       if (p.limit != null && p.per_page == null) {
         p.per_page = p.limit;
         delete p.limit;
       }
-      return apiClient.get('/listings/search', { params: p });
+      const res = await apiClient.get('/listings/search', { params: p });
+      normalizeListingsResponse(res);
+      return res;
     },
 
     my: (params?: Record<string, any>) =>
       apiClient.get('/listings/my', { params }),
 
-    get: (id: string) =>
-      apiClient.get(`/listings/${id}`),
+    get: async (id: string) => {
+      const res = await apiClient.get(`/listings/${id}`);
+      if (res?.data?.data) res.data.data = mapRustListing(res.data.data);
+      return res;
+    },
 
     create: (data: FormData) =>
       apiClient.post('/listings', data, {
@@ -202,8 +244,11 @@ export const api = {
     reactivate: (id: string) =>
       apiClient.post(`/listings/${id}/reactivate`),
 
-    search: (params: Record<string, any>) =>
-      apiClient.get('/listings/search', { params }),
+    search: async (params: Record<string, any>) => {
+      const res = await apiClient.get('/listings/search', { params });
+      normalizeListingsResponse(res);
+      return res;
+    },
 
     similar: (id: string) =>
       apiClient.get(`/listings/${id}/similar`),
