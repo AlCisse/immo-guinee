@@ -140,6 +140,8 @@ function mapRustListing(l: any): any {
     photos,
     main_photo_url: mainPhoto,
     is_premium: isPremium,
+    vues_count: l.vues_count ?? l.nombre_vues,
+    created_at: l.created_at ?? l.date_publication,
   };
 }
 

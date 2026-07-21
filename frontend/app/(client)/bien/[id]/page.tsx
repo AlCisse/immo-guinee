@@ -218,7 +218,9 @@ export default function PropertyDetailPage() {
     queryKey: ['listing', id],
     queryFn: async () => {
       const response = await api.listings.get(id);
-      return response.data;
+      // The Rust API returns the listing at data.data; this page expects
+      // data.data.listing. Wrap it (the listing is already normalized by get()).
+      return { data: { listing: response.data?.data } };
     },
     enabled: !!id,
   });
