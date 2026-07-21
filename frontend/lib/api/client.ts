@@ -58,23 +58,23 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
     const responseData = error.response?.data as { requires_2fa?: boolean; requires_2fa_setup?: boolean; message?: string } | undefined;
 
-    // Handle 401 Unauthorized or 404 Not Found on auth endpoints
+    // Handle 401 Unauthorized only. A 404 means the endpoint is not implemented
+    // yet (many Rust endpoints are still missing) — it must NOT clear the session
+    // or the user would be logged out by any unimplemented feature call.
     const status = error.response?.status;
-    if ((status === 401 || status === 404) && !originalRequest._retry) {
+    if (status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
-      // Clear local user data
-      // Note: httpOnly cookie will be cleared by the server on logout
+      // The JWT is invalid/expired — clear local auth state.
       if (typeof window !== 'undefined') {
         localStorage.removeItem('user');
-        setAuthToken(null); // drop the (now invalid) JWT
+        setAuthToken(null);
 
-        // Only redirect to login if NOT on auth endpoints (to avoid loops)
-        // /auth/me returns 401/404 for unauthenticated users - this is expected
+        // Redirect to login unless this is an auth endpoint (avoid loops).
+        // /auth/me returns 401 for unauthenticated users - expected, no redirect.
         const url = originalRequest.url || '';
         const isAuthEndpoint = url.includes('/auth/');
-
-        if (!isAuthEndpoint && status === 401) {
+        if (!isAuthEndpoint) {
           window.location.href = '/auth/login';
         }
       }
@@ -150,21 +150,30 @@ function normalizeListingsResponse(res: any): void {
   }
 }
 
+// Normalize a phone number to the E.164 shape the backend stores (+<countrycode>…).
+// The phone input emits the dial code without a leading "+"; add it back.
+function normalizePhone<T extends { telephone?: string }>(data: T): T {
+  if (typeof data?.telephone !== 'string') return data;
+  let t = data.telephone.replace(/[\s()-]/g, '');
+  if (/^\d/.test(t)) t = `+${t}`;
+  return { ...data, telephone: t };
+}
+
 // API Methods
 export const api = {
   // Auth endpoints
   auth: {
     register: (data: { telephone: string; mot_de_passe: string; nom_complet: string; type_compte: string }) =>
-      apiClient.post('/auth/register', data),
+      apiClient.post('/auth/register', normalizePhone(data)),
 
     verifyOtp: (data: { telephone: string; otp_code: string }) =>
-      apiClient.post('/auth/otp/verify', { telephone: data.telephone, code: data.otp_code }),
+      apiClient.post('/auth/otp/verify', { telephone: normalizePhone(data).telephone, code: data.otp_code }),
 
     resendOtp: (data: { telephone: string }) =>
-      apiClient.post('/auth/otp/resend', data),
+      apiClient.post('/auth/otp/send', normalizePhone(data)),
 
     login: (data: { telephone: string; mot_de_passe: string }) =>
-      apiClient.post('/auth/login', data),
+      apiClient.post('/auth/login', normalizePhone(data)),
 
     logout: () =>
       apiClient.post('/auth/logout', {}, { timeout: 3000 }), // Short timeout - we'll clean up locally anyway

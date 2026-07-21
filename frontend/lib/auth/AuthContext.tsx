@@ -179,14 +179,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        // No 2FA required - store user data for UX (token is in httpOnly cookie)
-        // Token is NOT stored in localStorage - it's in a secure httpOnly cookie
-        localStorage.setItem('user', JSON.stringify(user));
+        // The Rust API returns only tokens on login (no user object). The access
+        // token was captured by the api client; fetch the profile via /auth/me.
+        let resolvedUser = user;
+        if (!resolvedUser) {
+          try {
+            const meResp = await api.auth.me();
+            resolvedUser = (meResp.data?.data || meResp.data) as User;
+          } catch (e) {
+            console.error('Failed to load profile after login:', e);
+          }
+        }
+
+        // Store user data for UX (the JWT is kept by the api client in localStorage).
+        localStorage.setItem('user', JSON.stringify(resolvedUser));
         if (redirect) {
           localStorage.setItem('redirect_data', JSON.stringify(redirect));
         }
 
-        setUser(user);
+        setUser(resolvedUser as User);
         setRedirectData(redirect || null);
 
         // Redirect to role-based dashboard
