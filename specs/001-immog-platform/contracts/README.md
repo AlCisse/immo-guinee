@@ -68,6 +68,34 @@ Router::new()
 
 ---
 
+### Evolution API Webhook (WhatsApp inbound) — ✅ Implemented (W3)
+
+Receives Evolution API events (delivery/read receipts via `messages.update`, incoming
+messages via `messages.upsert`, connection changes). The endpoint authenticates the
+request, classifies the event, records it (tracing), and acks fast so Evolution does not
+retry. Incoming-message routing into `domain::messaging` and delivery-status persistence
+are wired in with those phases.
+
+**Endpoint**:
+- `POST /api/webhooks/evolution` — receive one Evolution event (no `AuthUser`; guarded by
+  a shared token).
+
+**Auth**: a shared token (`IMMOG_EVOLUTION_WEBHOOK_TOKEN`) compared in constant time
+against the `apikey` / `x-webhook-token` header. An empty configured token accepts all
+(dev only, with a warning). Unauthenticated requests get `401`; every authenticated
+request (including unhandled event types) gets `200 { "success": true }`.
+
+**Axum router** (`domain::webhooks::evolution`):
+```rust
+Router::new().route("/webhooks/evolution", post(receive))
+// mounted under /api; no AuthUser — token-guarded
+```
+
+**Key requirements**: FR-061 (WhatsApp channel — delivery status), FR-059/FR-063
+(inbound messages feed the messaging history once US6 lands).
+
+---
+
 ### Certifications
 
 **Endpoints**:
