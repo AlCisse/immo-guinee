@@ -277,14 +277,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const redirect = responseData.redirect || (data as any).redirect;
 
       if (data.success && token) {
-        // Store user data for UX (token is in httpOnly cookie set by server)
-        // Token is NOT stored in localStorage - it's in a secure httpOnly cookie
-        localStorage.setItem('user', JSON.stringify(user));
+        // The Rust API returns only tokens (no user); fetch the freshly-verified
+        // profile via /auth/me (now has telephone_verified_at set).
+        let resolvedUser = user;
+        if (!resolvedUser) {
+          try {
+            const meResp = await api.auth.me();
+            resolvedUser = (meResp.data?.data || meResp.data) as User;
+          } catch (e) {
+            console.error('Failed to load profile after OTP verify:', e);
+          }
+        }
+
+        localStorage.setItem('user', JSON.stringify(resolvedUser));
         if (redirect) {
           localStorage.setItem('redirect_data', JSON.stringify(redirect));
         }
 
-        setUser(user);
+        setUser(resolvedUser as User);
         setRedirectData(redirect || null);
 
         // Redirect to role-based dashboard

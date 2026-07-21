@@ -152,6 +152,60 @@ function normalizeListingsResponse(res: any): void {
   }
 }
 
+// --- Create-listing form (FormData) → Rust CreateListingRequest (JSON) ----------
+const TYPE_BIEN_MAP: Record<string, string> = {
+  appartement: 'APPARTEMENT', villa: 'VILLA', maison: 'VILLA', studio: 'STUDIO',
+  terrain: 'TERRAIN', commerce: 'COMMERCE', magasin: 'COMMERCE', boutique: 'COMMERCE',
+  bureau: 'BUREAU', entrepot: 'ENTREPOT',
+};
+// Rust `quartier` is the commune level (5 Conakry communes + Dubréka/Coyah).
+const QUARTIER_MAP: Record<string, string> = {
+  kaloum: 'KALOUM', dixinn: 'DIXINN', ratoma: 'RATOMA', matam: 'MATAM', matoto: 'MATOTO',
+};
+
+function extractPhotoFiles(fd: FormData): File[] {
+  const files: File[] = [];
+  for (const [k, v] of fd.entries()) {
+    if (k.startsWith('photos[') && v instanceof File && v.size > 0) files.push(v);
+  }
+  return files;
+}
+
+function formDataToCreateBody(fd: FormData): Record<string, unknown> {
+  const s = (k: string) => {
+    const v = fd.get(k);
+    return typeof v === 'string' ? v : undefined;
+  };
+  const num = (k: string) => {
+    const v = s(k);
+    if (v == null || v === '') return undefined;
+    const n = Number(v.replace(/\D/g, ''));
+    return Number.isFinite(n) ? n : undefined;
+  };
+  const equipements: string[] = [];
+  for (const [k, v] of fd.entries()) {
+    if (k.startsWith('equipements[') && typeof v === 'string') equipements.push(v);
+  }
+
+  const op = (s('type_transaction') || '').toUpperCase();
+  const body: Record<string, unknown> = {
+    type_operation: op === 'LOCATION_COURTE' ? 'LOCATION' : op || 'LOCATION',
+    type_bien: TYPE_BIEN_MAP[(s('type_propriete') || '').toLowerCase()] || 'APPARTEMENT',
+    titre: s('titre'),
+    description: s('description'),
+    prix_gnf: num('prix') ?? 0,
+    quartier: QUARTIER_MAP[(s('commune') || '').toLowerCase()] || 'KALOUM',
+    adresse_complete: s('quartier') || undefined, // neighbourhood name → free-text address
+    superficie_m2: num('surface_m2'),
+    nombre_chambres: num('nombre_chambres'),
+    caution_mois: num('caution_mois'),
+    equipements: equipements.length > 0 ? equipements : undefined,
+  };
+  // Drop undefined so optional fields are omitted (backend treats them as absent).
+  Object.keys(body).forEach((k) => body[k] === undefined && delete body[k]);
+  return body;
+}
+
 // Normalize a phone number to the E.164 shape the backend stores (+<countrycode>…).
 // The phone input emits the dial code without a leading "+"; add it back.
 function normalizePhone<T extends { telephone?: string }>(data: T): T {
@@ -232,11 +286,28 @@ export const api = {
       return res;
     },
 
-    create: (data: FormData) =>
-      apiClient.post('/listings', data, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 120000, // 2 minutes for photo uploads
-      }),
+    // The Rust API creates a listing from JSON (POST /listings) and takes photos on
+    // a separate multipart endpoint (POST /listings/{id}/photos). The form still
+    // builds one FormData, so split it here: map fields to the Rust shape, create,
+    // then upload the photo files.
+    create: async (data: FormData) => {
+      const created = await apiClient.post('/listings', formDataToCreateBody(data));
+      const id = created.data?.data?.id;
+      const photos = extractPhotoFiles(data);
+      if (id && photos.length > 0) {
+        const pf = new FormData();
+        photos.forEach((f) => pf.append('photo', f));
+        try {
+          await apiClient.post(`/listings/${id}/photos`, pf, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+            timeout: 120000,
+          });
+        } catch (e) {
+          console.error('Photo upload failed (listing created):', e);
+        }
+      }
+      return created;
+    },
 
     update: (id: string, data: FormData) => {
       // Use dedicated POST endpoint for FormData with file uploads
