@@ -1,0 +1,122 @@
+# Local Rust stack for browser testing (backend Rust + infra + frontend).
+# Distinct from the legacy Laravel compose files. Bring up with:
+#   docker compose -f docker/docker-compose.rust.yml up -d --build
+# Then open Chrome at http://localhost:3005 (API at http://localhost:8000/api).
+#
+# Scope today: US1 listings (search/detail/create/photos) + auth (register/login/
+# OTP/2FA). Contracts, payments, messaging, real-time WS are not implemented yet.
+
+name: immog-rust
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: immog_user
+      POSTGRES_PASSWORD: immog
+      POSTGRES_DB: immog_db
+    ports: ["5433:5432"]
+    volumes: ["immog_pg:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U immog_user -d immog_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    networks: [immog]
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--requirepass", "immog_redis_secret", "--appendonly", "yes"]
+    ports: ["6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "immog_redis_secret", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    networks: [immog]
+
+  minio:
+    image: minio/minio:latest
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports: ["9000:9000", "9001:9001"]
+    volumes: ["immog_minio:/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "mc ready local || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    networks: [immog]
+
+  # One-shot: apply SeaORM migrations, then exit. Builds the shared backend image.
+  migrate:
+    build:
+      context: ../rust-backend
+    image: immog-backend:dev
+    # Image ENTRYPOINT is immog-backend; override it to run the migrate binary
+    # (otherwise command args are appended to immog-backend and ignored).
+    entrypoint: ["immog-migrate"]
+    command: ["up"]
+    environment:
+      IMMOG_DATABASE_URL: postgres://immog_user:immog@postgres:5432/immog_db
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+    networks: [immog]
+
+  backend:
+    image: immog-backend:dev   # built by the `migrate` service
+    # Uses the image ENTRYPOINT (immog-backend) — no command override needed.
+    environment:
+      IMMOG_HOST: 0.0.0.0
+      IMMOG_PORT: "8000"
+      IMMOG_DATABASE_URL: postgres://immog_user:immog@postgres:5432/immog_db
+      IMMOG_REDIS_URL: redis://:immog_redis_secret@redis:6379
+      IMMOG_S3_ENDPOINT: http://minio:9000
+      IMMOG_S3_REGION: us-east-1
+      IMMOG_S3_BUCKET: immoguinee-images
+      IMMOG_CORS_ALLOWED_ORIGIN: http://localhost:3005
+      IMMOG_JWT_SECRET: dev-jwt-secret-immoguinee-change-me
+      # rust-s3 reads AWS creds from the environment.
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadmin
+      RUST_LOG: info,immog_backend=debug
+    ports: ["8000:8000"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    # If MinIO/DB briefly lag at boot, restart until ensure_bucket/connect succeed.
+    restart: on-failure
+    networks: [immog]
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile.dev
+    image: immog-frontend:dev
+    environment:
+      NODE_ENV: development
+      NEXT_TELEMETRY_DISABLED: "1"
+      # The browser (host) calls the backend on the published host port.
+      NEXT_PUBLIC_API_URL: http://localhost:8000/api
+    ports: ["3005:3005"]
+    depends_on:
+      - backend
+    networks: [immog]
+
+volumes:
+  immog_pg:
+  immog_minio:
+
+networks:
+  immog:
+    driver: bridge
