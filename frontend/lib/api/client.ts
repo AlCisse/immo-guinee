@@ -1,6 +1,50 @@
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
+import { CONAKRY_QUARTIERS } from '@/lib/data/communes';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
+
+// The Rust `quartier` enum is commune-level (KALOUM, DIXINN, RATOMA, MATAM, MATOTO).
+// Map every neighbourhood → its commune so a neighbourhood filter resolves to the
+// commune the listing is actually stored under. Communes map to themselves.
+const NEIGHBORHOOD_TO_COMMUNE: Record<string, string> = Object.fromEntries(
+  CONAKRY_QUARTIERS.map((q) => [q.name.toLowerCase(), q.commune]),
+);
+
+/// Rewrite the /recherche location + transaction params to the Rust query shape:
+/// - type_transaction → type_operation (LOCATION_COURTE → LOCATION);
+/// - commune + neighbourhood quartier → a de-duplicated commune-level `quartier` list.
+function mapSearchParams(params: Record<string, any>): Record<string, any> {
+  const p: Record<string, any> = { ...params };
+
+  if (p.limit != null && p.per_page == null) {
+    p.per_page = p.limit;
+    delete p.limit;
+  }
+
+  if (p.type_transaction) {
+    const t = String(p.type_transaction).toUpperCase();
+    p.type_operation = t === 'LOCATION_COURTE' ? 'LOCATION' : t;
+    delete p.type_transaction;
+  }
+
+  const communes = new Set<string>();
+  const addLocation = (val: unknown) => {
+    if (typeof val !== 'string') return;
+    for (const raw of val.split(',')) {
+      const name = raw.trim();
+      if (!name || name === 'Tous') continue;
+      const commune = NEIGHBORHOOD_TO_COMMUNE[name.toLowerCase()] || name;
+      communes.add(commune.toUpperCase());
+    }
+  };
+  addLocation(p.quartier);
+  addLocation(p.commune);
+  delete p.commune;
+  if (communes.size > 0) p.quartier = [...communes].join(',');
+  else delete p.quartier;
+
+  return p;
+}
 
 // --- JWT auth (Rust backend is stateless: Bearer token, no cookie session) ---
 const TOKEN_KEY = 'auth_token';
@@ -283,12 +327,7 @@ export const api = {
     // commune, type_transaction) are ignored by the backend's query extractor.
     // Response listings are normalized to the shape UI components expect.
     list: async (params?: Record<string, any>) => {
-      const p: Record<string, any> = { ...(params || {}) };
-      if (p.limit != null && p.per_page == null) {
-        p.per_page = p.limit;
-        delete p.limit;
-      }
-      const res = await apiClient.get('/listings/search', { params: p });
+      const res = await apiClient.get('/listings/search', { params: mapSearchParams(params || {}) });
       normalizeListingsResponse(res);
       return res;
     },
