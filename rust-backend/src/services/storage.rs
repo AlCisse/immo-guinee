@@ -54,7 +54,14 @@ impl S3Storage {
             .map_err(|e| AppError::Internal(anyhow::anyhow!("s3 bucket: {e}")))?
             .with_path_style();
 
-        let public_base = format!("{}/{}", cfg.s3_endpoint.trim_end_matches('/'), cfg.s3_bucket);
+        // Browser-facing base: s3_public_url when set (dev: "/media" via the frontend
+        // proxy; prod: the CDN), else the API endpoint.
+        let public_endpoint = if cfg.s3_public_url.is_empty() {
+            cfg.s3_endpoint.as_str()
+        } else {
+            cfg.s3_public_url.as_str()
+        };
+        let public_base = format!("{}/{}", public_endpoint.trim_end_matches('/'), cfg.s3_bucket);
         Ok(Self { bucket, public_base })
     }
 

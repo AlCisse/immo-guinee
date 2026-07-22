@@ -40,6 +40,8 @@ pub fn routes() -> Router<Arc<AppState>> {
         .route("/listings/my", get(my_listings))
         .route("/listings", post(create))
         .route("/listings/{id}", get(show).patch(update).delete(destroy))
+        .route("/listings/{id}/mark-as-rented", post(mark_as_rented))
+        .route("/listings/{id}/reactivate", post(reactivate))
         .route(
             "/listings/{id}/photos",
             post(upload_photos).layer(DefaultBodyLimit::max(PHOTOS_BODY_LIMIT)),
@@ -233,6 +235,39 @@ async fn destroy(
     am.update(&state.db).await?;
 
     Ok(Json(Envelope { success: true, data: json!({ "message": "Annonce archivée" }) }))
+}
+
+/// `POST /api/listings/{id}/mark-as-rented` — owner marks the listing rented/sold
+/// (statut → LOUE_VENDU). Any request body (e.g. `rented_via_immoguinee`) is ignored;
+/// the model has no such field yet.
+async fn mark_as_rented(
+    auth: AuthUser,
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<Uuid>,
+) -> AppResult<Json<Envelope<ListingResponse>>> {
+    let listing = owned_listing(&state.db, id, auth.id).await?;
+    let mut am: listing::ActiveModel = listing.into();
+    am.statut = Set(StatutListing::LoueVendu);
+    am.date_derniere_maj = Set(Some(chrono::Utc::now().fixed_offset()));
+    let updated = am.update(&state.db).await?;
+    Ok(Json(Envelope { success: true, data: ListingResponse::from(updated) }))
+}
+
+/// `POST /api/listings/{id}/reactivate` — owner reactivates an expired/archived/rented
+/// listing (statut → DISPONIBLE, expiry extended by 90 days, FR-014).
+async fn reactivate(
+    auth: AuthUser,
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<Uuid>,
+) -> AppResult<Json<Envelope<ListingResponse>>> {
+    let listing = owned_listing(&state.db, id, auth.id).await?;
+    let now = chrono::Utc::now();
+    let mut am: listing::ActiveModel = listing.into();
+    am.statut = Set(StatutListing::Disponible);
+    am.date_expiration = Set((now + chrono::Duration::days(90)).fixed_offset());
+    am.date_derniere_maj = Set(Some(now.fixed_offset()));
+    let updated = am.update(&state.db).await?;
+    Ok(Json(Envelope { success: true, data: ListingResponse::from(updated) }))
 }
 
 /// Fetch a listing and ensure `user_id` owns it (`404` if missing, `403` if not owner).

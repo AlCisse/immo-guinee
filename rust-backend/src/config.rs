@@ -23,8 +23,12 @@ pub struct Config {
     /// Redis connection URL (dev: with creds; prod: Vault-fetched).
     pub redis_url: String,
 
-    /// S3-compatible endpoint (MinIO in dev, DO Spaces in prod).
+    /// S3-compatible endpoint used for API calls (MinIO in dev, DO Spaces in prod).
     pub s3_endpoint: String,
+    /// Public base URL for building browser-facing object URLs. Empty = derive from
+    /// `s3_endpoint`. In dev set to `/media` (proxied to MinIO by the frontend); in
+    /// prod set to the CDN base (e.g. https://immoguinee.fra1.cdn.digitaloceanspaces.com).
+    pub s3_public_url: String,
     /// S3 region label (MinIO ignores it; DO Spaces uses e.g. "fra1").
     pub s3_region: String,
     /// Bucket for listing photos and documents.
@@ -66,6 +70,7 @@ impl Default for Config {
             database_url: "postgres://immog_user:immog@localhost:5433/immog_db".into(),
             redis_url: "redis://:immog_redis_secret@localhost:6379".into(),
             s3_endpoint: "http://localhost:9000".into(),
+            s3_public_url: String::new(),
             s3_region: "us-east-1".into(),
             s3_bucket: "immoguinee-images".into(),
             evolution_base_url: "http://localhost:8080".into(),

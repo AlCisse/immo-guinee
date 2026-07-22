@@ -93,6 +93,9 @@ services:
       IMMOG_DATABASE_URL: postgres://immog_user:immog@postgres:5432/immog_db
       IMMOG_REDIS_URL: redis://:immog_redis_secret@redis:6379
       IMMOG_S3_ENDPOINT: http://minio:9000
+      # Browser-facing photo URLs: same-origin /media, proxied to MinIO by the frontend
+      # (prod: set to the CDN base instead).
+      IMMOG_S3_PUBLIC_URL: /media
       IMMOG_S3_REGION: us-east-1
       IMMOG_S3_BUCKET: immoguinee-images
       IMMOG_CORS_ALLOWED_ORIGIN: http://localhost:3005
