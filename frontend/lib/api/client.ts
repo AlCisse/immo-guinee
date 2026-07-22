@@ -171,6 +171,18 @@ function publicPhotoUrl(url?: string): string | undefined {
   return url.replace(/https?:\/\/minio:9000\//, '/media/');
 }
 
+// Rust visit status (statut_visite) → the English vocabulary the visits UI uses.
+const VISIT_STATUT_MAP: Record<string, string> = {
+  EN_ATTENTE: 'PENDING',
+  CONFIRMEE: 'CONFIRMED',
+  COMPLETEE: 'COMPLETED',
+  ANNULEE: 'CANCELLED',
+};
+function mapVisit(v: any): any {
+  if (!v || typeof v !== 'object') return v;
+  return { ...v, statut: VISIT_STATUT_MAP[v.statut] ?? v.statut };
+}
+
 // Rust listing status (statut_listing) → the vocabulary the UI + i18n keys use.
 const STATUT_MAP: Record<string, string> = {
   DISPONIBLE: 'ACTIVE',
@@ -480,25 +492,49 @@ export const api = {
 
   // Visits endpoints
   visits: {
-    list: (params?: Record<string, any>) =>
-      apiClient.get('/visits', { params }),
+    // The Rust API returns { data: { visits: [...] } }. Reshape to what each page
+    // reads: VisitsContent -> data.data (array); the dashboard -> data (array).
+    list: async (params?: Record<string, any>) => {
+      const res = await apiClient.get('/visits', { params });
+      res.data = { data: { data: (res.data?.data?.visits ?? []).map(mapVisit) } };
+      return res;
+    },
 
-    upcoming: () =>
-      apiClient.get('/visits/upcoming'),
+    upcoming: async () => {
+      const res = await apiClient.get('/visits/upcoming');
+      res.data = { data: (res.data?.data?.visits ?? []).map(mapVisit) };
+      return res;
+    },
 
     byDate: (date: string) =>
       apiClient.get('/visits/by-date', { params: { date } }),
 
-    stats: () =>
-      apiClient.get('/visits/stats'),
+    // Rust stats use French keys; the UI reads pending/confirmed/completed/cancelled.
+    stats: async () => {
+      const res = await apiClient.get('/visits/stats');
+      const s = res.data?.data ?? {};
+      res.data = {
+        data: {
+          pending: s.en_attente ?? 0,
+          confirmed: s.confirmees ?? 0,
+          completed: s.completees ?? 0,
+          cancelled: s.annulees ?? 0,
+          total: s.total ?? 0,
+        },
+      };
+      return res;
+    },
 
     forListing: (listingId: string, params?: Record<string, any>) =>
       apiClient.get(`/visits/listing/${listingId}`, { params }),
 
-    get: (id: string) =>
-      apiClient.get(`/visits/${id}`),
+    get: async (id: string) => {
+      const res = await apiClient.get(`/visits/${id}`);
+      if (res?.data?.data) res.data.data = mapVisit(res.data.data);
+      return res;
+    },
 
-    create: (data: {
+    create: async (data: {
       listing_id: string;
       client_nom: string;
       client_telephone: string;
@@ -507,20 +543,32 @@ export const api = {
       heure_visite: string;
       duree_minutes?: number;
       notes?: string;
-    }) =>
-      apiClient.post('/visits', data),
+    }) => {
+      const res = await apiClient.post('/visits', data);
+      if (res?.data?.data) res.data.data = mapVisit(res.data.data);
+      return res;
+    },
 
     update: (id: string, data: Record<string, any>) =>
       apiClient.patch(`/visits/${id}`, data),
 
-    confirm: (id: string) =>
-      apiClient.post(`/visits/${id}/confirm`),
+    confirm: async (id: string) => {
+      const res = await apiClient.post(`/visits/${id}/confirm`);
+      if (res?.data?.data) res.data.data = mapVisit(res.data.data);
+      return res;
+    },
 
-    complete: (id: string) =>
-      apiClient.post(`/visits/${id}/complete`),
+    complete: async (id: string) => {
+      const res = await apiClient.post(`/visits/${id}/complete`);
+      if (res?.data?.data) res.data.data = mapVisit(res.data.data);
+      return res;
+    },
 
-    cancel: (id: string, motif?: string) =>
-      apiClient.post(`/visits/${id}/cancel`, { motif }),
+    cancel: async (id: string, motif?: string) => {
+      const res = await apiClient.post(`/visits/${id}/cancel`, { motif });
+      if (res?.data?.data) res.data.data = mapVisit(res.data.data);
+      return res;
+    },
 
     delete: (id: string) =>
       apiClient.delete(`/visits/${id}`),
