@@ -1100,10 +1100,9 @@ export default function PropertyDetailPage() {
                         message: contactMessage.trim(),
                       });
                       if (response.data?.success) {
-                        toast.success('Message envoyé avec succès !');
+                        toast.success('Le propriétaire a été notifié via WhatsApp !');
                         setShowContactModal(false);
                         setContactMessage('');
-                        router.push('/messages');
                       } else {
                         throw new Error(response.data?.message || 'Erreur');
                       }

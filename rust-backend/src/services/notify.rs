@@ -40,6 +40,18 @@ pub async fn send_otp_code(state: &AppState, phone: &str, code: &str) -> AppResu
     Ok(())
 }
 
+/// Send a WhatsApp message to `phone` directly (no opt-in gate) — used for
+/// transactional contact (e.g. a buyer contacting a listing owner). Dev-safe: logs
+/// when Evolution API is not configured.
+pub async fn send_direct(state: &AppState, phone: &str, message: &str) -> AppResult<()> {
+    if state.whatsapp.is_configured() {
+        state.whatsapp.send_text(phone, message).await?;
+    } else {
+        tracing::info!(phone, %message, "message WhatsApp de développement (non configuré)");
+    }
+    Ok(())
+}
+
 /// Send a WhatsApp notification to `user` when they have opted into the WhatsApp
 /// channel (FR-005). Returns `Ok(false)` (no-op) when the channel is disabled.
 /// In dev (Evolution not configured) the message is logged.

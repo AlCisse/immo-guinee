@@ -584,8 +584,10 @@ export const api = {
     conversations: () =>
       apiClient.get('/messaging/conversations'),
 
+    // Initial messaging routes through WhatsApp: notify the owner via the contact
+    // endpoint (the backend sends a WhatsApp message through Evolution API).
     startConversation: (data: { listing_id: string; message?: string }) =>
-      apiClient.post('/messaging/conversations/start', data),
+      apiClient.post(`/listings/${data.listing_id}/contact`, { message: data.message ?? '' }),
 
     getMessages: (conversationId: string) =>
       apiClient.get(`/messaging/${conversationId}/messages`),

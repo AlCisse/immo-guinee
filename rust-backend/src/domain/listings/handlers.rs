@@ -17,8 +17,8 @@ use sea_orm::{
 use serde_json::json;
 use uuid::Uuid;
 
-use crate::db::entities::listing;
 use crate::db::entities::sea_orm_active_enums::StatutListing;
+use crate::db::entities::{listing, user};
 use crate::error::{AppError, AppResult};
 use crate::extractors::{AuthUser, ValidatedJson};
 use crate::services::listing_photo;
@@ -42,6 +42,7 @@ pub fn routes() -> Router<Arc<AppState>> {
         .route("/listings/{id}", get(show).patch(update).delete(destroy))
         .route("/listings/{id}/mark-as-rented", post(mark_as_rented))
         .route("/listings/{id}/reactivate", post(reactivate))
+        .route("/listings/{id}/contact", post(contact))
         .route(
             "/listings/{id}/photos",
             post(upload_photos).layer(DefaultBodyLimit::max(PHOTOS_BODY_LIMIT)),
@@ -268,6 +269,60 @@ async fn reactivate(
     am.date_derniere_maj = Set(Some(now.fixed_offset()));
     let updated = am.update(&state.db).await?;
     Ok(Json(Envelope { success: true, data: ListingResponse::from(updated) }))
+}
+
+/// Contact payload (message from the interested user to the owner).
+#[derive(Debug, serde::Deserialize, validator::Validate)]
+struct ContactRequest {
+    #[validate(length(min = 1, max = 1000, message = "message requis (1-1000 caractères)"))]
+    message: String,
+}
+
+/// `POST /api/listings/{id}/contact` — an interested user contacts the owner. At this
+/// stage messaging routes through WhatsApp: the backend sends the owner a WhatsApp
+/// message (via Evolution API) with the requester's contact, keeping numbers masked
+/// on the site (FR-060). The owner replies directly.
+async fn contact(
+    auth: AuthUser,
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<Uuid>,
+    ValidatedJson(req): ValidatedJson<ContactRequest>,
+) -> AppResult<Json<Envelope<serde_json::Value>>> {
+    let listing = listing::Entity::find_by_id(id)
+        .one(&state.db)
+        .await?
+        .ok_or(AppError::NotFound)?;
+    if listing.createur_id == auth.id {
+        return Err(AppError::Validation("Vous ne pouvez pas contacter votre propre annonce".into()));
+    }
+    let owner = user::Entity::find_by_id(listing.createur_id)
+        .one(&state.db)
+        .await?
+        .ok_or(AppError::NotFound)?;
+    let client = user::Entity::find_by_id(auth.id)
+        .one(&state.db)
+        .await?
+        .ok_or(AppError::Unauthorized)?;
+
+    let text = format!(
+        "📩 ImmoGuinée — Nouveau contact pour votre annonce « {titre} ».\n\n\
+         Client : {nom} ({tel})\n\
+         Message : {msg}\n\n\
+         Répondez directement au client.",
+        titre = listing.titre,
+        nom = client.nom_complet,
+        tel = client.telephone,
+        msg = req.message.trim(),
+    );
+    // Delivery failure must not fail the request (dev logs; prod sends via Evolution).
+    if let Err(e) = crate::services::notify::send_direct(&state, &owner.telephone, &text).await {
+        tracing::warn!(error = %e, "contact WhatsApp au propriétaire échoué");
+    }
+
+    Ok(Json(Envelope {
+        success: true,
+        data: json!({ "message": "Le propriétaire a été notifié via WhatsApp", "channel": "whatsapp" }),
+    }))
 }
 
 /// Fetch a listing and ensure `user_id` owns it (`404` if missing, `403` if not owner).
