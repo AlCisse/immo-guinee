@@ -9,6 +9,7 @@ pub mod sea_orm_active_enums;
 pub mod user;
 pub mod listing;
 pub mod visit;
+pub mod favorite;
 pub mod contract;
 pub mod payment;
 pub mod certification_document;

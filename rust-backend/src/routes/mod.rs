@@ -29,6 +29,7 @@ pub fn router(state: Arc<AppState>, cfg: &Config) -> Router {
         .merge(crate::domain::auth::routes())      // T078-T083 (auth)
         .merge(crate::domain::webhooks::routes()) // W3 (evolution webhook)
         .merge(crate::domain::visits::routes())    // US10 (visits)
+        .merge(crate::domain::favorites::routes())  // saved listings
         .merge(crate::domain::certifications::routes()); // Phase 5 (FR-054)
     // Phase 2: .merge(crate::domain::messaging::routes())
     // Phase 3: .merge(crate::domain::contracts::routes())

@@ -32,6 +32,7 @@ pub mod auth;        // T078-T083 (register / login / 2FA TOTP)
 pub mod webhooks;    // W3 (evolution WhatsApp; orange/mtn payments later)
 pub mod certifications; // Phase 5 (FR-054: upload + admin verify)
 pub mod visits;      // US10 (schedule/manage property visits)
+pub mod favorites;   // saved listings (favourites)
 // pub mod messaging;  // Phase 2
 // pub mod contracts;  // Phase 3
 // pub mod payments;   // Phase 4 (critical — last)

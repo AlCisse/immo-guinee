@@ -24,6 +24,7 @@ mod m20250128_000015_create_visits;
 mod m20250128_000016_add_two_factor_to_users;
 mod m20250128_000017_add_telephone_verifie;
 mod m20250128_000018_add_location_courte;
+mod m20250128_000019_create_favorites;
 
 pub struct Migrator;
 
@@ -48,6 +49,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20250128_000016_add_two_factor_to_users::Migration),
             Box::new(m20250128_000017_add_telephone_verifie::Migration),
             Box::new(m20250128_000018_add_location_courte::Migration),
+            Box::new(m20250128_000019_create_favorites::Migration),
         ]
     }
 }

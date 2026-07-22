@@ -474,8 +474,13 @@ export const api = {
 
   // Favorites endpoints
   favorites: {
-    list: () =>
-      apiClient.get('/favorites'),
+    // Normalize each favourited listing to the UI shape (keeps added_at).
+    list: async () => {
+      const res = await apiClient.get('/favorites');
+      const favs = res.data?.data?.favorites ?? [];
+      res.data = { data: { favorites: favs.map(mapRustListing) } };
+      return res;
+    },
 
     add: (listingId: string) =>
       apiClient.post('/favorites', { listing_id: listingId }),
