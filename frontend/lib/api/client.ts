@@ -171,6 +171,16 @@ function publicPhotoUrl(url?: string): string | undefined {
   return url.replace(/https?:\/\/minio:9000\//, '/media/');
 }
 
+// Rust listing status (statut_listing) → the vocabulary the UI + i18n keys use.
+const STATUT_MAP: Record<string, string> = {
+  DISPONIBLE: 'ACTIVE',
+  EN_NEGOCIATION: 'EN_ATTENTE',
+  LOUE_VENDU: 'ARCHIVEE',
+  EXPIRE: 'EXPIREE',
+  ARCHIVE: 'ARCHIVEE',
+  SUSPENDU: 'SUSPENDUE',
+};
+
 function mapRustListing(l: any): any {
   if (!l || typeof l !== 'object') return l;
   const photos = Array.isArray(l.photos)
@@ -202,6 +212,7 @@ function mapRustListing(l: any): any {
     is_premium: isPremium,
     vues_count: l.vues_count ?? l.nombre_vues,
     created_at: l.created_at ?? l.date_publication,
+    statut: (typeof l.statut === 'string' && STATUT_MAP[l.statut]) || l.statut,
   };
 }
 

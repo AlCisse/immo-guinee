@@ -27,7 +27,7 @@ export default function PhotoUploader({
   error,
   required = true,
 }: PhotoUploaderProps) {
-  const { t } = useTranslations();
+  const { t } = useTranslations('publish');
   const [isDragging, setIsDragging] = useState(false);
   const [uploadErrors, setUploadErrors] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
