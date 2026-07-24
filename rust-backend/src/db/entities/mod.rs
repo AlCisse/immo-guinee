@@ -17,5 +17,6 @@ pub mod rating;
 pub mod conversation;
 pub mod message;
 pub mod dispute;
+pub mod admin_audit_log;
 pub mod transaction;
 pub mod insurance;

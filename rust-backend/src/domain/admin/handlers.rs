@@ -17,11 +17,15 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use uuid::Uuid;
 
+use chrono::Utc;
+
 use crate::auth::rbac::Permission;
 use crate::db::entities::sea_orm_active_enums::{
-    StatutCompte, StatutContrat, StatutLitige, StatutListing, StatutVerificationDoc,
+    StatutCompte, StatutContrat, StatutLitige, StatutListing, StatutVerificationDoc, StatutVisite,
 };
-use crate::db::entities::{certification_document, contract, dispute, listing, rating, user};
+use crate::db::entities::{
+    admin_audit_log, certification_document, contract, dispute, listing, rating, user, visit,
+};
 use crate::error::{AppError, AppResult};
 use crate::extractors::{AuthUser, ValidatedJson};
 use crate::state::AppState;
@@ -39,6 +43,21 @@ pub fn routes() -> Router<Arc<AppState>> {
         .route("/admin/users/{id}", post(manage_user))
         .route("/admin/users/{id}/roles/sync", post(sync_roles))
         .route("/admin/roles", get(list_roles))
+        // certifications
+        .route("/admin/certifications", get(list_certifications))
+        .route("/admin/certifications/{id}/approve", post(approve_certification))
+        .route("/admin/certifications/{id}/reject", post(reject_certification))
+        // disputes
+        .route("/admin/disputes", get(list_disputes))
+        .route("/admin/disputes/{id}", get(get_dispute))
+        .route("/admin/disputes/{id}/assign", post(assign_dispute))
+        .route("/admin/disputes/{id}/resolve", post(resolve_dispute))
+        .route("/admin/mediators", get(list_mediators))
+        // visits
+        .route("/admin/visits", get(list_visits))
+        .route("/admin/visits/stats", get(visit_stats))
+        // audit log
+        .route("/admin/logs", get(list_logs))
 }
 
 // --- dashboard -------------------------------------------------------------
@@ -185,6 +204,7 @@ async fn moderate_listing(
     am.statut = Set(new_statut.clone());
     am.update(&state.db).await?;
 
+    audit(&state.db, auth.id, "listing.moderate", "listing", id, json!({ "action": req.action, "reason": req.reason })).await;
     Ok(Json(json!({ "success": true, "data": { "id": id, "statut": new_statut } })))
 }
 
@@ -199,6 +219,7 @@ async fn delete_listing(
     let mut am: listing::ActiveModel = l.into();
     am.statut = Set(StatutListing::Archive);
     am.update(&state.db).await?;
+    audit(&state.db, auth.id, "listing.delete", "listing", id, json!({})).await;
     Ok(Json(json!({ "success": true, "data": { "id": id } })))
 }
 
@@ -247,6 +268,7 @@ async fn manage_user(
     am.statut_compte = Set(new_statut.clone());
     am.update(&state.db).await?;
 
+    audit(&state.db, auth.id, "user.manage", "user", id, json!({ "action": req.action, "reason": req.reason })).await;
     Ok(Json(json!({ "success": true, "data": { "id": id, "statut_compte": new_statut } })))
 }
 
@@ -272,6 +294,7 @@ async fn sync_roles(
     am.role = Set(role.clone());
     am.update(&state.db).await?;
 
+    audit(&state.db, auth.id, "user.role", "user", id, json!({ "role": role })).await;
     Ok(Json(json!({ "success": true, "data": { "id": id, "role": role } })))
 }
 
@@ -349,4 +372,390 @@ async fn listings_with_owners(
             })
         })
         .collect())
+}
+
+/// Fetch a set of users keyed by id (for embedding parties/owners).
+async fn users_by_ids(
+    db: &sea_orm::DatabaseConnection,
+    ids: Vec<Uuid>,
+) -> AppResult<HashMap<Uuid, user::Model>> {
+    if ids.is_empty() {
+        return Ok(HashMap::new());
+    }
+    Ok(user::Entity::find()
+        .filter(user::Column::Id.is_in(ids))
+        .all(db)
+        .await?
+        .into_iter()
+        .map(|u| (u.id, u))
+        .collect())
+}
+
+/// Wrap a list in the Laravel-style paginator envelope some admin pages read
+/// (`data.data` is the array). A single page is returned — no server paging yet.
+fn paginated(items: Vec<Value>) -> Json<Value> {
+    let total = items.len();
+    Json(json!({
+        "success": true,
+        "data": {
+            "data": items,
+            "total": total,
+            "current_page": 1,
+            "last_page": 1,
+            "per_page": total.max(1),
+        }
+    }))
+}
+
+/// A compact `{id, nom_complet, telephone, badge}` for an embedded user.
+fn user_ref(u: Option<&user::Model>) -> Value {
+    match u {
+        Some(u) => json!({
+            "id": u.id,
+            "nom_complet": u.nom_complet,
+            "telephone": u.telephone,
+            "badge": u.badge_certification,
+        }),
+        None => Value::Null,
+    }
+}
+
+// --- audit trail -----------------------------------------------------------
+
+/// Record a staff action. Best-effort: a logging failure must never fail the
+/// action it describes, so errors are logged and swallowed.
+async fn audit(
+    db: &sea_orm::DatabaseConnection,
+    admin_id: Uuid,
+    action: &str,
+    target_type: &str,
+    target_id: Uuid,
+    details: Value,
+) {
+    let row = admin_audit_log::ActiveModel {
+        id: Set(Uuid::new_v4()),
+        admin_id: Set(admin_id),
+        action: Set(action.to_owned()),
+        target_type: Set(Some(target_type.to_owned())),
+        target_id: Set(Some(target_id)),
+        details: Set(details),
+        created_at: Set(Utc::now().into()),
+    };
+    if let Err(e) = row.insert(db).await {
+        tracing::warn!(error = %e, action, "échec d'écriture du journal d'audit");
+    }
+}
+
+/// `GET /api/admin/logs` — the audit trail, newest first, with the actor's name.
+async fn list_logs(auth: AuthUser, State(state): State<Arc<AppState>>) -> AppResult<Json<Value>> {
+    auth.require_permission(Permission::ViewAnalytics)?;
+    let rows = admin_audit_log::Entity::find()
+        .order_by_desc(admin_audit_log::Column::CreatedAt)
+        .limit(200)
+        .all(&state.db)
+        .await?;
+    let admins = users_by_ids(&state.db, rows.iter().map(|r| r.admin_id).collect()).await?;
+    let items: Vec<Value> = rows
+        .iter()
+        .map(|r| {
+            json!({
+                "id": r.id,
+                "admin_id": r.admin_id,
+                "admin": admins.get(&r.admin_id).map(|a| a.nom_complet.clone()),
+                "action": r.action,
+                "target_type": r.target_type,
+                "target_id": r.target_id,
+                "details": r.details,
+                "created_at": r.created_at,
+            })
+        })
+        .collect();
+    Ok(Json(json!({ "success": true, "data": items })))
+}
+
+// --- certifications --------------------------------------------------------
+
+/// `GET /api/admin/certifications` — all uploaded documents + their owner.
+async fn list_certifications(auth: AuthUser, State(state): State<Arc<AppState>>) -> AppResult<Json<Value>> {
+    auth.require_permission(Permission::ManageCertifications)?;
+    let rows = certification_document::Entity::find()
+        .order_by_desc(certification_document::Column::DateUpload)
+        .limit(200)
+        .all(&state.db)
+        .await?;
+    let owners = users_by_ids(&state.db, rows.iter().map(|c| c.utilisateur_id).collect()).await?;
+    let items: Vec<Value> = rows
+        .iter()
+        .map(|c| {
+            json!({
+                "id": c.id,
+                "type_document": c.type_document,
+                // The current schema has no separate document number / expiry.
+                "numero_document": Value::Null,
+                "date_expiration": Value::Null,
+                "fichier_url": c.fichier_url,
+                "statut_verification": c.statut_verification,
+                "commentaire_verification": c.commentaire_verification,
+                "date_upload": c.date_upload,
+                "date_verification": c.date_verification,
+                "user": user_ref(owners.get(&c.utilisateur_id)),
+            })
+        })
+        .collect();
+    Ok(paginated(items))
+}
+
+#[derive(Debug, Deserialize, validator::Validate)]
+pub struct ApproveCertRequest {
+    pub notes: Option<String>,
+}
+
+/// `POST /api/admin/certifications/{id}/approve`.
+async fn approve_certification(
+    auth: AuthUser,
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<Uuid>,
+    ValidatedJson(req): ValidatedJson<ApproveCertRequest>,
+) -> AppResult<Json<Value>> {
+    auth.require_permission(Permission::ManageCertifications)?;
+    verify_certification(&state, auth.id, id, StatutVerificationDoc::Approuve, req.notes).await
+}
+
+#[derive(Debug, Deserialize, validator::Validate)]
+pub struct RejectCertRequest {
+    pub raison: Option<String>,
+}
+
+/// `POST /api/admin/certifications/{id}/reject`.
+async fn reject_certification(
+    auth: AuthUser,
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<Uuid>,
+    ValidatedJson(req): ValidatedJson<RejectCertRequest>,
+) -> AppResult<Json<Value>> {
+    auth.require_permission(Permission::ManageCertifications)?;
+    verify_certification(&state, auth.id, id, StatutVerificationDoc::Rejete, req.raison).await
+}
+
+/// Shared approve/reject path: set the verification decision + comment + auditor.
+async fn verify_certification(
+    state: &AppState,
+    admin_id: Uuid,
+    id: Uuid,
+    decision: StatutVerificationDoc,
+    comment: Option<String>,
+) -> AppResult<Json<Value>> {
+    let doc = certification_document::Entity::find_by_id(id)
+        .one(&state.db)
+        .await?
+        .ok_or(AppError::NotFound)?;
+    let mut am: certification_document::ActiveModel = doc.into();
+    am.statut_verification = Set(decision.clone());
+    am.commentaire_verification = Set(comment);
+    am.verifie_par_admin_id = Set(Some(admin_id));
+    am.date_verification = Set(Some(Utc::now().into()));
+    am.update(&state.db).await?;
+
+    audit(&state.db, admin_id, "certification.verify", "certification", id, json!({ "decision": decision })).await;
+    Ok(Json(json!({ "success": true, "data": { "id": id, "statut_verification": decision } })))
+}
+
+// --- disputes --------------------------------------------------------------
+
+/// `GET /api/admin/disputes` — all disputes with both parties + assigned mediator.
+async fn list_disputes(auth: AuthUser, State(state): State<Arc<AppState>>) -> AppResult<Json<Value>> {
+    auth.require_permission(Permission::ResolveDisputes)?;
+    let rows = dispute::Entity::find()
+        .order_by_desc(dispute::Column::DateOuverture)
+        .limit(200)
+        .all(&state.db)
+        .await?;
+    let mut ids: Vec<Uuid> = Vec::new();
+    for d in &rows {
+        ids.push(d.demandeur_id);
+        ids.push(d.defendeur_id);
+        if let Some(m) = d.mediateur_assigne_id {
+            ids.push(m);
+        }
+    }
+    let users = users_by_ids(&state.db, ids).await?;
+    let items: Vec<Value> = rows.iter().map(|d| dispute_json(d, &users)).collect();
+    Ok(paginated(items))
+}
+
+/// `GET /api/admin/disputes/{id}` — a single dispute.
+async fn get_dispute(
+    auth: AuthUser,
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<Uuid>,
+) -> AppResult<Json<Value>> {
+    auth.require_permission(Permission::ResolveDisputes)?;
+    let d = dispute::Entity::find_by_id(id).one(&state.db).await?.ok_or(AppError::NotFound)?;
+    let mut ids = vec![d.demandeur_id, d.defendeur_id];
+    if let Some(m) = d.mediateur_assigne_id {
+        ids.push(m);
+    }
+    let users = users_by_ids(&state.db, ids).await?;
+    Ok(Json(json!({ "success": true, "data": dispute_json(&d, &users) })))
+}
+
+/// `GET /api/admin/mediators` — users who can be assigned to disputes.
+async fn list_mediators(auth: AuthUser, State(state): State<Arc<AppState>>) -> AppResult<Json<Value>> {
+    auth.require_permission(Permission::ResolveDisputes)?;
+    let rows = user::Entity::find()
+        .filter(user::Column::Role.eq("mediator"))
+        .all(&state.db)
+        .await?;
+    let items: Vec<Value> = rows.iter().map(|u| user_ref(Some(u))).collect();
+    Ok(Json(json!({ "success": true, "data": items })))
+}
+
+#[derive(Debug, Deserialize, validator::Validate)]
+pub struct AssignDisputeRequest {
+    pub mediateur_id: Uuid,
+}
+
+/// `POST /api/admin/disputes/{id}/assign` — assign a mediator (status → EN_COURS).
+async fn assign_dispute(
+    auth: AuthUser,
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<Uuid>,
+    ValidatedJson(req): ValidatedJson<AssignDisputeRequest>,
+) -> AppResult<Json<Value>> {
+    auth.require_permission(Permission::ResolveDisputes)?;
+    let d = dispute::Entity::find_by_id(id).one(&state.db).await?.ok_or(AppError::NotFound)?;
+    let mut am: dispute::ActiveModel = d.into();
+    am.mediateur_assigne_id = Set(Some(req.mediateur_id));
+    am.date_assignation_mediateur = Set(Some(Utc::now().into()));
+    am.statut = Set(StatutLitige::EnCours);
+    am.update(&state.db).await?;
+
+    audit(&state.db, auth.id, "dispute.assign", "dispute", id, json!({ "mediateur_id": req.mediateur_id })).await;
+    Ok(Json(json!({ "success": true, "data": { "id": id, "mediateur_id": req.mediateur_id } })))
+}
+
+#[derive(Debug, Deserialize, validator::Validate)]
+pub struct ResolveDisputeRequest {
+    pub statut: Option<String>,
+    pub resolution_notes: Option<String>,
+    pub montant_resolution: Option<f64>,
+}
+
+/// `POST /api/admin/disputes/{id}/resolve` — close a dispute with an outcome.
+async fn resolve_dispute(
+    auth: AuthUser,
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<Uuid>,
+    ValidatedJson(req): ValidatedJson<ResolveDisputeRequest>,
+) -> AppResult<Json<Value>> {
+    auth.require_permission(Permission::ResolveDisputes)?;
+    let d = dispute::Entity::find_by_id(id).one(&state.db).await?.ok_or(AppError::NotFound)?;
+
+    let statut = match req.statut.as_deref() {
+        Some("RESOLU_COMPENSATION") => StatutLitige::ResoluCompensation,
+        Some("ECHOUE_ESCALADE") => StatutLitige::EchoueEscalade,
+        _ => StatutLitige::ResoluAmiable,
+    };
+    let resolution = json!({
+        "notes": req.resolution_notes,
+        "montant_resolution": req.montant_resolution,
+    });
+    let mut am: dispute::ActiveModel = d.into();
+    am.statut = Set(statut.clone());
+    am.resolution = Set(Some(resolution.clone()));
+    am.date_resolution = Set(Some(Utc::now().into()));
+    am.update(&state.db).await?;
+
+    audit(&state.db, auth.id, "dispute.resolve", "dispute", id, json!({ "statut": statut })).await;
+    Ok(Json(json!({ "success": true, "data": { "id": id, "statut": statut } })))
+}
+
+/// Shape a dispute (+ parties) for the admin table.
+fn dispute_json(d: &dispute::Model, users: &HashMap<Uuid, user::Model>) -> Value {
+    json!({
+        "id": d.id,
+        "reference": d.reference,
+        "statut": d.statut,
+        // The schema models the reason as a category (`type_litige`); expose it as
+        // `motif` for the admin UI, with the free-text `description` alongside.
+        "motif": d.type_litige,
+        "type_litige": d.type_litige,
+        "description": d.description,
+        "date_ouverture": d.date_ouverture,
+        "date_resolution": d.date_resolution,
+        "resolution": d.resolution,
+        "demandeur": user_ref(users.get(&d.demandeur_id)),
+        "defendeur": user_ref(users.get(&d.defendeur_id)),
+        "mediateur": d.mediateur_assigne_id.and_then(|m| users.get(&m)).map(|u| user_ref(Some(u))),
+    })
+}
+
+// --- visits ----------------------------------------------------------------
+
+/// `GET /api/admin/visits` — all scheduled visits with parties + listing title.
+async fn list_visits(auth: AuthUser, State(state): State<Arc<AppState>>) -> AppResult<Json<Value>> {
+    auth.require_permission(Permission::ViewAnalytics)?;
+    let rows = visit::Entity::find()
+        .order_by_desc(visit::Column::DateVisite)
+        .limit(200)
+        .all(&state.db)
+        .await?;
+    let mut uids: Vec<Uuid> = Vec::new();
+    for v in &rows {
+        uids.push(v.demandeur_id);
+        uids.push(v.proprietaire_id);
+    }
+    let users = users_by_ids(&state.db, uids).await?;
+    let listing_ids: Vec<Uuid> = rows.iter().map(|v| v.annonce_id).collect();
+    let listings: HashMap<Uuid, listing::Model> = if listing_ids.is_empty() {
+        HashMap::new()
+    } else {
+        listing::Entity::find()
+            .filter(listing::Column::Id.is_in(listing_ids))
+            .all(&state.db)
+            .await?
+            .into_iter()
+            .map(|l| (l.id, l))
+            .collect()
+    };
+    let items: Vec<Value> = rows
+        .iter()
+        .map(|v| {
+            json!({
+                "id": v.id,
+                "annonce_id": v.annonce_id,
+                "annonce_titre": listings.get(&v.annonce_id).map(|l| l.titre.clone()),
+                "date_visite": v.date_visite,
+                "statut": v.statut,
+                "message": v.message,
+                "demandeur": user_ref(users.get(&v.demandeur_id)),
+                "proprietaire": user_ref(users.get(&v.proprietaire_id)),
+                "created_at": v.date_creation,
+            })
+        })
+        .collect();
+    Ok(Json(json!({ "success": true, "data": items })))
+}
+
+/// `GET /api/admin/visits/stats` — visit counts by status.
+async fn visit_stats(auth: AuthUser, State(state): State<Arc<AppState>>) -> AppResult<Json<Value>> {
+    auth.require_permission(Permission::ViewAnalytics)?;
+    let db = &state.db;
+    let by_statut = |s: StatutVisite| visit::Entity::find().filter(visit::Column::Statut.eq(s));
+    let total = visit::Entity::find().count(db).await?;
+    let pending = by_statut(StatutVisite::EnAttente).count(db).await?;
+    let confirmed = by_statut(StatutVisite::Confirmee).count(db).await?;
+    let completed = by_statut(StatutVisite::Completee).count(db).await?;
+    let cancelled = by_statut(StatutVisite::Annulee).count(db).await?;
+
+    Ok(Json(json!({
+        "success": true,
+        "data": {
+            "total": total,
+            "pending": pending,
+            "confirmed": confirmed,
+            "completed": completed,
+            "cancelled": cancelled,
+        }
+    })))
 }

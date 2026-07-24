@@ -26,6 +26,7 @@ mod m20250128_000017_add_telephone_verifie;
 mod m20250128_000018_add_location_courte;
 mod m20250128_000019_create_favorites;
 mod m20250128_000020_add_role_to_users;
+mod m20250128_000021_create_admin_audit_logs;
 
 pub struct Migrator;
 
@@ -52,6 +53,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20250128_000018_add_location_courte::Migration),
             Box::new(m20250128_000019_create_favorites::Migration),
             Box::new(m20250128_000020_add_role_to_users::Migration),
+            Box::new(m20250128_000021_create_admin_audit_logs::Migration),
         ]
     }
 }
