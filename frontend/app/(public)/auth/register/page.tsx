@@ -20,7 +20,7 @@ export default function RegisterPage() {
   const accountTypes = [
     { value: 'PARTICULIER', label: t('auth.register.accountTypes.individual'), description: t('auth.register.accountTypes.individualDesc') },
     { value: 'AGENCE', label: t('auth.register.accountTypes.agency'), description: t('auth.register.accountTypes.agencyDesc') },
-    { value: 'PROMOTEUR', label: t('auth.register.accountTypes.promoter'), description: t('auth.register.accountTypes.promoterDesc') },
+    { value: 'DIASPORA', label: t('auth.register.accountTypes.diaspora'), description: t('auth.register.accountTypes.diasporaDesc') },
   ];
   const [formData, setFormData] = useState({
     telephone: '',
@@ -28,7 +28,7 @@ export default function RegisterPage() {
     mot_de_passe: '',
     mot_de_passe_confirmation: '',
     nom_complet: '',
-    type_compte: 'PARTICULIER' as 'PARTICULIER' | 'AGENCE' | 'PROMOTEUR',
+    type_compte: 'PARTICULIER' as 'PARTICULIER' | 'AGENCE' | 'DIASPORA',
   });
   const [acceptedCGU, setAcceptedCGU] = useState(false);
   const [showPassword, setShowPassword] = useState(false);

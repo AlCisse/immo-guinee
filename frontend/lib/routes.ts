@@ -98,7 +98,7 @@ export const MOBILE_NAV_ITEMS: NavItem[] = [
 
 // User dropdown menu items
 export const USER_MENU_ITEMS: NavItem[] = [
-  { href: ROUTES.DASHBOARD, icon: LayoutDashboard, labelKey: 'nav.dashboard', requiresAuth: true, forAccountTypes: ['AGENCE', 'AGENT', 'PROPRIETAIRE'] },
+  { href: ROUTES.DASHBOARD, icon: LayoutDashboard, labelKey: 'nav.dashboard', requiresAuth: true, forAccountTypes: ['AGENCE'] },
   { href: ROUTES.PROFILE, icon: User, labelKey: 'nav.myProfile' },
   { href: ROUTES.MY_LISTINGS, icon: FileText, labelKey: 'nav.myListings' },
   { href: ROUTES.FAVORITES, icon: Heart, labelKey: 'nav.myFavorites' },
@@ -111,7 +111,7 @@ export const USER_MENU_ITEMS: NavItem[] = [
 // Mobile menu items (slide out menu)
 export const MOBILE_MENU_ITEMS: NavItem[] = [
   { href: ROUTES.HOME, icon: Home, labelKey: 'nav.home' },
-  { href: ROUTES.DASHBOARD, icon: LayoutDashboard, labelKey: 'nav.dashboard', requiresAuth: true, forAccountTypes: ['AGENCE', 'AGENT', 'PROPRIETAIRE'] },
+  { href: ROUTES.DASHBOARD, icon: LayoutDashboard, labelKey: 'nav.dashboard', requiresAuth: true, forAccountTypes: ['AGENCE'] },
   { href: ROUTES.MY_LISTINGS, icon: FileText, labelKey: 'nav.myListings', requiresAuth: true },
   { href: ROUTES.SEARCH, icon: Search, labelKey: 'nav.search' },
   { href: ROUTES.FAVORITES, icon: Heart, labelKey: 'nav.myFavorites', requiresAuth: true },

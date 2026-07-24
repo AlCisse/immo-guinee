@@ -277,8 +277,8 @@
         "individualDesc": "Chercher, louer ou vendre",
         "agency": "Agence / Agent",
         "agencyDesc": "Professionnel de l'immobilier",
-        "promoter": "Promoteur",
-        "promoterDesc": "Promoteur immobilier"
+        "diaspora": "Diaspora",
+        "diasporaDesc": "Guineen de la diaspora"
       },
       "individual": "Particulier",
       "professional": "Professionnel",
@@ -484,9 +484,8 @@
     },
     "accountTypes": {
       "AGENCE": "Agence",
-      "PROPRIETAIRE": "Proprietaire",
       "PARTICULIER": "Particulier",
-      "AGENT": "Agent"
+      "DIASPORA": "Diaspora"
     },
     "myListings": {
       "title": "Mes annonces",

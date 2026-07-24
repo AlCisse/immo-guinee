@@ -11,7 +11,7 @@ export interface User {
   telephone: string;
   nom_complet: string;
   email?: string;
-  type_compte: 'PARTICULIER' | 'PROPRIETAIRE' | 'AGENT' | 'AGENCE';
+  type_compte: 'PARTICULIER' | 'AGENCE' | 'DIASPORA';
   badge: 'BRONZE' | 'ARGENT' | 'OR' | 'DIAMANT';
   statut_verification: 'NON_VERIFIE' | 'EN_ATTENTE' | 'VERIFIE' | 'REJETE';
   is_active: boolean;
@@ -63,7 +63,7 @@ interface RegisterData {
   telephone: string;
   mot_de_passe: string;
   nom_complet: string;
-  type_compte: 'PARTICULIER' | 'PROPRIETAIRE' | 'AGENT' | 'AGENCE';
+  type_compte: 'PARTICULIER' | 'AGENCE' | 'DIASPORA';
   email?: string;
 }
 

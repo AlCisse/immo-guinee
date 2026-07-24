@@ -277,8 +277,8 @@
         "individualDesc": "Search, rent or sell",
         "agency": "Agency / Agent",
         "agencyDesc": "Real estate professional",
-        "promoter": "Developer",
-        "promoterDesc": "Real estate developer"
+        "diaspora": "Diaspora",
+        "diasporaDesc": "Guinean living abroad"
       },
       "individual": "Individual",
       "professional": "Professional",
@@ -484,9 +484,8 @@
     },
     "accountTypes": {
       "AGENCE": "Agency",
-      "PROPRIETAIRE": "Owner",
       "PARTICULIER": "Individual",
-      "AGENT": "Agent"
+      "DIASPORA": "Diaspora"
     },
     "myListings": {
       "title": "My listings",
