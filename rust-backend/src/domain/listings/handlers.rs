@@ -103,9 +103,10 @@ async fn my_listings(
 async fn show(
     State(state): State<Arc<AppState>>,
     Path(id): Path<Uuid>,
-) -> AppResult<Json<Envelope<ListingResponse>>> {
+) -> AppResult<Json<serde_json::Value>> {
     let model = listing::Entity::find_by_id(id).one(&state.db).await?;
     let model = model.ok_or(AppError::NotFound)?;
+    let createur_id = model.createur_id;
 
     // Increment the view counter (FR: nombre_vues) atomically in the DB.
     listing::Entity::update_many()
@@ -116,7 +117,25 @@ async fn show(
 
     let mut data = ListingResponse::from(model);
     data.nombre_vues += 1;
-    Ok(Json(Envelope { success: true, data }))
+
+    // Embed the owner so the detail page can show their name, badge and rating
+    // (note_moyenne, maintained by the ratings domain).
+    let owner = user::Entity::find_by_id(createur_id).one(&state.db).await?;
+    let user_json = owner.map(|u| {
+        json!({
+            "id": u.id,
+            "nom_complet": u.nom_complet,
+            "badge": u.badge_certification,
+            "note_moyenne": u.note_moyenne,
+            "photo_profil_url": u.photo_profil_url,
+        })
+    });
+
+    let mut body = serde_json::to_value(&data).unwrap_or_else(|_| json!({}));
+    if let Some(obj) = body.as_object_mut() {
+        obj.insert("user".into(), user_json.unwrap_or(serde_json::Value::Null));
+    }
+    Ok(Json(json!({ "success": true, "data": body })))
 }
 
 /// `POST /api/listings` — create a listing owned by the authenticated user

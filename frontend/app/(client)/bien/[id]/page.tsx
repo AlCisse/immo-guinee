@@ -8,6 +8,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import toast from 'react-hot-toast';
+import RatingsDisplay from '@/components/ratings/RatingsDisplay';
 
 // Dynamically import map component to avoid SSR issues
 const MapView = dynamic(() => import('./MapView'), {
@@ -614,18 +615,36 @@ export default function PropertyDetailPage() {
                 <h3 className="font-semibold text-neutral-900 dark:text-white">
                   {t('listingDetail.hostedBy')} {listing.user?.nom_complet || t('listingDetail.owner')}
                 </h3>
-                {listing.user?.badge && (
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    listing.user.badge === 'DIAMANT' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' :
-                    listing.user.badge === 'OR' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
-                    listing.user.badge === 'ARGENT' ? 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400' :
-                    'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
-                  }`}>
-                    {listing.user.badge}
-                  </span>
-                )}
+                <div className="flex items-center gap-2 mt-0.5">
+                  {listing.user?.badge && (
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                      listing.user.badge === 'DIAMANT' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' :
+                      listing.user.badge === 'OR' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                      listing.user.badge === 'ARGENT' ? 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400' :
+                      'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
+                    }`}>
+                      {listing.user.badge}
+                    </span>
+                  )}
+                  {listing.user?.note_moyenne > 0 && (
+                    <span className="flex items-center gap-1 text-sm text-neutral-600 dark:text-neutral-300">
+                      <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                      {Number(listing.user.note_moyenne).toFixed(1)}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
+
+            {/* Owner reviews */}
+            {listing.user?.id && listing.user?.note_moyenne > 0 && (
+              <div className="border-b border-neutral-200 dark:border-dark-border pb-6">
+                <h3 className="font-semibold text-neutral-900 dark:text-white mb-4">
+                  {t('listingDetail.reviews') || 'Avis'}
+                </h3>
+                <RatingsDisplay userId={listing.user.id} maxDisplay={3} />
+              </div>
+            )}
 
             {/* Key Features */}
             <div className="space-y-6 border-b border-neutral-200 dark:border-dark-border pb-6">

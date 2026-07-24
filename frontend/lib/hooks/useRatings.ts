@@ -64,10 +64,36 @@ export interface ReplyToRatingData {
   reponse: string;
 }
 
+// --- Rust API bridge -------------------------------------------------------
+// The Rust backend uses the DB-native field names (note_globale, critere_N_note,
+// transaction_id). Map them to the frontend Rating shape here so components stay
+// unchanged. Reply/helpful are not backed by the current schema → safe defaults.
+function mapRustRating(r: any): Rating {
+  return {
+    id: r.id,
+    contract_id: r.transaction_id ?? r.contract_id ?? '',
+    evaluateur_id: r.evaluateur_id,
+    evalue_id: r.evalue_id,
+    note: r.note ?? r.note_globale ?? 0,
+    note_communication: r.note_communication ?? r.critere_1_note ?? null,
+    note_ponctualite: r.note_ponctualite ?? r.critere_2_note ?? null,
+    note_proprete: r.note_proprete ?? r.critere_3_note ?? null,
+    note_respect_contrat: r.note_respect_contrat ?? null,
+    commentaire: r.commentaire ?? '',
+    reponse: r.reponse ?? null,
+    reponse_at: r.reponse_at ?? null,
+    is_published: r.is_published ?? true,
+    helpful_count: r.helpful_count ?? 0,
+    created_at: r.created_at ?? r.date_creation,
+    evaluateur: r.evaluateur ?? { id: r.evaluateur_id, nom_complet: '', badge: '' },
+    evalue: r.evalue,
+  };
+}
+
 // API functions
 async function fetchUserRatings(userId: string): Promise<Rating[]> {
   const response = await apiClient.get(`/users/${userId}/ratings`);
-  return response.data.data || [];
+  return (response.data.data || []).map(mapRustRating);
 }
 
 async function fetchUserRatingStats(userId: string): Promise<RatingStats> {
@@ -85,7 +111,16 @@ async function fetchContractRating(contractId: string): Promise<Rating | null> {
 }
 
 async function createRating(data: CreateRatingData): Promise<Rating> {
-  const response = await apiClient.post('/ratings', data);
+  // Frontend has 4 criteria; the Rust schema stores 3 (+ global note). Map the
+  // three primary criteria; respect_contrat is folded into the global note.
+  const response = await apiClient.post('/ratings', {
+    transaction_id: data.contract_id,
+    note_globale: data.note,
+    critere_1_note: data.note_communication,
+    critere_2_note: data.note_ponctualite,
+    critere_3_note: data.note_proprete,
+    commentaire: data.commentaire,
+  });
   return response.data.data;
 }
 
