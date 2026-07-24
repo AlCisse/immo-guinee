@@ -89,11 +89,18 @@ pub struct UserPublic {
     pub telephone_verified_at: Option<DateTimeWithTimeZone>,
     pub preferences_notification: serde_json::Value,
     pub date_inscription: DateTimeWithTimeZone,
+    /// Effective role (override or type-derived). The frontend gates staff areas
+    /// on `roles`; `primary_role` mirrors it for single-role UIs.
+    pub primary_role: String,
+    pub roles: Vec<String>,
 }
 
 impl From<crate::db::entities::user::Model> for UserPublic {
     fn from(m: crate::db::entities::user::Model) -> Self {
+        let role = effective_role(&m);
         Self {
+            primary_role: role.clone(),
+            roles: vec![role],
             id: m.id,
             telephone: m.telephone,
             email: m.email,
