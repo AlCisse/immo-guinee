@@ -24,7 +24,8 @@ use crate::db::entities::sea_orm_active_enums::{
     StatutCompte, StatutContrat, StatutLitige, StatutListing, StatutVerificationDoc, StatutVisite,
 };
 use crate::db::entities::{
-    admin_audit_log, certification_document, contract, dispute, listing, rating, user, visit,
+    admin_audit_log, certification_document, contract, dispute, listing, rating, transaction, user,
+    visit,
 };
 use crate::error::{AppError, AppResult};
 use crate::extractors::{AuthUser, ValidatedJson};
@@ -133,7 +134,10 @@ async fn dashboard_stats(auth: AuthUser, State(state): State<Arc<AppState>>) -> 
     })))
 }
 
-/// `GET /api/admin/analytics` — minimal analytics payload (period echo + totals).
+/// `GET /api/admin/analytics` — dashboard analytics: totals + breakdowns by role
+/// and by listing type + transaction volume + average rating. Shaped as the
+/// dashboard reads it (`analytics.users.*`, `.listings.*`, `.transactions.*`,
+/// `.quality.*`).
 async fn analytics(
     auth: AuthUser,
     State(state): State<Arc<AppState>>,
@@ -141,11 +145,44 @@ async fn analytics(
 ) -> AppResult<Json<Value>> {
     auth.require_permission(Permission::ViewAnalytics)?;
     let period: i64 = params.get("period").and_then(|p| p.parse().ok()).unwrap_or(30);
-    let total_users = user::Entity::find().count(&state.db).await?;
-    let total_listings = listing::Entity::find().count(&state.db).await?;
+    let db = &state.db;
+
+    let users = user::Entity::find().all(db).await?;
+    let mut users_by_role: HashMap<String, i64> = HashMap::new();
+    for u in &users {
+        *users_by_role.entry(crate::domain::auth::dto::effective_role(u)).or_insert(0) += 1;
+    }
+
+    let listings = listing::Entity::find().all(db).await?;
+    let active_listings = listings.iter().filter(|l| l.statut == StatutListing::Disponible).count();
+    let mut listings_by_type: HashMap<String, i64> = HashMap::new();
+    for l in &listings {
+        let key = serde_json::to_value(&l.type_bien).ok()
+            .and_then(|v| v.as_str().map(str::to_owned))
+            .unwrap_or_else(|| "AUTRE".into());
+        *listings_by_type.entry(key).or_insert(0) += 1;
+    }
+
+    let transactions = transaction::Entity::find().all(db).await?;
+    let total_volume_gnf: i64 = transactions.iter().map(|t| t.montant_total_gnf).sum();
+
+    let ratings = rating::Entity::find().all(db).await?;
+    let average_rating = if ratings.is_empty() {
+        0.0
+    } else {
+        let sum: i64 = ratings.iter().map(|r| r.note_globale as i64).sum();
+        (sum as f64 / ratings.len() as f64 * 10.0).round() / 10.0
+    };
+
     Ok(Json(json!({
         "success": true,
-        "data": { "period": period, "total_users": total_users, "total_listings": total_listings }
+        "data": {
+            "period": period,
+            "users": { "total_users": users.len(), "users_by_role": users_by_role },
+            "listings": { "active_listings": active_listings, "listings_by_type": listings_by_type },
+            "transactions": { "total_volume_gnf": total_volume_gnf },
+            "quality": { "average_rating": average_rating },
+        }
     })))
 }
 
@@ -234,7 +271,8 @@ async fn list_users(auth: AuthUser, State(state): State<Arc<AppState>>) -> AppRe
         .all(&state.db)
         .await?;
     let items: Vec<Value> = rows.iter().map(user_admin_json).collect();
-    Ok(Json(json!({ "success": true, "data": items })))
+    let total = items.len();
+    Ok(Json(json!({ "success": true, "data": items, "meta": { "total": total } })))
 }
 
 #[derive(Debug, Deserialize, validator::Validate)]

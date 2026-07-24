@@ -170,7 +170,7 @@ export default function CertificationsPage() {
   const certifications = Array.isArray(data?.data?.data) ? data.data.data : [];
   const total = data?.data?.total || certifications.length;
   const pendingCount = certifications.filter((c: Certification) => c.statut_verification === 'EN_ATTENTE').length;
-  const verifiedCount = certifications.filter((c: Certification) => c.statut_verification === 'VERIFIE').length;
+  const verifiedCount = certifications.filter((c: Certification) => c.statut_verification === 'APPROUVE').length;
   const rejectedCount = certifications.filter((c: Certification) => c.statut_verification === 'REJETE').length;
 
   return (
@@ -236,7 +236,7 @@ export default function CertificationsPage() {
               >
                 <option value="">Tous les statuts</option>
                 <option value="EN_ATTENTE">En attente</option>
-                <option value="VERIFIE">Vérifié</option>
+                <option value="APPROUVE">Vérifié</option>
                 <option value="REJETE">Rejeté</option>
               </select>
 
@@ -519,19 +519,19 @@ export default function CertificationsPage() {
                 {(selectedCert.verified_at || selectedCert.raison_rejet || selectedCert.verification_notes) && (
                   <div className={clsx(
                     'rounded-xl p-4',
-                    selectedCert.statut_verification === 'VERIFIE' ? 'bg-success-50 dark:bg-success-500/10' : 'bg-error-50 dark:bg-error-500/10'
+                    selectedCert.statut_verification === 'APPROUVE' ? 'bg-success-50 dark:bg-success-500/10' : 'bg-error-50 dark:bg-error-500/10'
                   )}>
                     <div className="flex items-center gap-2 mb-3">
-                      {selectedCert.statut_verification === 'VERIFIE' ? (
+                      {selectedCert.statut_verification === 'APPROUVE' ? (
                         <CheckCircle className="w-5 h-5 text-success-600 dark:text-success-400" />
                       ) : (
                         <XCircle className="w-5 h-5 text-error-600 dark:text-error-400" />
                       )}
                       <span className={clsx(
                         'font-semibold',
-                        selectedCert.statut_verification === 'VERIFIE' ? 'text-success-900 dark:text-success-300' : 'text-error-900 dark:text-error-300'
+                        selectedCert.statut_verification === 'APPROUVE' ? 'text-success-900 dark:text-success-300' : 'text-error-900 dark:text-error-300'
                       )}>
-                        {selectedCert.statut_verification === 'VERIFIE' ? 'Vérification' : 'Rejet'}
+                        {selectedCert.statut_verification === 'APPROUVE' ? 'Vérification' : 'Rejet'}
                       </span>
                     </div>
                     <div className="space-y-2 text-sm">

@@ -357,15 +357,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       // Token is sent automatically via httpOnly cookie
       const response = await api.auth.me();
-      const data: ApiResponse<{ user: User; redirect: RedirectData }> = response.data;
+      const data: ApiResponse<any> = response.data;
+      // The Rust API returns the user directly in `data.data` (no nested `user`).
+      // Fall back to `data.data.user` for compatibility with the older shape.
+      const resolvedUser: User | undefined = data?.data?.user ?? data?.data;
 
-      if (data.success && data.data.user) {
-        setUser(data.data.user);
-        localStorage.setItem('user', JSON.stringify(data.data.user));
+      if (data.success && resolvedUser) {
+        setUser(resolvedUser);
+        localStorage.setItem('user', JSON.stringify(resolvedUser));
 
-        if (data.data.redirect) {
-          setRedirectData(data.data.redirect);
-          localStorage.setItem('redirect_data', JSON.stringify(data.data.redirect));
+        const redirect = data?.data?.redirect;
+        if (redirect) {
+          setRedirectData(redirect);
+          localStorage.setItem('redirect_data', JSON.stringify(redirect));
         }
       }
     } catch (error: any) {
