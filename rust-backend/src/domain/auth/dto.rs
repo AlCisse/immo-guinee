@@ -166,6 +166,15 @@ pub fn role_for(type_compte: TypeCompte) -> &'static str {
     }
 }
 
+/// The role to carry in the JWT: the explicit `role` override if set, otherwise
+/// derived from the account type. Staff roles (admin/moderator/mediator) are only
+/// ever reachable via the override.
+pub fn effective_role(user: &crate::db::entities::user::Model) -> String {
+    user.role
+        .clone()
+        .unwrap_or_else(|| role_for(user.type_compte.clone()).to_string())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

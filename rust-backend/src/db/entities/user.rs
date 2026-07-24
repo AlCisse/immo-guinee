@@ -24,6 +24,9 @@ pub struct Model {
     pub photo_profil_url: Option<String>,
     pub bio: Option<String>,
     pub type_compte: TypeCompte,
+    /// Explicit role override. `None` → derived from `type_compte` (chercheur /
+    /// agence). Set to `admin` / `moderator` / `mediator` to grant staff access.
+    pub role: Option<String>,
     pub badge_certification: Badge,
     pub statut_verification: StatutVerification,
     pub statut_compte: StatutCompte,

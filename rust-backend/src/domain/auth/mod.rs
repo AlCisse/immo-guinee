@@ -5,7 +5,7 @@
 //! `middleware::rate_limit::limit_login`, `bcrypt`, `totp-rs`, `services::otp`
 //! (the SMS 6-digit flow — separate from TOTP 2FA).
 
-mod dto;
+pub mod dto;
 mod handlers;
 
 pub use handlers::routes;

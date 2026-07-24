@@ -31,7 +31,7 @@ use crate::middleware::rate_limit;
 use crate::state::AppState;
 
 use super::dto::{
-    role_for, Envelope, LoginRequest, LoginResponse, LoginSuccess, OtpRequest, OtpSendRequest,
+    effective_role, Envelope, LoginRequest, LoginResponse, LoginSuccess, OtpRequest, OtpSendRequest,
     RegisterRequest, UpdateProfileRequest, UserPublic,
 };
 
@@ -202,14 +202,14 @@ async fn otp_verify(
 
     // FR-001: confirming the OTP marks the phone as verified (first time only).
     let user_id = user.id;
-    let role = role_for(user.type_compte.clone());
+    let role = effective_role(&user);
     if user.telephone_verifie_at.is_none() {
         let mut am: user::ActiveModel = user.into();
         am.telephone_verifie_at = Set(Some(chrono::Utc::now().fixed_offset()));
         am.update(&state.db).await?;
     }
 
-    let tokens = jwt::issue_pair(&state.jwt_secret, user_id, role)?;
+    let tokens = jwt::issue_pair(&state.jwt_secret, user_id, &role)?;
     Ok(Json(Envelope { success: true, data: LoginSuccess { tokens } }))
 }
 
@@ -246,7 +246,7 @@ async fn login(
         }));
     }
 
-    let tokens = jwt::issue_pair(&state.jwt_secret, user.id, role_for(user.type_compte))?;
+    let tokens = jwt::issue_pair(&state.jwt_secret, user.id, &effective_role(&user))?;
     Ok(Json(Envelope {
         success: true,
         data: LoginResponse::Tokens(LoginSuccess { tokens }),
@@ -275,6 +275,6 @@ async fn otp(
         return Err(AppError::Validation("Code TOTP incorrect".into()));
     }
 
-    let tokens = jwt::issue_pair(&state.jwt_secret, user.id, role_for(user.type_compte))?;
+    let tokens = jwt::issue_pair(&state.jwt_secret, user.id, &effective_role(&user))?;
     Ok(Json(Envelope { success: true, data: LoginSuccess { tokens } }))
 }
