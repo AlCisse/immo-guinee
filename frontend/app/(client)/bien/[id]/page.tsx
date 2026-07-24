@@ -311,8 +311,10 @@ export default function PropertyDetailPage() {
   const listing: Listing = data.data.listing;
   const similarListings = similarData?.data?.listings || [];
 
-  // Check if current user is the owner of this listing
-  const isOwner = user?.id === listing.user_id || user?.id === listing.user?.id;
+  // Check if current user is the owner of this listing. Guard on a truthy user id
+  // first: otherwise, when logged out, `undefined === listing.user_id` (also
+  // undefined) would wrongly resolve to true and show owner-only controls.
+  const isOwner = !!user?.id && (user.id === listing.user_id || user.id === listing.user?.id);
 
   // Get images array (filter out empty/placeholder images)
   const images = (() => {
