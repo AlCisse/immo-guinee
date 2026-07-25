@@ -74,6 +74,17 @@ impl S3Storage {
         Ok(object_url(&self.public_base, key))
     }
 
+    /// Fetch the raw bytes of the object at `key` (e.g. to stream a private PDF
+    /// through an authenticated endpoint rather than exposing the object URL).
+    pub async fn get(&self, key: &str) -> AppResult<Vec<u8>> {
+        let resp = self
+            .bucket
+            .get_object(key)
+            .await
+            .map_err(|e| AppError::Internal(anyhow::anyhow!("s3 get {key}: {e}")))?;
+        Ok(resp.bytes().to_vec())
+    }
+
     /// Delete the object at `key`.
     pub async fn delete(&self, key: &str) -> AppResult<()> {
         self.bucket

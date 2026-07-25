@@ -43,6 +43,7 @@
 pub mod storage;
 pub mod listing_photo;
 pub mod notify;
+pub mod pdf;
 pub mod otp;
 pub mod vault;
 pub mod whatsapp;

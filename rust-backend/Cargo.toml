@@ -105,9 +105,13 @@ s3 = { package = "rust-s3", version = "0.35", default-features = false, features
 # # Email (replaces Laravel Mail) — Phase 5
 # lettre = { version = "0.11", default-features = false, features = ["rustls-tls", "smtp", "tokio1"] }
 #
-# # PDF (replaces DOMPDF / Blade) — Phase 3 (contracts)
-# headless-chrome = "1"        # HTML template -> PDF (closest to Blade -> DOMPDF)
-# # printpdf = "0.7"           # programmatic PDF alt
+# --- PDF (replaces DOMPDF / Blade) — Phase 3 (contracts): Typst engine (pure Rust,
+# no browser). Template baked with contract data -> PagedDocument -> PDF bytes. ---
+typst = "0.15"
+typst-layout = "0.15"         # PagedDocument (the compiled document type)
+typst-pdf = "0.15"
+typst-as-lib = "0.16"
+sha2 = "0.10"                  # SHA-256 of the generated contract PDF (integrity)
 #
 # --- Images: resize + WebP (replaces Intervention Image) — Phase 1 ---
 image = "0.25"

@@ -35,6 +35,7 @@ pub mod visits;      // US10 (schedule/manage property visits)
 pub mod favorites;   // saved listings (favourites)
 pub mod ratings;     // US7 (reviews + average rating)
 pub mod admin;       // Phase 5 (dashboard + listing/user moderation)
+pub mod contracts;   // US2 (Loi 2016/037 lease generation to PDF)
 // pub mod messaging;  // Phase 2
 // pub mod contracts;  // Phase 3
 // pub mod payments;   // Phase 4 (critical — last)

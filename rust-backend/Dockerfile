@@ -41,7 +41,9 @@ RUN find src -type f -exec touch {} + && cargo build --bin immog-backend --bin i
 
 # --- runtime: minimal image with just the two binaries ---
 FROM debian:bookworm-slim AS runtime
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \
+# ca-certificates for TLS; fonts-dejavu-core provides the font the Typst PDF
+# renderer loads at runtime (contract generation, US2).
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /app/target/debug/immog-backend  /usr/local/bin/immog-backend
 COPY --from=builder /app/target/debug/immog-migrate  /usr/local/bin/immog-migrate
