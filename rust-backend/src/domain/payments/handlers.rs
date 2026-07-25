@@ -192,7 +192,7 @@ async fn validate(
     let result = payment::Entity::update_many()
         .col_expr(
             payment::Column::Statut,
-            sea_orm::sea_query::Expr::value(StatutPaiement::Confirme),
+            statut_expr(StatutPaiement::Confirme),
         )
         .filter(payment::Column::Id.eq(id))
         .filter(payment::Column::Statut.is_in([
@@ -415,7 +415,7 @@ async fn refund(
     let result = payment::Entity::update_many()
         .col_expr(
             payment::Column::Statut,
-            sea_orm::sea_query::Expr::value(StatutPaiement::Rembourse),
+            statut_expr(StatutPaiement::Rembourse),
         )
         .filter(payment::Column::Id.eq(id))
         .filter(payment::Column::Statut.is_in([StatutPaiement::EnEscrow, StatutPaiement::CommissionCollectee]))
@@ -484,6 +484,15 @@ async fn assert_no_active_payment(state: &AppState, contract_id: Uuid) -> AppRes
         }
     }
     Ok(())
+}
+
+/// A `statut_paiement` value as a typed SQL expression. Postgres rejects a bare
+/// text literal for an enum column (`42804: column "statut" is of type
+/// statut_paiement but expression is of type text`), so the value is cast to the
+/// enum type before being used in a conditional `update_many().col_expr(...)`.
+fn statut_expr(v: StatutPaiement) -> sea_orm::sea_query::SimpleExpr {
+    use sea_orm::sea_query::{Alias, Expr};
+    Expr::value(v).cast_as(Alias::new("statut_paiement"))
 }
 
 async fn fetch_party_payment(state: &AppState, auth: &AuthUser, id: Uuid) -> AppResult<payment::Model> {
@@ -562,7 +571,7 @@ fn quittance_source(p: &payment::Model, payeur: &user::Model, beneficiaire: &use
     let date = p.date_confirmation.unwrap_or(p.date_creation).format("%d/%m/%Y").to_string();
     format!(
         r##"#set page(paper: "a4", margin: 2.5cm)
-#set text(font: "DejaVu Sans", size: 11pt, lang: "fr")
+#set text(font: ("DejaVu Sans", "Arial"), size: 11pt, lang: "fr")
 #align(center)[#text(size: 16pt, weight: "bold")[QUITTANCE DE CAUTION]]
 #align(center)[#text(size: 9pt, fill: rgb("#666"))[ImmoGuinée — Référence {reference}]]
 #v(1em)

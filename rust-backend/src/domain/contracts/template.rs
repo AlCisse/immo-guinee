@@ -68,16 +68,63 @@ pub fn build_source(ctx: &ContractContext) -> String {
         .map(|c| format!("\"{}\"", escape(c)))
         .collect::<Vec<_>>()
         .join(", ");
-    src.push_str(&format!("#let clauses = ({},)\n", clauses));
+    // Empty clauses must emit `()` — `(,)` is an "unexpected comma" Typst error.
+    let clauses_array = if ctx.clauses.is_empty() {
+        "()".to_string()
+    } else {
+        format!("({},)", clauses)
+    };
+    src.push_str(&format!("#let clauses = {}\n", clauses_array));
 
     // Static document body (French; references the bindings above).
     src.push_str(TEMPLATE_BODY);
     src
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::services::pdf;
+
+    fn ctx(clauses: Vec<&str>) -> ContractContext {
+        ContractContext {
+            reference: "CTR-TEST".into(),
+            titre: "CONTRAT DE LOCATION RÉSIDENTIEL".into(),
+            date_generation: "01/01/2025".into(),
+            proprietaire_nom: "Awa Diallo".into(),
+            proprietaire_tel: "+224622000000".into(),
+            locataire_nom: "Moussa Camara".into(),
+            locataire_tel: "+224622000001".into(),
+            bien_designation: "Appartement test".into(),
+            bien_adresse: "Kaloum".into(),
+            loyer: fmt_gnf(100_000),
+            caution: fmt_gnf(0),
+            date_debut: "2025-01-01".into(),
+            duree: "12 mois".into(),
+            clauses: clauses.into_iter().map(String::from).collect(),
+            proprietaire_signature: "Signé électroniquement le 01/01/2025".into(),
+            locataire_signature: "Signature électronique — en attente".into(),
+        }
+    }
+
+    /// Regression: an empty `clauses` list used to emit `#let clauses = (,)` which
+    /// Typst rejects as "unexpected comma". Both the empty and non-empty cases must
+    /// compile to a PDF.
+    #[test]
+    fn build_source_renders_with_and_without_clauses() {
+        for c in [ctx(vec![]), ctx(vec!["Animaux interdits", "Pas de sous-location"])] {
+            let src = build_source(&c);
+            match pdf::render(src) {
+                Ok(bytes) => assert!(bytes.starts_with(b"%PDF"), "expected a PDF"),
+                Err(e) => panic!("lease render failed: {e}"),
+            }
+        }
+    }
+}
+
 const TEMPLATE_BODY: &str = r##"
 #set page(paper: "a4", margin: 2.2cm, numbering: "1/1")
-#set text(font: "DejaVu Sans", size: 10pt, lang: "fr")
+#set text(font: ("DejaVu Sans", "Arial"), size: 10pt, lang: "fr")
 #set par(justify: true, leading: 0.65em)
 
 #align(center)[
