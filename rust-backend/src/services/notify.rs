@@ -9,14 +9,29 @@
 //!
 //! Dev-safe fallback: when Evolution API is not configured (`is_configured()`
 //! false), the code/message is logged instead of sent, so the whole flow works
-//! locally and in tests without a live WhatsApp instance.
+//! locally and in tests without a live WhatsApp instance. In **prod intent**
+//! (`vault_addr` configured) a missing key is a misconfig, not a dev fallback —
+//! the helpers below refuse to silently log OTPs/notifications in that case.
 
 use serde_json::Value;
 
 use crate::db::entities::user;
-use crate::error::AppResult;
+use crate::error::{AppError, AppResult};
 use crate::services::otp;
 use crate::state::AppState;
+
+/// When WhatsApp is not configured, decide between the dev-safe log path and a
+/// loud prod error. Pure dev (no `vault_addr`) → `Ok` (caller logs the payload).
+/// Prod intent without a key → `Err` (must not silently swallow an OTP/message).
+fn ensure_dev_or_prod_err(state: &AppState) -> AppResult<()> {
+    if state.cfg.vault_addr.is_empty() {
+        Ok(())
+    } else {
+        Err(AppError::Internal(anyhow::anyhow!(
+            "WhatsApp (Evolution API) non configuré en production (clé Vault absente) — envoi impossible"
+        )))
+    }
+}
 
 /// Issue a fresh OTP for `phone` (Redis, 5 min TTL, 60 s resend throttle) and
 /// deliver it by WhatsApp. Propagates `429` if a code was requested < 60 s ago.
@@ -41,6 +56,7 @@ pub async fn send_otp_code(state: &AppState, phone: &str, code: &str) -> AppResu
     if state.whatsapp.is_configured() {
         state.whatsapp.send_text(phone, &text).await?;
     } else {
+        ensure_dev_or_prod_err(state)?; // loud in prod misconfig; Ok in dev (log below)
         tracing::info!(phone, code, "OTP de développement (WhatsApp non configuré)");
     }
     Ok(())
@@ -48,11 +64,12 @@ pub async fn send_otp_code(state: &AppState, phone: &str, code: &str) -> AppResu
 
 /// Send a WhatsApp message to `phone` directly (no opt-in gate) — used for
 /// transactional contact (e.g. a buyer contacting a listing owner). Dev-safe: logs
-/// when Evolution API is not configured.
+/// when Evolution API is not configured; fails loud in prod misconfig.
 pub async fn send_direct(state: &AppState, phone: &str, message: &str) -> AppResult<()> {
     if state.whatsapp.is_configured() {
         state.whatsapp.send_text(phone, message).await?;
     } else {
+        ensure_dev_or_prod_err(state)?;
         tracing::info!(phone, %message, "message WhatsApp de développement (non configuré)");
     }
     Ok(())
@@ -60,7 +77,7 @@ pub async fn send_direct(state: &AppState, phone: &str, message: &str) -> AppRes
 
 /// Send a WhatsApp notification to `user` when they have opted into the WhatsApp
 /// channel (FR-005). Returns `Ok(false)` (no-op) when the channel is disabled.
-/// In dev (Evolution not configured) the message is logged.
+/// In dev (Evolution not configured) the message is logged; fails loud in prod.
 pub async fn notify_whatsapp(state: &AppState, user: &user::Model, message: &str) -> AppResult<bool> {
     if !whatsapp_opt_in(&user.preferences_notification) {
         return Ok(false);
@@ -68,6 +85,7 @@ pub async fn notify_whatsapp(state: &AppState, user: &user::Model, message: &str
     if state.whatsapp.is_configured() {
         state.whatsapp.send_text(&user.telephone, message).await?;
     } else {
+        ensure_dev_or_prod_err(state)?;
         tracing::info!(telephone = %user.telephone, %message, "notification WhatsApp de développement (non configuré)");
     }
     Ok(true)

@@ -106,10 +106,11 @@ async fn show(
 ) -> AppResult<Json<serde_json::Value>> {
     let model = listing::Entity::find_by_id(id).one(&state.db).await?;
     let model = model.ok_or(AppError::NotFound)?;
-    // Public detail is only for listings currently on the market. Archived, rented
-    // / sold, suspended (moderation) and expired listings are not exposed to the
-    // public — the owner still reaches theirs via `GET /listings/my`.
-    if !matches!(model.statut, StatutListing::Disponible) {
+    // Public detail is for listings on the market or concluded via the platform.
+    // Expired, archived (soft-deleted) and suspended (moderation) are hidden —
+    // the owner still reaches theirs via `GET /listings/my`. `LoueVendu` is shown
+    // as a concluded listing; `EnNegociation` is still an active listing.
+    if matches!(model.statut, StatutListing::Expire | StatutListing::Archive | StatutListing::Suspendu) {
         return Err(AppError::NotFound);
     }
     let createur_id = model.createur_id;

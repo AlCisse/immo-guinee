@@ -13,6 +13,7 @@ use axum::{Json, Router};
 use chrono::Utc;
 use sea_orm::{
     ActiveModelTrait, ActiveValue::Set, ColumnTrait, EntityTrait, QueryFilter, QueryOrder,
+    TransactionTrait,
 };
 use serde_json::{Value, json};
 use uuid::Uuid;
@@ -99,44 +100,67 @@ async fn process(
     let external_ref = sandbox_provider_ref(&methode);
 
     let id = Uuid::new_v4();
-    let pay = payment::ActiveModel {
-        id: Set(id),
-        payeur_id: Set(auth.id),
-        beneficiaire_id: Set(c.proprietaire_id),
-        contrat_id: Set(Some(c.id)),
-        type_paiement: Set(TypePaiement::Caution),
-        montant_gnf: Set(inv.caution),
-        commission_plateforme_gnf: Set(inv.commission),
-        montant_total_gnf: Set(inv.total),
-        methode_paiement: Set(methode),
-        // Deposit escrowed, commission collected — both happen at confirmation.
-        statut: Set(StatutPaiement::EnEscrow),
-        numero_transaction_externe: Set(Some(external_ref)),
-        tentatives_paiement: Set(1),
-        date_creation: Set(now.into()),
-        date_confirmation: Set(Some(now.into())),
-        ..Default::default()
-    }
-    .insert(&state.db)
-    .await?;
+    // Atomic: the payment and its escrow transaction commit together so a mid-flow
+    // DB failure cannot leave an escrowed payment without a transaction record
+    // (which would block the owner's `validate` from closing the escrow).
+    let payeur_id = auth.id;
+    let beneficiaire_id = c.proprietaire_id;
+    let contrat_id = c.id;
+    let annonce_id = c.annonce_id;
+    let caution = inv.caution;
+    let commission = inv.commission;
+    let total = inv.total;
+    let pay = state
+        .db
+        .transaction::<_, payment::Model, AppError>(|txn| {
+            Box::pin(async move {
+                let pay = payment::ActiveModel {
+                    id: Set(id),
+                    payeur_id: Set(payeur_id),
+                    beneficiaire_id: Set(beneficiaire_id),
+                    contrat_id: Set(Some(contrat_id)),
+                    type_paiement: Set(TypePaiement::Caution),
+                    montant_gnf: Set(caution),
+                    commission_plateforme_gnf: Set(commission),
+                    montant_total_gnf: Set(total),
+                    methode_paiement: Set(methode),
+                    // Deposit escrowed, commission collected — both happen at confirmation.
+                    statut: Set(StatutPaiement::EnEscrow),
+                    numero_transaction_externe: Set(Some(external_ref)),
+                    tentatives_paiement: Set(1),
+                    date_creation: Set(now.into()),
+                    date_confirmation: Set(Some(now.into())),
+                    ..Default::default()
+                }
+                .insert(txn)
+                .await?;
 
-    // Open the escrow transaction.
-    transaction::ActiveModel {
-        id: Set(Uuid::new_v4()),
-        annonce_id: Set(c.annonce_id),
-        proprietaire_id: Set(c.proprietaire_id),
-        locataire_acheteur_id: Set(auth.id),
-        contrat_id: Set(c.id),
-        paiements_ids: Set(json!([id])),
-        type_transaction: Set(TypeOperation::Location),
-        montant_total_gnf: Set(inv.total),
-        commission_plateforme_gnf: Set(inv.commission),
-        statut: Set(StatutTransaction::EnCours),
-        date_debut: Set(now.into()),
-        ..Default::default()
-    }
-    .insert(&state.db)
-    .await?;
+                // Open the escrow transaction (same atomic unit as the payment).
+                transaction::ActiveModel {
+                    id: Set(Uuid::new_v4()),
+                    annonce_id: Set(annonce_id),
+                    proprietaire_id: Set(beneficiaire_id),
+                    locataire_acheteur_id: Set(payeur_id),
+                    contrat_id: Set(contrat_id),
+                    paiements_ids: Set(json!([id])),
+                    type_transaction: Set(TypeOperation::Location),
+                    montant_total_gnf: Set(total),
+                    commission_plateforme_gnf: Set(commission),
+                    statut: Set(StatutTransaction::EnCours),
+                    date_debut: Set(now.into()),
+                    ..Default::default()
+                }
+                .insert(txn)
+                .await?;
+
+                Ok(pay)
+            })
+        })
+        .await
+        .map_err(|e| match e {
+            sea_orm::TransactionError::Connection(db) => AppError::Database(db),
+            sea_orm::TransactionError::Transaction(app) => app,
+        })?;
 
     let listing = load_listing(&state, c.annonce_id).await?;
     let beneficiaire = user::Entity::find_by_id(c.proprietaire_id).one(&state.db).await?;
@@ -379,7 +403,6 @@ async fn refund(
     ValidatedJson(req): ValidatedJson<RefundRequest>,
 ) -> AppResult<Json<Value>> {
     auth.require_permission(Permission::ResolveDisputes)?;
-    rate_limit::limit_payment(&state.redis, auth.id).await?;
 
     let p = payment::Entity::find_by_id(id)
         .one(&state.db)

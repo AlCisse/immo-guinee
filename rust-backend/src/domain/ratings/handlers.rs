@@ -163,7 +163,7 @@ async fn create(
     }
 
     let now = Utc::now().into();
-    rating::ActiveModel {
+    let am = rating::ActiveModel {
         id: Set(Uuid::new_v4()),
         evaluateur_id: Set(auth.id),
         evalue_id: Set(evalue_id),
@@ -179,9 +179,18 @@ async fn create(
         date_publication: Set(Some(now)),
         created_at: Set(now),
         updated_at: Set(now),
+    };
+    // The pre-check above returns a friendly 409 in the common (sequential) case;
+    // but two concurrent ratings for the same transaction can both pass it and
+    // race to the UNIQUE(transaction_id) constraint. Map that DB unique violation
+    // back to 409 instead of surfacing a raw 500.
+    if let Err(e) = am.insert(&state.db).await {
+        let msg = e.to_string().to_ascii_lowercase();
+        if msg.contains("unique") || msg.contains("duplicate") {
+            return Err(AppError::Conflict("Cette transaction a déjà été évaluée".into()));
+        }
+        return Err(AppError::Database(e));
     }
-    .insert(&state.db)
-    .await?;
 
     recompute_note_moyenne(&state.db, evalue_id).await?;
 

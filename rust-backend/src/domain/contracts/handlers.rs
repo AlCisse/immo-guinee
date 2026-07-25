@@ -62,6 +62,18 @@ async fn create(
         return Err(AppError::Forbidden("Vous n'êtes pas le propriétaire de cette annonce".into()));
     }
 
+    // One active contract per listing: a non-cancelled contract already exists
+    // (draft, awaiting signature, partially/totally signed) — refuse to open a
+    // second one over the same property.
+    let existing = contract::Entity::find()
+        .filter(contract::Column::AnnonceId.eq(req.listing_id))
+        .filter(contract::Column::Statut.ne(StatutContrat::Annule))
+        .one(&state.db)
+        .await?;
+    if existing.is_some() {
+        return Err(AppError::Conflict("un contrat actif existe déjà pour cette annonce".into()));
+    }
+
     // The creator is the owner; the tenant/buyer must be an existing user.
     let locataire_id = req
         .locataire_id
@@ -311,7 +323,11 @@ async fn sign(
     // Redis mutex makes the read-modify-write exclusive. The TTL is a safety net
     // in case the holder crashes mid-flight.
     let lock_key = format!("lock:contract:sign:{id}");
-    if !crate::services::redis_atomic::acquire_lock(&state.redis, &lock_key, 30).await? {
+    // 60s budget: the critical section reads, verifies the OTP, re-renders the
+    // Typst PDF (spawn_blocking) and pushes it to S3. Under a degraded S3 the
+    // whole thing can run long; a too-short TTL would let a second signer acquire
+    // the lock mid-flight and reintroduce the lost-update race the lock prevents.
+    if !crate::services::redis_atomic::acquire_lock(&state.redis, &lock_key, 60).await? {
         return Err(AppError::Conflict(
             "Une signature est déjà en cours sur ce contrat, réessayez dans un instant".into(),
         ));
