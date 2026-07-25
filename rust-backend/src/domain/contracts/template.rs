@@ -22,6 +22,10 @@ pub struct ContractContext {
     pub date_debut: String,
     pub duree: String,
     pub clauses: Vec<String>,
+    /// Signature status line per party (e.g. "Signé électroniquement le …" or
+    /// "Signature électronique — en attente").
+    pub proprietaire_signature: String,
+    pub locataire_signature: String,
 }
 
 /// Format an amount in GNF with thin-space grouping, e.g. `2 500 000 GNF`.
@@ -55,6 +59,8 @@ pub fn build_source(ctx: &ContractContext) -> String {
     src.push_str(&format!("#let m_caution = \"{}\"\n", escape(&ctx.caution)));
     src.push_str(&format!("#let d_debut = \"{}\"\n", escape(&ctx.date_debut)));
     src.push_str(&format!("#let d_duree = \"{}\"\n", escape(&ctx.duree)));
+    src.push_str(&format!("#let p_sig = \"{}\"\n", escape(&ctx.proprietaire_signature)));
+    src.push_str(&format!("#let l_sig = \"{}\"\n", escape(&ctx.locataire_signature)));
 
     let clauses = ctx
         .clauses
@@ -137,14 +143,14 @@ Le Preneur maintient les lieux en bon état, use paisiblement des locaux et pren
     #p_nom#linebreak()
     #v(2.2em)
     #line(length: 70%, stroke: 0.5pt)
-    #text(size: 8pt, fill: rgb("#777"))[Signature électronique — en attente]
+    #text(size: 8pt, fill: rgb("#777"))[#p_sig]
   ],
   [
     *Le Preneur*#linebreak()
     #l_nom#linebreak()
     #v(2.2em)
     #line(length: 70%, stroke: 0.5pt)
-    #text(size: 8pt, fill: rgb("#777"))[Signature électronique — en attente]
+    #text(size: 8pt, fill: rgb("#777"))[#l_sig]
   ],
 )
 

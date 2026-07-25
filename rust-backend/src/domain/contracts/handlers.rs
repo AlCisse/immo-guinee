@@ -42,6 +42,8 @@ pub fn routes() -> Router<Arc<AppState>> {
         .route("/contracts/{id}/download", get(download))
         .route("/contracts/{id}/send", post(send))
         .route("/contracts/{id}/cancel", post(cancel))
+        .route("/contracts/{id}/sign/request-otp", post(request_sign_otp))
+        .route("/contracts/{id}/sign", post(sign))
 }
 
 /// `POST /api/contracts` — generate a lease PDF and create the contract (BROUILLON).
@@ -72,13 +74,6 @@ async fn create(
 
     let loyer = req.montant_loyer.unwrap_or(listing.prix_gnf);
     let caution = req.montant_caution.unwrap_or(0);
-    let duree = if req.duree_indeterminee.unwrap_or(false) {
-        "durée indéterminée".to_string()
-    } else if let Some(m) = req.duree_mois {
-        format!("{m} mois")
-    } else {
-        "—".to_string()
-    };
 
     let donnees = json!({
         "date_debut": req.date_debut,
@@ -92,32 +87,8 @@ async fn create(
     });
 
     let id = Uuid::new_v4();
-    let adresse = listing
-        .adresse_complete
-        .clone()
-        .unwrap_or_else(|| enum_str(&listing.quartier));
-    let ctx = ContractContext {
-        reference: reference_for(id),
-        titre: "CONTRAT DE LOCATION RÉSIDENTIEL".into(),
-        date_generation: Utc::now().format("%d/%m/%Y").to_string(),
-        proprietaire_nom: proprietaire.nom_complet.clone(),
-        proprietaire_tel: proprietaire.telephone.clone(),
-        locataire_nom: locataire.nom_complet.clone(),
-        locataire_tel: locataire.telephone.clone(),
-        bien_designation: listing.titre.clone(),
-        bien_adresse: adresse,
-        loyer: fmt_gnf(loyer),
-        caution: fmt_gnf(caution),
-        date_debut: req.date_debut.clone(),
-        duree,
-        clauses: req.clauses_speciales.unwrap_or_default(),
-    };
-
-    // Render + hash + store.
-    let pdf_bytes = pdf::render(build_source(&ctx))?;
-    let hash = format!("{:x}", Sha256::digest(&pdf_bytes));
-    let key = format!("contracts/{id}.pdf");
-    let url = state.storage.put(&key, &pdf_bytes, "application/pdf").await?;
+    let ctx = build_ctx(id, &donnees, &json!([]), Some(&listing), &proprietaire, &locataire);
+    let (url, hash) = render_and_store(&state, id, &ctx).await?;
 
     let model = contract::ActiveModel {
         id: Set(id),
@@ -280,6 +251,92 @@ async fn cancel(
     Ok(Json(json!({ "success": true, "data": { "id": id, "statut": "ANNULE" } })))
 }
 
+/// `POST /api/contracts/{id}/sign/request-otp` — send the caller a signing OTP.
+async fn request_sign_otp(
+    auth: AuthUser,
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<Uuid>,
+) -> AppResult<Json<Value>> {
+    let c = fetch_party_contract(&state, &auth, id).await?;
+    ensure_signable(&c, auth.id)?;
+    let phone = signer_phone(&state, auth.id).await?;
+    crate::services::notify::issue_and_send_otp(&state, &phone).await?;
+    Ok(Json(json!({ "success": true, "data": { "expires_in": 300 } })))
+}
+
+#[derive(Debug, Deserialize, validator::Validate)]
+pub struct SignRequest {
+    // The two contract pages post either `otp` or `otp_code`; accept both.
+    pub otp: Option<String>,
+    pub otp_code: Option<String>,
+}
+
+/// `POST /api/contracts/{id}/sign` — verify the OTP and record the caller's
+/// electronic signature. When both parties have signed, the contract is sealed
+/// (SIGNE_ARCHIVE) and becomes immutable.
+async fn sign(
+    auth: AuthUser,
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<Uuid>,
+    ValidatedJson(req): ValidatedJson<SignRequest>,
+) -> AppResult<Json<Value>> {
+    let c = fetch_party_contract(&state, &auth, id).await?;
+    ensure_signable(&c, auth.id)?;
+
+    let code = req
+        .otp
+        .or(req.otp_code)
+        .ok_or_else(|| AppError::Validation("code OTP requis".into()))?;
+    let phone = signer_phone(&state, auth.id).await?;
+    crate::services::otp::verify(&state.redis, &phone, &code).await?;
+
+    // Record the signature (role + timestamp + seal).
+    let role = if c.proprietaire_id == auth.id { "proprietaire" } else { "locataire" };
+    let now = Utc::now();
+    let mut signatures = c.signatures.as_array().cloned().unwrap_or_default();
+    signatures.push(json!({
+        "role": role,
+        "user_id": auth.id,
+        "telephone": phone,
+        "signed_at": now.to_rfc3339(),
+        "cachet": "Signé électroniquement via ImmoGuinée",
+    }));
+    let signatures = json!(signatures);
+
+    let both_signed = has_role(&signatures, "proprietaire") && has_role(&signatures, "locataire");
+    let statut = if both_signed { StatutContrat::SigneArchive } else { StatutContrat::PartiellementSigne };
+
+    // Re-render the PDF with the updated signature block(s) and re-store it.
+    let listing = match c.annonce_id {
+        Some(a) => listing::Entity::find_by_id(a).one(&state.db).await?,
+        None => None,
+    };
+    let proprietaire = user::Entity::find_by_id(c.proprietaire_id).one(&state.db).await?;
+    let locataire = user::Entity::find_by_id(c.locataire_acheteur_id).one(&state.db).await?;
+    let (url, hash) = match (&proprietaire, &locataire) {
+        (Some(p), Some(l)) => {
+            let ctx = build_ctx(id, &c.donnees_personnalisees, &signatures, listing.as_ref(), p, l);
+            render_and_store(&state, id, &ctx).await?
+        }
+        _ => (c.fichier_pdf_url.clone().unwrap_or_default(), c.hash_sha256.clone().unwrap_or_default()),
+    };
+
+    let mut am: contract::ActiveModel = c.into();
+    am.signatures = Set(signatures);
+    am.statut = Set(statut.clone());
+    am.fichier_pdf_url = Set(Some(url));
+    am.hash_sha256 = Set(Some(hash));
+    if both_signed {
+        am.date_signature_complete = Set(Some(now.into()));
+    }
+    let updated = am.update(&state.db).await?;
+
+    Ok(Json(json!({
+        "success": true,
+        "data": { "contract": contract_json(&updated, listing.as_ref(), proprietaire.as_ref(), locataire.as_ref()) }
+    })))
+}
+
 // --- helpers ---------------------------------------------------------------
 
 /// Fetch a contract and ensure the caller is one of its parties.
@@ -334,4 +391,110 @@ async fn load_refs(
 /// Serialize an enum value to its SCREAMING_SNAKE string (e.g. quartier → "RATOMA").
 fn enum_str<T: serde::Serialize>(v: &T) -> String {
     serde_json::to_value(v).ok().and_then(|x| x.as_str().map(str::to_owned)).unwrap_or_default()
+}
+
+/// A contract may only be signed while awaiting signatures, and each party signs
+/// at most once.
+fn ensure_signable(c: &contract::Model, user_id: Uuid) -> AppResult<()> {
+    if !matches!(c.statut, StatutContrat::EnAttenteSignature | StatutContrat::PartiellementSigne) {
+        return Err(AppError::Conflict("le contrat n'est pas en attente de signature".into()));
+    }
+    let role = if c.proprietaire_id == user_id { "proprietaire" } else { "locataire" };
+    if has_role(&c.signatures, role) {
+        return Err(AppError::Conflict("vous avez déjà signé ce contrat".into()));
+    }
+    Ok(())
+}
+
+/// Whether the signatures array already contains a signature for `role`.
+fn has_role(signatures: &Value, role: &str) -> bool {
+    signatures
+        .as_array()
+        .map(|a| a.iter().any(|s| s.get("role").and_then(Value::as_str) == Some(role)))
+        .unwrap_or(false)
+}
+
+/// The phone of the signer (OTP is issued/verified against it).
+async fn signer_phone(state: &AppState, user_id: Uuid) -> AppResult<String> {
+    let u = user::Entity::find_by_id(user_id).one(&state.db).await?.ok_or(AppError::Unauthorized)?;
+    Ok(u.telephone)
+}
+
+/// The signature status line for a party, for the PDF signature block.
+fn sig_line(signatures: &Value, role: &str) -> String {
+    signatures
+        .as_array()
+        .and_then(|a| a.iter().find(|s| s.get("role").and_then(Value::as_str) == Some(role)))
+        .and_then(|s| s.get("signed_at").and_then(Value::as_str))
+        .map(|ts| {
+            let date = chrono::DateTime::parse_from_rfc3339(ts)
+                .map(|d| d.format("%d/%m/%Y à %H:%M").to_string())
+                .unwrap_or_else(|_| ts.to_owned());
+            format!("Signé électroniquement le {date} — cachet ImmoGuinée")
+        })
+        .unwrap_or_else(|| "Signature électronique — en attente".to_owned())
+}
+
+/// Build the lease template context from stored contract data + signatures.
+fn build_ctx(
+    id: Uuid,
+    donnees: &Value,
+    signatures: &Value,
+    listing: Option<&listing::Model>,
+    proprietaire: &user::Model,
+    locataire: &user::Model,
+) -> ContractContext {
+    let gi = |k: &str| donnees.get(k).and_then(Value::as_i64);
+    let indet = donnees.get("duree_indeterminee").and_then(Value::as_bool).unwrap_or(false);
+    let duree = if indet {
+        "durée indéterminée".to_owned()
+    } else if let Some(m) = gi("duree_mois") {
+        format!("{m} mois")
+    } else {
+        "—".to_owned()
+    };
+    let clauses: Vec<String> = donnees
+        .get("clauses_speciales")
+        .and_then(Value::as_array)
+        .map(|a| a.iter().filter_map(|v| v.as_str().map(str::to_owned)).collect())
+        .unwrap_or_default();
+    let (designation, adresse) = match listing {
+        Some(l) => (
+            l.titre.clone(),
+            l.adresse_complete.clone().unwrap_or_else(|| enum_str(&l.quartier)),
+        ),
+        None => ("Bien immobilier".to_owned(), "—".to_owned()),
+    };
+
+    ContractContext {
+        reference: reference_for(id),
+        titre: "CONTRAT DE LOCATION RÉSIDENTIEL".to_owned(),
+        date_generation: Utc::now().format("%d/%m/%Y").to_string(),
+        proprietaire_nom: proprietaire.nom_complet.clone(),
+        proprietaire_tel: proprietaire.telephone.clone(),
+        locataire_nom: locataire.nom_complet.clone(),
+        locataire_tel: locataire.telephone.clone(),
+        bien_designation: designation,
+        bien_adresse: adresse,
+        loyer: fmt_gnf(gi("montant_loyer").unwrap_or(0)),
+        caution: fmt_gnf(gi("montant_caution").unwrap_or(0)),
+        date_debut: donnees.get("date_debut").and_then(Value::as_str).unwrap_or("").to_owned(),
+        duree,
+        clauses,
+        proprietaire_signature: sig_line(signatures, "proprietaire"),
+        locataire_signature: sig_line(signatures, "locataire"),
+    }
+}
+
+/// Render the lease to PDF and store it in S3; returns `(public_url, sha256)`.
+async fn render_and_store(
+    state: &AppState,
+    id: Uuid,
+    ctx: &ContractContext,
+) -> AppResult<(String, String)> {
+    let pdf_bytes = pdf::render(build_source(ctx))?;
+    let hash = format!("{:x}", Sha256::digest(&pdf_bytes));
+    let key = format!("contracts/{id}.pdf");
+    let url = state.storage.put(&key, &pdf_bytes, "application/pdf").await?;
+    Ok((url, hash))
 }
