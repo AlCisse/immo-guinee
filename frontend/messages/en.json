@@ -251,6 +251,8 @@
       "errors": {
         "fillAllFields": "Please fill in all fields",
         "invalidCredentials": "Invalid credentials. Please try again.",
+        "invalidInput": "Invalid phone number or details. Please check your input.",
+        "tooManyAttempts": "Too many attempts. Please try again later.",
         "accountLocked": "Account locked. Please contact support.",
         "serverError": "Server error. Please try again.",
         "googleError": "Error logging in with Google",

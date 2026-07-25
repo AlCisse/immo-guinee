@@ -40,11 +40,16 @@ export default function LoginPage() {
       await login(loginId, formData.mot_de_passe);
     } catch (err: any) {
       console.error('Login error:', err);
-      setError(
-        err.response?.data?.message ||
-        err.message ||
-        t('auth.login.errors.invalidCredentials')
-      );
+      // Map the HTTP status to a localized message. Never surface the raw axios
+      // string ("Request failed with status code 401") to the user. No status
+      // (network/timeout) or 5xx falls through to serverError.
+      const status = err?.response?.status;
+      let errorKey = 'auth.login.errors.serverError';
+      if (status === 401) errorKey = 'auth.login.errors.invalidCredentials';
+      else if (status === 400 || status === 422) errorKey = 'auth.login.errors.invalidInput';
+      else if (status === 403) errorKey = 'auth.login.errors.accountLocked';
+      else if (status === 429) errorKey = 'auth.login.errors.tooManyAttempts';
+      setError(t(errorKey));
     } finally {
       setIsLoading(false);
     }

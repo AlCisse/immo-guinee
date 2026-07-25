@@ -251,6 +251,8 @@
       "errors": {
         "fillAllFields": "Veuillez remplir tous les champs",
         "invalidCredentials": "Identifiants incorrects. Veuillez reessayer.",
+        "invalidInput": "Numero ou informations invalides. Verifiez votre saisie.",
+        "tooManyAttempts": "Trop de tentatives. Veuillez reessayer plus tard.",
         "accountLocked": "Compte bloque. Veuillez contacter le support.",
         "serverError": "Erreur serveur. Veuillez reessayer.",
         "googleError": "Erreur lors de la connexion avec Google",

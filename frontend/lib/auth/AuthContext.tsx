@@ -207,7 +207,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(data.message || 'Login failed');
       }
     } catch (error: any) {
-      console.error('Login error:', error);
+      // The login page (the UI boundary) logs and maps this to a user message;
+      // don't double-log here.
       throw error;
     }
   };
