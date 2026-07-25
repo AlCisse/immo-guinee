@@ -285,7 +285,7 @@ Le dossier `backend/` (prototype Laravel) est **archivé/supprimé** au profit d
 
 ### Backend - Contract Generation (FR-022 to FR-027)
 
-- [ ] T112 [US2] Configure headless-chrome (HTML → PDF) in rust-backend/src/services/pdf.rs (remplace Laravel PDF/DomPDF)
+- [x] T112 [US2] Configure Typst (typst-as-lib, source → PDF) in rust-backend/src/services/pdf.rs — moteur pur-Rust sans navigateur (remplace headless-chrome/DomPDF ; police DejaVu chargée au runtime)
 - [ ] T113 [US2] Create POST /api/contracts/generate handler in rust-backend/src/routes/contracts.rs::generate() (FR-023 3-step form)
 - [ ] T114 [US2] Create contract service in rust-backend/src/services/contract.rs with PDF generation logic (FR-024 professional PDF)
 - [ ] T115 [P] [US2] Create HTML template for bail_location_residentiel in rust-backend/templates/contracts/bail-location-residentiel.html (FR-024 conformité loi 2016/037)

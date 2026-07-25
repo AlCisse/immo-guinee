@@ -13,8 +13,9 @@
 
 **Technical Approach** (from research.md):
 - **Architecture**: Decoupled API-first (Rust/Axum backend + Next.js 16 frontend). Backend écrit en Rust, **remplaçant** un prototype Laravel jamais déployé (voir `rust-backend/README.md`).
-- **Backend**: Rust 1.85+ (Axum + Tokio, édition 2024), SeaORM/SQLx (ORM), oxide-auth + JWT (auth), apalis (jobs Redis), Axum WebSocket (broadcasting)
-- **Backend Crates**: axum, tower/tower-http, sea-orm, sqlx, jsonwebtoken, oxide-auth, totp-rs, bcrypt, validator, elasticsearch, headless-chrome (PDF), image/imageproc, reqwest, figment, tracing, vaultrs, apalis, rust-s3 (+ RBAC natif in-code)
+- **Backend**: Rust 1.85+ (Axum + Tokio, édition 2024), SeaORM/SQLx (ORM), JWT (auth, `jsonwebtoken`), Typst (PDF)
+- **Backend Crates (réels)**: axum, tower/tower-http, sea-orm, sqlx, jsonwebtoken, totp-rs, bcrypt, validator, **typst + typst-pdf + typst-as-lib (PDF)**, image, reqwest, figment, tracing, rust-s3, sha2 (+ RBAC natif in-code)
+  - 🔜 _Prévus (non encore implémentés)_ : oxide-auth (OAuth2), elasticsearch, apalis + tokio-cron-scheduler (jobs), vaultrs (Vault), imageproc (watermarks), Axum WebSocket (messagerie temps réel)
 - **Frontend**: Next.js 16 (React 18, TypeScript, TailwindCSS), React Query (data fetching), PWA, Framer Motion, React Leaflet
 - **Database**: PostgreSQL 15+ with PostGIS (primary + read replicas), Redis 7+ (cache/queue/sessions), Elasticsearch (advanced search), PgAdmin, Varnish (cache)
 - **Real-Time**: Axum WebSocket (pusher-compat) + Socket.IO client (messaging, notifications)
@@ -31,7 +32,7 @@
 
 **Backend Language/Version**: Rust 1.85+ (édition 2024) — crate `immog-backend` (Axum + Tokio)
 **Frontend Language/Version**: TypeScript 5+ (strict mode), Node.js 20 LTS (Next.js 16)
-**Backend Dependencies**: axum, axum-extra, tower, tower-http, sea-orm, sea-orm-migration, sqlx, jsonwebtoken, oxide-auth, totp-rs, bcrypt, validator, elasticsearch, headless-chrome, image, imageproc, reqwest, redis, deadpool-redis, figment, tracing, tracing-subscriber, vaultrs, apalis, tokio-cron-scheduler, rust-s3, thiserror, anyhow, uuid, chrono, serde (RBAC natif in-code, no crate)
+**Backend Dependencies (réelles)**: axum, axum-extra, tower, tower-http, sea-orm, sea-orm-migration, sqlx, jsonwebtoken, totp-rs, bcrypt, validator, typst + typst-pdf + typst-as-lib (PDF), image, reqwest, redis, figment, tracing, tracing-subscriber, rust-s3, sha2, thiserror, anyhow, uuid, chrono, serde (RBAC natif in-code, no crate). — 🔜 _Prévues_ : oxide-auth, elasticsearch, imageproc, deadpool-redis, vaultrs, apalis, tokio-cron-scheduler.
 **Frontend Dependencies**: React 18, React Query, Framer Motion, TailwindCSS 3, PWA Plugin, Socket.IO Client, React Leaflet
 **Storage**: PostgreSQL 15+ with PostGIS (primary + read replicas), Redis 7+ (cache, queue, sessions, broadcasting), Elasticsearch (search engine), Varnish (HTTP cache), MinIO/S3 (files)
 **Database Tools**: PgAdmin (PostgreSQL management), DBeaver (universal DB tool)

@@ -42,6 +42,14 @@
 
 ---
 
+> ℹ️ **Note d'implémentation (état réel — juillet 2026)** — cette spec reste la cible ; écarts assumés du backend Rust livré :
+> - **OTP livré par WhatsApp (Evolution API)**, pas par SMS (FR-001/004/028). Impact : pénétration WhatsApp en Guinée ; passerelle SMS = évolution future.
+> - **US6 Messagerie temps réel (WebSocket) reportée en v2** — remplacée par le contact propriétaire via WhatsApp. Notifications actuellement **mono-canal WhatsApp** (SMS/Email/Push = v2).
+> - **US4 Paiement en mode SANDBOX** (provider Orange/MTN simulé) — la logique escrow/commission/quittance est complète ; les appels marchands réels attendent les identifiants business.
+> - **US5 badges** : upload + vérification admin faits ; **progression automatique Bronze→Diamant** non implémentée.
+> - **Contrats PDF via Typst** (moteur pur-Rust), pas headless-chrome (FR-024) ; police DejaVu.
+> - Non implémentés : options premium (FR-015), rappels d'expiration planifiés (FR-014), tri distance/PostGIS (FR-018), fulltext Elasticsearch (FR-020 : recherche PostgreSQL), assurances (US8) et i18n arabe (US9) = Phase 2.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Publication Gratuite d'Annonces en 5 Minutes (Priority: P1)

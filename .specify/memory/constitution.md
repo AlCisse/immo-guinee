@@ -98,10 +98,10 @@
   - Durée minimum 7 jours avant résiliation
   - Préavis 3 mois pour terminaison
 - **Signature électronique** :
-  - Signature via OTP SMS (2FA)
-  - Horodatage sécurisé
-  - Archivage crypté 10 ans minimum
-  - Export PDF signé avec certificat d'authenticité
+  - Signature via OTP (canal actuel : **WhatsApp/Evolution** ; SMS prévu) — 2FA
+  - Horodatage sécurisé + cachet « Signé électroniquement via ImmoGuinée »
+  - Hash SHA-256 du PDF (intégrité) ; archivage S3 10 ans (chiffrement at-rest 🔜)
+  - Export PDF signé (les 2 blocs de signature horodatés)
 
 ### VII. Paiements Sécurisés
 **Intégration native avec Mobile Money local**
@@ -207,12 +207,12 @@ Framework       : Axum 0.8 + Tower / tower-http (routing, middleware, WS)
 Runtime         : Tokio 1 (async multi-thread)
 ORM             : SeaORM 1.1 (sur SQLx 0.8, PostgreSQL) — remplace Eloquent
 Migrations      : sea-orm-migration 1.1 (bin `immog-migrate`)
-API Auth        : jsonwebtoken 9 (JWT) + oxide-auth (OAuth2) — remplace Passport
+API Auth        : jsonwebtoken 9 (JWT HS256) — remplace Passport [oxide-auth/OAuth2 non retenu]
 Sessions        : tower-sessions / axum-login — équivalent Sanctum stateful
 WebSocket       : Axum WS + pusher-compat — remplace Reverb/Echo
-Queue / Jobs    : apalis 0.6 (Redis) + tokio-cron-scheduler — remplace Horizon
-Search          : elasticsearch 8.5 (client Rust) — remplace Scout
-PDF             : headless-chrome (HTML → PDF) — remplace DomPDF/Blade
+Queue / Jobs    : 🔜 prévu (apalis + tokio-cron-scheduler) — non encore implémenté
+Search          : PostgreSQL (filtres + ILIKE, IN multi-valeurs) ; 🔜 Elasticsearch prévu — remplace Scout
+PDF             : Typst 0.15 (typst-as-lib, moteur pur-Rust, sans navigateur) — remplace DomPDF/Blade
 Images          : image 0.25 + imageproc (watermarks) — remplace Intervention
 Permissions     : garde RBAC natif (table statique) — remplace Spatie Permission
 2FA             : totp-rs 5 (RFC 6238) — remplace pragmarx/google2fa
@@ -222,7 +222,7 @@ Storage         : rust-s3 0.35 (S3-compatible : MinIO / DO Spaces)
 HTTP client     : reqwest 0.12 (Twilio, Evolution API, Orange/MTN, Expo) — remplace Guzzle
 Config          : figment 0.10 (env + toml) — remplace config/*.php + env()
 Logging         : tracing + tracing-subscriber (JSON) + Sentry — remplace Telescope
-Secrets         : vaultrs (Vault KV + Transit) — remplace Docker Secrets/EncryptionService
+Secrets         : env/figment (dev) ; 🔜 Vault (vaultrs KV + Transit) prévu — remplace Docker Secrets
 Erreurs         : thiserror + anyhow (AppError → réponses JSON structurées)
 Tests           : cargo test + axum-test + mockall — remplace PHPUnit
 ```
@@ -327,6 +327,14 @@ lib/
 ---
 
 ## Fonctionnalités Implémentées
+
+> ⚠️ **AVERTISSEMENT (état réel — juillet 2026)** : les cases cochées ci-dessous décrivent le **périmètre cible** (hérité de l'inventaire Laravel) et **sur-déclarent** l'implémentation Rust actuelle. État réel du backend `rust-backend/` :
+>
+> - ✅ **Fait** : auth JWT + OTP (WhatsApp) + 2FA TOTP + rate-limit ; annonces (CRUD, recherche/filtres PostgreSQL, photos WebP×3) ; favoris ; visites (US10) ; notation & avis (US7) ; **contrats PDF Typst (US2)** ; **signature OTP + scellement (US3)** ; **paiement escrow + commission + quittance en mode SANDBOX (US4)** ; admin (modération, users/rôles, litiges, certifs, journal d'audit).
+> - ⚠️ **Partiel** : certifications = upload+vérif admin, mais **progression des badges non implémentée** ; visites/contrats = notifications **WhatsApp uniquement** (pas SMS/Email/Push).
+> - ❌ **Non implémenté** : messagerie temps réel (WebSocket, E2E) — remplacée par contact WhatsApp ; notifications multicanales (SMS/Email/Push/Telegram) ; assurances (Phase 2) ; i18n arabe (Phase 2) ; options premium ; jobs planifiés (apalis/scheduler) ; Elasticsearch ; PostGIS/géoloc ; paiement MoMo **réel** (sandbox seulement).
+>
+> Les listes cochées ci-dessous sont conservées comme **backlog cible**, non comme état livré.
 
 ### Authentification & Sécurité
 - [x] Inscription/Connexion avec OTP SMS/WhatsApp
