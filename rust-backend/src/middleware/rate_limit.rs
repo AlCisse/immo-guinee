@@ -4,22 +4,21 @@
 //! call the preset that fits the endpoint; exceeding a limit yields `429` with a
 //! `Retry-After` header (via `AppError::RateLimited`).
 
-use redis::AsyncCommands;
 use redis::aio::ConnectionManager;
+use redis::AsyncCommands;
 use uuid::Uuid;
 
 use crate::error::{AppError, AppResult};
+use crate::services::redis_atomic::incr_with_ttl;
 
 /// Increment the counter at `key` within a `window_secs` fixed window and reject
-/// once it exceeds `limit`. The window starts on the first hit.
+/// once it exceeds `limit`. The window starts on the first hit. The INCR + EXPIRE
+/// run as a single atomic Lua script so a Redis hiccup can never leave the key
+/// without a TTL (which would permanently lock the caller out).
 pub async fn enforce(redis: &ConnectionManager, key: &str, limit: u64, window_secs: u64) -> AppResult<()> {
-    let mut conn = redis.clone();
-
-    let count: u64 = conn.incr(key, 1).await?;
-    if count == 1 {
-        let _: () = conn.expire(key, window_secs as i64).await?;
-    }
+    let count = incr_with_ttl(redis, key, window_secs).await? as u64;
     if count > limit {
+        let mut conn = redis.clone();
         let ttl: i64 = conn.ttl(key).await?;
         return Err(AppError::RateLimited { retry_after_secs: ttl.max(1) as u64 });
     }

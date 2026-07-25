@@ -67,8 +67,11 @@ impl Default for Config {
         Self {
             host: "0.0.0.0".into(),
             port: 8000,
-            database_url: "postgres://immog_user:immog@localhost:5433/immog_db".into(),
-            redis_url: "redis://:immog_redis_secret@localhost:6379".into(),
+            // No credentials in source (public repo, zero-tolerance). Real
+            // connection strings come from IMMOG_DATABASE_URL / IMMOG_REDIS_URL
+            // (docker-compose in dev, Vault/env in prod).
+            database_url: "postgres://localhost:5433/immog_db".into(),
+            redis_url: "redis://localhost:6379".into(),
             s3_endpoint: "http://localhost:9000".into(),
             s3_public_url: String::new(),
             s3_region: "us-east-1".into(),

@@ -17,12 +17,14 @@ use sea_orm::{
 use serde_json::{Value, json};
 use uuid::Uuid;
 
+use crate::auth::rbac::Permission;
 use crate::db::entities::sea_orm_active_enums::{
     MethodePaiement, StatutContrat, StatutPaiement, StatutTransaction, TypeOperation, TypePaiement,
 };
-use crate::db::entities::{contract, listing, payment, transaction, user};
+use crate::db::entities::{admin_audit_log, contract, listing, payment, transaction, user};
 use crate::error::{AppError, AppResult};
 use crate::extractors::{AuthUser, ValidatedJson};
+use crate::middleware::rate_limit;
 use crate::services::pdf;
 use crate::state::AppState;
 
@@ -62,6 +64,7 @@ async fn process(
     State(state): State<Arc<AppState>>,
     ValidatedJson(req): ValidatedJson<ProcessRequest>,
 ) -> AppResult<Json<Value>> {
+    rate_limit::limit_payment(&state.redis, auth.id).await?;
     let c = fetch_payable_contract(&state, &auth, req.contract_id).await?;
 
     // One active payment per contract.
@@ -76,6 +79,27 @@ async fn process(
     }
 
     let inv = Invoice::from_contract(&c);
+
+    // FR-045: 2FA (TOTP) required for payments > 500 000 GNF.
+    if inv.total > 500_000 {
+        let payer = user::Entity::find_by_id(auth.id)
+            .one(&state.db)
+            .await?
+            .ok_or(AppError::Unauthorized)?;
+        let secret = payer.two_factor_secret.as_ref().ok_or_else(|| {
+            AppError::Forbidden(
+                "2FA requise pour les paiements > 500 000 GNF — activez la 2FA sur votre compte".into(),
+            )
+        })?;
+        let code = req
+            .totp_code
+            .as_ref()
+            .ok_or_else(|| AppError::Validation("code TOTP requis (paiement > 500 000 GNF)".into()))?;
+        if !crate::auth::totp::verify(secret, &payer.telephone, code)? {
+            return Err(AppError::Validation("Code TOTP incorrect".into()));
+        }
+    }
+
     let methode = parse_methode(&req.methode_paiement);
     let now = Utc::now();
 
@@ -138,17 +162,35 @@ async fn validate(
     Path(id): Path<Uuid>,
     ValidatedJson(req): ValidatedJson<ValidateRequest>,
 ) -> AppResult<Json<Value>> {
+    rate_limit::limit_payment(&state.redis, auth.id).await?;
     let p = payment::Entity::find_by_id(id).one(&state.db).await?.ok_or(AppError::NotFound)?;
     if p.beneficiaire_id != auth.id {
         return Err(AppError::Forbidden("seul le bénéficiaire peut valider ce paiement".into()));
-    }
-    if !matches!(p.statut, StatutPaiement::EnEscrow | StatutPaiement::CommissionCollectee) {
-        return Err(AppError::Conflict("ce paiement n'est pas en séquestre".into()));
     }
     if !req.validated {
         return Ok(Json(json!({ "success": true, "data": { "payment": payment_json(&p, None, None, None) } })));
     }
 
+    // Atomic conditional update: only one concurrent validate can win (anti double-release).
+    // UPDATE payments SET statut = CONFIRME WHERE id = ? AND statut IN (EN_ESCROW, COMMISSION_COLLECTEE)
+    let result = payment::Entity::update_many()
+        .col_expr(
+            payment::Column::Statut,
+            sea_orm::sea_query::Expr::value(StatutPaiement::Confirme),
+        )
+        .filter(payment::Column::Id.eq(id))
+        .filter(payment::Column::Statut.is_in([
+            StatutPaiement::EnEscrow,
+            StatutPaiement::CommissionCollectee,
+        ]))
+        .exec(&state.db)
+        .await?;
+    if result.rows_affected == 0 {
+        return Err(AppError::Conflict("paiement déjà validé ou non en séquestre".into()));
+    }
+
+    // Re-fetch the now-Confirme payment (only the winner reaches here).
+    let p = payment::Entity::find_by_id(id).one(&state.db).await?.ok_or(AppError::NotFound)?;
     let contract = match p.contrat_id {
         Some(cid) => contract::Entity::find_by_id(cid).one(&state.db).await?,
         None => None,
@@ -156,11 +198,16 @@ async fn validate(
     let payeur = user::Entity::find_by_id(p.payeur_id).one(&state.db).await?;
     let beneficiaire = user::Entity::find_by_id(p.beneficiaire_id).one(&state.db).await?;
 
-    // Issue the deposit receipt (quittance) PDF.
+    // Issue the deposit receipt (quittance) PDF. Typst compilation is CPU-bound
+    // → run on a blocking thread so it cannot stall the async reactor.
     let quittance_url = match (&payeur, &beneficiaire) {
         (Some(pa), Some(be)) => {
             let src = quittance_source(&p, pa, be);
-            let bytes = pdf::render(src)?;
+            let bytes = match tokio::task::spawn_blocking(move || pdf::render(src)).await {
+                Ok(Ok(b)) => b,
+                Ok(Err(e)) => return Err(e),
+                Err(e) => return Err(AppError::Internal(anyhow::anyhow!("quittance render task: {e}"))),
+            };
             let key = format!("quittances/{}.pdf", p.id);
             Some(state.storage.put(&key, &bytes, "application/pdf").await?)
         }
@@ -170,7 +217,6 @@ async fn validate(
     let now = Utc::now();
     let contrat_id = p.contrat_id;
     let mut am: payment::ActiveModel = p.into();
-    am.statut = Set(StatutPaiement::Confirme);
     am.quittance_pdf_url = Set(quittance_url);
     am.date_validation_beneficiaire = Set(Some(now.into()));
     am.date_deblocage_escrow = Set(Some(now.into()));
@@ -290,6 +336,7 @@ async fn cash(
     State(state): State<Arc<AppState>>,
     ValidatedJson(req): ValidatedJson<super::dto::ProcessRequest>,
 ) -> AppResult<Json<Value>> {
+    rate_limit::limit_payment(&state.redis, auth.id).await?;
     let c = fetch_payable_contract(&state, &auth, req.contract_id).await?;
     let inv = Invoice::from_contract(&c);
     let now = Utc::now();
@@ -314,20 +361,56 @@ async fn cash(
     Ok(Json(json!({ "success": true, "data": { "payment": payment_json(&pay, Some(&c), None, None) } })))
 }
 
-/// `POST /api/payments/{id}/refund` — refund a payment (payer or beneficiary).
+/// `POST /api/payments/{id}/refund` — record an escrow refund. This is a
+/// **mediation action**: only a staff member with `ResolveDisputes` may trigger
+/// it, because a unilateral refund by either party would let an owner mark a
+/// caution as repaid without any money actually moving. The status transition
+/// is applied atomically and only from an escrow-held state.
 async fn refund(
     auth: AuthUser,
     State(state): State<Arc<AppState>>,
     Path(id): Path<Uuid>,
-    ValidatedJson(_req): ValidatedJson<RefundRequest>,
+    ValidatedJson(req): ValidatedJson<RefundRequest>,
 ) -> AppResult<Json<Value>> {
-    let p = fetch_party_payment(&state, &auth, id).await?;
-    if matches!(p.statut, StatutPaiement::Confirme) {
-        return Err(AppError::Conflict("un paiement confirmé ne peut être remboursé automatiquement".into()));
+    auth.require_permission(Permission::ResolveDisputes)?;
+    rate_limit::limit_payment(&state.redis, auth.id).await?;
+
+    let p = payment::Entity::find_by_id(id)
+        .one(&state.db)
+        .await?
+        .ok_or(AppError::NotFound)?;
+    let previous_statut = super::dto::statut_str(&p.statut);
+
+    // Atomic conditional update: only an escrow-held payment can be refunded,
+    // and only one concurrent refund can win (anti double-refund).
+    let result = payment::Entity::update_many()
+        .col_expr(
+            payment::Column::Statut,
+            sea_orm::sea_query::Expr::value(StatutPaiement::Rembourse),
+        )
+        .filter(payment::Column::Id.eq(id))
+        .filter(payment::Column::Statut.is_in([StatutPaiement::EnEscrow, StatutPaiement::CommissionCollectee]))
+        .exec(&state.db)
+        .await?;
+    if result.rows_affected == 0 {
+        return Err(AppError::Conflict("paiement non remboursable (non séquestré ou déjà traité)".into()));
     }
-    let mut am: payment::ActiveModel = p.into();
-    am.statut = Set(StatutPaiement::Rembourse);
-    let updated = am.update(&state.db).await?;
+
+    let updated = payment::Entity::find_by_id(id).one(&state.db).await?.ok_or(AppError::NotFound)?;
+
+    // Audit the mediation action (best-effort, like admin/audit).
+    let _ = admin_audit_log::ActiveModel {
+        id: Set(Uuid::new_v4()),
+        admin_id: Set(auth.id),
+        action: Set("payment.refund".into()),
+        target_type: Set(Some("payment".into())),
+        target_id: Set(Some(id)),
+        details: Set(json!({ "previous_statut": previous_statut, "reason": req.reason })),
+        created_at: Set(Utc::now().into()),
+    }
+    .insert(&state.db)
+    .await;
+
     Ok(Json(json!({ "success": true, "data": { "payment": payment_json(&updated, None, None, None) } })))
 }
 

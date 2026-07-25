@@ -71,8 +71,9 @@ pub async fn verify(redis: &ConnectionManager, phone: &str, code: &str) -> AppRe
         return Ok(());
     }
 
-    let attempts: i64 = conn.incr(attempts_key(phone), 1).await?;
-    let _: () = conn.expire(attempts_key(phone), OTP_TTL_SECS as i64).await?;
+    // INCR + EXPIRE atomically (Lua): a separate EXPIRE could fail and leave the
+    // attempts key without a TTL, locking the caller out of OTP for good.
+    let attempts: i64 = crate::services::redis_atomic::incr_with_ttl(&conn, &attempts_key(phone), OTP_TTL_SECS).await?;
     if attempts >= MAX_ATTEMPTS {
         let _: () = conn.set_ex(blocked_key(phone), 1, BLOCK_SECS).await?;
         let _: () = conn.del(code_key(phone)).await?;

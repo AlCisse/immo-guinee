@@ -265,6 +265,12 @@ async fn otp(
         .await?
         .ok_or(AppError::Unauthorized)?;
 
+    // Reject suspended / banned / soft-deleted accounts — the 2FA TOTP flow must
+    // not be a way back in for an account that login and otp_verify already block.
+    if !matches!(user.statut_compte, StatutCompte::Actif) {
+        return Err(AppError::Forbidden("Compte suspendu ou banni".into()));
+    }
+
     let secret = user
         .two_factor_secret
         .as_ref()

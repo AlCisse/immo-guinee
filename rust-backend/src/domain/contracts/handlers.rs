@@ -57,6 +57,11 @@ async fn create(
         .await?
         .ok_or(AppError::NotFound)?;
 
+    // Only the listing's owner can create a contract on it (anti-fraud).
+    if listing.createur_id != auth.id {
+        return Err(AppError::Forbidden("Vous n'êtes pas le propriétaire de cette annonce".into()));
+    }
+
     // The creator is the owner; the tenant/buyer must be an existing user.
     let locataire_id = req
         .locataire_id
@@ -179,13 +184,27 @@ async fn preview(
 }
 
 /// `GET /api/contracts/{id}/download` — stream the PDF bytes (authenticated).
+/// The stored SHA-256 is recomputed and compared so a substituted/tampered
+/// object in S3 is detected rather than silently served as an authentic lease.
 async fn download(
     auth: AuthUser,
     State(state): State<Arc<AppState>>,
     Path(id): Path<Uuid>,
 ) -> AppResult<Response> {
-    let _ = fetch_party_contract(&state, &auth, id).await?;
+    let c = fetch_party_contract(&state, &auth, id).await?;
     let bytes = state.storage.get(&format!("contracts/{id}.pdf")).await?;
+    if let Some(stored) = &c.hash_sha256 {
+        let actual = format!("{:x}", Sha256::digest(&bytes));
+        if &actual != stored {
+            tracing::error!(
+                contract_id = %id,
+                expected = %stored,
+                actual = %actual,
+                "hash PDF mismatch — refus de servir un bail potentiellement falsifié"
+            );
+            return Err(AppError::Internal(anyhow::anyhow!("intégrité du PDF compromise")));
+        }
+    }
     Ok((
         [
             (header::CONTENT_TYPE, "application/pdf".to_string()),
@@ -260,7 +279,11 @@ async fn request_sign_otp(
     let c = fetch_party_contract(&state, &auth, id).await?;
     ensure_signable(&c, auth.id)?;
     let phone = signer_phone(&state, auth.id).await?;
-    crate::services::notify::issue_and_send_otp(&state, &phone).await?;
+    // Scope the OTP by contract_id so a code issued for contract A cannot be
+    // replayed to sign contract B (the Redis key is otp:code:contract:{id}:{phone}).
+    let scoped = format!("contract:{}:{}", id, phone);
+    let code = crate::services::otp::request(&state.redis, &scoped).await?;
+    crate::services::notify::send_otp_code(&state, &phone, &code).await?;
     Ok(Json(json!({ "success": true, "data": { "expires_in": 300 } })))
 }
 
@@ -288,7 +311,9 @@ async fn sign(
         .or(req.otp_code)
         .ok_or_else(|| AppError::Validation("code OTP requis".into()))?;
     let phone = signer_phone(&state, auth.id).await?;
-    crate::services::otp::verify(&state.redis, &phone, &code).await?;
+    // Verify against the contract-scoped key (must match request_sign_otp).
+    let scoped = format!("contract:{}:{}", id, phone);
+    crate::services::otp::verify(&state.redis, &scoped, &code).await?;
 
     // Record the signature (role + timestamp + seal).
     let role = if c.proprietaire_id == auth.id { "proprietaire" } else { "locataire" };
@@ -487,14 +512,28 @@ fn build_ctx(
 }
 
 /// Render the lease to PDF and store it in S3; returns `(public_url, sha256)`.
+/// The Typst compilation (`pdf::render`) is CPU-bound and can take hundreds of
+/// ms to seconds — it runs on a blocking thread so it cannot stall the async
+/// reactor (the 60s `TimeoutLayer` cannot cancel work done on the async thread).
 async fn render_and_store(
     state: &AppState,
     id: Uuid,
     ctx: &ContractContext,
 ) -> AppResult<(String, String)> {
-    let pdf_bytes = pdf::render(build_source(ctx))?;
+    let source = build_source(ctx); // cheap string assembly, fine on the async thread
+    let pdf_bytes = spawn_blocking_render(source).await?;
     let hash = format!("{:x}", Sha256::digest(&pdf_bytes));
     let key = format!("contracts/{id}.pdf");
     let url = state.storage.put(&key, &pdf_bytes, "application/pdf").await?;
     Ok((url, hash))
+}
+
+/// Run the CPU-bound Typst render on a blocking thread, flattening the nested
+/// `Result<Result<_, JoinError>, _>` into a single `AppResult`.
+async fn spawn_blocking_render(source: String) -> AppResult<Vec<u8>> {
+    match tokio::task::spawn_blocking(move || pdf::render(source)).await {
+        Ok(Ok(bytes)) => Ok(bytes),
+        Ok(Err(e)) => Err(e),
+        Err(e) => Err(AppError::Internal(anyhow::anyhow!("pdf render task: {e}"))),
+    }
 }

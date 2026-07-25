@@ -20,6 +20,9 @@ pub struct ProcessRequest {
     pub contract_id: Uuid,
     pub methode_paiement: String,
     pub numero_telephone: Option<String>,
+    /// FR-045: TOTP code required when montant_total > 500 000 GNF.
+    #[serde(default)]
+    pub totp_code: Option<String>,
 }
 
 #[derive(Debug, Deserialize, validator::Validate)]

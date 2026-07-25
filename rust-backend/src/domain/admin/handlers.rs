@@ -18,7 +18,9 @@ use serde_json::{Value, json};
 use uuid::Uuid;
 
 use chrono::Utc;
+use redis::AsyncCommands;
 
+use crate::auth::jwt::ACCESS_TTL_SECS;
 use crate::auth::rbac::Permission;
 use crate::db::entities::sea_orm_active_enums::{
     StatutCompte, StatutContrat, StatutLitige, StatutListing, StatutVerificationDoc, StatutVisite,
@@ -28,7 +30,7 @@ use crate::db::entities::{
     visit,
 };
 use crate::error::{AppError, AppResult};
-use crate::extractors::{AuthUser, ValidatedJson};
+use crate::extractors::{user_invalid_before_key, AuthUser, ValidatedJson};
 use crate::state::AppState;
 
 pub fn routes() -> Router<Arc<AppState>> {
@@ -306,6 +308,10 @@ async fn manage_user(
     am.statut_compte = Set(new_statut.clone());
     am.update(&state.db).await?;
 
+    // Invalidate all of the user's outstanding tokens: a suspended/banned/deleted
+    // account must lose access immediately, not when its 24h token expires.
+    invalidate_user_tokens(&state, id).await;
+
     audit(&state.db, auth.id, "user.manage", "user", id, json!({ "action": req.action, "reason": req.reason })).await;
     Ok(Json(json!({ "success": true, "data": { "id": id, "statut_compte": new_statut } })))
 }
@@ -331,6 +337,10 @@ async fn sync_roles(
     let mut am: user::ActiveModel = u.into();
     am.role = Set(role.clone());
     am.update(&state.db).await?;
+
+    // A role change must take effect at once: invalidate outstanding tokens so
+    // the old embedded role cannot be used until the user re-authenticates.
+    invalidate_user_tokens(&state, id).await;
 
     audit(&state.db, auth.id, "user.role", "user", id, json!({ "role": role })).await;
     Ok(Json(json!({ "success": true, "data": { "id": id, "role": role } })))
@@ -459,6 +469,19 @@ fn user_ref(u: Option<&user::Model>) -> Value {
 }
 
 // --- audit trail -----------------------------------------------------------
+
+/// Invalidate all outstanding access tokens for `user_id` by recording the
+/// current time as the "tokens issued before this are revoked" boundary. The
+/// `AuthUser` extractor checks this against each token's `iat`. Best-effort:
+/// a Redis failure is logged (the DB role/status change already succeeded).
+async fn invalidate_user_tokens(state: &AppState, user_id: Uuid) {
+    let now = jsonwebtoken::get_current_timestamp() as i64;
+    let mut conn = state.redis.clone();
+    let res: Result<(), _> = conn.set_ex(user_invalid_before_key(user_id), now, ACCESS_TTL_SECS + 60).await;
+    if let Err(e) = res {
+        tracing::warn!(error = %e, %user_id, "échec invalidation tokens utilisateur");
+    }
+}
 
 /// Record a staff action. Best-effort: a logging failure must never fail the
 /// action it describes, so errors are logged and swallowed.

@@ -202,8 +202,17 @@ async fn upload_photos(
             .await
             .map_err(|e| AppError::Validation(format!("lecture du fichier: {e}")))?;
 
+        // Lanczos3 resize is CPU-bound (up to seconds on a large photo) — run it
+        // on a blocking thread so concurrent uploads/requests cannot stall the
+        // async reactor (the 60s timeout cannot cancel work on the async thread).
+        let renditions = match tokio::task::spawn_blocking(move || listing_photo::optimize(&bytes)).await {
+            Ok(Ok(r)) => r,
+            Ok(Err(e)) => return Err(e),
+            Err(e) => return Err(AppError::Internal(anyhow::anyhow!("photo optimize task: {e}"))),
+        };
+
         let mut urls = serde_json::Map::new();
-        for r in listing_photo::optimize(&bytes)? {
+        for r in renditions {
             let key = format!("listings/{id}/{}-{}.webp", Uuid::new_v4(), r.label);
             let url = state.storage.put(&key, &r.webp, "image/webp").await?;
             urls.insert(r.label.to_string(), json!(url));

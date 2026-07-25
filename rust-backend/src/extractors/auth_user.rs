@@ -20,6 +20,14 @@ pub fn revoked_key(jti: Uuid) -> String {
     format!("revoked:{jti}")
 }
 
+/// Redis key holding the unix timestamp before which all of `user_id`'s tokens
+/// are invalid. Set when an admin changes the user's role or account status
+/// (sync_roles / manage_user) so a demoted or banned admin cannot keep using a
+/// still-unexpired 24h token. TTL mirrors the access-token lifetime.
+pub fn user_invalid_before_key(user_id: Uuid) -> String {
+    format!("user_invalid_before:{user_id}")
+}
+
 /// The authenticated caller, injected into handlers that require a valid token.
 #[derive(Debug, Clone)]
 pub struct AuthUser {
@@ -82,6 +90,17 @@ where
         let revoked: bool = conn.exists(revoked_key(claims.jti)).await?;
         if revoked {
             return Err(AppError::Unauthorized);
+        }
+
+        // Reject tokens issued before a role/status change (per-user deny-list).
+        // Lets us invalidate all of a user's tokens at once when an admin demotes
+        // or bans them — the embedded `role` would otherwise stay authoritative
+        // for the full 24h access-token lifetime.
+        let invalid_before: Option<i64> = conn.get(user_invalid_before_key(claims.sub)).await?;
+        if let Some(ts) = invalid_before {
+            if (claims.iat as i64) < ts {
+                return Err(AppError::Unauthorized);
+            }
         }
 
         Ok(AuthUser { id: claims.sub, role: claims.role, jti: claims.jti, exp: claims.exp })

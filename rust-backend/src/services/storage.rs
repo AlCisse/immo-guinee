@@ -16,17 +16,24 @@ pub struct S3Storage {
     public_base: String,
 }
 
-/// Credentials from env (`IMMOG_S3_ACCESS_KEY`/`_SECRET_KEY`), defaulting to the
-/// MinIO dev defaults.
-fn credentials() -> AppResult<Credentials> {
-    let access = std::env::var("IMMOG_S3_ACCESS_KEY").unwrap_or_else(|_| "minioadmin".into());
-    let secret = std::env::var("IMMOG_S3_SECRET_KEY").unwrap_or_else(|_| "minioadmin".into());
+/// Credentials for S3. In prod the keys come from Vault (passed in as
+/// `s3_access` / `s3_secret`); in dev they come from `IMMOG_S3_ACCESS_KEY` /
+/// `IMMOG_S3_SECRET_KEY`, defaulting to the MinIO dev defaults. Vault overrides
+/// take precedence; a non-empty override wins over env.
+fn credentials(s3_access: Option<String>, s3_secret: Option<String>) -> AppResult<Credentials> {
+    let access = s3_access
+        .filter(|k| !k.is_empty())
+        .unwrap_or_else(|| std::env::var("IMMOG_S3_ACCESS_KEY").unwrap_or_else(|_| "minioadmin".into()));
+    let secret = s3_secret
+        .filter(|k| !k.is_empty())
+        .unwrap_or_else(|| std::env::var("IMMOG_S3_SECRET_KEY").unwrap_or_else(|_| "minioadmin".into()));
     Credentials::new(Some(&access), Some(&secret), None, None, None)
         .map_err(|e| AppError::Internal(anyhow::anyhow!("s3 credentials: {e}")))
 }
 
 /// Create the configured bucket if it does not exist (dev/test setup). Best-effort:
-/// an "already owned by you" response is ignored.
+/// an "already owned by you" response is ignored. Uses env/local credentials
+/// (dev bootstrap — Vault overrides are applied at `AppState` init time).
 pub async fn ensure_bucket(cfg: &Config) -> AppResult<()> {
     let region = Region::Custom {
         region: cfg.s3_region.clone(),
@@ -35,7 +42,7 @@ pub async fn ensure_bucket(cfg: &Config) -> AppResult<()> {
     let _ = Bucket::create_with_path_style(
         &cfg.s3_bucket,
         region,
-        credentials()?,
+        credentials(None, None)?,
         s3::BucketConfiguration::default(),
     )
     .await;
@@ -43,8 +50,10 @@ pub async fn ensure_bucket(cfg: &Config) -> AppResult<()> {
 }
 
 impl S3Storage {
-    pub fn from_config(cfg: &Config) -> AppResult<Self> {
-        let creds = credentials()?;
+    /// Build the storage client. `s3_access` / `s3_secret` are the Vault-fetched
+    /// keys in prod (`None` in dev → env / MinIO defaults).
+    pub fn from_config(cfg: &Config, s3_access: Option<String>, s3_secret: Option<String>) -> AppResult<Self> {
+        let creds = credentials(s3_access, s3_secret)?;
         let region = Region::Custom {
             region: cfg.s3_region.clone(),
             endpoint: cfg.s3_endpoint.clone(),

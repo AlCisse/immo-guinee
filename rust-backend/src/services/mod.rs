@@ -45,6 +45,7 @@ pub mod listing_photo;
 pub mod notify;
 pub mod pdf;
 pub mod otp;
+pub mod redis_atomic;
 pub mod vault;
 pub mod whatsapp;
 // pub mod sms;

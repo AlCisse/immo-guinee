@@ -18,8 +18,13 @@ pub struct WhatsAppClient {
 }
 
 impl WhatsAppClient {
-    pub fn from_config(cfg: &Config) -> Self {
-        let api_key = std::env::var("IMMOG_EVOLUTION_API_KEY").unwrap_or_default();
+    /// Build the client. `evolution_key` is the Vault-fetched Evolution API key
+    /// in prod (`None` in dev → `IMMOG_EVOLUTION_API_KEY` env). A non-empty Vault
+    /// override wins over env; empty/absent falls back to env (then empty = unset).
+    pub fn from_config(cfg: &Config, evolution_key: Option<String>) -> Self {
+        let api_key = evolution_key
+            .filter(|k| !k.is_empty())
+            .unwrap_or_else(|| std::env::var("IMMOG_EVOLUTION_API_KEY").unwrap_or_default());
         Self {
             http: Client::new(),
             base_url: cfg.evolution_base_url.trim_end_matches('/').to_owned(),
