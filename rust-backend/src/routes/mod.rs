@@ -33,6 +33,7 @@ pub fn router(state: Arc<AppState>, cfg: &Config) -> Router {
         .merge(crate::domain::ratings::routes())    // US7 (reviews + average)
         .merge(crate::domain::admin::routes())      // Phase 5 (dashboard + moderation)
         .merge(crate::domain::contracts::routes())  // US2 (contract PDF generation)
+        .merge(crate::domain::payments::routes())   // US4 (commission + escrow)
         .merge(crate::domain::certifications::routes()); // Phase 5 (FR-054)
     // Phase 2: .merge(crate::domain::messaging::routes())
     // Phase 3: .merge(crate::domain::contracts::routes())
