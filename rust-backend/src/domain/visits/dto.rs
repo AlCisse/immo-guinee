@@ -14,11 +14,7 @@ use validator::Validate;
 use crate::db::entities::sea_orm_active_enums::StatutVisite;
 use crate::db::entities::{listing, user, visit};
 
-#[derive(Debug, Serialize)]
-pub struct Envelope<T: Serialize> {
-    pub success: bool,
-    pub data: T,
-}
+pub use crate::extractors::Envelope;
 
 #[derive(Debug, Serialize)]
 pub struct ListingBrief {

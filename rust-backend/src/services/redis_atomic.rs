@@ -30,6 +30,32 @@ pub async fn incr_with_ttl(conn: &ConnectionManager, key: &str, ttl_secs: u64) -
     Ok(count)
 }
 
+/// Acquire a short-lived mutex (`SET key 1 NX EX ttl`). Returns `true` if the
+/// lock was acquired, `false` if it was already held. The TTL is a safety net
+/// so a crashed holder cannot deadlock the resource forever; callers should
+/// still release explicitly via [`release_lock`].
+pub async fn acquire_lock(conn: &ConnectionManager, key: &str, ttl_secs: u64) -> AppResult<bool> {
+    let mut conn = conn.clone();
+    let res: Option<String> = redis::cmd("SET")
+        .arg(key)
+        .arg(1i64)
+        .arg("NX")
+        .arg("EX")
+        .arg(ttl_secs as i64)
+        .query_async(&mut conn)
+        .await
+        .map_err(|e| AppError::Internal(anyhow::anyhow!("redis SET NX: {e}")))?;
+    Ok(res.is_some())
+}
+
+/// Release a mutex acquired by [`acquire_lock`] (best-effort `DEL`).
+pub async fn release_lock(conn: &ConnectionManager, key: &str) -> AppResult<()> {
+    use redis::AsyncCommands;
+    let mut conn = conn.clone();
+    let _: () = conn.del(key).await?;
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -4,7 +4,7 @@
 //! the tenant pays deposit + platform commission; the deposit is held in escrow
 //! and released to the owner on their confirmation, when a quittance PDF is issued.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use axum::extract::{Path, Query, State};
@@ -68,15 +68,7 @@ async fn process(
     let c = fetch_payable_contract(&state, &auth, req.contract_id).await?;
 
     // One active payment per contract.
-    if let Some(existing) = payment::Entity::find()
-        .filter(payment::Column::ContratId.eq(c.id))
-        .one(&state.db)
-        .await?
-    {
-        if !matches!(existing.statut, StatutPaiement::Echoue | StatutPaiement::Rembourse) {
-            return Err(AppError::Conflict("un paiement existe déjà pour ce contrat".into()));
-        }
-    }
+    assert_no_active_payment(&state, c.id).await?;
 
     let inv = Invoice::from_contract(&c);
 
@@ -310,15 +302,25 @@ async fn pending_invoices(auth: AuthUser, State(state): State<Arc<AppState>>) ->
         .all(&state.db)
         .await?;
 
+    // One query for all payments of these contracts (was: one query per contract).
+    let contract_ids: Vec<Uuid> = contracts.iter().map(|c| c.id).collect();
+    let payments: Vec<payment::Model> = if contract_ids.is_empty() {
+        vec![]
+    } else {
+        payment::Entity::find()
+            .filter(payment::Column::ContratId.is_in(contract_ids))
+            .all(&state.db)
+            .await?
+    };
+    let paid: HashSet<Uuid> = payments
+        .iter()
+        .filter(|p| !matches!(p.statut, StatutPaiement::Echoue | StatutPaiement::Rembourse))
+        .filter_map(|p| p.contrat_id)
+        .collect();
+
     let mut invoices = Vec::new();
     for c in &contracts {
-        let paid = payment::Entity::find()
-            .filter(payment::Column::ContratId.eq(c.id))
-            .one(&state.db)
-            .await?
-            .map(|p| !matches!(p.statut, StatutPaiement::Echoue | StatutPaiement::Rembourse))
-            .unwrap_or(false);
-        if !paid {
+        if !paid.contains(&c.id) {
             let inv = Invoice::from_contract(c);
             let mut v = invoice_json(c, &inv);
             if let Some(o) = v.as_object_mut() {
@@ -338,6 +340,10 @@ async fn cash(
 ) -> AppResult<Json<Value>> {
     rate_limit::limit_payment(&state.redis, auth.id).await?;
     let c = fetch_payable_contract(&state, &auth, req.contract_id).await?;
+    // Cash payments share the one-active-payment-per-contract invariant with
+    // mobile-money (otherwise a tenant could record a cash payment on top of an
+    // already-escrowed one).
+    assert_no_active_payment(&state, c.id).await?;
     let inv = Invoice::from_contract(&c);
     let now = Utc::now();
     let pay = payment::ActiveModel {
@@ -442,6 +448,21 @@ async fn fetch_payable_contract(
     Ok(c)
 }
 
+/// Reject if the contract already has an active (non-failed, non-refunded) payment.
+/// Guards both mobile-money (`process`) and cash (`cash`) against double-payment.
+async fn assert_no_active_payment(state: &AppState, contract_id: Uuid) -> AppResult<()> {
+    if let Some(existing) = payment::Entity::find()
+        .filter(payment::Column::ContratId.eq(contract_id))
+        .one(&state.db)
+        .await?
+    {
+        if !matches!(existing.statut, StatutPaiement::Echoue | StatutPaiement::Rembourse) {
+            return Err(AppError::Conflict("un paiement existe déjà pour ce contrat".into()));
+        }
+    }
+    Ok(())
+}
+
 async fn fetch_party_payment(state: &AppState, auth: &AuthUser, id: Uuid) -> AppResult<payment::Model> {
     let p = payment::Entity::find_by_id(id).one(&state.db).await?.ok_or(AppError::NotFound)?;
     if p.payeur_id != auth.id && p.beneficiaire_id != auth.id {
@@ -458,19 +479,55 @@ async fn load_listing(state: &AppState, annonce_id: Option<Uuid>) -> AppResult<O
 }
 
 /// Embed each payment's contract, listing and beneficiary for a list response.
+/// Batched: 3 queries total (contracts, listings, beneficiaries) regardless of
+/// the number of rows — was 3 sequential queries per payment (3N total).
 async fn hydrate_payments(state: &AppState, rows: &[payment::Model]) -> AppResult<Vec<Value>> {
+    if rows.is_empty() {
+        return Ok(vec![]);
+    }
+    let contract_ids: Vec<Uuid> = rows.iter().filter_map(|p| p.contrat_id).collect();
+    let contracts: HashMap<Uuid, contract::Model> = if contract_ids.is_empty() {
+        HashMap::new()
+    } else {
+        contract::Entity::find()
+            .filter(contract::Column::Id.is_in(contract_ids))
+            .all(&state.db)
+            .await?
+            .into_iter()
+            .map(|c| (c.id, c))
+            .collect()
+    };
+    let listing_ids: Vec<Uuid> = contracts.values().filter_map(|c| c.annonce_id).collect();
+    let listings: HashMap<Uuid, listing::Model> = if listing_ids.is_empty() {
+        HashMap::new()
+    } else {
+        listing::Entity::find()
+            .filter(listing::Column::Id.is_in(listing_ids))
+            .all(&state.db)
+            .await?
+            .into_iter()
+            .map(|l| (l.id, l))
+            .collect()
+    };
+    let beneficiaire_ids: Vec<Uuid> = rows.iter().map(|p| p.beneficiaire_id).collect();
+    let beneficiaries: HashMap<Uuid, user::Model> = if beneficiaire_ids.is_empty() {
+        HashMap::new()
+    } else {
+        user::Entity::find()
+            .filter(user::Column::Id.is_in(beneficiaire_ids))
+            .all(&state.db)
+            .await?
+            .into_iter()
+            .map(|u| (u.id, u))
+            .collect()
+    };
+
     let mut out = Vec::with_capacity(rows.len());
     for p in rows {
-        let contract = match p.contrat_id {
-            Some(cid) => contract::Entity::find_by_id(cid).one(&state.db).await?,
-            None => None,
-        };
-        let listing = match &contract {
-            Some(c) => load_listing(state, c.annonce_id).await?,
-            None => None,
-        };
-        let beneficiaire = user::Entity::find_by_id(p.beneficiaire_id).one(&state.db).await?;
-        out.push(payment_json(p, contract.as_ref(), listing.as_ref(), beneficiaire.as_ref()));
+        let contract = p.contrat_id.and_then(|cid| contracts.get(&cid));
+        let listing = contract.and_then(|c| c.annonce_id).and_then(|a| listings.get(&a));
+        let beneficiaire = beneficiaries.get(&p.beneficiaire_id);
+        out.push(payment_json(p, contract, listing, beneficiaire));
     }
     Ok(out)
 }

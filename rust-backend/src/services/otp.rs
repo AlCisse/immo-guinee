@@ -54,6 +54,17 @@ pub async fn request(redis: &ConnectionManager, phone: &str) -> AppResult<String
     Ok(code)
 }
 
+/// Clear the code, attempts and resend-throttle keys for `phone`. Used by the
+/// notifier when delivery fails *after* `request` succeeded: without this the
+/// 60 s resend throttle would leave the caller blocked with no code received.
+pub async fn clear_request(redis: &ConnectionManager, phone: &str) -> AppResult<()> {
+    let mut conn = redis.clone();
+    let _: () = conn
+        .del(&[code_key(phone), attempts_key(phone), resend_key(phone)])
+        .await?;
+    Ok(())
+}
+
 /// Verify `code` for `phone`. On success the code is consumed. On failure the
 /// attempt counter increases; after 3 failures the phone is blocked for 5 min.
 pub async fn verify(redis: &ConnectionManager, phone: &str, code: &str) -> AppResult<()> {

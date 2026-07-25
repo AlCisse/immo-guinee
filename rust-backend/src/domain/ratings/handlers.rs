@@ -27,7 +27,7 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use uuid::Uuid;
 
-use crate::db::entities::sea_orm_active_enums::StatutVerificationDoc;
+use crate::db::entities::sea_orm_active_enums::{StatutTransaction, StatutVerificationDoc};
 use crate::db::entities::{rating, transaction, user};
 use crate::error::{AppError, AppResult};
 use crate::extractors::{AuthUser, ValidatedJson};
@@ -111,7 +111,11 @@ async fn stats_for_user(
                 "communication": avg(sum_c1),
                 "ponctualite": avg(sum_c2),
                 "proprete": avg(sum_c3),
-                "respect_contrat": avg(sum_c3)
+                // The schema stores 3 criteria; the frontend folds respect_contrat
+                // into the global note (see useRatings.createRating), so its
+                // aggregate is the average global note — distinct from proprete
+                // (which previously mirrored sum_c3, making the two identical).
+                "respect_contrat": avg(sum_note)
             }
         }
     })))
@@ -127,6 +131,14 @@ async fn create(
         .one(&state.db)
         .await?
         .ok_or(AppError::NotFound)?;
+
+    // Only a completed transaction can be reviewed — not one that is pending,
+    // cancelled, or refunded.
+    if !matches!(txn.statut, StatutTransaction::Completee) {
+        return Err(AppError::Conflict(
+            "Seule une transaction achevée peut être évaluée".into(),
+        ));
+    }
 
     // The caller must be a party to the transaction; the reviewee is the other party.
     let evalue_id = if txn.proprietaire_id == auth.id {

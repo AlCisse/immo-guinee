@@ -4,12 +4,23 @@ use axum::body::Body;
 use axum::extract::FromRequest;
 use axum::http::Request;
 use serde::de::DeserializeOwned;
+use serde::Serialize;
 use validator::Validate;
 
 use crate::error::AppError;
 
 pub mod auth_user;
 pub use auth_user::{revoked_key, user_invalid_before_key, AuthUser};
+
+/// `{ "success": true, "data": T }` — the Laravel-style success envelope shared
+/// by every domain response DTO. Defined once here and re-exported from each
+/// `domain/*/dto` so the per-domain copies are not duplicated (was defined
+/// verbatim in 4 dto modules).
+#[derive(Debug, Serialize)]
+pub struct Envelope<T: Serialize> {
+    pub success: bool,
+    pub data: T,
+}
 
 /// Deserialize a JSON body and run `validator` rules before the handler sees it
 /// (replaces Laravel FormRequest `rules()` + `validated()`). Reuses `axum::Json`

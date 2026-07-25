@@ -106,6 +106,12 @@ async fn show(
 ) -> AppResult<Json<serde_json::Value>> {
     let model = listing::Entity::find_by_id(id).one(&state.db).await?;
     let model = model.ok_or(AppError::NotFound)?;
+    // Public detail is only for listings currently on the market. Archived, rented
+    // / sold, suspended (moderation) and expired listings are not exposed to the
+    // public — the owner still reaches theirs via `GET /listings/my`.
+    if !matches!(model.statut, StatutListing::Disponible) {
+        return Err(AppError::NotFound);
+    }
     let createur_id = model.createur_id;
 
     // Increment the view counter (FR: nombre_vues) atomically in the DB.

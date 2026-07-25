@@ -9,10 +9,12 @@ use std::sync::Arc;
 use axum::extract::{Path, Query, State};
 use axum::routing::{delete, get, post};
 use axum::{Json, Router};
+use sea_orm::sea_query::Expr;
 use sea_orm::{
     ActiveModelTrait, ActiveValue::Set, ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter,
     QueryOrder, QuerySelect,
 };
+use sea_orm::ActiveEnum;
 use serde::Deserialize;
 use serde_json::{Value, json};
 use uuid::Uuid;
@@ -24,6 +26,7 @@ use crate::auth::jwt::ACCESS_TTL_SECS;
 use crate::auth::rbac::Permission;
 use crate::db::entities::sea_orm_active_enums::{
     StatutCompte, StatutContrat, StatutLitige, StatutListing, StatutVerificationDoc, StatutVisite,
+    TypeBien, TypeCompte,
 };
 use crate::db::entities::{
     admin_audit_log, certification_document, contract, dispute, listing, rating, transaction, user,
@@ -149,38 +152,86 @@ async fn analytics(
     let period: i64 = params.get("period").and_then(|p| p.parse().ok()).unwrap_or(30);
     let db = &state.db;
 
-    let users = user::Entity::find().all(db).await?;
+    // users_by_role: aggregate instead of loading every user row. Role overrides
+    // are grouped by the (string) role column; non-overridden accounts fall back
+    // to their type-derived role (chercheur / agence) via two filtered counts.
+    let role_groups: Vec<(Option<String>, i64)> = user::Entity::find()
+        .select_only()
+        .column(user::Column::Role)
+        .column_as(Expr::col(user::Column::Id).count(), "count")
+        .group_by(user::Column::Role)
+        .into_tuple::<(Option<String>, i64)>()
+        .all(db)
+        .await?;
     let mut users_by_role: HashMap<String, i64> = HashMap::new();
-    for u in &users {
-        *users_by_role.entry(crate::domain::auth::dto::effective_role(u)).or_insert(0) += 1;
+    for (role, count) in role_groups {
+        if let Some(r) = role {
+            *users_by_role.entry(r).or_insert(0) += count;
+        }
     }
+    let agence_no_override = user::Entity::find()
+        .filter(user::Column::Role.is_null())
+        .filter(user::Column::TypeCompte.eq(TypeCompte::Agence))
+        .count(db)
+        .await? as i64;
+    let chercheur_no_override = user::Entity::find()
+        .filter(user::Column::Role.is_null())
+        .filter(user::Column::TypeCompte.is_in([TypeCompte::Particulier, TypeCompte::Diaspora]))
+        .count(db)
+        .await? as i64;
+    *users_by_role.entry("agence".into()).or_insert(0) += agence_no_override;
+    *users_by_role.entry("chercheur".into()).or_insert(0) += chercheur_no_override;
 
-    let listings = listing::Entity::find().all(db).await?;
-    let active_listings = listings.iter().filter(|l| l.statut == StatutListing::Disponible).count();
+    let total_users = user::Entity::find().count(db).await? as i64;
+
+    // listings: counts via the DB, not by loading every row.
+    let active_listings = listing::Entity::find()
+        .filter(listing::Column::Statut.eq(StatutListing::Disponible))
+        .count(db)
+        .await? as i64;
     let mut listings_by_type: HashMap<String, i64> = HashMap::new();
-    for l in &listings {
-        let key = serde_json::to_value(&l.type_bien).ok()
+    for variant in TypeBien::values() {
+        let c = listing::Entity::find()
+            .filter(listing::Column::TypeBien.eq(variant.clone()))
+            .count(db)
+            .await? as i64;
+        let key = serde_json::to_value(&variant)
+            .ok()
             .and_then(|v| v.as_str().map(str::to_owned))
             .unwrap_or_else(|| "AUTRE".into());
-        *listings_by_type.entry(key).or_insert(0) += 1;
+        listings_by_type.insert(key, c);
     }
 
-    let transactions = transaction::Entity::find().all(db).await?;
-    let total_volume_gnf: i64 = transactions.iter().map(|t| t.montant_total_gnf).sum();
+    // Transaction volume: SUM aggregate (was: load all rows + sum in RAM).
+    let total_volume_gnf: i64 = transaction::Entity::find()
+        .select_only()
+        .column_as(Expr::col(transaction::Column::MontantTotalGnf).sum(), "total")
+        .into_tuple::<(Option<i64>,)>()
+        .one(db)
+        .await?
+        .and_then(|(v,)| v)
+        .unwrap_or(0);
 
-    let ratings = rating::Entity::find().all(db).await?;
-    let average_rating = if ratings.is_empty() {
-        0.0
-    } else {
-        let sum: i64 = ratings.iter().map(|r| r.note_globale as i64).sum();
-        (sum as f64 / ratings.len() as f64 * 10.0).round() / 10.0
+    // Average rating: SUM + COUNT (AVG isn't exposed on Expr in this sea_query
+    // version); computed from two scalar aggregates instead of loading rows.
+    let (rating_sum, rating_count) = rating::Entity::find()
+        .select_only()
+        .column_as(Expr::col(rating::Column::NoteGlobale).sum(), "sum")
+        .column_as(Expr::col(rating::Column::Id).count(), "count")
+        .into_tuple::<(Option<i64>, i64)>()
+        .one(db)
+        .await?
+        .unwrap_or((None, 0));
+    let average_rating = match (rating_sum, rating_count) {
+        (Some(s), c) if c > 0 => (s as f64 / c as f64 * 10.0).round() / 10.0,
+        _ => 0.0,
     };
 
     Ok(Json(json!({
         "success": true,
         "data": {
             "period": period,
-            "users": { "total_users": users.len(), "users_by_role": users_by_role },
+            "users": { "total_users": total_users, "users_by_role": users_by_role },
             "listings": { "active_listings": active_listings, "listings_by_type": listings_by_type },
             "transactions": { "total_volume_gnf": total_volume_gnf },
             "quality": { "average_rating": average_rating },
@@ -331,6 +382,12 @@ async fn sync_roles(
     ValidatedJson(req): ValidatedJson<SyncRolesRequest>,
 ) -> AppResult<Json<Value>> {
     auth.require_permission(Permission::ManageRoles)?;
+    // A staff member must not reassign their own role (self-elevation guard):
+    // it would let e.g. an admin keep "admin" or a moderator grant themselves
+    // "admin". ManageRoles is for managing *other* users.
+    if id == auth.id {
+        return Err(AppError::Validation("Vous ne pouvez pas modifier votre propre rôle".into()));
+    }
     let u = user::Entity::find_by_id(id).one(&state.db).await?.ok_or(AppError::NotFound)?;
 
     let role = req.roles.iter().find(|r| ASSIGNABLE_ROLES.contains(&r.as_str())).cloned();

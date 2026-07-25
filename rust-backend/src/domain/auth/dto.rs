@@ -9,12 +9,7 @@ use validator::{Validate, ValidationError};
 use crate::auth::jwt::TokenPair;
 use crate::db::entities::sea_orm_active_enums::{Badge, StatutCompte, StatutVerification, TypeCompte};
 
-/// `{ "success": true, "data": T }` — matches the Laravel success envelope.
-#[derive(Debug, Serialize)]
-pub struct Envelope<T: Serialize> {
-    pub success: bool,
-    pub data: T,
-}
+pub use crate::extractors::Envelope;
 
 /// Register payload (FR-001). The SMS phone-verification step is a separate flow
 /// (services::otp); this endpoint creates the account with statut_verification =

@@ -11,12 +11,7 @@ use validator::Validate;
 use crate::db::entities::listing;
 use crate::db::entities::sea_orm_active_enums::{Quartier, StatutListing, TypeBien, TypeOperation};
 
-/// `{ "success": true, "data": T }` — matches the Laravel success envelope.
-#[derive(Debug, Serialize)]
-pub struct Envelope<T: Serialize> {
-    pub success: bool,
-    pub data: T,
-}
+pub use crate::extractors::Envelope;
 
 /// Public-facing listing shape (subset of the entity; no soft-delete/admin columns).
 #[derive(Debug, Serialize)]

@@ -20,9 +20,15 @@ use crate::state::AppState;
 
 /// Issue a fresh OTP for `phone` (Redis, 5 min TTL, 60 s resend throttle) and
 /// deliver it by WhatsApp. Propagates `429` if a code was requested < 60 s ago.
+/// If delivery fails after the code was issued, the resend throttle is rolled
+/// back so the caller can retry immediately instead of waiting 60 s with no code.
 pub async fn issue_and_send_otp(state: &AppState, phone: &str) -> AppResult<()> {
     let code = otp::request(&state.redis, phone).await?;
-    send_otp_code(state, phone, &code).await
+    if let Err(e) = send_otp_code(state, phone, &code).await {
+        let _ = otp::clear_request(&state.redis, phone).await;
+        return Err(e);
+    }
+    Ok(())
 }
 
 /// Deliver an already-generated OTP `code` to `phone` over WhatsApp. In dev

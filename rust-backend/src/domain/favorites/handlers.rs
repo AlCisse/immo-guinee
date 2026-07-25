@@ -9,9 +9,8 @@ use std::sync::Arc;
 use axum::extract::{Path, State};
 use axum::routing::{delete, get, post};
 use axum::{Json, Router};
-use sea_orm::{
-    ActiveModelTrait, ActiveValue::Set, ColumnTrait, EntityTrait, QueryFilter, QueryOrder,
-};
+use sea_orm::{ActiveValue::Set, ColumnTrait, EntityTrait, QueryFilter, QueryOrder};
+use sea_orm::sea_query::OnConflict;
 use serde::Deserialize;
 use serde_json::json;
 use uuid::Uuid;
@@ -140,15 +139,25 @@ async fn existing(
         .await?)
 }
 
+/// Insert a favourite row, idempotent under concurrency: the `(user_id,
+/// listing_id)` unique constraint + `ON CONFLICT DO NOTHING` mean two concurrent
+/// inserts collapse to a single row instead of raising a duplicate-key error
+/// (the check-then-insert TOCTOU in `toggle`/`set_favorite`).
 async fn insert(db: &sea_orm::DatabaseConnection, user_id: Uuid, listing_id: Uuid) -> AppResult<()> {
-    favorite::ActiveModel {
+    let model = favorite::ActiveModel {
         id: Set(Uuid::new_v4()),
         user_id: Set(user_id),
         listing_id: Set(listing_id),
         ..Default::default()
-    }
-    .insert(db)
-    .await?;
+    };
+    favorite::Entity::insert(model)
+        .on_conflict(
+            OnConflict::columns([favorite::Column::UserId, favorite::Column::ListingId])
+                .do_nothing()
+                .to_owned(),
+        )
+        .exec(db)
+        .await?;
     Ok(())
 }
 

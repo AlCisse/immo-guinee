@@ -200,6 +200,9 @@ async fn confirm(
     if v.proprietaire_id != auth.id {
         return Err(AppError::Forbidden("Seul le propriétaire peut confirmer".into()));
     }
+    if !matches!(v.statut, StatutVisite::EnAttente) {
+        return Err(AppError::Conflict("La visite n'est plus en attente de confirmation".into()));
+    }
     set_statut(&state.db, v, StatutVisite::Confirmee, true).await
 }
 
@@ -210,6 +213,9 @@ async fn complete(
     Path(id): Path<Uuid>,
 ) -> AppResult<Json<Envelope<VisitResponse>>> {
     let v = participant_visit(&state.db, id, auth.id).await?;
+    if !matches!(v.statut, StatutVisite::EnAttente | StatutVisite::Confirmee) {
+        return Err(AppError::Conflict("La visite ne peut pas être marquée achevée depuis son état actuel".into()));
+    }
     set_statut(&state.db, v, StatutVisite::Completee, false).await
 }
 
@@ -221,6 +227,9 @@ async fn cancel(
     body: Option<Json<CancelRequest>>,
 ) -> AppResult<Json<Envelope<VisitResponse>>> {
     let v = participant_visit(&state.db, id, auth.id).await?;
+    if matches!(v.statut, StatutVisite::Completee | StatutVisite::Annulee) {
+        return Err(AppError::Conflict("Une visite achevée ou annulée ne peut plus être annulée".into()));
+    }
     let motif = body.and_then(|b| b.0.motif);
     let mut am: visit::ActiveModel = v.into();
     am.statut = Set(StatutVisite::Annulee);

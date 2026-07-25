@@ -261,8 +261,10 @@ async fn cancel(
     ValidatedJson(_req): ValidatedJson<CancelRequest>,
 ) -> AppResult<Json<Value>> {
     let c = fetch_party_contract(&state, &auth, id).await?;
-    if matches!(c.statut, StatutContrat::SigneArchive) {
-        return Err(AppError::Conflict("un contrat signé et archivé ne peut être annulé".into()));
+    if matches!(c.statut, StatutContrat::SigneArchive | StatutContrat::PartiellementSigne) {
+        return Err(AppError::Conflict(
+            "un contrat déjà signé (partiellement ou totalement) ne peut être annulé".into(),
+        ));
     }
     let mut am: contract::ActiveModel = c.into();
     am.statut = Set(StatutContrat::Annule);
@@ -303,14 +305,36 @@ async fn sign(
     Path(id): Path<Uuid>,
     ValidatedJson(req): ValidatedJson<SignRequest>,
 ) -> AppResult<Json<Value>> {
-    let c = fetch_party_contract(&state, &auth, id).await?;
+    // Serialize signers per contract: the signature array is read-then-appended
+    // then written back, so two concurrent signers would otherwise race and one
+    // signature would be lost (the contract stuck in PartiellementSigne). The
+    // Redis mutex makes the read-modify-write exclusive. The TTL is a safety net
+    // in case the holder crashes mid-flight.
+    let lock_key = format!("lock:contract:sign:{id}");
+    if !crate::services::redis_atomic::acquire_lock(&state.redis, &lock_key, 30).await? {
+        return Err(AppError::Conflict(
+            "Une signature est déjà en cours sur ce contrat, réessayez dans un instant".into(),
+        ));
+    }
+    let res = sign_locked(&state, &auth, id, req).await;
+    let _ = crate::services::redis_atomic::release_lock(&state.redis, &lock_key).await;
+    res
+}
+
+async fn sign_locked(
+    state: &Arc<AppState>,
+    auth: &AuthUser,
+    id: Uuid,
+    req: SignRequest,
+) -> AppResult<Json<Value>> {
+    let c = fetch_party_contract(state, auth, id).await?;
     ensure_signable(&c, auth.id)?;
 
     let code = req
         .otp
         .or(req.otp_code)
         .ok_or_else(|| AppError::Validation("code OTP requis".into()))?;
-    let phone = signer_phone(&state, auth.id).await?;
+    let phone = signer_phone(state, auth.id).await?;
     // Verify against the contract-scoped key (must match request_sign_otp).
     let scoped = format!("contract:{}:{}", id, phone);
     crate::services::otp::verify(&state.redis, &scoped, &code).await?;
@@ -341,7 +365,7 @@ async fn sign(
     let (url, hash) = match (&proprietaire, &locataire) {
         (Some(p), Some(l)) => {
             let ctx = build_ctx(id, &c.donnees_personnalisees, &signatures, listing.as_ref(), p, l);
-            render_and_store(&state, id, &ctx).await?
+            render_and_store(state, id, &ctx).await?
         }
         _ => (c.fichier_pdf_url.clone().unwrap_or_default(), c.hash_sha256.clone().unwrap_or_default()),
     };
