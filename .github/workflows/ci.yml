@@ -14,7 +14,9 @@ env:
   NODE_VERSION: '20'
 
 jobs:
-  # Backend Tests (Rust / Axum)
+  # Backend Tests (Rust / Axum). No external toolchain action: ubuntu-latest ships
+  # rustup + a recent stable, and the repo's Actions policy only allows actions/*,
+  # docker/* and shivammathur/setup-php@* (all SHA-pinned).
   backend-tests:
     name: Backend Tests (Rust)
     runs-on: ubuntu-latest
@@ -25,16 +27,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      # TODO(sécurité): épingler ces actions Rust à un commit SHA (politique du repo).
-      - name: Setup Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt, clippy
+      - name: Ensure Rust components
+        run: |
+          rustup show active-toolchain || rustup default stable
+          rustup component add rustfmt clippy
 
       - name: Cache cargo
-        uses: Swatinem/rust-cache@v2
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
         with:
-          workspaces: rust-backend
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust-backend/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('rust-backend/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
 
       - name: Format check
         run: cargo fmt --all --check
@@ -92,9 +98,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
-      - name: Setup Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
 
       - name: Audit Rust dependencies
         working-directory: rust-backend
