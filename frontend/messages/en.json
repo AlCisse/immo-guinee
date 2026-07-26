@@ -312,6 +312,8 @@
         "passwordMismatch": "Passwords do not match",
         "weakPassword": "Password must contain at least 8 characters",
         "acceptTerms": "Please accept the terms of service and privacy policy",
+        "invalidInput": "Invalid details. Please check your input.",
+        "tooManyAttempts": "Too many attempts. Please try again later.",
         "serverError": "An error occurred during registration",
         "googleError": "Error signing up with Google",
         "facebookError": "Error signing up with Facebook",

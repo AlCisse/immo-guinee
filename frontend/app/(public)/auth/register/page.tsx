@@ -84,11 +84,15 @@ export default function RegisterPage() {
         router.push('/auth/login');
         return;
       } else {
-        setError(
-          err.response?.data?.message ||
-          err.message ||
-          t('auth.register.errors.serverError')
-        );
+        // Map the HTTP status to a localized message. Never surface the raw axios
+        // string ("Request failed with status code XXX") to the user. No status
+        // (network/timeout) or 5xx falls through to serverError.
+        const status = err?.response?.status;
+        let errorKey = 'auth.register.errors.serverError';
+        if (status === 400 || status === 422) errorKey = 'auth.register.errors.invalidInput';
+        else if (status === 409) errorKey = 'auth.register.errors.phoneExists';
+        else if (status === 429) errorKey = 'auth.register.errors.tooManyAttempts';
+        setError(t(errorKey));
       }
     } finally {
       setIsLoading(false);

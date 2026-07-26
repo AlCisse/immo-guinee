@@ -242,7 +242,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(result.message || 'Registration failed');
       }
     } catch (error: any) {
-      console.error('Registration error:', error);
+      // The register page (the UI boundary) logs and maps this to a user message;
+      // don't double-log here.
 
       // Handle 409 Conflict - user already exists and is verified
       if (error.response?.status === 409) {

@@ -312,6 +312,8 @@
         "passwordMismatch": "Les mots de passe ne correspondent pas",
         "weakPassword": "Le mot de passe doit contenir au moins 8 caracteres",
         "acceptTerms": "Veuillez accepter les conditions generales d'utilisation et la politique de confidentialite",
+        "invalidInput": "Informations invalides. Verifiez votre saisie.",
+        "tooManyAttempts": "Trop de tentatives. Veuillez reessayer plus tard.",
         "serverError": "Une erreur est survenue lors de l'inscription",
         "googleError": "Erreur lors de l'inscription avec Google",
         "facebookError": "Erreur lors de l'inscription avec Facebook",
