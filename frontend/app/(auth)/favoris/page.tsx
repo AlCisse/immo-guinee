@@ -115,7 +115,7 @@ function FavoriteCard({
             {/* Badges */}
             <div className="absolute top-3 left-3 flex gap-2">
               {property.est_premium && (
-                <span className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-semibold rounded-full">
+                <span className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-warning-500 to-primary-500 text-white text-xs font-semibold rounded-full">
                   <Sparkles className="w-3 h-3" />
                   {t('favorites.premium')}
                 </span>
@@ -132,7 +132,7 @@ function FavoriteCard({
                     {property.type_bien}
                   </span>
                   {property.est_verifie && (
-                    <span className="flex items-center gap-1 text-xs text-emerald-600">
+                    <span className="flex items-center gap-1 text-xs text-accent-600">
                       <Check className="w-3 h-3" />
                       {t('favorites.verified')}
                     </span>
@@ -158,7 +158,7 @@ function FavoriteCard({
                   <span className="text-sm text-neutral-500">{t('favorites.perMonth')}</span>
                 )}
                 {(property.type_transaction === 'LOCATION_COURTE' || property.type_transaction === 'location_courte') && (
-                  <span className="text-sm text-purple-500">{t('favorites.perDay')}</span>
+                  <span className="text-sm text-teal-500">{t('favorites.perDay')}</span>
                 )}
               </div>
             </div>
@@ -178,7 +178,7 @@ function FavoriteCard({
                   onRemove();
                 }}
                 disabled={isRemoving}
-                className="p-2 hover:bg-red-50 dark:hover:bg-red-500/10 text-red-500 rounded-lg transition-colors disabled:opacity-50"
+                className="p-2 hover:bg-error-50 dark:hover:bg-error-500/10 text-error-500 rounded-lg transition-colors disabled:opacity-50"
               >
                 {isRemoving ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -218,7 +218,7 @@ function FavoriteCard({
           {/* Badges */}
           <div className="absolute top-3 left-3 flex gap-2">
             {property.est_premium && (
-              <span className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-semibold rounded-full">
+              <span className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-warning-500 to-primary-500 text-white text-xs font-semibold rounded-full">
                 <Sparkles className="w-3 h-3" />
                 {t('favorites.premium')}
               </span>
@@ -236,9 +236,9 @@ function FavoriteCard({
             className="absolute top-3 right-3 p-2.5 bg-white/90 dark:bg-dark-card/90 rounded-full shadow-lg z-10 disabled:opacity-50"
           >
             {isRemoving ? (
-              <Loader2 className="w-5 h-5 animate-spin text-red-500" />
+              <Loader2 className="w-5 h-5 animate-spin text-error-500" />
             ) : (
-              <Heart className="w-5 h-5 fill-red-500 text-red-500" />
+              <Heart className="w-5 h-5 fill-error-500 text-error-500" />
             )}
           </motion.button>
 
@@ -250,7 +250,7 @@ function FavoriteCard({
                 <span className="text-sm font-normal text-neutral-500">{t('favorites.perMonth')}</span>
               )}
               {(property.type_transaction === 'LOCATION_COURTE' || property.type_transaction === 'location_courte') && (
-                <span className="text-sm font-normal text-purple-500">{t('favorites.perDay')}</span>
+                <span className="text-sm font-normal text-teal-500">{t('favorites.perDay')}</span>
               )}
             </span>
           </div>
@@ -263,7 +263,7 @@ function FavoriteCard({
               {property.type_bien}
             </span>
             {property.est_verifie && (
-              <span className="flex items-center gap-1 text-xs text-emerald-600">
+              <span className="flex items-center gap-1 text-xs text-accent-600">
                 <Check className="w-3 h-3" />
                 {t('favorites.verified')}
               </span>
@@ -340,7 +340,7 @@ export default function FavoritesPage() {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="text-center">
-          <p className="text-red-500 mb-4">{t('favorites.error.loading')}</p>
+          <p className="text-error-500 mb-4">{t('favorites.error.loading')}</p>
           <button
             onClick={() => queryClient.invalidateQueries({ queryKey: ['favorites'] })}
             className="px-4 py-2 bg-primary-500 text-white rounded-lg"

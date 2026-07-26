@@ -98,7 +98,7 @@ const formatPrice = (price: string | number) => {
 // Message Status
 function MessageStatus({ isRead }: { isRead: boolean }) {
   return isRead ? (
-    <CheckCheck className="w-4 h-4 text-blue-300" />
+    <CheckCheck className="w-4 h-4 text-secondary-300" />
   ) : (
     <Check className="w-4 h-4 text-white/70" />
   );
@@ -741,13 +741,13 @@ export default function MessagesPage() {
                       <X className="w-5 h-5" />
                     </motion.button>
 
-                    <div className="flex-1 flex items-center gap-3 px-4 py-3 bg-red-50 dark:bg-red-500/10 rounded-full">
+                    <div className="flex-1 flex items-center gap-3 px-4 py-3 bg-error-50 dark:bg-error-500/10 rounded-full">
                       <motion.div
                         animate={{ scale: [1, 1.2, 1] }}
                         transition={{ repeat: Infinity, duration: 1 }}
-                        className="w-3 h-3 bg-red-500 rounded-full"
+                        className="w-3 h-3 bg-error-500 rounded-full"
                       />
-                      <span className="text-red-600 dark:text-red-400 font-medium">
+                      <span className="text-error-600 dark:text-error-400 font-medium">
                         {formatRecordingTime(recordingTime)}
                       </span>
                       <div className="flex-1 flex items-center gap-1">
@@ -756,7 +756,7 @@ export default function MessagesPage() {
                             key={i}
                             animate={{ height: [4, Math.random() * 16 + 4, 4] }}
                             transition={{ repeat: Infinity, duration: 0.5, delay: i * 0.05 }}
-                            className="w-1 bg-red-400 rounded-full"
+                            className="w-1 bg-error-400 rounded-full"
                           />
                         ))}
                       </div>
@@ -765,7 +765,7 @@ export default function MessagesPage() {
                     <motion.button
                       whileTap={{ scale: 0.9 }}
                       onClick={stopRecording}
-                      className="p-3 bg-red-500 text-white rounded-full hover:bg-red-600"
+                      className="p-3 bg-error-500 text-white rounded-full hover:bg-error-600"
                     >
                       <Square className="w-5 h-5 fill-current" />
                     </motion.button>

@@ -47,12 +47,12 @@ export default function RatingPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg py-8">
         <div className="max-w-lg mx-auto px-4">
           <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-200 rounded w-3/4" />
-            <div className="h-32 bg-gray-200 rounded" />
-            <div className="h-64 bg-gray-200 rounded" />
+            <div className="h-8 bg-neutral-200 dark:bg-dark-hover rounded w-3/4" />
+            <div className="h-32 bg-neutral-200 dark:bg-dark-hover rounded" />
+            <div className="h-64 bg-neutral-200 dark:bg-dark-hover rounded" />
           </div>
         </div>
       </div>
@@ -61,11 +61,11 @@ export default function RatingPage() {
 
   if (error || !contract) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg py-8">
         <div className="max-w-lg mx-auto px-4">
-          <div className="bg-white rounded-xl p-8 text-center">
+          <div className="bg-white dark:bg-dark-card rounded-xl p-8 text-center">
             <svg
-              className="w-16 h-16 text-red-400 mx-auto mb-4"
+              className="w-16 h-16 text-error-400 mx-auto mb-4"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -77,8 +77,8 @@ export default function RatingPage() {
                 d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Contrat introuvable</h2>
-            <p className="text-gray-600 mb-6">
+            <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">Contrat introuvable</h2>
+            <p className="text-neutral-600 dark:text-neutral-400 mb-6">
               Ce contrat n'existe pas ou vous n'avez pas les droits pour l'évaluer.
             </p>
             <button
@@ -95,11 +95,11 @@ export default function RatingPage() {
 
   if (contract.has_rating) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg py-8">
         <div className="max-w-lg mx-auto px-4">
-          <div className="bg-white rounded-xl p-8 text-center">
+          <div className="bg-white dark:bg-dark-card rounded-xl p-8 text-center">
             <svg
-              className="w-16 h-16 text-green-500 mx-auto mb-4"
+              className="w-16 h-16 text-success-500 mx-auto mb-4"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -111,8 +111,8 @@ export default function RatingPage() {
                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Déjà évalué</h2>
-            <p className="text-gray-600 mb-6">Vous avez déjà laissé un avis pour ce contrat.</p>
+            <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">Déjà évalué</h2>
+            <p className="text-neutral-600 dark:text-neutral-400 mb-6">Vous avez déjà laissé un avis pour ce contrat.</p>
             <button
               onClick={() => router.push('/dashboard/mes-contrats')}
               className="px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600"
@@ -126,13 +126,13 @@ export default function RatingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg py-8">
       <div className="max-w-lg mx-auto px-4">
         {/* Header */}
         <div className="mb-6">
           <button
             onClick={() => router.back()}
-            className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
+            className="flex items-center text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:text-white mb-4"
           >
             <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -144,12 +144,12 @@ export default function RatingPage() {
             </svg>
             Retour
           </button>
-          <h1 className="text-2xl font-bold text-gray-900">Laisser un avis</h1>
-          <p className="text-gray-600 mt-1">Partagez votre expérience pour aider la communauté</p>
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">Laisser un avis</h1>
+          <p className="text-neutral-600 dark:text-neutral-400 mt-1">Partagez votre expérience pour aider la communauté</p>
         </div>
 
         {/* Contract Info */}
-        <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+        <div className="bg-white dark:bg-dark-card rounded-xl border border-neutral-200 dark:border-dark-border p-4 mb-6">
           <div className="flex items-start gap-4">
             {contract.listing.photo_principale_url && (
               <img
@@ -159,10 +159,10 @@ export default function RatingPage() {
               />
             )}
             <div className="flex-1 min-w-0">
-              <h3 className="font-medium text-gray-900 truncate">{contract.listing.titre}</h3>
-              <p className="text-sm text-gray-500">Contrat #{contract.reference}</p>
+              <h3 className="font-medium text-neutral-900 dark:text-white truncate">{contract.listing.titre}</h3>
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">Contrat #{contract.reference}</p>
               <div className="flex items-center gap-2 mt-2">
-                <span className="text-xs text-gray-500">Propriétaire:</span>
+                <span className="text-xs text-neutral-500 dark:text-neutral-400">Propriétaire:</span>
                 <span className="text-sm font-medium">{contract.bailleur.nom_complet}</span>
               </div>
             </div>
@@ -170,7 +170,7 @@ export default function RatingPage() {
         </div>
 
         {/* Rating Form */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-white dark:bg-dark-card rounded-xl border border-neutral-200 dark:border-dark-border p-6">
           <RatingForm
             contractId={contract.id}
             onSuccess={() => {

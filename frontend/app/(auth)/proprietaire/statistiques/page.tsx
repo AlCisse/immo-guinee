@@ -42,7 +42,7 @@ function StatCard({
     success: 'bg-success-50 dark:bg-success-500/10 text-success-500',
     warning: 'bg-warning-50 dark:bg-warning-500/10 text-warning-500',
     error: 'bg-error-50 dark:bg-error-500/10 text-error-500',
-    purple: 'bg-purple-50 dark:bg-purple-500/10 text-purple-500',
+    purple: 'bg-teal-50 dark:bg-teal-500/10 text-teal-500',
   };
 
   return (

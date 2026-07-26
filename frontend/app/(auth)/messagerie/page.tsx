@@ -263,7 +263,7 @@ function MessageStatus({ status }: { status: Message['status'] }) {
     case 'delivered':
       return <CheckCheck className="w-3.5 h-3.5 text-white/70" />;
     case 'read':
-      return <CheckCheck className="w-3.5 h-3.5 text-blue-300" />;
+      return <CheckCheck className="w-3.5 h-3.5 text-secondary-300" />;
   }
 }
 

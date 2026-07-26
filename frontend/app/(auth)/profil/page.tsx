@@ -130,19 +130,19 @@ function MenuItem({
       whileTap={{ scale: 0.98 }}
       className={`flex items-center gap-4 p-4 rounded-xl transition-colors ${
         danger
-          ? 'hover:bg-red-50 dark:hover:bg-red-500/10'
+          ? 'hover:bg-error-50 dark:hover:bg-error-500/10'
           : 'hover:bg-neutral-50 dark:hover:bg-dark-bg'
       }`}
     >
       <div className={`p-2.5 rounded-xl ${
         danger
-          ? 'bg-red-100 dark:bg-red-500/10'
+          ? 'bg-error-100 dark:bg-error-500/10'
           : 'bg-neutral-100 dark:bg-dark-bg'
       }`}>
-        <Icon className={`w-5 h-5 ${danger ? 'text-red-500' : 'text-neutral-600 dark:text-neutral-300'}`} />
+        <Icon className={`w-5 h-5 ${danger ? 'text-error-500' : 'text-neutral-600 dark:text-neutral-300'}`} />
       </div>
       <div className="flex-1">
-        <p className={`font-medium ${danger ? 'text-red-600' : 'text-neutral-900 dark:text-white'}`}>
+        <p className={`font-medium ${danger ? 'text-error-600' : 'text-neutral-900 dark:text-white'}`}>
           {label}
         </p>
         {description && (
@@ -154,7 +154,7 @@ function MenuItem({
           {badge}
         </span>
       )}
-      <ChevronRight className={`w-5 h-5 ${danger ? 'text-red-400' : 'text-neutral-400'}`} />
+      <ChevronRight className={`w-5 h-5 ${danger ? 'text-error-400' : 'text-neutral-400'}`} />
     </motion.div>
   );
 
@@ -219,7 +219,7 @@ export default function ProfilePage() {
   return (
     <div>
       {/* Profile Header */}
-      <div className="bg-gradient-to-br from-primary-500 to-orange-500 pt-8 pb-20">
+      <div className="bg-gradient-to-br from-primary-500 to-primary-500 pt-8 pb-20">
         <div className="max-w-3xl mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-xl font-bold text-white">{t('profile.title')}</h1>
@@ -256,7 +256,7 @@ export default function ProfilePage() {
               <div className="flex items-center gap-2">
                 <h2 className="text-xl font-bold text-white">{user?.name || t('profile.defaultUser')}</h2>
                 {user?.isVerified && (
-                  <CheckCircle className="w-5 h-5 text-emerald-300" />
+                  <CheckCircle className="w-5 h-5 text-accent-300" />
                 )}
               </div>
               <p className="text-white/80 text-sm">{user?.email || user?.phone || ''}</p>
@@ -280,28 +280,28 @@ export default function ProfilePage() {
             icon={Heart}
             label={t('profile.stats.favorites')}
             value={counts?.favorites_count || 0}
-            color="bg-red-500"
+            color="bg-error-500"
             isLoading={countsLoading}
           />
           <StatCard
             icon={Eye}
             label={t('profile.stats.views')}
             value={totalViews}
-            color="bg-blue-500"
+            color="bg-secondary-500"
             isLoading={listingsLoading}
           />
           <StatCard
             icon={MessageSquare}
             label={t('profile.stats.messages')}
             value={counts?.unread_messages || 0}
-            color="bg-emerald-500"
+            color="bg-accent-500"
             isLoading={countsLoading}
           />
           <StatCard
             icon={Calendar}
             label={t('profile.stats.visits')}
             value={visitsArray.length}
-            color="bg-purple-500"
+            color="bg-teal-500"
             isLoading={visitsLoading}
           />
         </div>
@@ -386,13 +386,13 @@ export default function ProfilePage() {
                 <div key={visit.id} className="p-4 flex items-center gap-4">
                   <div className={`p-2 rounded-lg ${
                     visit.statut === 'TERMINEE'
-                      ? 'bg-emerald-100 dark:bg-emerald-500/10'
+                      ? 'bg-accent-100 dark:bg-accent-500/10'
                       : visit.statut === 'ANNULEE'
-                      ? 'bg-red-100 dark:bg-red-500/10'
+                      ? 'bg-error-100 dark:bg-error-500/10'
                       : 'bg-primary-100 dark:bg-primary-500/10'
                   }`}>
                     {visit.statut === 'TERMINEE' ? (
-                      <CheckCircle className="w-5 h-5 text-emerald-500" />
+                      <CheckCircle className="w-5 h-5 text-accent-500" />
                     ) : (
                       <Clock className="w-5 h-5 text-primary-500" />
                     )}
@@ -407,9 +407,9 @@ export default function ProfilePage() {
                   </div>
                   <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                     visit.statut === 'TERMINEE'
-                      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400'
+                      ? 'bg-accent-100 text-accent-700 dark:bg-accent-500/10 dark:text-accent-400'
                       : visit.statut === 'ANNULEE'
-                      ? 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400'
+                      ? 'bg-error-100 text-error-700 dark:bg-error-500/10 dark:text-error-400'
                       : 'bg-primary-100 text-primary-700 dark:bg-primary-500/10 dark:text-primary-400'
                   }`}>
                     {visit.statut === 'TERMINEE' ? t('profile.visitHistory.status.completed') :
@@ -443,8 +443,8 @@ export default function ProfilePage() {
               contractsArray.slice(0, 3).map((contract: any) => (
                 <Link key={contract.id} href={`/contrats/${contract.id}`}>
                   <div className="p-4 flex items-center gap-4 hover:bg-neutral-50 dark:hover:bg-dark-bg">
-                    <div className="p-2 bg-red-100 dark:bg-red-500/10 rounded-lg">
-                      <FileText className="w-5 h-5 text-red-500" />
+                    <div className="p-2 bg-error-100 dark:bg-error-500/10 rounded-lg">
+                      <FileText className="w-5 h-5 text-error-500" />
                     </div>
                     <div className="flex-1">
                       <p className="font-medium text-neutral-900 dark:text-white text-sm">
@@ -456,9 +456,9 @@ export default function ProfilePage() {
                     </div>
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                       contract.statut === 'SIGNE' || contract.statut === 'ACTIF'
-                        ? 'bg-emerald-100 text-emerald-700'
+                        ? 'bg-accent-100 text-accent-700'
                         : contract.statut?.includes('ATTENTE')
-                        ? 'bg-yellow-100 text-yellow-700'
+                        ? 'bg-warning-100 text-warning-700'
                         : 'bg-neutral-100 text-neutral-700'
                     }`}>
                       {contract.statut === 'SIGNE' ? t('profile.contracts.status.signed') :

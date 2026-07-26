@@ -129,53 +129,53 @@ function StatusBadge({ status, t }: { status: string; t: (key: string) => string
   const config: Record<string, { labelKey: string; className: string }> = {
     BROUILLON: {
       labelKey: 'contracts.status.draft',
-      className: 'bg-gray-100 text-gray-700',
+      className: 'bg-neutral-100 dark:bg-dark-hover text-neutral-700 dark:text-neutral-300',
     },
     EN_ATTENTE_SIGNATURE: {
       labelKey: 'contracts.status.pendingSignature',
-      className: 'bg-yellow-100 text-yellow-700',
+      className: 'bg-warning-100 text-warning-700',
     },
     EN_ATTENTE_SIGNATURE_LOCATAIRE: {
       labelKey: 'contracts.status.pendingTenantSignature',
-      className: 'bg-yellow-100 text-yellow-700',
+      className: 'bg-warning-100 text-warning-700',
     },
     PARTIELLEMENT_SIGNE: {
       labelKey: 'contracts.status.partiallySigned',
-      className: 'bg-orange-100 text-orange-700',
+      className: 'bg-primary-100 text-primary-700',
     },
     SIGNE: {
       labelKey: 'contracts.status.signed',
-      className: 'bg-blue-100 text-blue-700',
+      className: 'bg-secondary-100 text-secondary-700',
     },
     EN_RETRACTATION: {
       labelKey: 'contracts.status.inRetraction',
-      className: 'bg-purple-100 text-purple-700',
+      className: 'bg-teal-100 text-teal-700',
     },
     ACTIF: {
       labelKey: 'contracts.status.active',
-      className: 'bg-green-100 text-green-700',
+      className: 'bg-success-100 text-success-700',
     },
     EN_PREAVIS: {
       labelKey: 'contracts.status.inNotice',
-      className: 'bg-orange-100 text-orange-700',
+      className: 'bg-primary-100 text-primary-700',
     },
     EXPIRE: {
       labelKey: 'contracts.status.expired',
-      className: 'bg-gray-100 text-gray-600',
+      className: 'bg-neutral-100 dark:bg-dark-hover text-neutral-600 dark:text-neutral-400',
     },
     ANNULE: {
       labelKey: 'contracts.status.cancelled',
-      className: 'bg-red-100 text-red-700',
+      className: 'bg-error-100 text-error-700',
     },
     RESILIE: {
       labelKey: 'contracts.status.terminated',
-      className: 'bg-red-100 text-red-700',
+      className: 'bg-error-100 text-error-700',
     },
   };
 
   const { labelKey, className } = config[status] || {
     labelKey: status,
-    className: 'bg-gray-100 text-gray-700',
+    className: 'bg-neutral-100 dark:bg-dark-hover text-neutral-700 dark:text-neutral-300',
   };
 
   return (
@@ -268,21 +268,21 @@ function ContractCard({
     : null;
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow">
+    <div className="rounded-lg border border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card shadow-sm hover:shadow-md transition-shadow">
       <div className="p-6">
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-lg font-semibold text-gray-900">{contract.reference || contract.numero_contrat || contract.id.slice(0, 8)}</h3>
+              <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">{contract.reference || contract.numero_contrat || contract.id.slice(0, 8)}</h3>
               <StatusBadge status={contract.statut} t={t} />
             </div>
-            <p className="text-sm text-gray-500">{getContractTypeLabel(contract.type_contrat || 'location', t)}</p>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">{getContractTypeLabel(contract.type_contrat || 'location', t)}</p>
           </div>
           {needsAction && (
             <span className="flex h-3 w-3">
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-error-500">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-error-400 opacity-75"></span>
               </span>
             </span>
           )}
@@ -298,8 +298,8 @@ function ContractCard({
             />
           )}
           <div className="flex-1 min-w-0">
-            <p className="font-medium text-gray-900 truncate">{contract.listing?.titre || t('contracts.card.property')}</p>
-            <p className="text-sm text-gray-500">{contract.listing?.quartier}</p>
+            <p className="font-medium text-neutral-900 dark:text-white truncate">{contract.listing?.titre || t('contracts.card.property')}</p>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">{contract.listing?.quartier}</p>
             <p className="text-sm font-semibold text-primary-600">
               {contract.loyer_mensuel?.toLocaleString('fr-GN')} GNF{t('contracts.card.perMonth')}
             </p>
@@ -309,43 +309,43 @@ function ContractCard({
         {/* Parties info */}
         <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
           <div>
-            <p className="text-gray-500">{t('contracts.card.yourRole')}</p>
-            <p className="font-medium text-gray-900">{userRole}</p>
+            <p className="text-neutral-500 dark:text-neutral-400">{t('contracts.card.yourRole')}</p>
+            <p className="font-medium text-neutral-900 dark:text-white">{userRole}</p>
           </div>
           <div>
-            <p className="text-gray-500">{t('contracts.card.otherParty')}</p>
-            <p className="font-medium text-gray-900">{otherPartyName}</p>
+            <p className="text-neutral-500 dark:text-neutral-400">{t('contracts.card.otherParty')}</p>
+            <p className="font-medium text-neutral-900 dark:text-white">{otherPartyName}</p>
           </div>
         </div>
 
         {/* Signature status */}
-        <div className="border-t border-gray-100 pt-4 mb-4">
+        <div className="border-t border-neutral-100 dark:border-dark-border pt-4 mb-4">
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
               {proprietaireSigned ? (
-                <svg className="h-4 w-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="h-4 w-4 text-success-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
               ) : (
-                <svg className="h-4 w-4 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="h-4 w-4 text-neutral-300" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                 </svg>
               )}
-              <span className={proprietaireSigned ? 'text-green-700' : 'text-gray-500'}>
+              <span className={proprietaireSigned ? 'text-success-700' : 'text-neutral-500 dark:text-neutral-400'}>
                 {t('contracts.card.owner')}
               </span>
             </div>
             <div className="flex items-center gap-2">
               {locataireSigned ? (
-                <svg className="h-4 w-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="h-4 w-4 text-success-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
               ) : (
-                <svg className="h-4 w-4 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="h-4 w-4 text-neutral-300" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                 </svg>
               )}
-              <span className={locataireSigned ? 'text-green-700' : 'text-gray-500'}>
+              <span className={locataireSigned ? 'text-success-700' : 'text-neutral-500 dark:text-neutral-400'}>
                 {t('contracts.card.tenant')}
               </span>
             </div>
@@ -354,12 +354,12 @@ function ContractCard({
 
         {/* Retraction warning */}
         {isBothSigned && contract.delai_retractation_expire && new Date(contract.delai_retractation_expire) > new Date() && (
-          <div className="mb-4 rounded-md bg-yellow-50 p-3">
+          <div className="mb-4 rounded-md bg-warning-50 p-3">
             <div className="flex items-center">
-              <svg className="h-4 w-4 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-4 w-4 text-warning-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span className="text-xs text-yellow-700">
+              <span className="text-xs text-warning-700">
                 {t('contracts.signature.retractionPossible')} {new Date(contract.delai_retractation_expire).toLocaleDateString('fr-FR')}
               </span>
             </div>
@@ -368,26 +368,26 @@ function ContractCard({
 
         {/* Termination notice */}
         {isInTerminationPeriod && daysUntilTermination !== null && daysUntilTermination > 0 && (
-          <div className="mb-4 rounded-md bg-orange-50 border border-orange-200 p-3">
+          <div className="mb-4 rounded-md bg-primary-50 border border-primary-200 p-3">
             <div className="flex items-start">
-              <svg className="h-5 w-5 text-orange-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-5 w-5 text-primary-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
               <div className="flex-1">
-                <p className="text-sm font-medium text-orange-800">
+                <p className="text-sm font-medium text-primary-800">
                   {t('contracts.termination.inProgress')}
                 </p>
-                <p className="text-xs text-orange-700 mt-1">
+                <p className="text-xs text-primary-700 mt-1">
                   {t('contracts.termination.effectiveDate')}: {new Date(contract.resiliation_effective_date!).toLocaleDateString('fr-FR')}
                   {' '}({daysUntilTermination} {t('contracts.termination.daysRemaining')})
                 </p>
                 {contract.resiliation_motif && (
-                  <p className="text-xs text-orange-600 mt-1">
+                  <p className="text-xs text-primary-600 mt-1">
                     {t('contracts.termination.reason')}: {contract.resiliation_motif}
                   </p>
                 )}
                 {!contract.resiliation_confirmed_at && (
-                  <p className="text-xs text-orange-600 mt-1 italic">
+                  <p className="text-xs text-primary-600 mt-1 italic">
                     {terminationRequestedByMe
                       ? t('contracts.termination.awaitingOtherParty')
                       : t('contracts.termination.awaitingYourConfirmation')}
@@ -441,7 +441,7 @@ function ContractCard({
               variant="outline"
               onClick={() => onCancel(contract.id)}
               disabled={isCancelling}
-              className="text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400"
+              className="text-error-600 border-error-300 hover:bg-error-50 hover:border-error-400"
               aria-label={t('contracts.card.cancel')}
             >
               {isCancelling ? (
@@ -461,7 +461,7 @@ function ContractCard({
               variant="outline"
               onClick={() => onTerminate(contract.id)}
               disabled={isTerminating}
-              className="text-orange-600 border-orange-300 hover:bg-orange-50 hover:border-orange-400"
+              className="text-primary-600 border-primary-300 hover:bg-primary-50 hover:border-primary-400"
               aria-label={t('contracts.card.terminate')}
             >
               {isTerminating ? (
@@ -481,7 +481,7 @@ function ContractCard({
               variant="outline"
               onClick={() => onTerminate(contract.id)}
               disabled={isTerminating}
-              className="text-green-600 border-green-300 hover:bg-green-50 hover:border-green-400"
+              className="text-success-600 border-success-300 hover:bg-success-50 hover:border-success-400"
               aria-label={t('contracts.card.confirm')}
             >
               {isTerminating ? (
@@ -676,8 +676,8 @@ export default function MyContractsPage() {
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{t('contracts.title')}</h1>
-            <p className="mt-1 text-gray-600">
+            <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">{t('contracts.title')}</h1>
+            <p className="mt-1 text-neutral-600 dark:text-neutral-400">
               {t('contracts.subtitle')}
             </p>
           </div>
@@ -693,12 +693,12 @@ export default function MyContractsPage() {
 
         {/* Pending action banner */}
         {pendingCount > 0 && (
-          <div className="mt-4 rounded-lg bg-yellow-50 border border-yellow-200 p-4">
+          <div className="mt-4 rounded-lg bg-warning-50 border border-warning-200 p-4">
             <div className="flex items-center">
-              <svg className="h-5 w-5 text-yellow-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-5 w-5 text-warning-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
-              <p className="text-sm text-yellow-700">
+              <p className="text-sm text-warning-700">
                 <strong>{pendingCount}</strong> {t('contracts.pendingBanner')}
               </p>
             </div>
@@ -709,7 +709,7 @@ export default function MyContractsPage() {
       {/* Filters */}
       <div className="mb-6 flex flex-col sm:flex-row gap-4">
         {/* Status tabs */}
-        <div className="flex rounded-lg border border-gray-200 bg-white p-1">
+        <div className="flex rounded-lg border border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card p-1">
           {FILTER_TABS.map((tab) => (
             <button
               key={tab.key}
@@ -720,7 +720,7 @@ export default function MyContractsPage() {
               className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                 activeTab === tab.key
                   ? 'bg-primary-600 text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
+                  : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-dark-hover'
               }`}
             >
               {t(tab.labelKey)}
@@ -735,7 +735,7 @@ export default function MyContractsPage() {
             setRoleFilter(e.target.value || undefined);
             setCurrentPage(1);
           }}
-          className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm focus:border-primary-500 focus:ring-primary-500"
+          className="rounded-lg border border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card px-4 py-2 text-sm focus:border-primary-500 focus:ring-primary-500"
           aria-label={t('contracts.filters.allRoles')}
         >
           <option value="">{t('contracts.filters.allRoles')}</option>
@@ -753,12 +753,12 @@ export default function MyContractsPage() {
 
       {/* Error state */}
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
-          <svg className="mx-auto h-12 w-12 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="rounded-lg border border-error-200 bg-error-50 p-6 text-center">
+          <svg className="mx-auto h-12 w-12 text-error-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
-          <h3 className="mt-4 text-lg font-medium text-red-800">{t('contracts.loadError')}</h3>
-          <p className="mt-2 text-sm text-red-600">
+          <h3 className="mt-4 text-lg font-medium text-error-800">{t('contracts.loadError')}</h3>
+          <p className="mt-2 text-sm text-error-600">
             {t('contracts.loadErrorDesc')}
           </p>
         </div>
@@ -766,12 +766,12 @@ export default function MyContractsPage() {
 
       {/* Empty state */}
       {!isLoading && !error && contracts.length === 0 && (
-        <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
-          <svg className="mx-auto h-16 w-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="rounded-lg border border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card p-12 text-center">
+          <svg className="mx-auto h-16 w-16 text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <h3 className="mt-4 text-lg font-medium text-gray-900">{t('contracts.noContracts')}</h3>
-          <p className="mt-2 text-gray-500">
+          <h3 className="mt-4 text-lg font-medium text-neutral-900 dark:text-white">{t('contracts.noContracts')}</h3>
+          <p className="mt-2 text-neutral-500 dark:text-neutral-400">
             {activeTab === 'all'
               ? t('contracts.noContractsDesc')
               : t('contracts.noContractsFilter')}
@@ -806,8 +806,8 @@ export default function MyContractsPage() {
 
           {/* Pagination */}
           {pagination && pagination.last_page > 1 && (
-            <div className="mt-8 flex items-center justify-between border-t border-gray-200 pt-6">
-              <p className="text-sm text-gray-600">
+            <div className="mt-8 flex items-center justify-between border-t border-neutral-200 dark:border-dark-border pt-6">
+              <p className="text-sm text-neutral-600 dark:text-neutral-400">
                 {t('contracts.pagination.page')} {pagination.current_page} {t('contracts.pagination.of')} {pagination.last_page} ({pagination.total} {t('contracts.pagination.contracts')})
               </p>
               <div className="flex gap-2">
@@ -842,22 +842,22 @@ export default function MyContractsPage() {
         size="sm"
       >
         <div className="flex items-center justify-center mb-4">
-          <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center">
-            <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="h-12 w-12 rounded-full bg-error-100 flex items-center justify-center">
+            <svg className="h-6 w-6 text-error-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
         </div>
-        <p className="text-center text-gray-700 mb-2">
+        <p className="text-center text-neutral-700 dark:text-neutral-300 mb-2">
           {t('contracts.modal.cancelConfirm')}
         </p>
-        <p className="text-center text-sm text-gray-500 mb-6">
+        <p className="text-center text-sm text-neutral-500 dark:text-neutral-400 mb-6">
           {t('contracts.modal.cancelWarning')}
         </p>
 
         {cancelMutation.isError && (
-          <div className="mb-4 rounded-md bg-red-50 p-3">
-            <p className="text-sm text-red-700">
+          <div className="mb-4 rounded-md bg-error-50 p-3">
+            <p className="text-sm text-error-700">
               {(cancelMutation.error as any)?.response?.data?.message || t('common.error')}
             </p>
           </div>
@@ -877,7 +877,7 @@ export default function MyContractsPage() {
           </Button>
           <Button
             variant="primary"
-            className="flex-1 bg-red-600 hover:bg-red-700"
+            className="flex-1 bg-error-600 hover:bg-error-700"
             onClick={handleConfirmCancel}
             disabled={cancelMutation.isPending}
           >
@@ -905,13 +905,13 @@ export default function MyContractsPage() {
         size="sm"
       >
         <div className="flex items-center justify-center mb-4">
-          <div className={`h-12 w-12 rounded-full ${isConfirmingTermination ? 'bg-green-100' : 'bg-orange-100'} flex items-center justify-center`}>
+          <div className={`h-12 w-12 rounded-full ${isConfirmingTermination ? 'bg-success-100' : 'bg-primary-100'} flex items-center justify-center`}>
             {isConfirmingTermination ? (
-              <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-6 w-6 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             ) : (
-              <svg className="h-6 w-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-6 w-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
               </svg>
             )}
@@ -920,24 +920,24 @@ export default function MyContractsPage() {
 
         {isConfirmingTermination ? (
           <>
-            <p className="text-center text-gray-700 mb-2">
+            <p className="text-center text-neutral-700 dark:text-neutral-300 mb-2">
               {t('contracts.modal.terminateOtherPartyRequested')}
             </p>
-            <p className="text-center text-sm text-gray-500 mb-6">
+            <p className="text-center text-sm text-neutral-500 dark:text-neutral-400 mb-6">
               {t('contracts.modal.terminateConfirmNotice')}
             </p>
           </>
         ) : (
           <>
-            <p className="text-center text-gray-700 mb-2">
+            <p className="text-center text-neutral-700 dark:text-neutral-300 mb-2">
               {t('contracts.modal.terminateRequest')}
             </p>
-            <p className="text-center text-sm text-gray-500 mb-4">
+            <p className="text-center text-sm text-neutral-500 dark:text-neutral-400 mb-4">
               {t('contracts.modal.terminateNotice')}
             </p>
 
             <div className="mb-6">
-              <label htmlFor="motif" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="motif" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
                 {t('contracts.modal.terminateReasonLabel')}
               </label>
               <textarea
@@ -945,7 +945,7 @@ export default function MyContractsPage() {
                 value={terminationMotif}
                 onChange={(e) => setTerminationMotif(e.target.value)}
                 placeholder={t('contracts.modal.terminateReasonPlaceholder')}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:ring-primary-500"
+                className="w-full rounded-lg border border-neutral-300 dark:border-dark-border px-3 py-2 text-sm focus:border-primary-500 focus:ring-primary-500"
                 rows={3}
               />
             </div>
@@ -953,8 +953,8 @@ export default function MyContractsPage() {
         )}
 
         {(terminateMutation.isError || confirmTerminationMutation.isError) && (
-          <div className="mb-4 rounded-md bg-red-50 p-3">
-            <p className="text-sm text-red-700">
+          <div className="mb-4 rounded-md bg-error-50 p-3">
+            <p className="text-sm text-error-700">
               {(terminateMutation.error as any)?.response?.data?.message ||
                (confirmTerminationMutation.error as any)?.response?.data?.message ||
                t('common.error')}
@@ -977,7 +977,7 @@ export default function MyContractsPage() {
           </Button>
           <Button
             variant="primary"
-            className={`flex-1 ${isConfirmingTermination ? 'bg-green-600 hover:bg-green-700' : 'bg-orange-600 hover:bg-orange-700'}`}
+            className={`flex-1 ${isConfirmingTermination ? 'bg-success-600 hover:bg-success-700' : 'bg-primary-600 hover:bg-primary-700'}`}
             onClick={handleConfirmTerminate}
             disabled={terminateMutation.isPending || confirmTerminationMutation.isPending}
           >

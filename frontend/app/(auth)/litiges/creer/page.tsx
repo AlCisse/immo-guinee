@@ -53,12 +53,12 @@ export default function CreateDisputePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg py-8">
         <div className="max-w-2xl mx-auto px-4">
           <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-200 rounded w-1/2" />
-            <div className="h-4 bg-gray-200 rounded w-3/4" />
-            <div className="h-64 bg-gray-200 rounded" />
+            <div className="h-8 bg-neutral-200 dark:bg-dark-hover rounded w-1/2" />
+            <div className="h-4 bg-neutral-200 dark:bg-dark-hover rounded w-3/4" />
+            <div className="h-64 bg-neutral-200 dark:bg-dark-hover rounded" />
           </div>
         </div>
       </div>
@@ -66,13 +66,13 @@ export default function CreateDisputePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg py-8">
       <div className="max-w-2xl mx-auto px-4">
         {/* Header */}
         <div className="mb-6">
           <button
             onClick={() => router.back()}
-            className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
+            className="flex items-center text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:text-white mb-4"
           >
             <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -84,16 +84,16 @@ export default function CreateDisputePage() {
             </svg>
             Retour
           </button>
-          <h1 className="text-2xl font-bold text-gray-900">Ouvrir un litige</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">Ouvrir un litige</h1>
+          <p className="text-neutral-600 dark:text-neutral-400 mt-1">
             Signalez un problème lié à un de vos contrats
           </p>
         </div>
 
         {/* Contract Selection */}
         {!selectedContractId && (
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h2 className="font-semibold text-gray-900 mb-4">Sélectionnez un contrat</h2>
+          <div className="bg-white dark:bg-dark-card rounded-xl border border-neutral-200 dark:border-dark-border p-6">
+            <h2 className="font-semibold text-neutral-900 dark:text-white mb-4">Sélectionnez un contrat</h2>
 
             {contracts && contracts.length > 0 ? (
               <div className="space-y-3">
@@ -101,7 +101,7 @@ export default function CreateDisputePage() {
                   <button
                     key={contract.id}
                     onClick={() => setSelectedContractId(contract.id)}
-                    className="w-full p-4 border border-gray-200 rounded-lg hover:border-primary-500 hover:bg-primary-50/50 transition-all text-left"
+                    className="w-full p-4 border border-neutral-200 dark:border-dark-border rounded-lg hover:border-primary-500 hover:bg-primary-50/50 transition-all text-left"
                   >
                     <div className="flex items-start gap-4">
                       {contract.listing.photo_principale_url && (
@@ -112,19 +112,19 @@ export default function CreateDisputePage() {
                         />
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 truncate">
+                        <p className="font-medium text-neutral-900 dark:text-white truncate">
                           {contract.listing.titre}
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-neutral-500 dark:text-neutral-400">
                           Contrat #{contract.reference}
                         </p>
-                        <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                        <div className="flex items-center gap-4 mt-2 text-sm text-neutral-500 dark:text-neutral-400">
                           <span>Du {new Date(contract.date_debut).toLocaleDateString('fr-FR')}</span>
                           <span>au {new Date(contract.date_fin).toLocaleDateString('fr-FR')}</span>
                         </div>
                       </div>
                       <svg
-                        className="w-5 h-5 text-gray-400"
+                        className="w-5 h-5 text-neutral-400"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -143,7 +143,7 @@ export default function CreateDisputePage() {
             ) : (
               <div className="text-center py-12">
                 <svg
-                  className="w-16 h-16 text-gray-300 mx-auto mb-4"
+                  className="w-16 h-16 text-neutral-300 mx-auto mb-4"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -155,7 +155,7 @@ export default function CreateDisputePage() {
                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
                 </svg>
-                <p className="text-gray-500 mb-4">Aucun contrat actif trouvé</p>
+                <p className="text-neutral-500 dark:text-neutral-400 mb-4">Aucun contrat actif trouvé</p>
                 <button
                   onClick={() => router.push('/annonces')}
                   className="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600"
@@ -171,7 +171,7 @@ export default function CreateDisputePage() {
         {selectedContractId && selectedContract && (
           <>
             {/* Contract Info Card */}
-            <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+            <div className="bg-white dark:bg-dark-card rounded-xl border border-neutral-200 dark:border-dark-border p-4 mb-6">
               <div className="flex items-start gap-4">
                 {selectedContract.listing.photo_principale_url && (
                   <img
@@ -181,14 +181,14 @@ export default function CreateDisputePage() {
                   />
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900 truncate">
+                  <p className="font-medium text-neutral-900 dark:text-white truncate">
                     {selectedContract.listing.titre}
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
                     Contrat #{selectedContract.reference}
                   </p>
                   <div className="flex items-center gap-2 mt-2">
-                    <span className="text-xs text-gray-500">Propriétaire:</span>
+                    <span className="text-xs text-neutral-500 dark:text-neutral-400">Propriétaire:</span>
                     <span className="text-sm font-medium">
                       {selectedContract.bailleur.nom_complet}
                     </span>
@@ -204,7 +204,7 @@ export default function CreateDisputePage() {
             </div>
 
             {/* Dispute Form */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <div className="bg-white dark:bg-dark-card rounded-xl border border-neutral-200 dark:border-dark-border p-6">
               <DisputeForm
                 contractId={selectedContractId}
                 onSuccess={(disputeId) => {

@@ -221,7 +221,7 @@ export default function EditProfilePage() {
               type="button"
               onClick={handleDeletePhoto}
               disabled={isUploadingPhoto}
-              className="mt-3 flex items-center gap-1 text-sm text-red-500 hover:text-red-600 transition-colors disabled:opacity-50"
+              className="mt-3 flex items-center gap-1 text-sm text-error-500 hover:text-error-600 transition-colors disabled:opacity-50"
             >
               <Trash2 className="w-4 h-4" />
               {t('profile.edit.deletePhoto')}
@@ -236,13 +236,13 @@ export default function EditProfilePage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Error/Success Messages */}
           {error && (
-            <div className="p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl">
-              <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+            <div className="p-4 bg-error-50 dark:bg-error-500/10 border border-error-200 dark:border-error-500/20 rounded-xl">
+              <p className="text-error-600 dark:text-error-400 text-sm">{error}</p>
             </div>
           )}
           {success && (
-            <div className="p-4 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl">
-              <p className="text-emerald-600 dark:text-emerald-400 text-sm">{success}</p>
+            <div className="p-4 bg-accent-50 dark:bg-accent-500/10 border border-accent-200 dark:border-accent-500/20 rounded-xl">
+              <p className="text-accent-600 dark:text-accent-400 text-sm">{success}</p>
             </div>
           )}
 

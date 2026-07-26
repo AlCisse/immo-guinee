@@ -39,33 +39,33 @@ interface CertificationData {
 const BADGE_INFO = {
   BRONZE: {
     label: 'Bronze',
-    color: 'text-amber-600',
-    bgColor: 'bg-amber-50',
-    borderColor: 'border-amber-200',
+    color: 'text-warning-600',
+    bgColor: 'bg-warning-50',
+    borderColor: 'border-warning-200',
     description: 'Niveau de base pour les nouveaux utilisateurs',
     discount: 0,
   },
   ARGENT: {
     label: 'Argent',
-    color: 'text-gray-500',
-    bgColor: 'bg-gray-50',
-    borderColor: 'border-gray-300',
+    color: 'text-neutral-500 dark:text-neutral-400',
+    bgColor: 'bg-neutral-50 dark:bg-dark-bg',
+    borderColor: 'border-neutral-300 dark:border-dark-border',
     description: 'CNI vérifiée, 1+ transaction, note 3.5+',
     discount: 5,
   },
   OR: {
     label: 'Or',
-    color: 'text-yellow-600',
-    bgColor: 'bg-yellow-50',
-    borderColor: 'border-yellow-300',
+    color: 'text-warning-600',
+    bgColor: 'bg-warning-50',
+    borderColor: 'border-warning-300',
     description: 'CNI vérifiée, 5+ transactions, note 4.0+',
     discount: 10,
   },
   DIAMANT: {
     label: 'Diamant',
-    color: 'text-blue-600',
-    bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-300',
+    color: 'text-secondary-600',
+    bgColor: 'bg-secondary-50',
+    borderColor: 'border-secondary-300',
     description: 'Titre foncier vérifié, 20+ transactions, note 4.5+',
     discount: 15,
   },
@@ -97,8 +97,8 @@ export default function CertificationPage() {
   if (error) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
-          <p className="text-red-700">Erreur lors du chargement de la certification</p>
+        <div className="rounded-lg border border-error-200 bg-error-50 p-6 text-center">
+          <p className="text-error-700">Erreur lors du chargement de la certification</p>
           <Button
             variant="outline"
             className="mt-4"
@@ -120,8 +120,8 @@ export default function CertificationPage() {
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Programme de Certification</h1>
-        <p className="mt-1 text-gray-600">
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">Programme de Certification</h1>
+        <p className="mt-1 text-neutral-600 dark:text-neutral-400">
           Progressez dans les niveaux pour débloquer des avantages exclusifs
         </p>
       </div>
@@ -137,14 +137,14 @@ export default function CertificationPage() {
       </div>
 
       {/* Tabs */}
-      <div className="mb-6 border-b border-gray-200">
+      <div className="mb-6 border-b border-neutral-200 dark:border-dark-border">
         <nav className="-mb-px flex space-x-8" aria-label="Tabs">
           <button
             onClick={() => setActiveTab('overview')}
             className={`border-b-2 py-4 px-1 text-sm font-medium ${
               activeTab === 'overview'
                 ? 'border-primary-500 text-primary-600'
-                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:border-neutral-300 dark:border-dark-border hover:text-neutral-700 dark:text-neutral-300'
             }`}
           >
             Vue d&apos;ensemble
@@ -154,7 +154,7 @@ export default function CertificationPage() {
             className={`border-b-2 py-4 px-1 text-sm font-medium ${
               activeTab === 'documents'
                 ? 'border-primary-500 text-primary-600'
-                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:border-neutral-300 dark:border-dark-border hover:text-neutral-700 dark:text-neutral-300'
             }`}
           >
             Mes documents
@@ -167,8 +167,8 @@ export default function CertificationPage() {
         <div className="space-y-8">
           {/* Progress to next level */}
           {certification?.next_badge && (
-            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <div className="rounded-lg border border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card p-6 shadow-sm">
+              <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
                 Progression vers {nextBadgeInfo?.label}
               </h2>
               <ProgressTracker
@@ -183,14 +183,14 @@ export default function CertificationPage() {
 
           {/* Already at max level */}
           {!certification?.next_badge && (
-            <div className="rounded-lg border border-blue-200 bg-blue-50 p-6">
+            <div className="rounded-lg border border-secondary-200 bg-secondary-50 p-6">
               <div className="flex items-center">
-                <svg className="h-8 w-8 text-blue-600 mr-4" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="h-8 w-8 text-secondary-600 mr-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
                 <div>
-                  <h3 className="font-semibold text-blue-800">Niveau maximum atteint !</h3>
-                  <p className="text-blue-600">
+                  <h3 className="font-semibold text-secondary-800">Niveau maximum atteint !</h3>
+                  <p className="text-secondary-600">
                     Vous avez atteint le niveau Diamant, le plus haut niveau de certification.
                   </p>
                 </div>
@@ -200,30 +200,30 @@ export default function CertificationPage() {
 
           {/* Stats */}
           <div className="grid gap-6 md:grid-cols-4">
-            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-              <p className="text-sm text-gray-500">Transactions</p>
-              <p className="text-2xl font-bold text-gray-900">
+            <div className="rounded-lg border border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card p-6 shadow-sm">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">Transactions</p>
+              <p className="text-2xl font-bold text-neutral-900 dark:text-white">
                 {certification?.stats?.nombre_transactions || 0}
               </p>
             </div>
-            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-              <p className="text-sm text-gray-500">Note moyenne</p>
+            <div className="rounded-lg border border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card p-6 shadow-sm">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">Note moyenne</p>
               <div className="flex items-center">
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-2xl font-bold text-neutral-900 dark:text-white">
                   {certification?.stats?.note_moyenne?.toFixed(1) || '0.0'}
                 </p>
-                <span className="ml-1 text-yellow-500">&#9733;</span>
+                <span className="ml-1 text-warning-500">&#9733;</span>
               </div>
             </div>
-            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-              <p className="text-sm text-gray-500">Litiges</p>
-              <p className="text-2xl font-bold text-gray-900">
+            <div className="rounded-lg border border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card p-6 shadow-sm">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">Litiges</p>
+              <p className="text-2xl font-bold text-neutral-900 dark:text-white">
                 {certification?.stats?.nombre_litiges || 0}
               </p>
             </div>
-            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-              <p className="text-sm text-gray-500">Vérification</p>
-              <p className="text-sm font-medium text-gray-900 mt-1">
+            <div className="rounded-lg border border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card p-6 shadow-sm">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">Vérification</p>
+              <p className="text-sm font-medium text-neutral-900 dark:text-white mt-1">
                 {certification?.stats?.statut_verification === 'TITRE_FONCIER_VERIFIE'
                   ? 'Titre foncier vérifié'
                   : certification?.stats?.statut_verification === 'CNI_VERIFIEE'
@@ -234,8 +234,8 @@ export default function CertificationPage() {
           </div>
 
           {/* All badge levels */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-900 mb-6">Tous les niveaux</h2>
+          <div className="rounded-lg border border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-6">Tous les niveaux</h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {Object.entries(BADGE_INFO).map(([badge, info]) => {
                 const isCurrentBadge = badge === certification?.current_badge;
@@ -251,8 +251,8 @@ export default function CertificationPage() {
                       isCurrentBadge
                         ? `${info.bgColor} ${info.borderColor} border-2`
                         : isUnlocked
-                        ? 'border-gray-200 bg-white'
-                        : 'border-gray-100 bg-gray-50 opacity-60'
+                        ? 'border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card'
+                        : 'border-neutral-100 dark:border-dark-border bg-neutral-50 dark:bg-dark-bg opacity-60'
                     }`}
                   >
                     {isCurrentBadge && (
@@ -266,8 +266,8 @@ export default function CertificationPage() {
                         {info.label}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-500 mb-2">{info.description}</p>
-                    <p className="text-xs font-medium text-green-600">
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-2">{info.description}</p>
+                    <p className="text-xs font-medium text-success-600">
                       -{info.discount}% sur les commissions
                     </p>
                   </div>
@@ -282,8 +282,8 @@ export default function CertificationPage() {
       {activeTab === 'documents' && (
         <div className="space-y-8">
           {/* Upload section */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className="rounded-lg border border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
               Ajouter un document
             </h2>
             <DocumentUploader
@@ -294,8 +294,8 @@ export default function CertificationPage() {
           </div>
 
           {/* Uploaded documents */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className="rounded-lg border border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
               Documents soumis
             </h2>
 
@@ -304,19 +304,19 @@ export default function CertificationPage() {
                 {certification.documents.map((doc) => (
                   <div
                     key={doc.id}
-                    className="flex items-center justify-between rounded-lg border border-gray-100 p-4"
+                    className="flex items-center justify-between rounded-lg border border-neutral-100 dark:border-dark-border p-4"
                   >
                     <div className="flex items-center">
-                      <div className="rounded-lg bg-gray-100 p-3">
-                        <svg className="h-6 w-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="rounded-lg bg-neutral-100 dark:bg-dark-hover p-3">
+                        <svg className="h-6 w-6 text-neutral-500 dark:text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                       </div>
                       <div className="ml-4">
-                        <p className="font-medium text-gray-900">
+                        <p className="font-medium text-neutral-900 dark:text-white">
                           {doc.type_document === 'CNI' ? "Carte d'identité" : 'Titre foncier'}
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-neutral-500 dark:text-neutral-400">
                           Soumis le {new Date(doc.created_at).toLocaleDateString('fr-FR')}
                         </p>
                       </div>
@@ -325,10 +325,10 @@ export default function CertificationPage() {
                       <span
                         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                           doc.statut_verification === 'APPROUVE'
-                            ? 'bg-green-100 text-green-700'
+                            ? 'bg-success-100 text-success-700'
                             : doc.statut_verification === 'REJETE'
-                            ? 'bg-red-100 text-red-700'
-                            : 'bg-yellow-100 text-yellow-700'
+                            ? 'bg-error-100 text-error-700'
+                            : 'bg-warning-100 text-warning-700'
                         }`}
                       >
                         {doc.statut_verification === 'APPROUVE'
@@ -351,10 +351,10 @@ export default function CertificationPage() {
               </div>
             ) : (
               <div className="text-center py-8">
-                <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="mx-auto h-12 w-12 text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                <p className="mt-2 text-gray-500">Aucun document soumis</p>
+                <p className="mt-2 text-neutral-500 dark:text-neutral-400">Aucun document soumis</p>
               </div>
             )}
           </div>

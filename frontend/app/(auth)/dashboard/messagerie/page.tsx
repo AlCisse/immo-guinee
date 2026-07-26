@@ -91,23 +91,23 @@ export default function MessagingPage() {
     return (
       <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600">Erreur lors du chargement des conversations</p>
+          <p className="text-error-600">Erreur lors du chargement des conversations</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] bg-gray-50">
+    <div className="flex h-[calc(100vh-4rem)] bg-neutral-50 dark:bg-dark-bg">
       {/* Conversation List - Hidden on mobile when a conversation is selected */}
       <div
         className={`${
           isMobileListVisible ? 'flex' : 'hidden'
-        } md:flex w-full md:w-80 lg:w-96 flex-shrink-0 flex-col border-r border-gray-200 bg-white`}
+        } md:flex w-full md:w-80 lg:w-96 flex-shrink-0 flex-col border-r border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card`}
       >
-        <div className="border-b border-gray-200 px-4 py-4">
-          <h1 className="text-xl font-bold text-gray-900">Messagerie</h1>
-          <p className="text-sm text-gray-500">
+        <div className="border-b border-neutral-200 dark:border-dark-border px-4 py-4">
+          <h1 className="text-xl font-bold text-neutral-900 dark:text-white">Messagerie</h1>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">
             {conversations.length} conversation{conversations.length !== 1 ? 's' : ''}
           </p>
         </div>
@@ -116,7 +116,7 @@ export default function MessagingPage() {
           <div className="flex-1 flex items-center justify-center p-4">
             <div className="text-center">
               <svg
-                className="mx-auto h-12 w-12 text-gray-300"
+                className="mx-auto h-12 w-12 text-neutral-300"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -128,8 +128,8 @@ export default function MessagingPage() {
                   d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                 />
               </svg>
-              <p className="mt-2 text-gray-500">Aucune conversation</p>
-              <p className="text-sm text-gray-400">
+              <p className="mt-2 text-neutral-500 dark:text-neutral-400">Aucune conversation</p>
+              <p className="text-sm text-neutral-400">
                 Contactez un propriétaire depuis une annonce
               </p>
             </div>
@@ -147,15 +147,15 @@ export default function MessagingPage() {
       <div
         className={`${
           !isMobileListVisible || !selectedConversationId ? 'flex' : 'hidden'
-        } md:flex flex-1 flex-col bg-white`}
+        } md:flex flex-1 flex-col bg-white dark:bg-dark-card`}
       >
         {selectedConversation ? (
           <>
             {/* Header */}
-            <div className="flex items-center gap-4 border-b border-gray-200 px-4 py-3">
+            <div className="flex items-center gap-4 border-b border-neutral-200 dark:border-dark-border px-4 py-3">
               <button
                 onClick={handleBackToList}
-                className="md:hidden p-2 -ml-2 text-gray-500 hover:text-gray-700"
+                className="md:hidden p-2 -ml-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-300"
                 aria-label="Retour à la liste"
               >
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -169,18 +169,18 @@ export default function MessagingPage() {
               </button>
 
               <div className="flex-1">
-                <h2 className="font-semibold text-gray-900">
+                <h2 className="font-semibold text-neutral-900 dark:text-white">
                   {getOtherParticipant(selectedConversation).nom_complet}
                 </h2>
                 {selectedConversation.listing && (
-                  <p className="text-sm text-gray-500 truncate">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400 truncate">
                     {selectedConversation.listing.titre}
                   </p>
                 )}
               </div>
 
               {/* Options menu */}
-              <button className="p-2 text-gray-400 hover:text-gray-600">
+              <button className="p-2 text-neutral-400 hover:text-neutral-600 dark:text-neutral-400">
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
@@ -199,10 +199,10 @@ export default function MessagingPage() {
             <MessageInput conversationId={selectedConversation.id} />
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center bg-gray-50">
+          <div className="flex-1 flex items-center justify-center bg-neutral-50 dark:bg-dark-bg">
             <div className="text-center">
               <svg
-                className="mx-auto h-16 w-16 text-gray-300"
+                className="mx-auto h-16 w-16 text-neutral-300"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -214,7 +214,7 @@ export default function MessagingPage() {
                   d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                 />
               </svg>
-              <p className="mt-4 text-gray-500">Sélectionnez une conversation</p>
+              <p className="mt-4 text-neutral-500 dark:text-neutral-400">Sélectionnez une conversation</p>
             </div>
           </div>
         )}
