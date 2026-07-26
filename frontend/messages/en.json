@@ -77,7 +77,14 @@
       "subtitle": "Thousands of properties for rent and sale throughout Guinea. Find the one that suits you.",
       "searchPlaceholder": "Neighborhood, city or property type...",
       "rental": "Rental",
-      "purchase": "Purchase"
+      "purchase": "Purchase",
+      "eyebrow": "Real estate · Conakry & Guinea",
+      "whereLabel": "Where",
+      "typeLabel": "Type",
+      "allTypes": "All properties",
+      "chipFurnished": "Furnished",
+      "chipNew": "New",
+      "chipProtected": "Protected deposit"
     },
     "categories": {
       "apartments": "Apartments",
@@ -129,56 +136,87 @@
       "subtitle": "Receive instant alerts for new listings, chat with owners and manage your favorites wherever you are.",
       "availableOn": "Available on",
       "downloadOn": "Download on"
+    },
+    "featured": {
+      "eyebrow": "Selection"
+    },
+    "communes": {
+      "eyebrow": "Explore"
+    },
+    "trust": {
+      "eyebrow": "Why ImmoGuinée",
+      "verifiedTitle": "Verified listings",
+      "verifiedDesc": "Every owner is authenticated and properties are reviewed before publication.",
+      "depositTitle": "Protected deposit",
+      "depositDesc": "Your deposit is safely held and released only once the property is handed over.",
+      "whatsappTitle": "Direct WhatsApp contact",
+      "whatsappDesc": "Chat with the owner in one click, no middleman and no hidden fees."
+    },
+    "alerts": {
+      "eyebrow": "Your searches",
+      "title": "Saved alerts",
+      "emptyTitle": "No alerts yet",
+      "emptyDesc": "Save a search and get a WhatsApp notification as soon as a property matches — before everyone else.",
+      "create": "Create an alert",
+      "example": "See an example"
     }
   },
   "search": {
-    "title": "Search",
-    "results": "results",
-    "noResults": "No property matches your criteria",
-    "filters": {
-      "title": "Filters",
-      "propertyType": "Property type",
-      "transactionType": "Transaction type",
-      "location": "Location",
-      "commune": "District",
-      "quartier": "Neighborhood",
-      "priceRange": "Price range",
-      "minPrice": "Min price",
-      "maxPrice": "Max price",
-      "bedrooms": "Bedrooms",
-      "bathrooms": "Bathrooms",
-      "surface": "Surface area",
-      "minSurface": "Min surface",
-      "maxSurface": "Max surface",
-      "amenities": "Amenities",
-      "applyFilters": "Apply filters",
-      "resetFilters": "Reset"
-    },
-    "sort": {
-      "newest": "Newest",
-      "oldest": "Oldest",
-      "priceAsc": "Price: Low to High",
-      "priceDesc": "Price: High to Low",
-      "surfaceAsc": "Surface: Small to Large",
-      "surfaceDesc": "Surface: Large to Small"
-    },
+    "searchPlaceholder": "Search for a neighborhood (e.g., Kipe, Madina...)",
+    "resultsFound": "property(ies) found",
+    "noResults": "No results",
+    "noResultsHint": "Try modifying your search criteria",
+    "resetFilters": "Reset filters",
+    "loadingError": "Error loading listings",
+    "commune": "District",
+    "budget": "Budget",
+    "inQuartier": "In {quartier}",
+    "nearbyQuartiers": "Nearby neighborhoods",
+    "noExactMatch": "No listings found in {quartier}. Here are properties in nearby neighborhoods.",
+    "page": "Page",
+    "of": "of",
+    "previous": "Previous",
+    "next": "Next",
     "propertyTypes": {
       "all": "All",
-      "apartment": "Apartment",
-      "house": "House",
-      "villa": "Villa",
-      "studio": "Studio",
-      "land": "Land",
-      "office": "Office",
-      "shop": "Shop",
-      "warehouse": "Warehouse"
+      "APPARTEMENT": "Apartment",
+      "MAISON": "House",
+      "VILLA": "Villa",
+      "STUDIO": "Studio",
+      "BUREAU": "Office",
+      "MAGASIN": "Shop",
+      "TERRAIN": "Land"
     },
     "transactionTypes": {
       "all": "All",
-      "rental": "Rental",
-      "sale": "Sale",
-      "shortRental": "Short-term rental"
-    }
+      "LOCATION": "Rental",
+      "LOCATION_COURTE": "Short-term",
+      "VENTE": "Sale"
+    },
+    "badges": {
+      "premium": "Premium",
+      "new": "New",
+      "forRent": "For rent",
+      "shortTerm": "Short-term",
+      "forSale": "For sale"
+    },
+    "priceRanges": {
+      "all": "All prices",
+      "lessThan5M": "Less than 5M GNF",
+      "5Mto10M": "5M - 10M GNF",
+      "10Mto20M": "10M - 20M GNF",
+      "moreThan20M": "More than 20M GNF"
+    },
+    "sortOptions": {
+      "recent": "Most recent",
+      "priceAsc": "Price ascending",
+      "priceDesc": "Price descending",
+      "area": "Area"
+    },
+    "perMonth": "/month",
+    "perDay": "/day",
+    "bedrooms": "bd.",
+    "bathrooms": "ba."
   },
   "listing": {
     "details": "Details",
@@ -992,7 +1030,29 @@
   },
   "profile": {
     "title": "My profile",
-    "edit": "Edit profile",
+    "edit": {
+      "title": "Edit profile",
+      "personalInfo": "Personal information",
+      "fullName": "Full name",
+      "fullNamePlaceholder": "Your full name",
+      "email": "Email",
+      "emailPlaceholder": "your@email.com",
+      "phone": "Phone",
+      "phoneReadOnly": "(read-only)",
+      "address": "Address",
+      "addressPlaceholder": "Your address",
+      "save": "Save changes",
+      "saving": "Saving...",
+      "success": "Profile updated successfully",
+      "error": "Error updating profile",
+      "photoHint": "JPG, PNG or WebP. Max 5 MB.",
+      "photoSuccess": "Profile photo updated",
+      "photoDeleted": "Profile photo deleted",
+      "photoError": "Error updating photo",
+      "photoInvalidType": "Unsupported file format",
+      "photoTooLarge": "Photo is too large (max 5 MB)",
+      "deletePhoto": "Delete photo"
+    },
     "editButton": "Edit",
     "personalInfo": "Personal information",
     "fullName": "Full name",
@@ -1088,29 +1148,6 @@
       "emailNotifications": "Email notifications",
       "smsNotifications": "SMS notifications",
       "pushNotifications": "Push notifications"
-    },
-    "edit": {
-      "title": "Edit profile",
-      "personalInfo": "Personal information",
-      "fullName": "Full name",
-      "fullNamePlaceholder": "Your full name",
-      "email": "Email",
-      "emailPlaceholder": "your@email.com",
-      "phone": "Phone",
-      "phoneReadOnly": "(read-only)",
-      "address": "Address",
-      "addressPlaceholder": "Your address",
-      "save": "Save changes",
-      "saving": "Saving...",
-      "success": "Profile updated successfully",
-      "error": "Error updating profile",
-      "photoHint": "JPG, PNG or WebP. Max 5 MB.",
-      "photoSuccess": "Profile photo updated",
-      "photoDeleted": "Profile photo deleted",
-      "photoError": "Error updating photo",
-      "photoInvalidType": "Unsupported file format",
-      "photoTooLarge": "Photo is too large (max 5 MB)",
-      "deletePhoto": "Delete photo"
     }
   },
   "settings": {
@@ -1322,7 +1359,7 @@
   },
   "estimate": {
     "title": "Estimate your property",
-    "subtitle": "Get a free estimate of your property value in a few clicks",
+    "subtitle": "Get a free estimate of your property value in just a few clicks",
     "operationType": "Operation type",
     "rental": "Rental",
     "sale": "Sale",
@@ -1332,41 +1369,30 @@
     "selectCommune": "Select a district",
     "quartier": "Neighborhood",
     "selectQuartier": "Select a neighborhood",
-    "surface": "Surface area (sqm)",
-    "surfacePlaceholder": "Ex: 80",
+    "area": "Area (m²)",
+    "areaPlaceholder": "Ex: 80",
     "bedrooms": "Number of bedrooms",
     "selectBedrooms": "Select",
     "bedroom": "bedroom",
-    "bedrooms_plural": "bedrooms",
-    "furnished": "Property is furnished",
+    "bedroomsPlural": "bedrooms",
+    "bedroomsMore": "5+ bedrooms",
+    "furnished": "The property is furnished",
     "calculating": "Calculating...",
     "estimateButton": "Estimate my property",
-    "result": {
-      "title": "Your property estimate",
-      "minPrice": "Minimum price",
-      "estimatedPrice": "Estimated price",
-      "maxPrice": "Maximum price",
-      "pricePerM2": "Price per sqm",
-      "perMonth": "/ month"
-    },
-    "actions": {
-      "publishListing": "Publish my listing",
-      "viewSimilar": "View similar listings"
-    },
-    "features": {
-      "marketData": {
-        "title": "Market data",
-        "description": "Our estimate is based on real market prices in Conakry."
-      },
-      "preciseLocation": {
-        "title": "Precise location",
-        "description": "Prices vary by district and neighborhood. Our tool accounts for this."
-      },
-      "free": {
-        "title": "100% free",
-        "description": "Our estimation service is completely free with no commitment."
-      }
-    }
+    "resultTitle": "Your property estimate",
+    "minPrice": "Minimum price",
+    "estimatedPrice": "Estimated price",
+    "maxPrice": "Maximum price",
+    "pricePerM2": "Price per m²",
+    "perMonth": "/ month",
+    "publishListing": "Publish my listing",
+    "viewSimilar": "View similar listings",
+    "marketData": "Market data",
+    "marketDataDesc": "Our estimate is based on real market prices in Conakry.",
+    "preciseLocation": "Precise location",
+    "preciseLocationDesc": "Prices vary by district and neighborhood. Our tool takes this into account.",
+    "freeService": "100% free",
+    "freeServiceDesc": "Our estimation service is completely free with no obligation."
   },
   "contact": {
     "title": "Contact us",
@@ -1559,20 +1585,38 @@
           "sections": {
             "listingTitle": {
               "title": "Listing title",
-              "tips": ["15 to 100 characters", "Be descriptive and attractive", "Example: '4-bedroom villa with pool in Kipé'"],
-              "avoid": ["Vague titles like 'Nice house'", "ALL CAPS or 'URGENT!!!'"]
+              "tips": [
+                "15 to 100 characters",
+                "Be descriptive and attractive",
+                "Example: '4-bedroom villa with pool in Kipé'"
+              ],
+              "avoid": [
+                "Vague titles like 'Nice house'",
+                "ALL CAPS or 'URGENT!!!'"
+              ]
             },
             "description": {
               "title": "Description",
-              "tips": ["50 to 2000 characters", "Structure: Hook → Features → Location → Call to action", "Mention key amenities"]
+              "tips": [
+                "50 to 2000 characters",
+                "Structure: Hook → Features → Location → Call to action",
+                "Mention key amenities"
+              ]
             },
             "price": {
               "title": "Price and features",
-              "tips": ["Price in GNF based on type (monthly/daily/total)", "Area required for all properties", "Bedrooms required for residential properties"]
+              "tips": [
+                "Price in GNF based on type (monthly/daily/total)",
+                "Area required for all properties",
+                "Bedrooms required for residential properties"
+              ]
             },
             "ai": {
               "title": "AI Optimization",
-              "tips": ["Click 'Optimize with AI' to improve your text", "Corrects errors and improves SEO"]
+              "tips": [
+                "Click 'Optimize with AI' to improve your text",
+                "Corrects errors and improves SEO"
+              ]
             }
           }
         },
@@ -1581,7 +1625,11 @@
           "sections": {
             "location": {
               "title": "Select location",
-              "tips": ["Choose the region (Conakry by default)", "Select the commune (Kaloum, Dixinn, Matam, Ratoma, Matoto)", "Specify the exact neighborhood"]
+              "tips": [
+                "Choose the region (Conakry by default)",
+                "Select the commune (Kaloum, Dixinn, Matam, Ratoma, Matoto)",
+                "Specify the exact neighborhood"
+              ]
             },
             "neighborhoods": {
               "title": "Popular neighborhoods",
@@ -1599,15 +1647,30 @@
           "sections": {
             "requirements": {
               "title": "Requirements",
-              "tips": ["Minimum 3 photos, maximum 5", "Formats: JPG, PNG, WebP", "Max size: 5 MB per photo"]
+              "tips": [
+                "Minimum 3 photos, maximum 5",
+                "Formats: JPG, PNG, WebP",
+                "Max size: 5 MB per photo"
+              ]
             },
             "tips": {
               "title": "Tips for good photos",
-              "tips": ["Photograph during the day with natural light", "Tidy and clean before photographing", "Show all main rooms", "First photo = listing cover"]
+              "tips": [
+                "Photograph during the day with natural light",
+                "Tidy and clean before photographing",
+                "Show all main rooms",
+                "First photo = listing cover"
+              ]
             },
             "order": {
               "title": "Recommended order",
-              "items": ["Exterior view / Facade", "Living room", "Kitchen", "Bedrooms", "Bathroom, Outdoor"]
+              "items": [
+                "Exterior view / Facade",
+                "Living room",
+                "Kitchen",
+                "Bedrooms",
+                "Bathroom, Outdoor"
+              ]
             }
           }
         }
@@ -2200,100 +2263,6 @@
         "short-term rental expat Guinea"
       ]
     }
-  },
-  "search": {
-    "searchPlaceholder": "Search for a neighborhood (e.g., Kipe, Madina...)",
-    "resultsFound": "property(ies) found",
-    "noResults": "No results",
-    "noResultsHint": "Try modifying your search criteria",
-    "resetFilters": "Reset filters",
-    "loadingError": "Error loading listings",
-    "commune": "District",
-    "budget": "Budget",
-    "inQuartier": "In {quartier}",
-    "nearbyQuartiers": "Nearby neighborhoods",
-    "noExactMatch": "No listings found in {quartier}. Here are properties in nearby neighborhoods.",
-    "page": "Page",
-    "of": "of",
-    "previous": "Previous",
-    "next": "Next",
-    "propertyTypes": {
-      "all": "All",
-      "APPARTEMENT": "Apartment",
-      "MAISON": "House",
-      "VILLA": "Villa",
-      "STUDIO": "Studio",
-      "BUREAU": "Office",
-      "MAGASIN": "Shop",
-      "TERRAIN": "Land"
-    },
-    "transactionTypes": {
-      "all": "All",
-      "LOCATION": "Rental",
-      "LOCATION_COURTE": "Short-term",
-      "VENTE": "Sale"
-    },
-    "badges": {
-      "premium": "Premium",
-      "new": "New",
-      "forRent": "For rent",
-      "shortTerm": "Short-term",
-      "forSale": "For sale"
-    },
-    "priceRanges": {
-      "all": "All prices",
-      "lessThan5M": "Less than 5M GNF",
-      "5Mto10M": "5M - 10M GNF",
-      "10Mto20M": "10M - 20M GNF",
-      "moreThan20M": "More than 20M GNF"
-    },
-    "sortOptions": {
-      "recent": "Most recent",
-      "priceAsc": "Price ascending",
-      "priceDesc": "Price descending",
-      "area": "Area"
-    },
-    "perMonth": "/month",
-    "perDay": "/day",
-    "bedrooms": "bd.",
-    "bathrooms": "ba."
-  },
-  "estimate": {
-    "title": "Estimate your property",
-    "subtitle": "Get a free estimate of your property value in just a few clicks",
-    "operationType": "Operation type",
-    "rental": "Rental",
-    "sale": "Sale",
-    "propertyType": "Property type",
-    "selectType": "Select a type",
-    "commune": "District",
-    "selectCommune": "Select a district",
-    "quartier": "Neighborhood",
-    "selectQuartier": "Select a neighborhood",
-    "area": "Area (m²)",
-    "areaPlaceholder": "Ex: 80",
-    "bedrooms": "Number of bedrooms",
-    "selectBedrooms": "Select",
-    "bedroom": "bedroom",
-    "bedroomsPlural": "bedrooms",
-    "bedroomsMore": "5+ bedrooms",
-    "furnished": "The property is furnished",
-    "calculating": "Calculating...",
-    "estimateButton": "Estimate my property",
-    "resultTitle": "Your property estimate",
-    "minPrice": "Minimum price",
-    "estimatedPrice": "Estimated price",
-    "maxPrice": "Maximum price",
-    "pricePerM2": "Price per m²",
-    "perMonth": "/ month",
-    "publishListing": "Publish my listing",
-    "viewSimilar": "View similar listings",
-    "marketData": "Market data",
-    "marketDataDesc": "Our estimate is based on real market prices in Conakry.",
-    "preciseLocation": "Precise location",
-    "preciseLocationDesc": "Prices vary by district and neighborhood. Our tool takes this into account.",
-    "freeService": "100% free",
-    "freeServiceDesc": "Our estimation service is completely free with no obligation."
   },
   "listingDetail": {
     "share": "Share",

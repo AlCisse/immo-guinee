@@ -7,23 +7,23 @@ import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
+  BedDouble,
+  Bell,
   Briefcase,
   Building2,
+  Check,
   ChevronRight,
-  Clock,
   Heart,
   Home,
   Loader2,
+  Lock,
+  Maximize2,
   MapPin,
-  Phone,
-  Play,
+  MessageCircle,
+  Search,
   Shield,
-  Star,
   Store,
-  Users,
-  Zap
 } from 'lucide-react';
-import SearchInput from '@/components/ui/SearchInput';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -32,6 +32,7 @@ interface Listing {
   id: string;
   titre: string;
   type_bien: string;
+  type_transaction?: string;
   loyer_mensuel: string;
   formatted_price: string;
   quartier: string;
@@ -55,25 +56,21 @@ async function fetchPremiumListings(): Promise<Listing[]> {
 
 // Fetch quartier stats from API
 async function fetchQuartierStats(): Promise<{ name: string; count: number }[]> {
-  // Use communes list and get counts from listings
   const response = await api.listings.list({ group_by: 'quartier', limit: 100 });
   const listings = response.data.data.listings || [];
 
-  // Group by quartier and count
   const quartierCounts: Record<string, number> = {};
   listings.forEach((listing: Listing) => {
     const quartier = listing.quartier || 'Autre';
     quartierCounts[quartier] = (quartierCounts[quartier] || 0) + 1;
   });
 
-  // Convert to array and sort by count
   return Object.entries(quartierCounts)
     .map(([name, count]) => ({ name, count }))
     .sort((a, b) => b.count - a.count)
-    .slice(0, 6);
+    .slice(0, 5);
 }
 
-// Format price
 const formatPrice = (price: number | string | undefined | null) => {
   if (price === undefined || price === null) return '0 GNF';
   const num = typeof price === 'string' ? parseFloat(price) : price;
@@ -81,8 +78,9 @@ const formatPrice = (price: number | string | undefined | null) => {
   return new Intl.NumberFormat('fr-GN').format(num) + ' GNF';
 };
 
-// Property Card Component
+// ---------- Property Card (« Argile de Conakry ») ----------
 function PropertyCard({ property }: { property: Listing }) {
+  const { t } = useTranslations();
   const [isFavorite, setIsFavorite] = useState(false);
 
   const handleToggleFavorite = async (e: React.MouseEvent) => {
@@ -99,14 +97,11 @@ function PropertyCard({ property }: { property: Listing }) {
   const isLocation = property.type_transaction === 'LOCATION' || property.type_transaction === 'location';
   const isLocationCourte = property.type_transaction === 'LOCATION_COURTE' || property.type_transaction === 'location_courte';
 
-  // Get photo URL - handle both string (JSON) and array formats
   const getPhotoUrl = (): string | null => {
     if (property.main_photo_url && property.main_photo_url !== '/images/placeholder.jpg') {
       return property.main_photo_url;
     }
-    if (property.photo_principale) {
-      return property.photo_principale;
-    }
+    if (property.photo_principale) return property.photo_principale;
     if (property.photos) {
       if (typeof property.photos === 'string') {
         try {
@@ -116,9 +111,7 @@ function PropertyCard({ property }: { property: Listing }) {
           return null;
         }
       }
-      if (Array.isArray(property.photos) && property.photos.length > 0) {
-        return property.photos[0];
-      }
+      if (Array.isArray(property.photos) && property.photos.length > 0) return property.photos[0];
     }
     return null;
   };
@@ -126,115 +119,94 @@ function PropertyCard({ property }: { property: Listing }) {
   const photoUrl = getPhotoUrl();
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
+    <motion.article
+      initial={{ opacity: 0, y: 18 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      whileHover={{ y: -8 }}
-      className="group bg-white dark:bg-dark-card rounded-2xl border border-neutral-200 dark:border-dark-border shadow-sm hover:shadow-card-hover transition-shadow overflow-hidden"
+      whileHover={{ y: -4 }}
+      className="group bg-white dark:bg-dark-card rounded-2xl border border-neutral-200 dark:border-dark-border shadow-sm hover:shadow-soft-lg hover:border-neutral-300 dark:hover:border-dark-hover transition-all overflow-hidden"
     >
       <Link href={`/bien/${property.id}`}>
-        {/* Image */}
+        {/* Media */}
         <div className="relative aspect-[4/3] overflow-hidden">
           {photoUrl ? (
             <img
               src={photoUrl}
               alt={property.titre}
-              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-primary-200 to-primary-300 dark:from-primary-900 dark:to-primary-800" />
+            <div className="absolute inset-0 bg-gradient-to-br from-primary-200 to-neutral-100 dark:from-primary-900/40 dark:to-dark-hover" />
           )}
 
           {/* Badges */}
           <div className="absolute top-3 left-3 flex gap-2 z-10">
             {isNew && (
-              <span className="px-2.5 py-1 bg-primary-500 text-white text-xs font-semibold rounded-full">
-                Nouveau
+              <span className="px-2.5 py-1 bg-primary-500 text-white text-[11px] font-semibold rounded-full">
+                {t('search.badges.new')}
               </span>
             )}
           </div>
 
-          {/* Favorite Button */}
+          {/* Favorite */}
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={handleToggleFavorite}
-            className="absolute top-3 right-3 p-2.5 bg-white/90 dark:bg-dark-card/90 backdrop-blur-sm rounded-full shadow-lg z-10"
+            aria-label="favori"
+            className="absolute top-3 right-3 p-2.5 bg-white/85 dark:bg-dark-card/85 backdrop-blur-sm rounded-full shadow-sm z-10"
           >
             <Heart
-              className={`w-5 h-5 transition-colors ${isFavorite ? 'fill-error-500 text-error-500' : 'text-neutral-600 dark:text-neutral-400'
-                }`}
+              className={`w-[18px] h-[18px] transition-colors ${isFavorite ? 'fill-error-500 text-error-500' : 'text-neutral-600 dark:text-neutral-300'}`}
             />
           </motion.button>
 
-          {/* Price Tag */}
+          {/* Price tag */}
           <div className="absolute bottom-3 left-3 z-10">
-            <span className="px-4 py-2 bg-white dark:bg-dark-card rounded-xl font-bold text-lg text-neutral-900 dark:text-white shadow-lg">
-              {property.formatted_price || formatPrice(property.loyer_mensuel)}
-              {isLocation && <span className="text-sm font-normal text-neutral-500">/mois</span>}
-              {isLocationCourte && <span className="text-sm font-normal text-teal-600 dark:text-teal-400">/jour</span>}
-              {!isLocation && !isLocationCourte && <span className="text-sm font-normal text-neutral-500">/mois</span>}
+            <span className="inline-flex items-baseline gap-1 px-3 py-1.5 bg-white/90 dark:bg-dark-card/90 backdrop-blur-sm rounded-lg shadow-sm">
+              <span className="font-bold text-neutral-900 dark:text-white tabular-nums">
+                {property.formatted_price || formatPrice(property.loyer_mensuel)}
+              </span>
+              {isLocation && <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400">/mois</span>}
+              {isLocationCourte && <span className="text-xs font-medium text-teal-600 dark:text-teal-400">/jour</span>}
             </span>
           </div>
         </div>
 
-        {/* Content */}
+        {/* Body */}
         <div className="p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="px-2 py-0.5 bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 text-xs font-medium rounded-md">
-              {property.type_bien}
-            </span>
+          <div className="text-[11px] font-semibold tracking-wider uppercase text-primary-600 dark:text-primary-400">
+            {property.type_bien}
           </div>
-
-          <h3 className="font-semibold text-neutral-900 dark:text-white mb-1 line-clamp-1 group-hover:text-primary-500 transition-colors">
+          <h3 className="mt-1 font-semibold text-neutral-900 dark:text-white line-clamp-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
             {property.titre}
           </h3>
-
-          <div className="flex items-center gap-1 text-neutral-500 dark:text-neutral-400 text-sm mb-3">
-            <MapPin className="w-4 h-4" />
-            <span>{property.quartier}, {property.commune}</span>
+          <div className="flex items-center gap-1.5 text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+            <MapPin className="w-3.5 h-3.5" />
+            <span className="line-clamp-1">{property.quartier}, {property.commune}</span>
           </div>
 
-          {/* Features */}
-          <div className="flex items-center gap-4 text-sm text-neutral-600 dark:text-neutral-300 pt-3 border-t border-neutral-100 dark:border-dark-border">
-            {property.nombre_chambres > 0 && <span>{property.nombre_chambres} ch.</span>}
-            {property.nombre_salles_bain > 0 && (
-              <>
-                <span className="w-1 h-1 bg-neutral-300 rounded-full" />
-                <span>{property.nombre_salles_bain} sdb.</span>
-              </>
+          <div className="flex items-center gap-4 mt-3 pt-3 border-t border-neutral-100 dark:border-dark-border text-sm text-neutral-600 dark:text-neutral-300">
+            {property.nombre_chambres > 0 && (
+              <span className="flex items-center gap-1.5"><BedDouble className="w-4 h-4 text-neutral-400" />{property.nombre_chambres}</span>
             )}
             {property.surface_m2 > 0 && (
-              <>
-                <span className="w-1 h-1 bg-neutral-300 rounded-full" />
-                <span>{property.surface_m2} m²</span>
-              </>
+              <span className="flex items-center gap-1.5"><Maximize2 className="w-4 h-4 text-neutral-400" />{property.surface_m2} m²</span>
             )}
           </div>
         </div>
       </Link>
-    </motion.div>
+    </motion.article>
   );
 }
 
-// Category Button
-function CategoryButton({
-  icon: Icon,
-  label,
-  href,
-  tint,
-}: {
-  icon: React.ElementType;
-  label: string;
-  href: string;
-  tint: string;
-}) {
+// ---------- Category tile ----------
+function CategoryButton({ icon: Icon, label, href, tint }: { icon: React.ElementType; label: string; href: string; tint: string; }) {
   return (
     <Link href={href}>
       <motion.div
         whileHover={{ y: -3 }}
         whileTap={{ scale: 0.98 }}
-        className="flex flex-col gap-3 p-4 bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-xl cursor-pointer transition-shadow hover:shadow-card-hover"
+        className="flex flex-col gap-3 p-4 bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-2xl cursor-pointer transition-all hover:shadow-soft hover:border-neutral-300 dark:hover:border-dark-hover"
       >
         <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${tint}`}>
           <Icon className="w-5 h-5" />
@@ -245,26 +217,25 @@ function CategoryButton({
   );
 }
 
-// Quartier Card
-function QuartierCard({ quartier }: { quartier: { name: string; count: number } }) {
+// ---------- Commune tile ----------
+function CommuneTile({ name, count, index }: { name: string; count: number; index: number }) {
+  const tints = [
+    'from-primary-500/25 to-neutral-200 dark:from-primary-900/40 dark:to-dark-hover',
+    'from-neutral-200 to-neutral-300 dark:from-dark-hover dark:to-dark-border',
+    'from-teal-500/25 to-neutral-200 dark:from-teal-900/40 dark:to-dark-hover',
+    'from-neutral-200 to-neutral-300 dark:from-dark-hover dark:to-dark-border',
+    'from-success-500/20 to-neutral-200 dark:from-success-900/30 dark:to-dark-hover',
+  ];
   return (
-    <Link href={`/recherche?quartier=${quartier.name}`}>
+    <Link href={`/recherche?commune=${encodeURIComponent(name)}`}>
       <motion.div
-        whileHover={{ scale: 1.02 }}
-        className="relative h-40 rounded-2xl overflow-hidden group cursor-pointer"
+        whileHover={{ y: -3 }}
+        className="relative aspect-[3/4] rounded-2xl overflow-hidden border border-neutral-200 dark:border-dark-border cursor-pointer group"
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-neutral-700 to-neutral-900" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-
-        <div className="absolute bottom-4 left-4 right-4">
-          <h3 className="text-white font-bold text-lg mb-1">{quartier.name}</h3>
-          <p className="text-white/80 text-sm">{quartier.count} annonces</p>
-        </div>
-
-        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-          <div className="p-2 bg-white/20 backdrop-blur-sm rounded-full">
-            <ArrowRight className="w-4 h-4 text-white" />
-          </div>
+        <div className={`absolute inset-0 bg-gradient-to-b ${tints[index % tints.length]}`} />
+        <div className="absolute inset-x-0 bottom-0 p-3.5 bg-gradient-to-t from-black/55 to-transparent">
+          <div className="text-white font-semibold">{name}</div>
+          {count > 0 && <div className="text-white/85 text-xs tabular-nums">{count} annonces</div>}
         </div>
       </motion.div>
     </Link>
@@ -275,58 +246,114 @@ export default function ClientHomePage() {
   const router = useRouter();
   const { t } = useTranslations();
   const [searchQuery, setSearchQuery] = useState('');
+  const [propertyType, setPropertyType] = useState('');
 
-  // Fetch premium listings
   const { data: premiumListings = [], isLoading: listingsLoading } = useQuery({
     queryKey: ['listings', 'premium'],
     queryFn: fetchPremiumListings,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 
-  // Fetch quartier stats
   const { data: quartiers = [] } = useQuery({
     queryKey: ['quartiers', 'stats'],
     queryFn: fetchQuartierStats,
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    // Fallback to default quartiers if API fails
-    placeholderData: CONAKRY_COMMUNES.map(name => ({ name, count: 0 })),
+    staleTime: 10 * 60 * 1000,
+    placeholderData: CONAKRY_COMMUNES.slice(0, 5).map((name) => ({ name, count: 0 })),
   });
 
   const handleSearch = () => {
     const params = new URLSearchParams();
     if (searchQuery) params.set('q', searchQuery);
+    if (propertyType) params.set('type_bien', propertyType);
     router.push(`/recherche?${params.toString()}`);
   };
 
+  const chips: { label: string; href: string }[] = [
+    { label: t('home.hero.rental'), href: '/recherche?type_transaction=LOCATION' },
+    { label: t('home.hero.purchase'), href: '/recherche?type_transaction=VENTE' },
+    { label: t('home.hero.chipFurnished'), href: '/recherche?meuble=1' },
+    { label: t('home.hero.chipNew'), href: '/recherche?tri=recent' },
+    { label: t('home.hero.chipProtected'), href: '/recherche' },
+  ];
+
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg">
-      {/* Search Section */}
-      <section className="bg-white dark:bg-dark-card border-b border-neutral-200 dark:border-dark-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="max-w-3xl mx-auto"
-          >
-            {/* Search Input */}
-            <SearchInput
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onSearch={handleSearch}
-              placeholder={t('home.hero.searchPlaceholder')}
-              showButton
-              buttonText={t('common.search')}
-            />
+      {/* ---------- HERO ---------- */}
+      <section className="relative overflow-hidden border-b border-neutral-200 dark:border-dark-border">
+        {/* ambient glow */}
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -top-24 right-[-6rem] w-[36rem] h-[36rem] bg-primary-500/10 dark:bg-primary-500/10 rounded-full blur-3xl" />
+          <div className="absolute -top-32 left-[-8rem] w-[30rem] h-[30rem] bg-teal-500/10 rounded-full blur-3xl" />
+        </div>
 
-            {/* Quick Links */}
-            <div className="flex flex-wrap justify-center gap-2 mt-4">
-              {CONAKRY_COMMUNES.slice(0, 5).map((commune) => (
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-10 md:pt-20 md:pb-14">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-3xl"
+          >
+            <span className="text-xs font-semibold tracking-[0.15em] uppercase text-primary-600 dark:text-primary-400">
+              {t('home.hero.eyebrow')}
+            </span>
+            <h1 className="mt-3 text-4xl md:text-5xl font-bold tracking-tight text-neutral-900 dark:text-white text-balance leading-[1.08]">
+              {t('home.hero.title')}{' '}
+              <span className="text-primary-600 dark:text-primary-400">{t('home.hero.titleHighlight')}</span>
+            </h1>
+            <p className="mt-4 text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl">
+              {t('home.hero.subtitle')}
+            </p>
+
+            {/* Integrated search */}
+            <div className="mt-7 flex flex-wrap gap-2 p-2 bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-2xl shadow-soft max-w-2xl">
+              <label className="flex-1 min-w-[180px] flex items-center gap-2.5 px-3 py-2 rounded-xl focus-within:bg-neutral-50 dark:focus-within:bg-dark-hover transition-colors">
+                <Search className="w-[18px] h-[18px] text-neutral-400 shrink-0" />
+                <span className="flex-1">
+                  <span className="block text-[10px] font-semibold tracking-wider uppercase text-neutral-400">{t('home.hero.whereLabel')}</span>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    placeholder={t('home.hero.searchPlaceholder')}
+                    className="w-full bg-transparent border-0 p-0 text-sm font-medium text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:ring-0"
+                  />
+                </span>
+              </label>
+              <div className="w-px bg-neutral-200 dark:bg-dark-border my-1.5 hidden sm:block" />
+              <label className="flex items-center gap-2.5 px-3 py-2 rounded-xl focus-within:bg-neutral-50 dark:focus-within:bg-dark-hover transition-colors sm:w-44">
+                <Building2 className="w-[18px] h-[18px] text-neutral-400 shrink-0" />
+                <span className="flex-1">
+                  <span className="block text-[10px] font-semibold tracking-wider uppercase text-neutral-400">{t('home.hero.typeLabel')}</span>
+                  <select
+                    value={propertyType}
+                    onChange={(e) => setPropertyType(e.target.value)}
+                    className="w-full bg-transparent border-0 p-0 text-sm font-medium text-neutral-900 dark:text-white focus:outline-none focus:ring-0"
+                  >
+                    <option value="">{t('home.hero.allTypes')}</option>
+                    <option value="APPARTEMENT">{t('home.categories.apartments')}</option>
+                    <option value="MAISON">{t('home.categories.houses')}</option>
+                    <option value="BUREAU">{t('home.categories.offices')}</option>
+                    <option value="MAGASIN">{t('home.categories.shops')}</option>
+                  </select>
+                </span>
+              </label>
+              <button
+                onClick={handleSearch}
+                className="btn-primary px-5 py-2.5 rounded-xl self-stretch"
+              >
+                {t('common.search')}
+              </button>
+            </div>
+
+            {/* Chips */}
+            <div className="flex flex-wrap gap-2 mt-4">
+              {chips.map((chip) => (
                 <Link
-                  key={commune}
-                  href={`/recherche?commune=${commune}`}
-                  className="px-4 py-2 bg-neutral-100 dark:bg-dark-bg hover:bg-neutral-200 dark:hover:bg-dark-border text-neutral-600 dark:text-neutral-400 text-sm rounded-full transition-colors"
+                  key={chip.label}
+                  href={chip.href}
+                  className="px-3.5 py-1.5 text-sm font-medium text-neutral-600 dark:text-neutral-300 bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-full hover:border-neutral-300 dark:hover:border-dark-hover hover:text-neutral-900 dark:hover:text-white transition-colors"
                 >
-                  {commune}
+                  {chip.label}
                 </Link>
               ))}
             </div>
@@ -334,317 +361,134 @@ export default function ClientHomePage() {
         </div>
       </section>
 
-      {/* Categories Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <CategoryButton
-            icon={Home}
-            label={t('home.categories.apartments')}
-            href="/recherche?type_bien=APPARTEMENT"
-            tint="bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400"
-          />
-          <CategoryButton
-            icon={Building2}
-            label={t('home.categories.houses')}
-            href="/recherche?type_bien=MAISON"
-            tint="bg-teal-50 text-teal-600 dark:bg-teal-500/10 dark:text-teal-400"
-          />
-          <CategoryButton
-            icon={Store}
-            label={t('home.categories.shops')}
-            href="/recherche?type_bien=MAGASIN"
-            tint="bg-success-50 text-success-600 dark:bg-success-500/10 dark:text-success-400"
-          />
-          <CategoryButton
-            icon={Briefcase}
-            label={t('home.categories.offices')}
-            href="/recherche?type_bien=BUREAU"
-            tint="bg-neutral-100 text-neutral-600 dark:bg-dark-hover dark:text-neutral-300"
-          />
+      {/* ---------- CATEGORIES ---------- */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+          <CategoryButton icon={Home} label={t('home.categories.apartments')} href="/recherche?type_bien=APPARTEMENT" tint="bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400" />
+          <CategoryButton icon={Building2} label={t('home.categories.houses')} href="/recherche?type_bien=MAISON" tint="bg-teal-50 text-teal-600 dark:bg-teal-500/10 dark:text-teal-400" />
+          <CategoryButton icon={Store} label={t('home.categories.shops')} href="/recherche?type_bien=MAGASIN" tint="bg-success-50 text-success-600 dark:bg-success-500/10 dark:text-success-400" />
+          <CategoryButton icon={Briefcase} label={t('home.categories.offices')} href="/recherche?type_bien=BUREAU" tint="bg-neutral-100 text-neutral-600 dark:bg-dark-hover dark:text-neutral-300" />
         </div>
       </section>
 
-      {/* Premium Listings */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="flex items-center justify-between mb-8">
+      {/* ---------- FEATURED ---------- */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14">
+        <div className="flex items-end justify-between gap-4 mb-6">
           <div>
-            <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white mb-2">
-              {t('home.premium.title')}
-            </h2>
-            <p className="text-neutral-500 dark:text-neutral-400">
-              {t('home.premium.subtitle')}
-            </p>
+            <span className="text-xs font-semibold tracking-[0.15em] uppercase text-primary-600 dark:text-primary-400">{t('home.featured.eyebrow')}</span>
+            <h2 className="mt-1.5 text-2xl md:text-3xl font-bold tracking-tight text-neutral-900 dark:text-white">{t('home.premium.title')}</h2>
+            <p className="mt-1 text-neutral-500 dark:text-neutral-400">{t('home.premium.subtitle')}</p>
           </div>
-          <Link
-            href="/recherche?premium=true"
-            className="hidden md:flex items-center gap-2 text-primary-500 hover:text-primary-600 font-medium"
-          >
+          <Link href="/recherche?premium=true" className="hidden md:inline-flex items-center gap-1.5 text-sm font-semibold text-primary-600 dark:text-primary-400 whitespace-nowrap group">
             {t('home.premium.viewAll')}
-            <ChevronRight className="w-5 h-5" />
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </Link>
         </div>
 
         {listingsLoading ? (
-          <div className="flex justify-center py-12">
+          <div className="flex justify-center py-16">
             <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
           </div>
         ) : premiumListings.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {premiumListings.slice(0, 4).map((property) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {premiumListings.slice(0, 6).map((property) => (
               <PropertyCard key={property.id} property={property} />
             ))}
           </div>
         ) : (
-          <div className="text-center py-12">
-            <p className="text-neutral-500">{t('home.premium.noListings')}</p>
-          </div>
+          <p className="text-center py-12 text-neutral-500 dark:text-neutral-400">{t('home.premium.noListings')}</p>
         )}
 
-        <div className="mt-8 text-center md:hidden">
-          <Link
-            href="/recherche?premium=true"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-primary-500 text-white font-semibold rounded-xl"
-          >
-            {t('home.premium.viewAllListings')}
-            <ArrowRight className="w-5 h-5" />
+        <div className="mt-6 text-center md:hidden">
+          <Link href="/recherche?premium=true" className="btn-primary inline-flex items-center gap-2">
+            {t('home.premium.viewAllListings')}<ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       </section>
 
-      {/* Quartiers Section */}
-      <section className="bg-white dark:bg-dark-card py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white mb-2">
-              {t('home.quartiers.title')}
-            </h2>
-            <p className="text-neutral-500 dark:text-neutral-400">
-              {t('home.quartiers.subtitle')}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {quartiers.map((quartier) => (
-              <QuartierCard key={quartier.name} quartier={quartier} />
-            ))}
-          </div>
+      {/* ---------- COMMUNES ---------- */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14">
+        <div className="mb-6">
+          <span className="text-xs font-semibold tracking-[0.15em] uppercase text-primary-600 dark:text-primary-400">{t('home.communes.eyebrow')}</span>
+          <h2 className="mt-1.5 text-2xl md:text-3xl font-bold tracking-tight text-neutral-900 dark:text-white">{t('home.quartiers.title')}</h2>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
+          {quartiers.map((q, i) => (
+            <CommuneTile key={q.name} name={q.name} count={q.count} index={i} />
+          ))}
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white mb-2">
-            {t('home.features.title')}
-          </h2>
-          <p className="text-neutral-500 dark:text-neutral-400">
-            {t('home.features.subtitle')}
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      {/* ---------- TRUST ---------- */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
-            {
-              icon: Shield,
-              title: t('home.features.verified.title'),
-              description: t('home.features.verified.description'),
-              color: 'text-teal-600 dark:text-teal-400',
-              bg: 'bg-teal-50 dark:bg-teal-500/10',
-            },
-            {
-              icon: Clock,
-              title: t('home.features.fast.title'),
-              description: t('home.features.fast.description'),
-              color: 'text-success-600 dark:text-success-400',
-              bg: 'bg-success-50 dark:bg-success-500/10',
-            },
-            {
-              icon: Zap,
-              title: t('home.features.simple.title'),
-              description: t('home.features.simple.description'),
-              color: 'text-primary-500',
-              bg: 'bg-primary-50 dark:bg-primary-500/10',
-            },
-          ].map((feature, index) => (
+            { icon: Shield, tint: 'bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400', title: t('home.trust.verifiedTitle'), desc: t('home.trust.verifiedDesc') },
+            { icon: Lock, tint: 'bg-teal-50 text-teal-600 dark:bg-teal-500/10 dark:text-teal-400', title: t('home.trust.depositTitle'), desc: t('home.trust.depositDesc') },
+            { icon: MessageCircle, tint: 'bg-success-50 text-success-600 dark:bg-success-500/10 dark:text-success-400', title: t('home.trust.whatsappTitle'), desc: t('home.trust.whatsappDesc') },
+          ].map((item, i) => (
             <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
+              key={i}
+              initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              className="text-center"
+              transition={{ delay: i * 0.08 }}
+              className="flex gap-4 p-5 bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-2xl"
             >
-              <div className={`inline-flex p-4 ${feature.bg} rounded-2xl mb-4`}>
-                <feature.icon className={`w-8 h-8 ${feature.color}`} />
+              <div className={`shrink-0 w-11 h-11 rounded-xl flex items-center justify-center ${item.tint}`}>
+                <item.icon className="w-5 h-5" />
               </div>
-              <h3 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
-                {feature.title}
-              </h3>
-              <p className="text-neutral-500 dark:text-neutral-400">
-                {feature.description}
-              </p>
+              <div>
+                <h3 className="font-semibold text-neutral-900 dark:text-white">{item.title}</h3>
+                <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{item.desc}</p>
+              </div>
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="bg-gradient-to-br from-primary-600 via-primary-500 to-primary-400 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {[
-              { value: '5000+', label: t('home.stats.activeListings'), icon: Home },
-              { value: '15K+', label: t('home.stats.users'), icon: Users },
-              { value: '98%', label: t('home.stats.satisfaction'), icon: Star },
-              { value: '24/7', label: t('home.stats.support'), icon: Phone },
-            ].map((stat, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="text-center"
-              >
-                <stat.icon className="w-8 h-8 text-white/80 mx-auto mb-3" />
-                <p className="text-3xl md:text-4xl font-bold text-white mb-1">{stat.value}</p>
-                <p className="text-white/80">{stat.label}</p>
-              </motion.div>
-            ))}
-          </div>
+      {/* ---------- ALERTS (empty state) ---------- */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-4">
+        <div className="mb-6">
+          <span className="text-xs font-semibold tracking-[0.15em] uppercase text-primary-600 dark:text-primary-400">{t('home.alerts.eyebrow')}</span>
+          <h2 className="mt-1.5 text-2xl md:text-3xl font-bold tracking-tight text-neutral-900 dark:text-white">{t('home.alerts.title')}</h2>
         </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="bg-gradient-to-br from-neutral-900 to-neutral-800 dark:from-neutral-800 dark:to-neutral-900 rounded-3xl p-8 md:p-12 text-center relative overflow-hidden"
-        >
-          {/* Background decoration */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-teal-500/20 rounded-full blur-3xl" />
-
-          <div className="relative z-10">
-            <h2 className="text-2xl md:text-4xl font-bold text-white mb-4">
-              {t('home.cta.title')}
-            </h2>
-            <p className="text-neutral-400 mb-8 max-w-2xl mx-auto">
-              {t('home.cta.subtitle')}
-            </p>
-            <Link href="/publier">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-8 py-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl inline-flex items-center gap-2 transition-colors"
-              >
-                {t('home.cta.button')}
-                <ArrowRight className="w-5 h-5" />
-              </motion.button>
+        <div className="rounded-3xl border border-dashed border-neutral-300 dark:border-dark-border bg-white dark:bg-dark-card px-6 py-12 md:py-16 text-center">
+          <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-neutral-100 dark:bg-dark-hover border border-neutral-200 dark:border-dark-border flex items-center justify-center text-neutral-400">
+            <Bell className="w-6 h-6" />
+          </div>
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">{t('home.alerts.emptyTitle')}</h3>
+          <p className="mt-2 max-w-md mx-auto text-neutral-500 dark:text-neutral-400">{t('home.alerts.emptyDesc')}</p>
+          <div className="flex flex-wrap gap-3 justify-center mt-6">
+            <Link href="/recherche" className="btn-primary inline-flex items-center gap-2">
+              <Bell className="w-4 h-4" />{t('home.alerts.create')}
             </Link>
-          </div>
-        </motion.div>
-      </section>
-
-      {/* Download App Section */}
-      <section className="bg-primary-50 dark:bg-primary-500/5 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center gap-8">
-            <div className="flex-1">
-              <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white mb-4">
-                {t('home.app.title')}
-              </h2>
-              <p className="text-neutral-600 dark:text-neutral-400 mb-6">
-                {t('home.app.subtitle')}
-              </p>
-              <div className="flex gap-4">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex items-center gap-3 px-6 py-3 bg-neutral-900 dark:bg-white dark:text-neutral-900 text-white rounded-xl"
-                >
-                  <Play className="w-6 h-6" />
-                  <div className="text-left">
-                    <p className="text-[10px] opacity-80">{t('home.app.availableOn')}</p>
-                    <p className="font-semibold">Google Play</p>
-                  </div>
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex items-center gap-3 px-6 py-3 bg-neutral-900 dark:bg-white dark:text-neutral-900 text-white rounded-xl"
-                >
-                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
-                  </svg>
-                  <div className="text-left">
-                    <p className="text-[10px] opacity-80">{t('home.app.downloadOn')}</p>
-                    <p className="font-semibold">App Store</p>
-                  </div>
-                </motion.button>
-              </div>
-            </div>
-            <div className="flex-1 flex justify-center">
-              <div className="relative">
-                <img
-                  src="/images/app-screenshot.png"
-                  alt="ImmoGuinée Mobile App"
-                  className="w-64 h-auto rounded-[2rem] shadow-2xl"
-                />
-              </div>
-            </div>
+            <Link href="/recherche" className="btn-secondary inline-flex items-center gap-2">{t('home.alerts.example')}</Link>
           </div>
         </div>
       </section>
 
-      {/* SEO Content Section */}
-      <section className="bg-neutral-100 dark:bg-dark-card py-12 border-t border-neutral-200 dark:border-dark-border">
+      {/* ---------- SEO ---------- */}
+      <section className="mt-14 bg-neutral-100 dark:bg-dark-card py-12 border-t border-neutral-200 dark:border-dark-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="prose prose-neutral dark:prose-invert max-w-none text-sm">
-            <h2 className="text-xl font-bold text-neutral-800 dark:text-neutral-200 mb-4">
-              {t('seo.home.landingTitle')}
-            </h2>
-
+          <div className="max-w-none text-sm">
+            <h2 className="text-xl font-bold text-neutral-800 dark:text-neutral-200 mb-4">{t('seo.home.landingTitle')}</h2>
             <div className="grid md:grid-cols-2 gap-8 text-neutral-600 dark:text-neutral-400">
               <div>
-                <h3 className="text-base font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
-                  {t('seo.home.landingRental')}
-                </h3>
-                <p className="text-sm leading-relaxed mb-4">
-                  {t('seo.home.landingRentalContent')}
-                </p>
-
-                <h3 className="text-base font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
-                  {t('seo.home.landingShortTerm')}
-                </h3>
-                <p className="text-sm leading-relaxed">
-                  {t('seo.home.landingShortTermContent')}
-                </p>
+                <h3 className="text-base font-semibold text-neutral-700 dark:text-neutral-300 mb-2">{t('seo.home.landingRental')}</h3>
+                <p className="text-sm leading-relaxed mb-4">{t('seo.home.landingRentalContent')}</p>
+                <h3 className="text-base font-semibold text-neutral-700 dark:text-neutral-300 mb-2">{t('seo.home.landingShortTerm')}</h3>
+                <p className="text-sm leading-relaxed">{t('seo.home.landingShortTermContent')}</p>
               </div>
-
               <div>
-                <h3 className="text-base font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
-                  {t('seo.home.landingSale')}
-                </h3>
-                <p className="text-sm leading-relaxed mb-4">
-                  {t('seo.home.landingSaleContent')}
-                </p>
-
-                <h3 className="text-base font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
-                  {t('seo.home.landingPublish')}
-                </h3>
-                <p className="text-sm leading-relaxed">
-                  {t('seo.home.landingPublishContent')}
-                </p>
+                <h3 className="text-base font-semibold text-neutral-700 dark:text-neutral-300 mb-2">{t('seo.home.landingSale')}</h3>
+                <p className="text-sm leading-relaxed mb-4">{t('seo.home.landingSaleContent')}</p>
+                <h3 className="text-base font-semibold text-neutral-700 dark:text-neutral-300 mb-2">{t('seo.home.landingPublish')}</h3>
+                <p className="text-sm leading-relaxed">{t('seo.home.landingPublishContent')}</p>
               </div>
             </div>
-
             <div className="mt-6 pt-4 border-t border-neutral-200 dark:border-dark-border">
-              <p className="text-xs text-neutral-500 dark:text-neutral-500">
-                {t('seo.home.landingCoverage')}
-              </p>
+              <p className="text-xs text-neutral-500 dark:text-neutral-500">{t('seo.home.landingCoverage')}</p>
             </div>
           </div>
         </div>

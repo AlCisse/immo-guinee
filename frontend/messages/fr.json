@@ -77,7 +77,14 @@
       "subtitle": "Des milliers de proprietes a louer et a vendre dans toute la Guinee. Trouvez celle qui vous correspond.",
       "searchPlaceholder": "Quartier, ville ou type de bien...",
       "rental": "Location",
-      "purchase": "Achat"
+      "purchase": "Achat",
+      "eyebrow": "Immobilier · Conakry & Guinée",
+      "whereLabel": "Où",
+      "typeLabel": "Type",
+      "allTypes": "Tous les biens",
+      "chipFurnished": "Meublé",
+      "chipNew": "Neuf",
+      "chipProtected": "Caution protégée"
     },
     "categories": {
       "apartments": "Appartements",
@@ -129,56 +136,87 @@
       "subtitle": "Recevez des alertes instantanees pour les nouvelles annonces, discutez avec les proprietaires et gerez vos favoris ou que vous soyez.",
       "availableOn": "Disponible sur",
       "downloadOn": "Telecharger sur"
+    },
+    "featured": {
+      "eyebrow": "Sélection"
+    },
+    "communes": {
+      "eyebrow": "Explorer"
+    },
+    "trust": {
+      "eyebrow": "Pourquoi ImmoGuinée",
+      "verifiedTitle": "Annonces vérifiées",
+      "verifiedDesc": "Chaque propriétaire est authentifié et les biens contrôlés avant publication.",
+      "depositTitle": "Caution protégée",
+      "depositDesc": "Votre caution est bloquée en sécurité et libérée seulement une fois le bien remis.",
+      "whatsappTitle": "Contact direct WhatsApp",
+      "whatsappDesc": "Échangez avec le propriétaire en un clic, sans intermédiaire ni frais cachés."
+    },
+    "alerts": {
+      "eyebrow": "Vos recherches",
+      "title": "Alertes enregistrées",
+      "emptyTitle": "Aucune alerte pour l'instant",
+      "emptyDesc": "Enregistrez une recherche et recevez une notification WhatsApp dès qu'un bien correspond — avant tout le monde.",
+      "create": "Créer une alerte",
+      "example": "Voir un exemple"
     }
   },
   "search": {
-    "title": "Recherche",
-    "results": "resultats",
-    "noResults": "Aucun bien ne correspond a vos criteres",
-    "filters": {
-      "title": "Filtres",
-      "propertyType": "Type de bien",
-      "transactionType": "Type de transaction",
-      "location": "Localisation",
-      "commune": "Commune",
-      "quartier": "Quartier",
-      "priceRange": "Fourchette de prix",
-      "minPrice": "Prix min",
-      "maxPrice": "Prix max",
-      "bedrooms": "Chambres",
-      "bathrooms": "Salles de bain",
-      "surface": "Surface",
-      "minSurface": "Surface min",
-      "maxSurface": "Surface max",
-      "amenities": "Equipements",
-      "applyFilters": "Appliquer les filtres",
-      "resetFilters": "Reinitialiser"
-    },
-    "sort": {
-      "newest": "Plus recent",
-      "oldest": "Plus ancien",
-      "priceAsc": "Prix croissant",
-      "priceDesc": "Prix decroissant",
-      "surfaceAsc": "Surface croissante",
-      "surfaceDesc": "Surface decroissante"
-    },
+    "searchPlaceholder": "Rechercher un quartier (ex: Kipe, Madina...)",
+    "resultsFound": "bien(s) trouve(s)",
+    "noResults": "Aucun resultat",
+    "noResultsHint": "Essayez de modifier vos criteres de recherche",
+    "resetFilters": "Reinitialiser les filtres",
+    "loadingError": "Erreur lors du chargement des annonces",
+    "commune": "Commune",
+    "budget": "Budget",
+    "inQuartier": "A {quartier}",
+    "nearbyQuartiers": "Quartiers a proximite",
+    "noExactMatch": "Aucune annonce trouvee a {quartier}. Voici des biens dans les quartiers a proximite.",
+    "page": "Page",
+    "of": "sur",
+    "previous": "Precedent",
+    "next": "Suivant",
     "propertyTypes": {
       "all": "Tous",
-      "apartment": "Appartement",
-      "house": "Maison",
-      "villa": "Villa",
-      "studio": "Studio",
-      "land": "Terrain",
-      "office": "Bureau",
-      "shop": "Magasin",
-      "warehouse": "Entrepot"
+      "APPARTEMENT": "Appartement",
+      "MAISON": "Maison",
+      "VILLA": "Villa",
+      "STUDIO": "Studio",
+      "BUREAU": "Bureau",
+      "MAGASIN": "Magasin",
+      "TERRAIN": "Terrain"
     },
     "transactionTypes": {
       "all": "Tous",
-      "rental": "Location",
-      "sale": "Vente",
-      "shortRental": "Location courte duree"
-    }
+      "LOCATION": "Location",
+      "LOCATION_COURTE": "Courte duree",
+      "VENTE": "Vente"
+    },
+    "badges": {
+      "premium": "Premium",
+      "new": "Nouveau",
+      "forRent": "A louer",
+      "shortTerm": "Courte duree",
+      "forSale": "A vendre"
+    },
+    "priceRanges": {
+      "all": "Tous les prix",
+      "lessThan5M": "Moins de 5M GNF",
+      "5Mto10M": "5M - 10M GNF",
+      "10Mto20M": "10M - 20M GNF",
+      "moreThan20M": "Plus de 20M GNF"
+    },
+    "sortOptions": {
+      "recent": "Plus recents",
+      "priceAsc": "Prix croissant",
+      "priceDesc": "Prix decroissant",
+      "area": "Surface"
+    },
+    "perMonth": "/mois",
+    "perDay": "/jour",
+    "bedrooms": "ch.",
+    "bathrooms": "sdb."
   },
   "listing": {
     "details": "Details",
@@ -992,7 +1030,29 @@
   },
   "profile": {
     "title": "Mon profil",
-    "edit": "Modifier le profil",
+    "edit": {
+      "title": "Modifier le profil",
+      "personalInfo": "Informations personnelles",
+      "fullName": "Nom complet",
+      "fullNamePlaceholder": "Votre nom complet",
+      "email": "Email",
+      "emailPlaceholder": "votre@email.com",
+      "phone": "Telephone",
+      "phoneReadOnly": "(non modifiable)",
+      "address": "Adresse",
+      "addressPlaceholder": "Votre adresse",
+      "save": "Enregistrer les modifications",
+      "saving": "Enregistrement...",
+      "success": "Profil mis a jour avec succes",
+      "error": "Erreur lors de la mise a jour du profil",
+      "photoHint": "JPG, PNG ou WebP. Max 5 Mo.",
+      "photoSuccess": "Photo de profil mise a jour",
+      "photoDeleted": "Photo de profil supprimee",
+      "photoError": "Erreur lors de la mise a jour de la photo",
+      "photoInvalidType": "Format de fichier non supporte",
+      "photoTooLarge": "La photo est trop volumineuse (max 5 Mo)",
+      "deletePhoto": "Supprimer la photo"
+    },
     "editButton": "Modifier",
     "personalInfo": "Informations personnelles",
     "fullName": "Nom complet",
@@ -1088,29 +1148,6 @@
       "emailNotifications": "Notifications par email",
       "smsNotifications": "Notifications par SMS",
       "pushNotifications": "Notifications push"
-    },
-    "edit": {
-      "title": "Modifier le profil",
-      "personalInfo": "Informations personnelles",
-      "fullName": "Nom complet",
-      "fullNamePlaceholder": "Votre nom complet",
-      "email": "Email",
-      "emailPlaceholder": "votre@email.com",
-      "phone": "Telephone",
-      "phoneReadOnly": "(non modifiable)",
-      "address": "Adresse",
-      "addressPlaceholder": "Votre adresse",
-      "save": "Enregistrer les modifications",
-      "saving": "Enregistrement...",
-      "success": "Profil mis a jour avec succes",
-      "error": "Erreur lors de la mise a jour du profil",
-      "photoHint": "JPG, PNG ou WebP. Max 5 Mo.",
-      "photoSuccess": "Photo de profil mise a jour",
-      "photoDeleted": "Photo de profil supprimee",
-      "photoError": "Erreur lors de la mise a jour de la photo",
-      "photoInvalidType": "Format de fichier non supporte",
-      "photoTooLarge": "La photo est trop volumineuse (max 5 Mo)",
-      "deletePhoto": "Supprimer la photo"
     }
   },
   "settings": {
@@ -1332,41 +1369,30 @@
     "selectCommune": "Selectionnez une commune",
     "quartier": "Quartier",
     "selectQuartier": "Selectionnez un quartier",
-    "surface": "Superficie (m2)",
-    "surfacePlaceholder": "Ex: 80",
+    "area": "Superficie (m²)",
+    "areaPlaceholder": "Ex: 80",
     "bedrooms": "Nombre de chambres",
     "selectBedrooms": "Selectionnez",
     "bedroom": "chambre",
-    "bedrooms_plural": "chambres",
+    "bedroomsPlural": "chambres",
+    "bedroomsMore": "5+ chambres",
     "furnished": "Le bien est meuble",
     "calculating": "Calcul en cours...",
     "estimateButton": "Estimer mon bien",
-    "result": {
-      "title": "Estimation de votre bien",
-      "minPrice": "Prix minimum",
-      "estimatedPrice": "Prix estime",
-      "maxPrice": "Prix maximum",
-      "pricePerM2": "Prix au m2",
-      "perMonth": "/ mois"
-    },
-    "actions": {
-      "publishListing": "Publier mon annonce",
-      "viewSimilar": "Voir les annonces similaires"
-    },
-    "features": {
-      "marketData": {
-        "title": "Donnees du marche",
-        "description": "Notre estimation est basee sur les prix reels du marche immobilier a Conakry."
-      },
-      "preciseLocation": {
-        "title": "Localisation precise",
-        "description": "Les prix varient selon la commune et le quartier. Notre outil en tient compte."
-      },
-      "free": {
-        "title": "100% gratuit",
-        "description": "Notre service d'estimation est entierement gratuit et sans engagement."
-      }
-    }
+    "resultTitle": "Estimation de votre bien",
+    "minPrice": "Prix minimum",
+    "estimatedPrice": "Prix estime",
+    "maxPrice": "Prix maximum",
+    "pricePerM2": "Prix au m²",
+    "perMonth": "/ mois",
+    "publishListing": "Publier mon annonce",
+    "viewSimilar": "Voir les annonces similaires",
+    "marketData": "Donnees du marche",
+    "marketDataDesc": "Notre estimation est basee sur les prix reels du marche immobilier a Conakry.",
+    "preciseLocation": "Localisation precise",
+    "preciseLocationDesc": "Les prix varient selon la commune et le quartier. Notre outil en tient compte.",
+    "freeService": "100% gratuit",
+    "freeServiceDesc": "Notre service d'estimation est entierement gratuit et sans engagement."
   },
   "contact": {
     "title": "Contactez-nous",
@@ -1559,20 +1585,38 @@
           "sections": {
             "listingTitle": {
               "title": "Titre de l'annonce",
-              "tips": ["15 a 100 caracteres", "Soyez descriptif et attractif", "Exemple: 'Villa 4 chambres avec piscine a Kipe'"],
-              "avoid": ["Titres vagues comme 'Belle maison'", "MAJUSCULES ou 'URGENT!!!'"]
+              "tips": [
+                "15 a 100 caracteres",
+                "Soyez descriptif et attractif",
+                "Exemple: 'Villa 4 chambres avec piscine a Kipe'"
+              ],
+              "avoid": [
+                "Titres vagues comme 'Belle maison'",
+                "MAJUSCULES ou 'URGENT!!!'"
+              ]
             },
             "description": {
               "title": "Description",
-              "tips": ["50 a 2000 caracteres", "Structure: Accroche → Caracteristiques → Localisation → Appel a l'action", "Mentionnez les equipements cles"]
+              "tips": [
+                "50 a 2000 caracteres",
+                "Structure: Accroche → Caracteristiques → Localisation → Appel a l'action",
+                "Mentionnez les equipements cles"
+              ]
             },
             "price": {
               "title": "Prix et caracteristiques",
-              "tips": ["Prix en GNF selon le type (mensuel/jour/total)", "Superficie obligatoire pour tous les biens", "Chambres requises pour les biens residentiels"]
+              "tips": [
+                "Prix en GNF selon le type (mensuel/jour/total)",
+                "Superficie obligatoire pour tous les biens",
+                "Chambres requises pour les biens residentiels"
+              ]
             },
             "ai": {
               "title": "Optimisation IA",
-              "tips": ["Cliquez sur 'Optimiser avec l'IA' pour ameliorer votre texte", "Corrige les fautes et ameliore le referencement"]
+              "tips": [
+                "Cliquez sur 'Optimiser avec l'IA' pour ameliorer votre texte",
+                "Corrige les fautes et ameliore le referencement"
+              ]
             }
           }
         },
@@ -1581,7 +1625,11 @@
           "sections": {
             "location": {
               "title": "Selectionner l'emplacement",
-              "tips": ["Choisissez la region (Conakry par defaut)", "Selectionnez la commune (Kaloum, Dixinn, Matam, Ratoma, Matoto)", "Indiquez le quartier precis"]
+              "tips": [
+                "Choisissez la region (Conakry par defaut)",
+                "Selectionnez la commune (Kaloum, Dixinn, Matam, Ratoma, Matoto)",
+                "Indiquez le quartier precis"
+              ]
             },
             "neighborhoods": {
               "title": "Quartiers populaires",
@@ -1599,15 +1647,30 @@
           "sections": {
             "requirements": {
               "title": "Exigences",
-              "tips": ["Minimum 3 photos, maximum 5", "Formats: JPG, PNG, WebP", "Taille max: 5 MB par photo"]
+              "tips": [
+                "Minimum 3 photos, maximum 5",
+                "Formats: JPG, PNG, WebP",
+                "Taille max: 5 MB par photo"
+              ]
             },
             "tips": {
               "title": "Conseils pour de bonnes photos",
-              "tips": ["Photographiez en journee avec lumiere naturelle", "Rangez et nettoyez avant de photographier", "Montrez toutes les pieces principales", "La premiere photo = couverture de l'annonce"]
+              "tips": [
+                "Photographiez en journee avec lumiere naturelle",
+                "Rangez et nettoyez avant de photographier",
+                "Montrez toutes les pieces principales",
+                "La premiere photo = couverture de l'annonce"
+              ]
             },
             "order": {
               "title": "Ordre recommande",
-              "items": ["Vue exterieure / Facade", "Salon", "Cuisine", "Chambres", "Salle de bain, Exterieur"]
+              "items": [
+                "Vue exterieure / Facade",
+                "Salon",
+                "Cuisine",
+                "Chambres",
+                "Salle de bain, Exterieur"
+              ]
             }
           }
         }
@@ -1727,8 +1790,8 @@
       "title": "Moderation des annonces",
       "subtitle": "Verifiez et approuvez les annonces soumises",
       "pending": "En attente",
-      "approved": "Approuvees",
-      "rejected": "Rejetees",
+      "approved": "Annonce approuvee",
+      "rejected": "Annonce rejetee",
       "all": "Toutes",
       "noListings": "Aucune annonce a moderer",
       "approve": "Approuver",
@@ -1736,9 +1799,7 @@
       "approving": "Approbation...",
       "rejecting": "Rejet...",
       "rejectReason": "Motif du rejet",
-      "rejectReasonPlaceholder": "Indiquez la raison du rejet...",
-      "approved": "Annonce approuvee",
-      "rejected": "Annonce rejetee"
+      "rejectReasonPlaceholder": "Indiquez la raison du rejet..."
     },
     "reports": {
       "title": "Signalements",
@@ -2200,100 +2261,6 @@
         "location courte duree expatrie Guinee"
       ]
     }
-  },
-  "search": {
-    "searchPlaceholder": "Rechercher un quartier (ex: Kipe, Madina...)",
-    "resultsFound": "bien(s) trouve(s)",
-    "noResults": "Aucun resultat",
-    "noResultsHint": "Essayez de modifier vos criteres de recherche",
-    "resetFilters": "Reinitialiser les filtres",
-    "loadingError": "Erreur lors du chargement des annonces",
-    "commune": "Commune",
-    "budget": "Budget",
-    "inQuartier": "A {quartier}",
-    "nearbyQuartiers": "Quartiers a proximite",
-    "noExactMatch": "Aucune annonce trouvee a {quartier}. Voici des biens dans les quartiers a proximite.",
-    "page": "Page",
-    "of": "sur",
-    "previous": "Precedent",
-    "next": "Suivant",
-    "propertyTypes": {
-      "all": "Tous",
-      "APPARTEMENT": "Appartement",
-      "MAISON": "Maison",
-      "VILLA": "Villa",
-      "STUDIO": "Studio",
-      "BUREAU": "Bureau",
-      "MAGASIN": "Magasin",
-      "TERRAIN": "Terrain"
-    },
-    "transactionTypes": {
-      "all": "Tous",
-      "LOCATION": "Location",
-      "LOCATION_COURTE": "Courte duree",
-      "VENTE": "Vente"
-    },
-    "badges": {
-      "premium": "Premium",
-      "new": "Nouveau",
-      "forRent": "A louer",
-      "shortTerm": "Courte duree",
-      "forSale": "A vendre"
-    },
-    "priceRanges": {
-      "all": "Tous les prix",
-      "lessThan5M": "Moins de 5M GNF",
-      "5Mto10M": "5M - 10M GNF",
-      "10Mto20M": "10M - 20M GNF",
-      "moreThan20M": "Plus de 20M GNF"
-    },
-    "sortOptions": {
-      "recent": "Plus recents",
-      "priceAsc": "Prix croissant",
-      "priceDesc": "Prix decroissant",
-      "area": "Surface"
-    },
-    "perMonth": "/mois",
-    "perDay": "/jour",
-    "bedrooms": "ch.",
-    "bathrooms": "sdb."
-  },
-  "estimate": {
-    "title": "Estimez votre bien immobilier",
-    "subtitle": "Obtenez une estimation gratuite du prix de votre bien en quelques clics",
-    "operationType": "Type d'operation",
-    "rental": "Location",
-    "sale": "Vente",
-    "propertyType": "Type de bien",
-    "selectType": "Selectionnez un type",
-    "commune": "Commune",
-    "selectCommune": "Selectionnez une commune",
-    "quartier": "Quartier",
-    "selectQuartier": "Selectionnez un quartier",
-    "area": "Superficie (m²)",
-    "areaPlaceholder": "Ex: 80",
-    "bedrooms": "Nombre de chambres",
-    "selectBedrooms": "Selectionnez",
-    "bedroom": "chambre",
-    "bedroomsPlural": "chambres",
-    "bedroomsMore": "5+ chambres",
-    "furnished": "Le bien est meuble",
-    "calculating": "Calcul en cours...",
-    "estimateButton": "Estimer mon bien",
-    "resultTitle": "Estimation de votre bien",
-    "minPrice": "Prix minimum",
-    "estimatedPrice": "Prix estime",
-    "maxPrice": "Prix maximum",
-    "pricePerM2": "Prix au m²",
-    "perMonth": "/ mois",
-    "publishListing": "Publier mon annonce",
-    "viewSimilar": "Voir les annonces similaires",
-    "marketData": "Donnees du marche",
-    "marketDataDesc": "Notre estimation est basee sur les prix reels du marche immobilier a Conakry.",
-    "preciseLocation": "Localisation precise",
-    "preciseLocationDesc": "Les prix varient selon la commune et le quartier. Notre outil en tient compte.",
-    "freeService": "100% gratuit",
-    "freeServiceDesc": "Notre service d'estimation est entierement gratuit et sans engagement."
   },
   "listingDetail": {
     "share": "Partager",
