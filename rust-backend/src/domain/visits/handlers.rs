@@ -10,7 +10,7 @@ use axum::{Json, Router};
 use chrono::{NaiveDate, NaiveTime};
 use sea_orm::{
     ActiveModelTrait, ActiveValue::Set, ColumnTrait, Condition, EntityTrait, QueryFilter,
-    QueryOrder,
+    QueryOrder, QuerySelect,
 };
 use uuid::Uuid;
 
@@ -132,6 +132,7 @@ async fn list(
     let visits = visit::Entity::find()
         .filter(mine(auth.id))
         .order_by_desc(visit::Column::DateVisite)
+        .limit(200) // safety cap: bound the result set (was unbounded .all())
         .all(&state.db)
         .await?;
     let (listings, users) = hydrate(&state.db, &visits).await?;

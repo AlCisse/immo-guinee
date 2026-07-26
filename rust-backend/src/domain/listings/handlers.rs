@@ -180,17 +180,41 @@ async fn create(
 
 /// `POST /api/listings/{id}/photos` — upload photos (owner only, max 10). Each
 /// file is optimized to 3 WebP renditions and pushed to `listings.photos`.
+///
+/// `photos` is a read-modify-write on a JSON array, so two parallel uploads for
+/// the same listing would last-writer-wins and silently drop renditions. A
+/// per-listing Redis mutex (random token + compare-and-delete release) serializes
+/// the read → append → rewrite across requests. TTL is generous (up to 10 files ×
+/// 3 S3 puts); the token-based release makes a TTL expiry safe (never deletes a
+/// concurrent holder's lock).
 async fn upload_photos(
     auth: AuthUser,
     State(state): State<Arc<AppState>>,
     Path(id): Path<Uuid>,
+    multipart: Multipart,
+) -> AppResult<Json<Envelope<PhotoUploadResponse>>> {
+    let lock_key = format!("lock:listing-photos:{id}");
+    let token = crate::services::redis_atomic::acquire_lock(&state.redis, &lock_key, 120)
+        .await?
+        .ok_or_else(|| {
+            AppError::Conflict("un envoi de photos est déjà en cours pour cette annonce".into())
+        })?;
+    let result = upload_photos_locked(&state, auth.id, id, multipart).await;
+    let _ = crate::services::redis_atomic::release_lock(&state.redis, &lock_key, &token).await;
+    result
+}
+
+async fn upload_photos_locked(
+    state: &AppState,
+    auth_id: Uuid,
+    id: Uuid,
     mut multipart: Multipart,
 ) -> AppResult<Json<Envelope<PhotoUploadResponse>>> {
     let listing = listing::Entity::find_by_id(id)
         .one(&state.db)
         .await?
         .ok_or(AppError::NotFound)?;
-    if listing.createur_id != auth.id {
+    if listing.createur_id != auth_id {
         return Err(AppError::Forbidden("Vous n'êtes pas le propriétaire de cette annonce".into()));
     }
 

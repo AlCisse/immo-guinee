@@ -21,15 +21,23 @@ use crate::services::otp;
 use crate::state::AppState;
 
 /// When WhatsApp is not configured, decide between the dev-safe log path and a
-/// loud prod error. Pure dev (no `vault_addr`) → `Ok` (caller logs the payload).
-/// Prod intent without a key → `Err` (must not silently swallow an OTP/message).
+/// loud prod error. Pure dev → `Ok` (caller logs the payload). Prod intent
+/// without a key → `Err` (must not silently swallow an OTP/message).
+///
+/// Prod intent is detected the same way `state::load_jwt_secret` does: either
+/// `vault_addr` is set (Vault-backed prod) OR `IMMOG_APP_ENV=production` (prod
+/// running with an env-provided JWT secret, no Vault). Checking only `vault_addr`
+/// missed the second case → OTPs would be logged to stdout in an env-secret prod.
 fn ensure_dev_or_prod_err(state: &AppState) -> AppResult<()> {
-    if state.cfg.vault_addr.is_empty() {
-        Ok(())
-    } else {
+    let prod_intent = !state.cfg.vault_addr.is_empty()
+        || std::env::var("IMMOG_APP_ENV").map(|e| e == "production").unwrap_or(false);
+    if prod_intent {
         Err(AppError::Internal(anyhow::anyhow!(
-            "WhatsApp (Evolution API) non configuré en production (clé Vault absente) — envoi impossible"
+            "WhatsApp (Evolution API) non configuré en production — envoi impossible \
+             (Vault absent ou clé Evolution manquante)"
         )))
+    } else {
+        Ok(())
     }
 }
 

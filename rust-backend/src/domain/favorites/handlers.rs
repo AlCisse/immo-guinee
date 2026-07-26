@@ -9,7 +9,7 @@ use std::sync::Arc;
 use axum::extract::{Path, State};
 use axum::routing::{delete, get, post};
 use axum::{Json, Router};
-use sea_orm::{ActiveValue::Set, ColumnTrait, EntityTrait, QueryFilter, QueryOrder};
+use sea_orm::{ActiveValue::Set, ColumnTrait, EntityTrait, QueryFilter, QueryOrder, QuerySelect};
 use sea_orm::sea_query::OnConflict;
 use serde::Deserialize;
 use serde_json::json;
@@ -41,6 +41,7 @@ async fn list(
     let favs = favorite::Entity::find()
         .filter(favorite::Column::UserId.eq(auth.id))
         .order_by_desc(favorite::Column::CreatedAt)
+        .limit(200) // safety cap: bound the result set (was unbounded .all())
         .all(&state.db)
         .await?;
 

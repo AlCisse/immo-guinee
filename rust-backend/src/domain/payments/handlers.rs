@@ -13,7 +13,7 @@ use axum::{Json, Router};
 use chrono::Utc;
 use sea_orm::{
     ActiveModelTrait, ActiveValue::Set, ColumnTrait, EntityTrait, QueryFilter, QueryOrder,
-    TransactionTrait,
+    QuerySelect, TransactionTrait,
 };
 use serde_json::{Value, json};
 use uuid::Uuid;
@@ -276,8 +276,9 @@ async fn validate(
 async fn list(
     auth: AuthUser,
     State(state): State<Arc<AppState>>,
-    Query(_params): Query<HashMap<String, String>>,
+    Query(params): Query<HashMap<String, String>>,
 ) -> AppResult<Json<Value>> {
+    let (limit, offset) = page_params(&params);
     let rows = payment::Entity::find()
         .filter(
             sea_orm::Condition::any()
@@ -285,6 +286,8 @@ async fn list(
                 .add(payment::Column::BeneficiaireId.eq(auth.id)),
         )
         .order_by_desc(payment::Column::DateCreation)
+        .limit(limit)
+        .offset(offset)
         .all(&state.db)
         .await?;
 
@@ -557,6 +560,19 @@ async fn refund(
 }
 
 // --- helpers ---------------------------------------------------------------
+
+/// Parse `limit`/`offset` query params for a user-facing list, with a safe default
+/// page size and a hard cap so the response can never grow O(rows) (was: `.all()`
+/// with no bound → memory + payload unbounded as history accumulates).
+fn page_params(params: &HashMap<String, String>) -> (u64, u64) {
+    let limit = params
+        .get("limit")
+        .and_then(|s| s.parse::<u64>().ok())
+        .unwrap_or(50)
+        .clamp(1, 200);
+    let offset = params.get("offset").and_then(|s| s.parse::<u64>().ok()).unwrap_or(0);
+    (limit, offset)
+}
 
 /// Sandbox stand-in for an Orange Money / MTN MoMo transaction reference.
 fn sandbox_provider_ref(methode: &MethodePaiement) -> String {

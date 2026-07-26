@@ -22,6 +22,7 @@ use axum::{Json, Router};
 use chrono::Utc;
 use sea_orm::{
     ActiveModelTrait, ActiveValue::Set, ColumnTrait, EntityTrait, QueryFilter, QueryOrder,
+    QuerySelect,
 };
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -65,6 +66,7 @@ async fn list_for_user(
         .filter(rating::Column::EvalueId.eq(user_id))
         .filter(rating::Column::StatutModeration.eq(StatutVerificationDoc::Approuve))
         .order_by_desc(rating::Column::DateCreation)
+        .limit(200) // safety cap: bound the result set (was unbounded .all())
         .all(&state.db)
         .await?;
 
