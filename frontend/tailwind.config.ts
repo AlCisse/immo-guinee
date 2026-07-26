@@ -10,19 +10,19 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Primary Orange - Energetic & Modern
+        // Primary Terracotta — « Argile de Conakry » (accent signature)
         primary: {
-          50: '#fff7ed',
-          100: '#ffedd5',
-          200: '#fed7aa',
-          300: '#fdba74',
-          400: '#fb923c',
-          500: '#f97316', // Main Orange
-          600: '#ea580c',
-          700: '#c2410c',
-          800: '#9a3412',
-          900: '#7c2d12',
-          950: '#431407',
+          50: '#FCEEE8',
+          100: '#F9D9CC',
+          200: '#F2B49E',
+          300: '#EA8E6E',
+          400: '#E26E48',
+          500: '#DB5327', // Main accent
+          600: '#B84420', // hover
+          700: '#94371B',
+          800: '#6F2915',
+          900: '#4B1C0F',
+          950: '#2A0F08',
         },
         // Secondary Blue - Trust & Professionalism
         secondary: {
@@ -38,19 +38,32 @@ const config: Config = {
           900: '#1e3a8a',
           950: '#172554',
         },
-        // Neutral Gray
+        // Neutral — cool-biased grays (chosen, not default)
         neutral: {
-          50: '#fafafa',
-          100: '#f5f5f5',
-          200: '#e5e5e5',
-          300: '#d4d4d4',
-          400: '#a3a3a3',
-          500: '#737373',
-          600: '#525252',
-          700: '#404040',
-          800: '#262626',
-          900: '#171717',
-          950: '#0a0a0a',
+          50: '#F7F8FA',
+          100: '#F2F4F7',
+          200: '#E6E9EE',
+          300: '#D7DCE3',
+          400: '#A9B0BA',
+          500: '#79808B',
+          600: '#565D67',
+          700: '#3D434C',
+          800: '#262B32',
+          900: '#171A1F',
+          950: '#0C0E12',
+        },
+        // Teal — support hue (confiance, catégories, données)
+        teal: {
+          50: '#E4F0F2',
+          100: '#C9E1E6',
+          200: '#9DC7CF',
+          300: '#6FA9B4',
+          400: '#468B99',
+          500: '#2C6E7D',
+          600: '#235967',
+          700: '#1B4551',
+          800: '#14343D',
+          900: '#0D2329',
         },
         // Accent Green - Location, Prix, Disponible
         accent: {
@@ -105,12 +118,12 @@ const config: Config = {
           800: '#991b1b',
           900: '#7f1d1d',
         },
-        // Background colors for dark mode
+        // Background colors for dark mode — « Argile de Conakry » (biais froid)
         dark: {
-          bg: '#0f0f0f',
-          card: '#1a1a1a',
-          border: '#2a2a2a',
-          hover: '#252525',
+          bg: '#0C0E12',
+          card: '#14171D',
+          border: '#242A33',
+          hover: '#1B1F27',
         },
       },
       fontFamily: {
@@ -137,7 +150,7 @@ const config: Config = {
         'card-hover': '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
         'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
         'soft-lg': '0 4px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 30px -5px rgba(0, 0 , 0, 0.04)',
-        'glow-orange': '0 0 20px rgba(249, 115, 22, 0.3)',
+        'glow-orange': '0 0 20px rgba(219, 83, 39, 0.3)',
         'glow-green': '0 0 20px rgba(16, 185, 129, 0.3)',
         'inner-soft': 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05)',
       },

@@ -51,7 +51,7 @@
   }
 
   .btn-danger {
-    @apply btn bg-secondary-500 text-white hover:bg-secondary-600 focus:ring-secondary-500;
+    @apply btn bg-error-500 text-white hover:bg-error-600 focus:ring-error-500;
   }
 
   /* Input styles */
@@ -60,7 +60,7 @@
   }
 
   .input-error {
-    @apply border-secondary-500 focus:border-secondary-500 focus:ring-secondary-500;
+    @apply border-error-500 focus:border-error-500 focus:ring-error-500;
   }
 
   /* Card styles */
