@@ -25,7 +25,7 @@ function VerifyOtpContent() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-success-50 to-success-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-xl">
+      <div className="max-w-md w-full bg-white dark:bg-dark-card p-8 rounded-2xl shadow-xl">
         {/* Logo */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-success-600">ImmoGuinée</h1>
@@ -47,7 +47,7 @@ function LoadingFallback() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-success-50 to-success-100">
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-success-600 mx-auto"></div>
-        <p className="mt-4 text-neutral-600">{t('auth.otp.loading')}</p>
+        <p className="mt-4 text-neutral-600 dark:text-neutral-400">{t('auth.otp.loading')}</p>
       </div>
     </div>
   );
