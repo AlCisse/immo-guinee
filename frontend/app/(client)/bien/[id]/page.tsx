@@ -178,7 +178,7 @@ function ErrorDisplay({ message, onRetry }: { message: string; onRetry: () => vo
   return (
     <div className="min-h-screen bg-white dark:bg-dark-bg flex items-center justify-center">
       <div className="text-center px-4">
-        <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+        <AlertCircle className="w-16 h-16 text-error-500 mx-auto mb-4" />
         <h1 className="text-2xl font-bold text-neutral-900 dark:text-white mb-2">
           Erreur de chargement
         </h1>
@@ -394,7 +394,7 @@ export default function PropertyDetailPage() {
               }}
               className="flex items-center gap-2 px-3 py-2 hover:bg-neutral-100 dark:hover:bg-dark-card rounded-lg transition-colors"
             >
-              <Heart className={`w-4 h-4 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
+              <Heart className={`w-4 h-4 ${isFavorite ? 'fill-error-500 text-error-500' : ''}`} />
               <span className="hidden sm:inline text-sm font-medium underline">{t('listingDetail.save')}</span>
             </button>
           </div>
@@ -595,12 +595,12 @@ export default function PropertyDetailPage() {
                   {getTransactionLabel()}
                 </span>
                 {listing.meuble && (
-                  <span className="px-3 py-1 bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 text-sm font-medium rounded-full">
+                  <span className="px-3 py-1 bg-teal-50 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400 text-sm font-medium rounded-full">
                     {t('listingDetail.furnished')}
                   </span>
                 )}
                 {listing.user?.statut_verification === 'VERIFIE' && (
-                  <span className="flex items-center gap-1 px-3 py-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-sm font-medium rounded-full">
+                  <span className="flex items-center gap-1 px-3 py-1 bg-success-50 dark:bg-success-500/10 text-success-600 dark:text-success-400 text-sm font-medium rounded-full">
                     <Check className="w-3 h-3" />
                     {t('listingDetail.verified')}
                   </span>
@@ -620,17 +620,17 @@ export default function PropertyDetailPage() {
                 <div className="flex items-center gap-2 mt-0.5">
                   {listing.user?.badge && (
                     <span className={`text-xs px-2 py-0.5 rounded-full ${
-                      listing.user.badge === 'DIAMANT' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' :
-                      listing.user.badge === 'OR' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
-                      listing.user.badge === 'ARGENT' ? 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400' :
-                      'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
+                      listing.user.badge === 'DIAMANT' ? 'bg-teal-100 text-teal-700 dark:bg-teal-500/20 dark:text-teal-300' :
+                      listing.user.badge === 'OR' ? 'bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400' :
+                      listing.user.badge === 'ARGENT' ? 'bg-neutral-100 text-neutral-700 dark:bg-dark-hover dark:text-neutral-300' :
+                      'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400'
                     }`}>
                       {listing.user.badge}
                     </span>
                   )}
                   {listing.user?.note_moyenne > 0 && (
                     <span className="flex items-center gap-1 text-sm text-neutral-600 dark:text-neutral-300">
-                      <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                      <Star className="w-4 h-4 text-warning-400 fill-warning-400" />
                       {Number(listing.user.note_moyenne).toFixed(1)}
                     </span>
                   )}
@@ -723,17 +723,17 @@ export default function PropertyDetailPage() {
 
                 {/* Caution & Avance - Separate and visible */}
                 {((listing.caution && parseFloat(listing.caution) > 0) || (listing.avance && parseFloat(listing.avance) > 0)) && (
-                  <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mb-4 space-y-2">
+                  <div className="bg-teal-50 dark:bg-teal-500/10 border border-teal-200 dark:border-teal-800 rounded-lg p-3 mb-4 space-y-2">
                     {listing.caution && parseFloat(listing.caution) > 0 && (
                       <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium text-amber-800 dark:text-amber-300">{t('listingDetail.deposit')}</span>
-                        <span className="text-sm font-semibold text-amber-900 dark:text-amber-200">{formatPrice(listing.caution)}</span>
+                        <span className="text-sm font-medium text-teal-800 dark:text-teal-300">{t('listingDetail.deposit')}</span>
+                        <span className="text-sm font-semibold text-teal-900 dark:text-teal-200">{formatPrice(listing.caution)}</span>
                       </div>
                     )}
                     {listing.avance && parseFloat(listing.avance) > 0 && (
                       <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium text-amber-800 dark:text-amber-300">{t('listingDetail.advance')}</span>
-                        <span className="text-sm font-semibold text-amber-900 dark:text-amber-200">{formatPrice(listing.avance)}</span>
+                        <span className="text-sm font-medium text-teal-800 dark:text-teal-300">{t('listingDetail.advance')}</span>
+                        <span className="text-sm font-semibold text-teal-900 dark:text-teal-200">{formatPrice(listing.avance)}</span>
                       </div>
                     )}
                   </div>
@@ -741,7 +741,7 @@ export default function PropertyDetailPage() {
 
                 {/* Short rental minimum duration */}
                 {(listing.type_transaction === 'LOCATION_COURTE' || listing.type_transaction === 'location_courte') && listing.duree_minimum_jours && (
-                  <p className="text-sm text-purple-600 dark:text-purple-400 mb-4">
+                  <p className="text-sm text-teal-600 dark:text-teal-400 mb-4">
                     {t('listingDetail.minimumDuration')}: {listing.duree_minimum_jours} {listing.duree_minimum_jours > 1 ? t('listingDetail.nights') : t('listingDetail.night')}
                   </p>
                 )}
@@ -780,13 +780,13 @@ export default function PropertyDetailPage() {
                     </motion.button>
                   </div>
                 ) : (
-                  <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
-                    <p className="text-blue-600 dark:text-blue-400 font-medium">
+                  <div className="p-4 bg-primary-50 dark:bg-primary-500/10 rounded-lg text-center">
+                    <p className="text-primary-600 dark:text-primary-400 font-medium">
                       {t('listingDetail.thisIsYourListing')}
                     </p>
                     <Link
                       href={`/mes-annonces/${id}/modifier`}
-                      className="text-sm text-blue-500 hover:underline"
+                      className="text-sm text-primary-500 hover:underline"
                     >
                       {t('listingDetail.editListing')}
                     </Link>
@@ -835,17 +835,17 @@ export default function PropertyDetailPage() {
 
                 {/* Caution & Avance - Separate and visible */}
                 {((listing.caution && parseFloat(listing.caution) > 0) || (listing.avance && parseFloat(listing.avance) > 0)) && (
-                  <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-4 space-y-2">
+                  <div className="bg-teal-50 dark:bg-teal-500/10 border border-teal-200 dark:border-teal-800 rounded-lg p-4 mb-4 space-y-2">
                     {listing.caution && parseFloat(listing.caution) > 0 && (
                       <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium text-amber-800 dark:text-amber-300">{t('listingDetail.deposit')}</span>
-                        <span className="font-semibold text-amber-900 dark:text-amber-200">{formatPrice(listing.caution)}</span>
+                        <span className="text-sm font-medium text-teal-800 dark:text-teal-300">{t('listingDetail.deposit')}</span>
+                        <span className="font-semibold text-teal-900 dark:text-teal-200">{formatPrice(listing.caution)}</span>
                       </div>
                     )}
                     {listing.avance && parseFloat(listing.avance) > 0 && (
                       <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium text-amber-800 dark:text-amber-300">{t('listingDetail.advance')}</span>
-                        <span className="font-semibold text-amber-900 dark:text-amber-200">{formatPrice(listing.avance)}</span>
+                        <span className="text-sm font-medium text-teal-800 dark:text-teal-300">{t('listingDetail.advance')}</span>
+                        <span className="font-semibold text-teal-900 dark:text-teal-200">{formatPrice(listing.avance)}</span>
                       </div>
                     )}
                   </div>
@@ -853,7 +853,7 @@ export default function PropertyDetailPage() {
 
                 {/* Short rental minimum duration */}
                 {(listing.type_transaction === 'LOCATION_COURTE' || listing.type_transaction === 'location_courte') && listing.duree_minimum_jours && (
-                  <p className="text-sm text-purple-600 dark:text-purple-400 mb-4">
+                  <p className="text-sm text-teal-600 dark:text-teal-400 mb-4">
                     {t('listingDetail.minimumDuration')}: {listing.duree_minimum_jours} {listing.duree_minimum_jours > 1 ? t('listingDetail.nights') : t('listingDetail.night')}
                   </p>
                 )}
@@ -894,13 +894,13 @@ export default function PropertyDetailPage() {
                     </motion.button>
                   </div>
                 ) : (
-                  <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
-                    <p className="text-blue-600 dark:text-blue-400 font-medium">
+                  <div className="p-4 bg-primary-50 dark:bg-primary-500/10 rounded-lg text-center">
+                    <p className="text-primary-600 dark:text-primary-400 font-medium">
                       {t('listingDetail.thisIsYourListing')}
                     </p>
                     <Link
                       href={`/mes-annonces/${id}/modifier`}
-                      className="text-sm text-blue-500 hover:underline"
+                      className="text-sm text-primary-500 hover:underline"
                     >
                       {t('listingDetail.editListing')}
                     </Link>
