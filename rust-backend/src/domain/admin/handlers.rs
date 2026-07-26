@@ -14,7 +14,6 @@ use sea_orm::{
     ActiveModelTrait, ActiveValue::Set, ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter,
     QueryOrder, QuerySelect,
 };
-use sea_orm::ActiveEnum;
 use serde::Deserialize;
 use serde_json::{Value, json};
 use uuid::Uuid;
@@ -189,12 +188,17 @@ async fn analytics(
         .filter(listing::Column::Statut.eq(StatutListing::Disponible))
         .count(db)
         .await? as i64;
+    // Single GROUP BY (was: one COUNT query per TypeBien variant).
+    let by_type_rows: Vec<(TypeBien, i64)> = listing::Entity::find()
+        .select_only()
+        .column(listing::Column::TypeBien)
+        .column_as(Expr::col(listing::Column::Id).count(), "count")
+        .group_by(listing::Column::TypeBien)
+        .into_tuple()
+        .all(db)
+        .await?;
     let mut listings_by_type: HashMap<String, i64> = HashMap::new();
-    for variant in TypeBien::values() {
-        let c = listing::Entity::find()
-            .filter(listing::Column::TypeBien.eq(variant.clone()))
-            .count(db)
-            .await? as i64;
+    for (variant, c) in by_type_rows {
         let key = serde_json::to_value(&variant)
             .ok()
             .and_then(|v| v.as_str().map(str::to_owned))
@@ -202,8 +206,13 @@ async fn analytics(
         listings_by_type.insert(key, c);
     }
 
+    // Aggregates below are scoped to the requested period (were all-time, but the
+    // response is labelled "period" — the dashboard showed lifetime totals).
+    let cutoff = (Utc::now() - chrono::Duration::days(period)).fixed_offset();
+
     // Transaction volume: SUM aggregate (was: load all rows + sum in RAM).
     let total_volume_gnf: i64 = transaction::Entity::find()
+        .filter(transaction::Column::DateDebut.gte(cutoff))
         .select_only()
         .column_as(Expr::col(transaction::Column::MontantTotalGnf).sum(), "total")
         .into_tuple::<(Option<i64>,)>()
@@ -215,6 +224,7 @@ async fn analytics(
     // Average rating: SUM + COUNT (AVG isn't exposed on Expr in this sea_query
     // version); computed from two scalar aggregates instead of loading rows.
     let (rating_sum, rating_count) = rating::Entity::find()
+        .filter(rating::Column::DateCreation.gte(cutoff))
         .select_only()
         .column_as(Expr::col(rating::Column::NoteGlobale).sum(), "sum")
         .column_as(Expr::col(rating::Column::Id).count(), "count")
@@ -742,6 +752,11 @@ async fn assign_dispute(
 ) -> AppResult<Json<Value>> {
     auth.require_permission(Permission::ResolveDisputes)?;
     let d = dispute::Entity::find_by_id(id).one(&state.db).await?.ok_or(AppError::NotFound)?;
+    // Guard: don't (re)assign a mediator to an already-closed dispute — that would
+    // reopen it by flipping the statut back to EnCours.
+    if !matches!(d.statut, StatutLitige::Ouvert | StatutLitige::EnCours) {
+        return Err(AppError::Conflict("ce litige est déjà clôturé".into()));
+    }
     let mut am: dispute::ActiveModel = d.into();
     am.mediateur_assigne_id = Set(Some(req.mediateur_id));
     am.date_assignation_mediateur = Set(Some(Utc::now().into()));
@@ -768,6 +783,11 @@ async fn resolve_dispute(
 ) -> AppResult<Json<Value>> {
     auth.require_permission(Permission::ResolveDisputes)?;
     let d = dispute::Entity::find_by_id(id).one(&state.db).await?.ok_or(AppError::NotFound)?;
+    // Guard: only an open/in-progress dispute can be resolved — otherwise a second
+    // call would overwrite a prior resolution and its date.
+    if !matches!(d.statut, StatutLitige::Ouvert | StatutLitige::EnCours) {
+        return Err(AppError::Conflict("ce litige est déjà clôturé".into()));
+    }
 
     let statut = match req.statut.as_deref() {
         Some("RESOLU_COMPENSATION") => StatutLitige::ResoluCompensation,

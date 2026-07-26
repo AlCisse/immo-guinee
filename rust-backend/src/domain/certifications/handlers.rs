@@ -14,11 +14,13 @@ use axum::extract::{DefaultBodyLimit, Multipart, Path, State};
 use axum::routing::{get, post};
 use axum::Json;
 use axum::Router;
+use chrono::Utc;
 use sea_orm::{ActiveModelTrait, ActiveValue::Set, ColumnTrait, EntityTrait, QueryFilter, QueryOrder};
+use serde_json::json;
 use uuid::Uuid;
 
 use crate::auth::rbac::Permission;
-use crate::db::entities::certification_document;
+use crate::db::entities::{admin_audit_log, certification_document};
 use crate::db::entities::sea_orm_active_enums::{StatutVerificationDoc, TypeDocument};
 use crate::error::{AppError, AppResult};
 use crate::extractors::{AuthUser, ValidatedJson};
@@ -163,6 +165,20 @@ async fn verify(
     am.verifie_par_admin_id = Set(Some(auth.id));
     am.date_verification = Set(Some(now));
     let updated = am.update(&state.db).await?;
+
+    // Central audit-log entry (like resolve_dispute/assign_dispute) — the doc keeps
+    // verifie_par_admin_id, but admin actions must also land in admin_audit_log.
+    let _ = admin_audit_log::ActiveModel {
+        id: Set(Uuid::new_v4()),
+        admin_id: Set(auth.id),
+        action: Set("certification.verify".into()),
+        target_type: Set(Some("certification".into())),
+        target_id: Set(Some(id)),
+        details: Set(json!({ "decision": req.decision })),
+        created_at: Set(Utc::now().into()),
+    }
+    .insert(&state.db)
+    .await;
 
     Ok(Json(Envelope { success: true, data: CertificationResponse::from(updated) }))
 }
