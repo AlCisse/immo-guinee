@@ -1,0 +1,519 @@
+# =====================================================================
+# ImmoGuinée — Docker Swarm Production Stack (Rust)
+# =====================================================================
+# Cible de la revue d'archi : Cloudflare -> Traefik -> Rust (h2c), sans
+# NGINX ni services Laravel. Evolution API auto-hébergé. Réseaux overlay
+# segmentés (edge/data/admin) et chiffrés. Secrets via Vault + Docker secrets.
+#
+# Déploiement :
+#   docker stack deploy -c docker/docker-compose.swarm.rust.yml immog
+#
+# ⚠️  À FAIRE AVANT LE PREMIER DÉPLOIEMENT (voir notes en bas de fichier) :
+#   - Vault : operator init + unseal (ou auto-unseal KMS), écrire
+#     secret/immoguinee/app = { jwt_secret, evolution_api_key,
+#     s3_access_key, s3_secret_key }, créer l'AppRole.
+#   - Renseigner tous les fichiers ./secrets/* et le certificat d'origine CF.
+#   - Vérifier la commande de démarrage d'Evolution pour le tag épinglé.
+#   - Build backend en --release (Dockerfile) pour la prod.
+# =====================================================================
+
+version: "3.8"
+
+# ---------------------------------------------------------------------
+# RÉSEAUX — segmentation en 3 tiers, tous chiffrés (IPSec overlay)
+# ---------------------------------------------------------------------
+networks:
+  edge:            # Traefik <-> front/back : trafic entrant seulement
+    driver: overlay
+    driver_opts:
+      encrypted: "true"
+  data:            # back/evolution <-> pg/redis/minio/vault : jamais exposé
+    driver: overlay
+    internal: true          # aucun accès Internet sortant/entrant direct
+    driver_opts:
+      encrypted: "true"
+  admin:           # Traefik <-> outils d'admin (grafana/pgadmin/prometheus)
+    driver: overlay
+    driver_opts:
+      encrypted: "true"
+
+volumes:
+  postgres-data:
+  redis-data:
+  minio-data:
+  vault-data:
+  evolution-pg-data:
+  evolution-instances:
+  prometheus-data:
+  grafana-data:
+
+services:
+
+  # ===================================================================
+  # TRAEFIK — unique ingress d'origine (TLS, routage, LB, h2c vers Rust)
+  # ===================================================================
+  traefik:
+    image: traefik:v2.11
+    command:
+      - "--api.dashboard=true"
+      - "--api.insecure=false"
+      - "--providers.docker=true"
+      - "--providers.docker.swarmMode=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=immog_edge"
+      # Fichier dynamique : TLS (cert d'origine Cloudflare), middlewares partagés,
+      # serversTransport (keep-alive vers le backend). Voir traefik/dynamic/*.yml
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--providers.file.watch=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.websecure.address=:443"
+      # Coupe les slowloris / requêtes lentes (rôle jadis tenu par NGINX)
+      - "--entrypoints.websecure.transport.respondingTimeouts.readTimeout=15s"
+      - "--entrypoints.websecure.transport.respondingTimeouts.idleTimeout=65s"
+      - "--entrypoints.metrics.address=:8082"
+      - "--metrics.prometheus=true"
+      - "--metrics.prometheus.entryPoint=metrics"
+      - "--log.level=WARN"
+      - "--accesslog=true"
+    ports:
+      - { target: 80,  published: 80,  mode: host }
+      - { target: 443, published: 443, mode: host }
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    configs:
+      - source: traefik_dynamic_tls
+        target: /etc/traefik/dynamic/tls.yml
+      - source: traefik_dynamic_mw
+        target: /etc/traefik/dynamic/middlewares.yml
+    secrets:
+      - cf_origin_cert          # certificat d'origine Cloudflare (public)
+      - cf_origin_key           # clé privée du certificat d'origine
+      - cf_origin_pull_ca       # CA "Authenticated Origin Pulls" de Cloudflare
+      - admin_htpasswd          # basic-auth du dashboard (admin-auth@file)
+    networks: [edge, admin]
+    deploy:
+      mode: replicated
+      replicas: 2               # HA : plus de SPOF (cert statique CF -> pas de souci ACME distribué)
+      placement:
+        constraints: ["node.role == manager"]
+        preferences: [{ spread: node.id }]
+      restart_policy: { condition: on-failure }
+      labels:
+        - "traefik.enable=true"
+        # Dashboard protégé (IPAllowList CF + basic-auth), sinon accès par tunnel
+        - "traefik.http.routers.dashboard.rule=Host(`traefik.immoguinee.com`)"
+        - "traefik.http.routers.dashboard.entrypoints=websecure"
+        - "traefik.http.routers.dashboard.tls=true"
+        - "traefik.http.routers.dashboard.service=api@internal"
+        - "traefik.http.routers.dashboard.middlewares=cloudflare-only@file,security-headers@file,admin-auth@file"
+        - "traefik.http.services.dashboard.loadbalancer.server.port=8080"
+
+  # ===================================================================
+  # MIGRATE — one-shot : applique les migrations SeaORM puis s'arrête
+  # ===================================================================
+  migrate:
+    image: ${DOCKER_REGISTRY:-}immoguinee-backend:${VERSION:-latest}
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        export IMMOG_DATABASE_URL="postgres://immog_app:$$(cat /run/secrets/db_password)@postgres:5432/immog_db?sslmode=require"
+        exec immog-migrate up
+    secrets: [db_password]
+    networks: [data]
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy: { condition: none }   # exécution unique
+
+  # ===================================================================
+  # BACKEND — Rust / Axum (reçoit en h2c depuis Traefik)
+  # ===================================================================
+  backend:
+    image: ${DOCKER_REGISTRY:-}immoguinee-backend:${VERSION:-latest}
+    # Entrypoint wrapper : assemble les URLs DB/Redis à partir des Docker secrets
+    # (mots de passe JAMAIS en env clair), puis exécute le binaire.
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        export IMMOG_DATABASE_URL="postgres://immog_app:$$(cat /run/secrets/db_password)@postgres:5432/immog_db?sslmode=require"
+        export IMMOG_REDIS_URL="redis://:$$(cat /run/secrets/redis_password)@redis:6379"
+        export IMMOG_EVOLUTION_WEBHOOK_TOKEN="$$(cat /run/secrets/evolution_webhook_token)"
+        exec immog-backend
+    environment:
+      IMMOG_APP_ENV: production
+      IMMOG_HOST: "0.0.0.0"
+      IMMOG_PORT: "8000"
+      # S3 / objets — creds (s3_access_key/s3_secret_key) fournis par Vault
+      IMMOG_S3_ENDPOINT: http://minio:9000
+      IMMOG_S3_PUBLIC_URL: https://storage.immoguinee.com
+      IMMOG_S3_REGION: us-east-1
+      IMMOG_S3_BUCKET: immoguinee-images
+      # Evolution API (auto-hébergé) — la clé (evolution_api_key) vient de Vault
+      IMMOG_EVOLUTION_BASE_URL: http://evolution:8080
+      IMMOG_EVOLUTION_INSTANCE: immoguinee
+      # (IMMOG_EVOLUTION_WEBHOOK_TOKEN est exporté depuis le secret dans l'entrypoint :
+      #  la config figment ne supporte pas de convention *_FILE.)
+      # Vault (AppRole) — role_id public ; secret_id lu depuis /run/secrets/...
+      IMMOG_VAULT_ADDR: http://vault:8200
+      IMMOG_VAULT_APPROLE_ROLE_ID: ${VAULT_ROLE_ID}
+      IMMOG_JWT_SECRET_VAULT_PATH: secret/immoguinee/app
+      IMMOG_CORS_ALLOWED_ORIGIN: https://immoguinee.com
+    secrets:
+      - db_password
+      - redis_password
+      - vault_approle_secret_id      # lu directement par le VaultClient
+      - evolution_webhook_token
+    networks: [edge, data]           # edge : reçoit de Traefik ; data : atteint pg/redis/minio/vault/evolution
+    deploy:
+      mode: replicated
+      replicas: 3
+      update_config: { parallelism: 1, delay: 10s, order: start-first, failure_action: rollback }
+      restart_policy: { condition: on-failure, delay: 5s, max_attempts: 5 }
+      resources:
+        limits: { memory: 512M }
+        reservations: { memory: 128M }
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=immog_edge"
+        - "traefik.http.routers.api.rule=Host(`immoguinee.com`) && PathPrefix(`/api`)"
+        - "traefik.http.routers.api.entrypoints=websecure"
+        - "traefik.http.routers.api.tls=true"
+        - "traefik.http.routers.api.priority=100"
+        - "traefik.http.routers.api.middlewares=cloudflare-only@file,rate-limit-api@file"
+        # Routeur dédié /api/auth : limite plus stricte (rate-limit-auth existant)
+        - "traefik.http.routers.api-auth.rule=Host(`immoguinee.com`) && PathPrefix(`/api/auth`)"
+        - "traefik.http.routers.api-auth.entrypoints=websecure"
+        - "traefik.http.routers.api-auth.tls=true"
+        - "traefik.http.routers.api-auth.priority=110"
+        - "traefik.http.routers.api-auth.middlewares=cloudflare-only@file,rate-limit-auth@file"
+        - "traefik.http.routers.api-auth.service=api"
+        - "traefik.http.services.api.loadbalancer.server.port=8000"
+        # HTTP/2 cleartext vers Axum : multiplexage, moins de sockets
+        - "traefik.http.services.api.loadbalancer.server.scheme=h2c"
+        - "traefik.http.services.api.loadbalancer.serverstransport=keepalive@file"
+        - "traefik.http.services.api.loadbalancer.healthcheck.path=/api/health"
+        - "traefik.http.services.api.loadbalancer.healthcheck.interval=15s"
+
+  # ===================================================================
+  # FRONTEND — Next.js standalone (SSR appelle le backend en interne)
+  # ===================================================================
+  frontend:
+    image: ${DOCKER_REGISTRY:-}immoguinee-frontend:${VERSION:-latest}
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      # SSR : le front atteint le backend directement sur le réseau edge
+      BACKEND_INTERNAL_URL: http://backend:8000
+      NEXT_PUBLIC_API_URL: /api        # le navigateur appelle same-origin, proxifié
+    networks: [edge]
+    deploy:
+      mode: replicated
+      replicas: 2
+      update_config: { parallelism: 1, delay: 10s, order: start-first, failure_action: rollback }
+      restart_policy: { condition: on-failure, delay: 5s, max_attempts: 3 }
+      resources:
+        limits: { memory: 384M }
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=immog_edge"
+        - "traefik.http.routers.frontend.rule=Host(`immoguinee.com`) || Host(`www.immoguinee.com`)"
+        - "traefik.http.routers.frontend.entrypoints=websecure"
+        - "traefik.http.routers.frontend.tls=true"
+        - "traefik.http.routers.frontend.priority=1"
+        - "traefik.http.routers.frontend.middlewares=cloudflare-only@file,security-headers@file,www-redirect"
+        - "traefik.http.middlewares.www-redirect.redirectregex.regex=^https://www\\.(.*)"
+        - "traefik.http.middlewares.www-redirect.redirectregex.replacement=https://$${1}"
+        - "traefik.http.middlewares.www-redirect.redirectregex.permanent=true"
+        - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+
+  # ===================================================================
+  # POSTGRESQL — base applicative (SSL activé)
+  # ===================================================================
+  postgres:
+    image: postgres:16-alpine
+    command:
+      - postgres
+      - "-c"
+      - "ssl=on"
+      - "-c"
+      - "ssl_cert_file=/etc/postgresql/ssl/server.crt"
+      - "-c"
+      - "ssl_key_file=/etc/postgresql/ssl/server.key"
+      - "-c"
+      - "max_connections=200"
+    environment:
+      POSTGRES_DB: immog_db
+      POSTGRES_USER: immog_app
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      PGDATA: /var/lib/postgresql/data/pgdata
+    secrets: [db_password]
+    configs:
+      - { source: postgres_ssl_cert, target: /etc/postgresql/ssl/server.crt, mode: 0644 }
+      - { source: postgres_ssl_key,  target: /etc/postgresql/ssl/server.key, mode: 0600, uid: "70", gid: "70" }
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks: [data]
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement: { constraints: ["node.role == manager"] }
+      restart_policy: { condition: on-failure }
+      resources:
+        limits: { memory: 1G }
+        reservations: { memory: 512M }
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U immog_app -d immog_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===================================================================
+  # REDIS — cache, sessions, rate-limit applicatif
+  # ===================================================================
+  redis:
+    image: redis:7-alpine
+    command: sh -c 'redis-server --appendonly yes --requirepass "$$(cat /run/secrets/redis_password)"'
+    secrets: [redis_password]
+    volumes:
+      - redis-data:/data
+    networks: [data]
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy: { condition: on-failure }
+      resources:
+        limits: { memory: 256M }
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$(cat /run/secrets/redis_password)\" ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===================================================================
+  # MINIO — stockage objet (photos, documents)
+  # ===================================================================
+  minio:
+    image: minio/minio:latest
+    entrypoint: /bin/sh -c 'export MINIO_ROOT_PASSWORD=$$(cat /run/secrets/minio_password) && exec minio server /data --console-address ":9001"'
+    environment:
+      MINIO_ROOT_USER: immoguinee
+    secrets: [minio_password]
+    volumes:
+      - minio-data:/data
+    networks: [edge, data]     # edge : route storage.immoguinee.com ; data : accès backend
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy: { condition: on-failure }
+      labels:
+        # API publique (CDN d'origine pour les images) — passe par Cloudflare
+        - "traefik.enable=true"
+        - "traefik.docker.network=immog_edge"
+        - "traefik.http.routers.minio-api.rule=Host(`storage.immoguinee.com`)"
+        - "traefik.http.routers.minio-api.entrypoints=websecure"
+        - "traefik.http.routers.minio-api.tls=true"
+        - "traefik.http.routers.minio-api.middlewares=cloudflare-only@file"
+        - "traefik.http.services.minio-api.loadbalancer.server.port=9000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===================================================================
+  # EVOLUTION API — WhatsApp auto-hébergé (remplace WAHA)
+  # ===================================================================
+  evolution:
+    image: atendai/evolution-api:v2.2.3   # ⚠️ vérifier le dernier tag v2 stable
+    # La clé API globale vient d'un Docker secret (pas d'env clair). Evolution ne
+    # lit pas *_FILE nativement → wrapper shell qui l'exporte puis démarre.
+    # ⚠️ Confirmer la commande de démarrage réelle du tag épinglé (node dist/main.js).
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        export AUTHENTICATION_API_KEY="$$(cat /run/secrets/evolution_api_key)"
+        export DATABASE_CONNECTION_URI="postgresql://evolution:$$(cat /run/secrets/evolution_db_password)@evolution-postgres:5432/evolution?sslmode=disable"
+        export CACHE_REDIS_URI="redis://:$$(cat /run/secrets/redis_password)@redis:6379/1"
+        exec node ./dist/main.js
+    environment:
+      SERVER_URL: http://evolution:8080         # usage interne (pas de route publique par défaut)
+      DEL_INSTANCE: "false"
+      DATABASE_ENABLED: "true"
+      DATABASE_PROVIDER: postgresql
+      DATABASE_SAVE_DATA_INSTANCE: "true"
+      DATABASE_SAVE_DATA_NEW_MESSAGE: "true"
+      CACHE_REDIS_ENABLED: "true"
+      CACHE_LOCAL_ENABLED: "false"
+      # Webhook global -> backend Rust (domain::webhooks::evolution, monté sous /api)
+      WEBHOOK_GLOBAL_ENABLED: "true"
+      WEBHOOK_GLOBAL_URL: http://backend:8000/api/webhooks/evolution
+      WEBHOOK_GLOBAL_BY_EVENTS: "true"
+    secrets:
+      - evolution_api_key
+      - evolution_db_password
+      - redis_password
+    volumes:
+      - evolution-instances:/evolution/instances
+    networks: [data]        # interne : le backend l'atteint sur data ; pas d'exposition publique
+    deploy:
+      mode: replicated
+      replicas: 1           # session WhatsApp unique — ne pas scaler
+      restart_policy: { condition: on-failure, delay: 5s }
+      resources:
+        limits: { memory: 512M }
+    # Appairage / QR : via l'API en tunnel SSH, ou décommenter une route Traefik
+    # protégée (cf-ipallowlist + basic-auth) le temps de scanner le QR.
+
+  # ===================================================================
+  # EVOLUTION-POSTGRES — base dédiée à Evolution (isolation des données)
+  # ===================================================================
+  evolution-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: evolution
+      POSTGRES_USER: evolution
+      POSTGRES_PASSWORD_FILE: /run/secrets/evolution_db_password
+      PGDATA: /var/lib/postgresql/data/pgdata
+    secrets: [evolution_db_password]
+    volumes:
+      - evolution-pg-data:/var/lib/postgresql/data
+    networks: [data]
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement: { constraints: ["node.role == manager"] }
+      restart_policy: { condition: on-failure }
+      resources:
+        limits: { memory: 384M }
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U evolution -d evolution"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===================================================================
+  # VAULT — secrets (JWT, clés Evolution/S3). AppRole pour le backend.
+  # ===================================================================
+  # ⚠️ Vault en prod nécessite : operator init + unseal (idéalement auto-unseal
+  #    via KMS/Transit), backend de stockage HA (raft/consul), et audit device.
+  #    Le service ci-dessous est un socle mono-nœud à durcir avant prod réelle.
+  vault:
+    image: hashicorp/vault:1.16
+    command: ["vault", "server", "-config=/vault/config/vault.hcl"]
+    cap_add: ["IPC_LOCK"]
+    configs:
+      - { source: vault_config, target: /vault/config/vault.hcl }
+    volumes:
+      - vault-data:/vault/data
+    networks: [data]
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement: { constraints: ["node.role == manager"] }
+      restart_policy: { condition: on-failure }
+
+  # ===================================================================
+  # PROMETHEUS + GRAFANA — supervision (tier admin)
+  # ===================================================================
+  prometheus:
+    image: prom/prometheus:latest
+    configs:
+      - { source: prometheus_config, target: /etc/prometheus/prometheus.yml }
+    volumes:
+      - prometheus-data:/prometheus
+    networks: [admin]
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement: { constraints: ["node.role == manager"] }
+      restart_policy: { condition: on-failure }
+
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/grafana_password
+      GF_SERVER_ROOT_URL: https://monitoring.immoguinee.com
+    secrets: [grafana_password]
+    volumes:
+      - grafana-data:/var/lib/grafana
+    networks: [admin]
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy: { condition: on-failure }
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=immog_admin"
+        - "traefik.http.routers.grafana.rule=Host(`monitoring.immoguinee.com`)"
+        - "traefik.http.routers.grafana.entrypoints=websecure"
+        - "traefik.http.routers.grafana.tls=true"
+        - "traefik.http.routers.grafana.middlewares=cloudflare-only@file,security-headers@file"
+        - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+
+  # ===================================================================
+  # PGADMIN — admin BDD (sensible : IPAllowList + tier admin/data)
+  # ===================================================================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@immoguinee.com
+      PGADMIN_DEFAULT_PASSWORD_FILE: /run/secrets/pgadmin_password
+    secrets: [pgadmin_password]
+    networks: [admin, data]     # admin : reçoit de Traefik ; data : atteint postgres
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy: { condition: on-failure }
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=immog_admin"
+        - "traefik.http.routers.pgadmin.rule=Host(`pgadmin.immoguinee.com`)"
+        - "traefik.http.routers.pgadmin.entrypoints=websecure"
+        - "traefik.http.routers.pgadmin.tls=true"
+        - "traefik.http.routers.pgadmin.middlewares=cloudflare-only@file,security-headers@file,admin-auth@file"
+        - "traefik.http.services.pgadmin.loadbalancer.server.port=80"
+
+# =====================================================================
+# CONFIGS
+# =====================================================================
+configs:
+  traefik_dynamic_tls:
+    file: ./traefik/dynamic/tls.yml
+  traefik_dynamic_mw:
+    file: ./traefik/dynamic/middlewares.yml
+  postgres_ssl_cert:
+    external: true
+  postgres_ssl_key:
+    external: true
+  vault_config:
+    file: ./vault/vault.hcl
+  prometheus_config:
+    file: ../monitoring/prometheus/prometheus.yml
+
+# =====================================================================
+# SECRETS
+# =====================================================================
+secrets:
+  db_password:            { file: ./secrets/db_password }
+  redis_password:         { file: ./secrets/redis_password }
+  minio_password:         { file: ./secrets/minio_password }
+  grafana_password:       { file: ./secrets/grafana_password }
+  pgadmin_password:       { file: ./secrets/pgadmin_password }
+  # Evolution (auto-hébergé)
+  evolution_api_key:      { file: ./secrets/evolution_api_key }
+  evolution_db_password:  { file: ./secrets/evolution_db_password }
+  evolution_webhook_token: { file: ./secrets/evolution_webhook_token }
+  # Vault AppRole bootstrap (secret_id lu par le backend)
+  vault_approle_secret_id: { file: ./secrets/vault_approle_secret_id }
+  # Basic-auth Traefik (dashboard + admin) : généré par `htpasswd -nbB admin <pw>`
+  admin_htpasswd:         { file: ./secrets/admin_htpasswd }
+  # Cloudflare origin (Full strict + Authenticated Origin Pulls)
+  cf_origin_cert:         { external: true }
+  cf_origin_key:          { external: true }
+  cf_origin_pull_ca:      { external: true }
