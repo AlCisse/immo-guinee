@@ -9,6 +9,7 @@ use std::time::Duration;
 
 use axum::Router;
 use axum::extract::DefaultBodyLimit;
+use axum::http::StatusCode;
 use tower_http::{
     cors::{AllowOrigin, CorsLayer},
     timeout::TimeoutLayer,
@@ -48,7 +49,10 @@ pub fn router(state: Arc<AppState>, cfg: &Config) -> Router {
         .nest("/api", api)
         .with_state(state)
         .layer(DefaultBodyLimit::max(cfg.body_limit_bytes))
-        .layer(TimeoutLayer::new(Duration::from_secs(cfg.request_timeout_secs)))
+        .layer(TimeoutLayer::with_status_code(
+            StatusCode::REQUEST_TIMEOUT,
+            Duration::from_secs(cfg.request_timeout_secs),
+        ))
         .layer(cors)
         .layer(TraceLayer::new_for_http());
 

@@ -4,8 +4,6 @@
 //! The schema is owned by the Rust migrations (`immog-migrate`), and auth uses a
 //! JWT secret loaded from Vault. See specs/001-immog-platform/ for the design.
 
-#![allow(deprecated)] // tower-http TimeoutLayer::new deprecation (foundational scaffold)
-
 use std::sync::Arc;
 
 use tracing_subscriber::{EnvFilter, fmt};
