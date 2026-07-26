@@ -108,7 +108,7 @@ export default function SignatureModal({
                   className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
                     step >= stepNum
                       ? 'bg-primary-600 text-white'
-                      : 'bg-gray-200 text-gray-600'
+                      : 'bg-neutral-200 text-neutral-600'
                   }`}
                 >
                   {step > stepNum ? (
@@ -126,7 +126,7 @@ export default function SignatureModal({
                 {stepNum < 4 && (
                   <div
                     className={`h-0.5 w-8 ${
-                      step > stepNum ? 'bg-primary-600' : 'bg-gray-200'
+                      step > stepNum ? 'bg-primary-600' : 'bg-neutral-200'
                     }`}
                   />
                 )}
@@ -153,22 +153,22 @@ export default function SignatureModal({
                 />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            <h3 className="text-xl font-semibold text-neutral-900 mb-2">
               Signature électronique
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-neutral-600 mb-6">
               Vous êtes sur le point de signer le contrat{' '}
               <span className="font-medium">{contractReference}</span>
             </p>
 
-            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-left mb-6">
-              <h4 className="font-medium text-gray-900 mb-2">
+            <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4 text-left mb-6">
+              <h4 className="font-medium text-neutral-900 mb-2">
                 Avant de continuer, confirmez que:
               </h4>
-              <ul className="space-y-2 text-sm text-gray-600">
+              <ul className="space-y-2 text-sm text-neutral-600">
                 <li className="flex items-start">
                   <svg
-                    className="mr-2 h-5 w-5 text-gray-400 flex-shrink-0"
+                    className="mr-2 h-5 w-5 text-neutral-400 flex-shrink-0"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -184,7 +184,7 @@ export default function SignatureModal({
                 </li>
                 <li className="flex items-start">
                   <svg
-                    className="mr-2 h-5 w-5 text-gray-400 flex-shrink-0"
+                    className="mr-2 h-5 w-5 text-neutral-400 flex-shrink-0"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -200,7 +200,7 @@ export default function SignatureModal({
                 </li>
                 <li className="flex items-start">
                   <svg
-                    className="mr-2 h-5 w-5 text-gray-400 flex-shrink-0"
+                    className="mr-2 h-5 w-5 text-neutral-400 flex-shrink-0"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -222,9 +222,9 @@ export default function SignatureModal({
                 type="checkbox"
                 checked={accepted}
                 onChange={(e) => setAccepted(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                className="h-4 w-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
               />
-              <span className="ml-2 text-sm text-gray-700">
+              <span className="ml-2 text-sm text-neutral-700">
                 J&apos;accepte les conditions et la politique de confidentialité
               </span>
             </label>
@@ -263,10 +263,10 @@ export default function SignatureModal({
                 />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            <h3 className="text-xl font-semibold text-neutral-900 mb-2">
               Vérification OTP
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-neutral-600 mb-6">
               Un code à 6 chiffres a été envoyé à votre téléphone.
               <br />
               Saisissez-le ci-dessous.
@@ -284,21 +284,21 @@ export default function SignatureModal({
                   value={digit}
                   onChange={(e) => handleOtpChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
-                  className="h-12 w-12 rounded-lg border border-gray-300 text-center text-xl font-semibold focus:border-primary-500 focus:ring-primary-500"
+                  className="h-12 w-12 rounded-lg border border-neutral-300 text-center text-xl font-semibold focus:border-primary-500 focus:ring-primary-500"
                   autoFocus={index === 0}
                 />
               ))}
             </div>
 
             {/* Countdown */}
-            <p className={`text-sm mb-6 ${countdown < 60 ? 'text-red-600' : 'text-gray-500'}`}>
+            <p className={`text-sm mb-6 ${countdown < 60 ? 'text-error-600' : 'text-neutral-500'}`}>
               Code valide pendant: {formatTime(countdown)}
             </p>
 
             {/* Error message */}
             {error && (
-              <div className="mb-4 rounded-lg bg-red-50 p-3">
-                <p className="text-sm text-red-600">{error}</p>
+              <div className="mb-4 rounded-lg bg-error-50 p-3">
+                <p className="text-sm text-error-600">{error}</p>
               </div>
             )}
 
@@ -321,9 +321,9 @@ export default function SignatureModal({
         {/* Step 3: Confirm */}
         {step === 3 && (
           <div className="text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-yellow-100">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-warning-100">
               <svg
-                className="h-8 w-8 text-yellow-600"
+                className="h-8 w-8 text-warning-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -336,17 +336,17 @@ export default function SignatureModal({
                 />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            <h3 className="text-xl font-semibold text-neutral-900 mb-2">
               Confirmation finale
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-neutral-600 mb-6">
               Vous êtes sur le point de signer définitivement ce contrat.
               <br />
               Cette action est irréversible.
             </p>
 
-            <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 mb-6">
-              <p className="text-sm text-yellow-800">
+            <div className="rounded-lg border border-warning-200 bg-warning-50 p-4 mb-6">
+              <p className="text-sm text-warning-800">
                 <strong>Période de rétractation:</strong> Après signature des deux parties,
                 vous disposerez de 48 heures pour annuler le contrat sans frais.
               </p>
@@ -371,9 +371,9 @@ export default function SignatureModal({
         {/* Step 4: Success */}
         {step === 4 && (
           <div className="text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success-100">
               <svg
-                className="h-8 w-8 text-green-600"
+                className="h-8 w-8 text-success-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -386,10 +386,10 @@ export default function SignatureModal({
                 />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            <h3 className="text-xl font-semibold text-neutral-900 mb-2">
               Signature enregistrée!
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-neutral-600 mb-6">
               Votre signature a été enregistrée avec succès.
               Un cachet électronique horodaté a été ajouté au contrat.
             </p>

@@ -106,10 +106,10 @@ export default function PublicContractSigningPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 animate-spin text-primary-500 mx-auto" />
-          <p className="mt-4 text-gray-600">Chargement du contrat...</p>
+          <p className="mt-4 text-neutral-600 dark:text-neutral-400">Chargement du contrat...</p>
         </div>
       </div>
     );
@@ -118,14 +118,14 @@ export default function PublicContractSigningPage() {
   if (error || !data?.success) {
     const errorMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Lien invalide ou expiré';
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <AlertCircle className="w-8 h-8 text-red-600" />
+      <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white dark:bg-dark-card rounded-2xl shadow-lg p-8 text-center">
+          <div className="w-16 h-16 bg-error-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <AlertCircle className="w-8 h-8 text-error-600" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Lien invalide</h1>
-          <p className="text-gray-600">{errorMessage}</p>
-          <p className="mt-4 text-sm text-gray-500">
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white mb-2">Lien invalide</h1>
+          <p className="text-neutral-600 dark:text-neutral-400">{errorMessage}</p>
+          <p className="mt-4 text-sm text-neutral-500 dark:text-neutral-400">
             Veuillez demander un nouveau lien de signature au propriétaire.
           </p>
         </div>
@@ -136,13 +136,13 @@ export default function PublicContractSigningPage() {
   // Already signed
   if (contract?.locataire_signed_at) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Check className="w-8 h-8 text-green-600" />
+      <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white dark:bg-dark-card rounded-2xl shadow-lg p-8 text-center">
+          <div className="w-16 h-16 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Check className="w-8 h-8 text-success-600" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Contrat déjà signé</h1>
-          <p className="text-gray-600">Ce contrat a été signé le {new Date(contract.locataire_signed_at).toLocaleDateString('fr-FR')}.</p>
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white mb-2">Contrat déjà signé</h1>
+          <p className="text-neutral-600 dark:text-neutral-400">Ce contrat a été signé le {new Date(contract.locataire_signed_at).toLocaleDateString('fr-FR')}.</p>
         </div>
       </div>
     );
@@ -151,18 +151,18 @@ export default function PublicContractSigningPage() {
   // Success step
   if (step === 'success') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Check className="w-8 h-8 text-green-600" />
+      <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white dark:bg-dark-card rounded-2xl shadow-lg p-8 text-center">
+          <div className="w-16 h-16 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Check className="w-8 h-8 text-success-600" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Contrat signé !</h1>
-          <p className="text-gray-600">
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white mb-2">Contrat signé !</h1>
+          <p className="text-neutral-600 dark:text-neutral-400">
             Votre signature a été enregistrée avec succès.
             {!contract?.bailleur_signed_at && " En attente de la signature du propriétaire."}
           </p>
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-500">
+          <div className="mt-6 p-4 bg-neutral-50 dark:bg-dark-bg rounded-lg">
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">
               Un email de confirmation vous sera envoyé une fois que les deux parties auront signé.
             </p>
           </div>
@@ -174,21 +174,21 @@ export default function PublicContractSigningPage() {
   // OTP step
   if (step === 'otp') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8">
+      <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white dark:bg-dark-card rounded-2xl shadow-lg p-8">
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Phone className="w-8 h-8 text-primary-600" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Vérification</h1>
-            <p className="text-gray-600">
+            <h1 className="text-2xl font-bold text-neutral-900 dark:text-white mb-2">Vérification</h1>
+            <p className="text-neutral-600 dark:text-neutral-400">
               Un code a été envoyé par WhatsApp au {phoneMasked}
             </p>
           </div>
 
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                 Code de vérification
               </label>
               <input
@@ -198,7 +198,7 @@ export default function PublicContractSigningPage() {
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                 placeholder="000000"
-                className="w-full text-center text-2xl tracking-widest py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full text-center text-2xl tracking-widest py-4 border border-neutral-300 dark:border-dark-border rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               />
             </div>
 
@@ -235,74 +235,74 @@ export default function PublicContractSigningPage() {
 
   // View step (default)
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg py-8 px-4">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <FileText className="w-8 h-8 text-primary-600" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Contrat à signer</h1>
-          <p className="text-gray-600 mt-2">
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">Contrat à signer</h1>
+          <p className="text-neutral-600 dark:text-neutral-400 mt-2">
             Référence: {contract?.reference || contract?.numero_contrat}
           </p>
         </div>
 
         {/* Contract details */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Détails du contrat</h2>
+        <div className="bg-white dark:bg-dark-card rounded-2xl shadow-lg p-6 mb-6">
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">Détails du contrat</h2>
 
           <dl className="space-y-3">
             {contract?.listing && (
               <>
-                <div className="flex justify-between py-2 border-b border-gray-100">
-                  <dt className="text-gray-600">Bien</dt>
-                  <dd className="font-medium text-gray-900">{contract.listing.titre}</dd>
+                <div className="flex justify-between py-2 border-b border-neutral-100 dark:border-dark-border">
+                  <dt className="text-neutral-600 dark:text-neutral-400">Bien</dt>
+                  <dd className="font-medium text-neutral-900 dark:text-white">{contract.listing.titre}</dd>
                 </div>
-                <div className="flex justify-between py-2 border-b border-gray-100">
-                  <dt className="text-gray-600">Quartier</dt>
-                  <dd className="font-medium text-gray-900">{contract.listing.quartier}</dd>
+                <div className="flex justify-between py-2 border-b border-neutral-100 dark:border-dark-border">
+                  <dt className="text-neutral-600 dark:text-neutral-400">Quartier</dt>
+                  <dd className="font-medium text-neutral-900 dark:text-white">{contract.listing.quartier}</dd>
                 </div>
               </>
             )}
-            <div className="flex justify-between py-2 border-b border-gray-100">
-              <dt className="text-gray-600">Loyer mensuel</dt>
+            <div className="flex justify-between py-2 border-b border-neutral-100 dark:border-dark-border">
+              <dt className="text-neutral-600 dark:text-neutral-400">Loyer mensuel</dt>
               <dd className="font-medium text-primary-600">
                 {contract?.loyer_mensuel?.toLocaleString('fr-GN')} GNF
               </dd>
             </div>
-            <div className="flex justify-between py-2 border-b border-gray-100">
-              <dt className="text-gray-600">Période</dt>
-              <dd className="font-medium text-gray-900">
+            <div className="flex justify-between py-2 border-b border-neutral-100 dark:border-dark-border">
+              <dt className="text-neutral-600 dark:text-neutral-400">Période</dt>
+              <dd className="font-medium text-neutral-900 dark:text-white">
                 {contract?.date_debut && new Date(contract.date_debut).toLocaleDateString('fr-FR')} - {contract?.date_fin && new Date(contract.date_fin).toLocaleDateString('fr-FR')}
               </dd>
             </div>
-            <div className="flex justify-between py-2 border-b border-gray-100">
-              <dt className="text-gray-600">Propriétaire</dt>
-              <dd className="font-medium text-gray-900">{contract?.bailleur?.nom_complet}</dd>
+            <div className="flex justify-between py-2 border-b border-neutral-100 dark:border-dark-border">
+              <dt className="text-neutral-600 dark:text-neutral-400">Propriétaire</dt>
+              <dd className="font-medium text-neutral-900 dark:text-white">{contract?.bailleur?.nom_complet}</dd>
             </div>
           </dl>
         </div>
 
         {/* Signature status */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Statut des signatures</h2>
+        <div className="bg-white dark:bg-dark-card rounded-2xl shadow-lg p-6 mb-6">
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">Statut des signatures</h2>
 
           <div className="space-y-4">
             {/* Bailleur */}
             <div className="flex items-center gap-3">
               {contract?.bailleur_signed_at ? (
-                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                  <Check className="w-5 h-5 text-green-600" />
+                <div className="w-10 h-10 bg-success-100 rounded-full flex items-center justify-center">
+                  <Check className="w-5 h-5 text-success-600" />
                 </div>
               ) : (
-                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-gray-400" />
+                <div className="w-10 h-10 bg-neutral-100 dark:bg-dark-hover rounded-full flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-neutral-400" />
                 </div>
               )}
               <div>
-                <p className="font-medium text-gray-900">Propriétaire</p>
-                <p className="text-sm text-gray-500">
+                <p className="font-medium text-neutral-900 dark:text-white">Propriétaire</p>
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">
                   {contract?.bailleur_signed_at ? 'Signé' : 'En attente'}
                 </p>
               </div>
@@ -311,8 +311,8 @@ export default function PublicContractSigningPage() {
             {/* Locataire */}
             <div className="flex items-center gap-3">
               {contract?.locataire_signed_at ? (
-                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                  <Check className="w-5 h-5 text-green-600" />
+                <div className="w-10 h-10 bg-success-100 rounded-full flex items-center justify-center">
+                  <Check className="w-5 h-5 text-success-600" />
                 </div>
               ) : (
                 <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
@@ -320,8 +320,8 @@ export default function PublicContractSigningPage() {
                 </div>
               )}
               <div>
-                <p className="font-medium text-gray-900">Locataire (vous)</p>
-                <p className="text-sm text-gray-500">
+                <p className="font-medium text-neutral-900 dark:text-white">Locataire (vous)</p>
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">
                   {contract?.locataire_signed_at ? 'Signé' : 'En attente de votre signature'}
                 </p>
               </div>
@@ -331,7 +331,7 @@ export default function PublicContractSigningPage() {
 
         {/* Sign button */}
         <div className="bg-primary-50 rounded-2xl p-6 border border-primary-100">
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
             En cliquant sur &quot;Signer&quot;, vous acceptez les termes du contrat.
             Un code de vérification sera envoyé à votre téléphone par WhatsApp.
           </p>
@@ -356,7 +356,7 @@ export default function PublicContractSigningPage() {
         </div>
 
         {/* Legal notice */}
-        <p className="mt-6 text-xs text-center text-gray-500">
+        <p className="mt-6 text-xs text-center text-neutral-500 dark:text-neutral-400">
           Signature électronique conforme à la Loi L/2016/037/AN.
           Le contrat sera archivé de manière sécurisée pendant 10 ans.
         </p>

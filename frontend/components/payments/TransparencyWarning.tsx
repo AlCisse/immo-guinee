@@ -10,11 +10,11 @@ export default function TransparencyWarning({ showDetails = false }: Transparenc
   const [isExpanded, setIsExpanded] = useState(showDetails);
 
   return (
-    <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 mb-6">
+    <div className="rounded-lg border border-warning-200 bg-warning-50 p-4 mb-6">
       <div className="flex items-start">
         <div className="flex-shrink-0">
           <svg
-            className="h-5 w-5 text-yellow-600"
+            className="h-5 w-5 text-warning-600"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -28,10 +28,10 @@ export default function TransparencyWarning({ showDetails = false }: Transparenc
           </svg>
         </div>
         <div className="ml-3 flex-1">
-          <h3 className="text-sm font-medium text-yellow-800">
+          <h3 className="text-sm font-medium text-warning-800">
             Information importante sur les commissions (FR-042)
           </h3>
-          <p className="mt-1 text-sm text-yellow-700">
+          <p className="mt-1 text-sm text-warning-700">
             La commission plateforme est <strong>non remboursable</strong> en cas
             d&apos;annulation du contrat ou de litige.
           </p>
@@ -39,7 +39,7 @@ export default function TransparencyWarning({ showDetails = false }: Transparenc
           {!isExpanded && (
             <button
               onClick={() => setIsExpanded(true)}
-              className="mt-2 text-sm font-medium text-yellow-800 hover:text-yellow-900 underline"
+              className="mt-2 text-sm font-medium text-warning-800 hover:text-warning-900 underline"
             >
               En savoir plus sur nos tarifs
             </button>
@@ -47,31 +47,31 @@ export default function TransparencyWarning({ showDetails = false }: Transparenc
 
           {isExpanded && (
             <div className="mt-4 space-y-3">
-              <div className="rounded-lg bg-white p-3 border border-yellow-100">
-                <h4 className="text-sm font-medium text-gray-900 mb-2">
+              <div className="rounded-lg bg-white dark:bg-dark-card p-3 border border-warning-100">
+                <h4 className="text-sm font-medium text-neutral-900 dark:text-white mb-2">
                   Grille tarifaire ImmoGuinée
                 </h4>
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-gray-500">
+                    <tr className="text-left text-neutral-500 dark:text-neutral-400">
                       <th className="pb-2">Type de transaction</th>
                       <th className="pb-2 text-right">Commission</th>
                     </tr>
                   </thead>
-                  <tbody className="text-gray-700">
-                    <tr className="border-t border-gray-100">
+                  <tbody className="text-neutral-700 dark:text-neutral-300">
+                    <tr className="border-t border-neutral-100 dark:border-dark-border">
                       <td className="py-2">Location (résidentielle/commerciale)</td>
                       <td className="py-2 text-right font-medium">50% d&apos;un mois de loyer</td>
                     </tr>
-                    <tr className="border-t border-gray-100">
+                    <tr className="border-t border-neutral-100 dark:border-dark-border">
                       <td className="py-2">Vente de terrain</td>
                       <td className="py-2 text-right font-medium">1% du prix de vente</td>
                     </tr>
-                    <tr className="border-t border-gray-100">
+                    <tr className="border-t border-neutral-100 dark:border-dark-border">
                       <td className="py-2">Vente de maison/villa/appartement</td>
                       <td className="py-2 text-right font-medium">2% du prix de vente</td>
                     </tr>
-                    <tr className="border-t border-gray-100">
+                    <tr className="border-t border-neutral-100 dark:border-dark-border">
                       <td className="py-2">Mandat de gestion</td>
                       <td className="py-2 text-right font-medium">8% du loyer (mensuel)</td>
                     </tr>
@@ -79,34 +79,34 @@ export default function TransparencyWarning({ showDetails = false }: Transparenc
                 </table>
               </div>
 
-              <div className="rounded-lg bg-white p-3 border border-yellow-100">
-                <h4 className="text-sm font-medium text-gray-900 mb-2">
+              <div className="rounded-lg bg-white dark:bg-dark-card p-3 border border-warning-100">
+                <h4 className="text-sm font-medium text-neutral-900 dark:text-white mb-2">
                   Réductions selon votre badge
                 </h4>
-                <ul className="text-sm text-gray-700 space-y-1">
+                <ul className="text-sm text-neutral-700 dark:text-neutral-300 space-y-1">
                   <li className="flex items-center">
-                    <span className="inline-block w-3 h-3 rounded-full bg-amber-600 mr-2"></span>
+                    <span className="inline-block w-3 h-3 rounded-full bg-warning-600 mr-2"></span>
                     <span>Bronze: Tarif standard</span>
                   </li>
                   <li className="flex items-center">
-                    <span className="inline-block w-3 h-3 rounded-full bg-gray-400 mr-2"></span>
+                    <span className="inline-block w-3 h-3 rounded-full bg-neutral-400 mr-2"></span>
                     <span>Argent: -5% sur la commission</span>
                   </li>
                   <li className="flex items-center">
-                    <span className="inline-block w-3 h-3 rounded-full bg-yellow-500 mr-2"></span>
+                    <span className="inline-block w-3 h-3 rounded-full bg-warning-500 mr-2"></span>
                     <span>Or: -10% sur la commission</span>
                   </li>
                   <li className="flex items-center">
-                    <span className="inline-block w-3 h-3 rounded-full bg-blue-400 mr-2"></span>
+                    <span className="inline-block w-3 h-3 rounded-full bg-secondary-400 mr-2"></span>
                     <span>Diamant: -15% sur la commission</span>
                   </li>
                 </ul>
               </div>
 
-              <div className="rounded-lg bg-red-50 p-3 border border-red-100">
+              <div className="rounded-lg bg-error-50 p-3 border border-error-100">
                 <div className="flex items-start">
                   <svg
-                    className="h-5 w-5 text-red-500 mr-2 flex-shrink-0"
+                    className="h-5 w-5 text-error-500 mr-2 flex-shrink-0"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -119,15 +119,15 @@ export default function TransparencyWarning({ showDetails = false }: Transparenc
                     />
                   </svg>
                   <div>
-                    <p className="text-sm font-medium text-red-800">
+                    <p className="text-sm font-medium text-error-800">
                       Politique de non-remboursement
                     </p>
-                    <p className="text-sm text-red-700 mt-1">
+                    <p className="text-sm text-error-700 mt-1">
                       La commission plateforme couvre les frais de mise en relation,
                       vérification des parties, génération des contrats et support.
                       Elle n&apos;est jamais remboursée, même en cas de:
                     </p>
-                    <ul className="mt-2 text-sm text-red-700 list-disc pl-5 space-y-1">
+                    <ul className="mt-2 text-sm text-error-700 list-disc pl-5 space-y-1">
                       <li>Annulation du contrat pendant la période de rétractation</li>
                       <li>Résiliation anticipée du bail</li>
                       <li>Litige entre les parties</li>
@@ -139,7 +139,7 @@ export default function TransparencyWarning({ showDetails = false }: Transparenc
 
               <button
                 onClick={() => setIsExpanded(false)}
-                className="text-sm font-medium text-yellow-800 hover:text-yellow-900 underline"
+                className="text-sm font-medium text-warning-800 hover:text-warning-900 underline"
               >
                 Masquer les détails
               </button>

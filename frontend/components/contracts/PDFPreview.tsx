@@ -47,13 +47,13 @@ export default function PDFPreview({
     return (
       <div
         className={cn(
-          'flex h-[600px] items-center justify-center rounded-lg border border-gray-200 bg-gray-50',
+          'flex h-[600px] items-center justify-center rounded-lg border border-neutral-200 dark:border-dark-border bg-neutral-50 dark:bg-dark-bg',
           className
         )}
       >
         <div className="text-center">
           <Spinner size="lg" />
-          <p className="mt-4 text-gray-600">Chargement de l&apos;aperçu...</p>
+          <p className="mt-4 text-neutral-600 dark:text-neutral-400">Chargement de l&apos;aperçu...</p>
         </div>
       </div>
     );
@@ -62,22 +62,22 @@ export default function PDFPreview({
   return (
     <div
       className={cn(
-        'rounded-lg border border-gray-200 bg-white shadow-sm',
+        'rounded-lg border border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card shadow-sm',
         isFullscreen && 'fixed inset-4 z-50 overflow-hidden',
         className
       )}
     >
       {/* Toolbar */}
-      <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-4 py-2">
-        <h3 className="font-medium text-gray-900">{title}</h3>
+      <div className="flex items-center justify-between border-b border-neutral-200 dark:border-dark-border bg-neutral-50 dark:bg-dark-bg px-4 py-2">
+        <h3 className="font-medium text-neutral-900 dark:text-white">{title}</h3>
 
         <div className="flex items-center gap-2">
           {/* Zoom controls */}
-          <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1">
+          <div className="flex items-center gap-1 rounded-lg border border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card p-1">
             <button
               onClick={handleZoomOut}
               disabled={zoom === zoomLevels[0]}
-              className="rounded p-1 text-gray-600 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded p-1 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-dark-hover disabled:cursor-not-allowed disabled:opacity-50"
               aria-label="Zoom arrière"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -88,7 +88,7 @@ export default function PDFPreview({
             <select
               value={zoom}
               onChange={(e) => setZoom(Number(e.target.value))}
-              className="border-0 bg-transparent px-2 py-1 text-sm font-medium text-gray-700 focus:outline-none"
+              className="border-0 bg-transparent px-2 py-1 text-sm font-medium text-neutral-700 dark:text-neutral-300 focus:outline-none"
               aria-label="Niveau de zoom"
             >
               {zoomLevels.map((level) => (
@@ -101,7 +101,7 @@ export default function PDFPreview({
             <button
               onClick={handleZoomIn}
               disabled={zoom === zoomLevels[zoomLevels.length - 1]}
-              className="rounded p-1 text-gray-600 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded p-1 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-dark-hover disabled:cursor-not-allowed disabled:opacity-50"
               aria-label="Zoom avant"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,7 +113,7 @@ export default function PDFPreview({
           {/* Fullscreen toggle */}
           <button
             onClick={toggleFullscreen}
-            className="rounded-lg border border-gray-200 bg-white p-2 text-gray-600 hover:bg-gray-100"
+            className="rounded-lg border border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card p-2 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-dark-hover"
             aria-label={isFullscreen ? 'Quitter le plein écran' : 'Plein écran'}
           >
             {isFullscreen ? (
@@ -142,7 +142,7 @@ export default function PDFPreview({
       {/* PDF iframe */}
       <div
         className={cn(
-          'overflow-auto bg-gray-100',
+          'overflow-auto bg-neutral-100 dark:bg-dark-hover',
           isFullscreen ? 'h-[calc(100%-56px)]' : 'h-[600px]'
         )}
       >
@@ -163,8 +163,8 @@ export default function PDFPreview({
       </div>
 
       {/* Mobile-friendly fallback */}
-      <div className="border-t border-gray-200 bg-gray-50 p-4 text-center sm:hidden">
-        <p className="mb-3 text-sm text-gray-600">
+      <div className="border-t border-neutral-200 dark:border-dark-border bg-neutral-50 dark:bg-dark-bg p-4 text-center sm:hidden">
+        <p className="mb-3 text-sm text-neutral-600 dark:text-neutral-400">
           L&apos;aperçu peut être limité sur mobile.
         </p>
         <a
