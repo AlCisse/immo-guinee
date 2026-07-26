@@ -20,6 +20,10 @@ jobs:
   backend-tests:
     name: Backend Tests (Rust)
     runs-on: ubuntu-latest
+    # rust-backend/.cargo/config.toml sets rustc-wrapper=sccache (host-only speed-up).
+    # sccache isn't on the CI runner → disable it, like the Dockerfile does.
+    env:
+      RUSTC_WRAPPER: ''
     defaults:
       run:
         working-directory: rust-backend
@@ -95,6 +99,8 @@ jobs:
     name: Security Audit
     runs-on: ubuntu-latest
     continue-on-error: true
+    env:
+      RUSTC_WRAPPER: '' # sccache (config.toml) is host-only; not installed on CI
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
