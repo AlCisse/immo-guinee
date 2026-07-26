@@ -4,6 +4,8 @@
 //! come from `IMMOG_S3_ACCESS_KEY` / `IMMOG_S3_SECRET_KEY` (env in dev, Vault in
 //! prod). Used for listing photos and documents.
 
+use std::sync::atomic::{AtomicBool, Ordering};
+
 use s3::creds::Credentials;
 use s3::{Bucket, Region};
 
@@ -14,6 +16,10 @@ pub struct S3Storage {
     bucket: Box<Bucket>,
     /// `{endpoint}/{bucket}` — base for building public object URLs.
     public_base: String,
+    /// Fault-injection hook for integration tests: when set, `put` fails without
+    /// touching S3. Always `false` in production — only tests flip it (via
+    /// [`set_fail_puts`]) to exercise error paths such as a failed quittance persist.
+    fail_puts: AtomicBool,
 }
 
 /// Credentials for S3. In prod the keys come from Vault (passed in as
@@ -71,11 +77,22 @@ impl S3Storage {
             cfg.s3_public_url.as_str()
         };
         let public_base = format!("{}/{}", public_endpoint.trim_end_matches('/'), cfg.s3_bucket);
-        Ok(Self { bucket, public_base })
+        Ok(Self { bucket, public_base, fail_puts: AtomicBool::new(false) })
+    }
+
+    /// Test-only fault injection: force `put` to fail (or restore it). No effect in
+    /// production (never called there); lets integration tests drive S3 error paths.
+    pub fn set_fail_puts(&self, fail: bool) {
+        self.fail_puts.store(fail, Ordering::Relaxed);
     }
 
     /// Upload `bytes` at `key` and return the object's public URL.
     pub async fn put(&self, key: &str, bytes: &[u8], content_type: &str) -> AppResult<String> {
+        if self.fail_puts.load(Ordering::Relaxed) {
+            return Err(AppError::Internal(anyhow::anyhow!(
+                "s3 put {key}: fault-injection (test)"
+            )));
+        }
         self.bucket
             .put_object_with_content_type(key, bytes, content_type)
             .await

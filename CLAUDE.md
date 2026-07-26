@@ -88,20 +88,17 @@
 
 ### 🟢 Autorisé sans validation
 ````bash
-🟢 docker-compose up -d / down / logs
-🟢 php artisan cache:clear / config:clear / view:clear
-🟢 php artisan make:model / make:controller / make:migration
-🟢 php artisan route:list / migrate:status / tinker / test
-🟢 npm install / npm run dev / npm run build
-🟢 composer install / dump-autoload
+🟢 docker compose -f docker/docker-compose.rust.yml up -d / down / logs
+🟢 cargo build / cargo test --lib / cargo clippy / cargo fmt
+🟢 cargo run --bin immog-backend            # backend Rust local
+🟢 npm install / npm run dev / npm run build # frontend Next.js
 ````
 
 ### 🟡 Validation simple
 ````bash
-🟡 php artisan migrate
-🟡 php artisan migrate:rollback
-🟡 php artisan db:seed
-🟡 php artisan migrate:fresh --seed
+🟡 cargo run --bin immog-migrate up          # migrations SeaORM (dev)
+🟡 cargo run --bin immog-migrate down        # rollback dernière migration
+🟡 cargo test --test <suite>                 # e2e (Docker testcontainers)
 ````
 
 ### ⚫ Interdit même en local
@@ -141,22 +138,20 @@
 🟠 ./scripts/deploy-swarm.sh update-backend
 🟠 ./scripts/deploy-swarm.sh update-all
 🟠 ./scripts/deploy-swarm.sh rollback <service>
-🟠 ./scripts/deploy-swarm.sh artisan migrate
+🟠 ./scripts/deploy-swarm.sh migrate        # migrations SeaORM (service one-shot)
 ````
 
 ### 🔴 Critique (double confirmation)
 ````bash
 🔴 ./scripts/deploy-swarm.sh full
-🔴 ./scripts/deploy-swarm.sh fix-db
 🔴 ./scripts/cloudflare-firewall.sh
 ````
 
 ### ⚫ Interdit en production
 ````bash
-⚫ migrate:fresh / migrate:reset / db:wipe
-⚫ DROP DATABASE / DELETE sans WHERE
-⚫ Supprimer volumes Docker
-⚫ Modifier .env / nginx.conf / SSL
+⚫ immog-migrate reset / DROP DATABASE / DELETE sans WHERE
+⚫ Supprimer volumes Docker (postgres/redis/minio/vault)
+⚫ Modifier secrets / certs d'origine Cloudflare / config Vault
 ⚫ Scale services single-instance (postgres, redis, traefik...)
 ````
 
@@ -169,21 +164,19 @@
 | Service | Replicas | Commande scale |
 |---------|----------|----------------|
 | `frontend` | 1-5 | `scale frontend <n>` |
-| `php` | 1-5 | `scale php <n>` |
-| `queue-worker` | 1-10 | `scale queue-worker <n>` |
-| `nginx` | 1-3 | `scale nginx <n>` |
+| `backend` | 1-5 | `scale backend <n>` |
 
 ### Single-instance ⚫
 
 | Service | Raison |
 |---------|--------|
-| `traefik` | Port binding unique |
+| `traefik` | Port binding unique (HA via ≥2 replicas + cert CF) |
 | `postgres` | Single-master DB |
 | `redis` | Config single-node |
 | `minio` | Stockage fichiers |
-| `n8n` | Single-instance requis |
-| `waha` | Session WhatsApp unique |
-| `scheduler` | Cron unique |
+| `vault` | Secrets (init/unseal) |
+| `evolution` | Session WhatsApp unique |
+| `evolution-postgres` | Base dédiée Evolution |
 
 ---
 
@@ -226,16 +219,10 @@ commande rollback
 
 # GESTION (🟠)
 ./scripts/deploy-swarm.sh rollback <service>
-./scripts/deploy-swarm.sh scale <service> <n>
+./scripts/deploy-swarm.sh scale backend|frontend <n>
 
-# LARAVEL (🟠)
-./scripts/deploy-swarm.sh artisan migrate
-./scripts/deploy-swarm.sh artisan cache:clear
-./scripts/deploy-swarm.sh post-deploy
-
-# WAHA (🟠)
-./scripts/backup-waha-session.sh
-./scripts/restore-waha-session.sh
+# MIGRATIONS (🟠) — service one-shot SeaORM
+./scripts/deploy-swarm.sh migrate
 ````
 
 ---
@@ -277,6 +264,5 @@ immoguinee/
 ├── scripts/
 │   ├── deploy-swarm.sh
 │   ├── cloudflare-firewall.sh
-│   ├── backup-waha-session.sh
 │   └── ...
 └── ...

@@ -743,3 +743,55 @@ async fn assert_single_active_payment(app: &common::TestApp, contract_id: uuid::
         .count();
     assert_eq!(active, 1, "exactly one active payment must persist after the race");
 }
+
+/// H1 (fault injection): the quittance S3 put fails during `validate`. Because the
+/// render+put happens BEFORE the atomic flip, the payment must stay EnEscrow (no
+/// quittance, no release) and the operation is retryable — a retry after recovery
+/// releases the escrow exactly once. Uses the storage fault-injection hook.
+#[tokio::test]
+async fn validate_keeps_escrow_when_quittance_put_fails() {
+    init_tracing();
+    let app = setup().await;
+    let s = &app.server;
+    let (owner_token, _tenant_token, payment_id) = seed_paid_contract(&app).await;
+    use immog_backend::db::entities::sea_orm_active_enums::StatutPaiement;
+
+    // Inject an S3 put failure → validate must error and leave escrow intact.
+    app.state.storage.set_fail_puts(true);
+    let r = s
+        .post(&format!("/api/payments/{payment_id}/validate"))
+        .add_header(AUTHORIZATION, auth(&owner_token))
+        .json(&json!({ "validated": true }))
+        .await;
+    assert_eq!(
+        r.status_code(),
+        StatusCode::INTERNAL_SERVER_ERROR,
+        "a failed quittance persist must surface as 500"
+    );
+
+    let p = payment::Entity::find_by_id(payment_id)
+        .one(&app.state.db)
+        .await
+        .expect("find payment")
+        .expect("payment exists");
+    assert_eq!(p.statut, StatutPaiement::EnEscrow, "escrow must remain after a failed validate");
+    assert!(p.quittance_pdf_url.is_none(), "no quittance is persisted on failure");
+    assert!(p.date_deblocage_escrow.is_none(), "escrow was not released");
+
+    // Recover → retry validate succeeds and releases the escrow exactly once.
+    app.state.storage.set_fail_puts(false);
+    let r = s
+        .post(&format!("/api/payments/{payment_id}/validate"))
+        .add_header(AUTHORIZATION, auth(&owner_token))
+        .json(&json!({ "validated": true }))
+        .await;
+    r.assert_status_ok();
+
+    let p = payment::Entity::find_by_id(payment_id)
+        .one(&app.state.db)
+        .await
+        .expect("find payment")
+        .expect("payment exists");
+    assert_eq!(p.statut, StatutPaiement::Confirme, "retry after recovery releases escrow");
+    assert!(p.quittance_pdf_url.is_some(), "the successful retry persists a quittance");
+}
