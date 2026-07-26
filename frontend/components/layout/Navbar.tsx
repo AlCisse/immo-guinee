@@ -214,7 +214,7 @@ function NavItem({
         <div className="relative">
           <Icon className="w-6 h-6" />
           {badge !== undefined && badge > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-error-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
               {badge > 9 ? '9+' : badge}
             </span>
           )}
@@ -343,7 +343,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
               </div>
               <span className="text-lg font-bold">
                 <span className="text-neutral-900 dark:text-white">Immo</span>
-                <span className="text-orange-500">Guinée</span>
+                <span className="text-primary-500">Guinée</span>
               </span>
             </Link>
 
@@ -387,7 +387,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
               </div>
               <span className="text-xl font-bold">
                 <span className="text-neutral-900 dark:text-white">Immo</span>
-                <span className="text-orange-500">Guinée</span>
+                <span className="text-primary-500">Guinée</span>
               </span>
             </Link>
 
@@ -439,7 +439,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
                   >
                     <Bell className="w-5 h-5 text-neutral-700 dark:text-white" />
                     {unreadNotifications > 0 && (
-                      <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                      <span className="absolute top-1 right-1 w-2 h-2 bg-error-500 rounded-full" />
                     )}
                   </button>
 
@@ -529,7 +529,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
                         <button
                           onClick={handleLogout}
                           disabled={isLoggingOut}
-                          className="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 dark:hover:bg-red-500/10 text-red-600 w-full disabled:opacity-50"
+                          className="flex items-center gap-3 px-4 py-2.5 hover:bg-error-50 dark:hover:bg-error-500/10 text-error-600 w-full disabled:opacity-50"
                         >
                           {isLoggingOut ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
@@ -566,7 +566,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
             </div>
             <span className="text-lg font-bold">
               <span className="text-neutral-900 dark:text-white">Immo</span>
-              <span className="text-orange-500">Guinée</span>
+              <span className="text-primary-500">Guinée</span>
             </span>
           </Link>
 
@@ -583,7 +583,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
                 >
                   <Bell className="w-5 h-5 text-neutral-700 dark:text-white" />
                   {unreadNotifications > 0 && (
-                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                    <span className="absolute top-1 right-1 w-2 h-2 bg-error-500 rounded-full" />
                   )}
                 </button>
 
@@ -716,7 +716,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
                     <button
                       onClick={handleLogout}
                       disabled={isLoggingOut}
-                      className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 text-red-600 w-full disabled:opacity-50"
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-error-50 dark:hover:bg-error-500/10 text-error-600 w-full disabled:opacity-50"
                     >
                       {isLoggingOut ? (
                         <Loader2 className="w-5 h-5 animate-spin" />

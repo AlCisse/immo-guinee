@@ -459,7 +459,7 @@ export default function Verify2FAPage() {
                         onClick={handleCopySecret}
                         className="p-2 hover:bg-neutral-200 dark:hover:bg-dark-border rounded-lg transition-colors"
                       >
-                        {copiedSecret ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-neutral-500" />}
+                        {copiedSecret ? <Check className="w-4 h-4 text-success-500" /> : <Copy className="w-4 h-4 text-neutral-500" />}
                       </button>
                     </div>
                   </div>
@@ -538,8 +538,8 @@ export default function Verify2FAPage() {
               {showRecoveryCodes && setupData && (
                 <>
                   <div className="text-center mb-6">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 dark:bg-green-500/10 flex items-center justify-center">
-                      <Check className="w-8 h-8 text-green-500" />
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-success-100 dark:bg-success-500/10 flex items-center justify-center">
+                      <Check className="w-8 h-8 text-success-500" />
                     </div>
                     <h2 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">
                       2FA Active!

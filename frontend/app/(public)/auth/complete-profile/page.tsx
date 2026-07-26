@@ -152,16 +152,16 @@ export default function CompleteProfilePage() {
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-6 p-4 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl flex items-center gap-3"
+              className="mb-6 p-4 bg-success-50 dark:bg-success-500/10 rounded-xl flex items-center gap-3"
             >
-              <div className="p-2 bg-emerald-100 dark:bg-emerald-500/20 rounded-full">
-                <CheckCircle className="w-5 h-5 text-emerald-600" />
+              <div className="p-2 bg-success-100 dark:bg-success-500/20 rounded-full">
+                <CheckCircle className="w-5 h-5 text-success-600" />
               </div>
               <div>
-                <p className="font-medium text-emerald-800 dark:text-emerald-300">
+                <p className="font-medium text-success-800 dark:text-success-300">
                   {t('auth.completeProfile.welcome', { name: userName })}
                 </p>
-                <p className="text-sm text-emerald-600 dark:text-emerald-400">
+                <p className="text-sm text-success-600 dark:text-success-400">
                   {t('auth.completeProfile.connectedWith', { provider: provider === 'google' ? 'Google' : 'Facebook' })}
                 </p>
               </div>
@@ -295,7 +295,7 @@ export default function CompleteProfilePage() {
                       className="flex-1 px-4 py-3 bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-xl text-neutral-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent text-lg"
                     />
                   </div>
-                  <div className="flex items-center gap-2 mt-2 text-sm text-emerald-600 dark:text-emerald-400">
+                  <div className="flex items-center gap-2 mt-2 text-sm text-success-600 dark:text-success-400">
                     <MessageCircle className="w-4 h-4" />
                     <span>{t('auth.completeProfile.phone.whatsappHint')}</span>
                   </div>
@@ -334,9 +334,9 @@ export default function CompleteProfilePage() {
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="p-4 bg-red-50 dark:bg-red-500/10 rounded-xl"
+                    className="p-4 bg-error-50 dark:bg-error-500/10 rounded-xl"
                   >
-                    <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                    <p className="text-sm text-error-600 dark:text-error-400">{error}</p>
                   </motion.div>
                 )}
               </div>

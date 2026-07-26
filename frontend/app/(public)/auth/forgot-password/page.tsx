@@ -52,7 +52,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-500 via-orange-500 to-primary-600 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-primary-600 via-primary-500 to-primary-400 flex flex-col">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0" style={{
@@ -109,10 +109,10 @@ export default function ForgotPasswordPage() {
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mb-6 p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl flex items-start gap-3"
+                    className="mb-6 p-4 bg-error-50 dark:bg-error-500/10 border border-error-200 dark:border-error-500/20 rounded-xl flex items-start gap-3"
                   >
-                    <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                    <AlertCircle className="w-5 h-5 text-error-500 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-error-600 dark:text-error-400">{error}</p>
                   </motion.div>
                 )}
 
@@ -133,7 +133,7 @@ export default function ForgotPasswordPage() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full py-3.5 bg-gradient-to-r from-primary-500 to-orange-500 text-white font-semibold rounded-xl hover:from-primary-600 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-primary-500/25"
+                    className="w-full py-3.5 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-semibold rounded-xl hover:from-primary-600 hover:to-primary-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-primary-500/25"
                   >
                     {isLoading ? (
                       <>
@@ -153,8 +153,8 @@ export default function ForgotPasswordPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 className="text-center"
               >
-                <div className="w-20 h-20 bg-green-100 dark:bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <CheckCircle className="w-10 h-10 text-green-500" />
+                <div className="w-20 h-20 bg-success-100 dark:bg-success-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <CheckCircle className="w-10 h-10 text-success-500" />
                 </div>
                 <h2 className="text-2xl font-bold text-neutral-900 dark:text-white mb-3">
                   {t('auth.forgotPassword.codeSent')}
@@ -166,7 +166,7 @@ export default function ForgotPasswordPage() {
                 <div className="space-y-3">
                   <Link
                     href={`/auth/reset-password?phone=${encodeURIComponent(telephone)}`}
-                    className="block w-full py-3.5 bg-gradient-to-r from-primary-500 to-orange-500 text-white font-semibold rounded-xl hover:from-primary-600 hover:to-orange-600 transition-all text-center shadow-lg shadow-primary-500/25"
+                    className="block w-full py-3.5 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-semibold rounded-xl hover:from-primary-600 hover:to-primary-700 transition-all text-center shadow-lg shadow-primary-500/25"
                   >
                     {t('auth.forgotPassword.enterCode')}
                   </Link>

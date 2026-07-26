@@ -95,7 +95,7 @@ export default function ModeratorLayout({ children }: { children: ReactNode }) {
       <aside className="hidden md:flex fixed inset-y-0 left-0 z-40 w-64 flex-col bg-white dark:bg-dark-card border-r border-neutral-200 dark:border-dark-border">
         {/* Logo */}
         <div className="flex items-center gap-3 px-6 py-5 border-b border-neutral-200 dark:border-dark-border">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-400 flex items-center justify-center">
             <Shield className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -157,7 +157,7 @@ export default function ModeratorLayout({ children }: { children: ReactNode }) {
       <header className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white dark:bg-dark-card border-b border-neutral-200 dark:border-dark-border">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-primary-400 flex items-center justify-center">
               <Shield className="w-4 h-4 text-white" />
             </div>
             <div>

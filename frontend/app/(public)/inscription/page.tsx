@@ -102,7 +102,7 @@ export default function InscriptionPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-500 via-orange-500 to-primary-600 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-primary-600 via-primary-500 to-primary-400 flex flex-col">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0" style={{
@@ -187,10 +187,10 @@ export default function InscriptionPage() {
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl flex items-start gap-3"
+                  className="p-4 bg-error-50 dark:bg-error-500/10 border border-error-200 dark:border-error-500/20 rounded-xl flex items-start gap-3"
                 >
-                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                  <AlertCircle className="w-5 h-5 text-error-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-error-600 dark:text-error-400">{error}</p>
                 </motion.div>
               )}
 
@@ -250,13 +250,13 @@ export default function InscriptionPage() {
                     placeholder="Email (optionnel)"
                     className={`w-full pl-12 pr-4 py-3 rounded-xl border-2 ${
                       fieldErrors.email
-                        ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
+                        ? 'border-error-500 focus:border-error-500 focus:ring-error-500/20'
                         : 'border-neutral-200 dark:border-dark-border focus:border-primary-500 focus:ring-primary-500/20'
                     } focus:outline-none focus:ring-2 bg-white dark:bg-dark-card text-neutral-900 dark:text-white`}
                   />
                 </div>
                 {fieldErrors.email && (
-                  <p className="mt-1 text-sm text-red-500 flex items-center gap-1">
+                  <p className="mt-1 text-sm text-error-500 flex items-center gap-1">
                     <AlertCircle className="w-4 h-4" />
                     {fieldErrors.email}
                   </p>
@@ -270,10 +270,10 @@ export default function InscriptionPage() {
                   onChange={(fullNumber) => setFormData(prev => ({ ...prev, telephone: fullNumber }))}
                   placeholder="621 00 00 00"
                   required
-                  className={fieldErrors.telephone ? 'border-red-500' : ''}
+                  className={fieldErrors.telephone ? 'border-error-500' : ''}
                 />
                 {fieldErrors.telephone && (
-                  <p className="mt-1 text-sm text-red-500 flex items-center gap-1">
+                  <p className="mt-1 text-sm text-error-500 flex items-center gap-1">
                     <AlertCircle className="w-4 h-4" />
                     {fieldErrors.telephone}
                   </p>
@@ -328,7 +328,7 @@ export default function InscriptionPage() {
               <button
                 type="submit"
                 disabled={isLoading || !formData.acceptTerms}
-                className="w-full py-3.5 bg-gradient-to-r from-primary-500 to-orange-500 text-white font-semibold rounded-xl hover:from-primary-600 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-primary-500/25"
+                className="w-full py-3.5 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-semibold rounded-xl hover:from-primary-600 hover:to-primary-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-primary-500/25"
               >
                 {isLoading ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

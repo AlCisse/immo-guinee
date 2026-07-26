@@ -158,10 +158,10 @@ export default function OtpVerification({ telephone, onSuccess, onCancel }: OtpV
         <div className="w-16 h-16 bg-[#25D366] rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
           <WhatsAppIcon className="w-9 h-9 text-white" />
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+        <h2 className="text-2xl font-bold text-neutral-900 mb-2">
           {t('auth.otp.title')}
         </h2>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-neutral-600">
           {t('auth.otp.subtitle')}
         </p>
         <p className="text-sm font-medium text-[#25D366] mt-1">
@@ -173,7 +173,7 @@ export default function OtpVerification({ telephone, onSuccess, onCancel }: OtpV
       <div className="bg-[#DCF8C6] border border-[#25D366]/20 rounded-lg p-3 mb-6">
         <div className="flex items-center gap-2">
           <WhatsAppIcon className="w-5 h-5 text-[#25D366] flex-shrink-0" />
-          <p className="text-xs text-gray-700">
+          <p className="text-xs text-neutral-700">
             {t('auth.otp.whatsappHint')} <span className="font-semibold">ImmoGuinée</span>
           </p>
         </div>
@@ -181,8 +181,8 @@ export default function OtpVerification({ telephone, onSuccess, onCancel }: OtpV
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded mb-6">
-          <p className="text-sm text-red-700">{error}</p>
+        <div className="bg-error-50 border-l-4 border-error-500 p-4 rounded mb-6">
+          <p className="text-sm text-error-700">{error}</p>
         </div>
       )}
 
@@ -200,12 +200,12 @@ export default function OtpVerification({ telephone, onSuccess, onCancel }: OtpV
               onChange={(e) => handleChange(index, e.target.value)}
               onKeyDown={(e) => handleKeyDown(index, e)}
               disabled={isLoading}
-              className="w-12 h-14 text-center text-2xl font-bold border-2 border-gray-300 rounded-lg focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed transition-all"
+              className="w-12 h-14 text-center text-2xl font-bold border-2 border-neutral-300 rounded-lg focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/20 focus:outline-none disabled:bg-neutral-100 disabled:cursor-not-allowed transition-all"
               autoFocus={index === 0}
             />
           ))}
         </div>
-        <p className="text-xs text-center text-gray-500 mt-2">
+        <p className="text-xs text-center text-neutral-500 mt-2">
           {t('auth.otp.enterCode')}
         </p>
       </div>
@@ -221,13 +221,13 @@ export default function OtpVerification({ telephone, onSuccess, onCancel }: OtpV
 
       {/* Resend Button */}
       <div className="text-center">
-        <p className="text-sm text-gray-600 mb-2">
+        <p className="text-sm text-neutral-600 mb-2">
           {t('auth.otp.notReceived')}
         </p>
         <button
           onClick={handleResend}
           disabled={isResending || resendCooldown > 0}
-          className="text-sm font-medium text-[#25D366] hover:text-[#128C7E] disabled:text-gray-400 disabled:cursor-not-allowed transition-colors inline-flex items-center gap-1"
+          className="text-sm font-medium text-[#25D366] hover:text-[#128C7E] disabled:text-neutral-400 disabled:cursor-not-allowed transition-colors inline-flex items-center gap-1"
         >
           <WhatsAppIcon className="w-4 h-4" />
           {isResending
@@ -244,7 +244,7 @@ export default function OtpVerification({ telephone, onSuccess, onCancel }: OtpV
         <button
           onClick={onCancel}
           disabled={isLoading || isResending}
-          className="w-full mt-6 py-2 px-4 text-sm text-gray-600 hover:text-gray-900 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+          className="w-full mt-6 py-2 px-4 text-sm text-neutral-600 hover:text-neutral-900 disabled:text-neutral-400 disabled:cursor-not-allowed transition-colors"
         >
           {t('auth.otp.cancel')}
         </button>

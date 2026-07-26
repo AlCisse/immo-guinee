@@ -188,7 +188,7 @@ function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'gr
             {/* Badges */}
             <div className="absolute top-3 left-3 flex gap-2">
               {property.is_premium && (
-                <span className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-semibold rounded-full">
+                <span className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-warning-400 to-warning-500 text-white text-xs font-semibold rounded-full">
                   <Sparkles className="w-3 h-3" />
                   {t('badges.premium')}
                 </span>
@@ -300,7 +300,7 @@ function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'gr
           {/* Badges */}
           <div className="absolute top-3 left-3 flex gap-2">
             {property.is_premium && (
-              <span className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-semibold rounded-full">
+              <span className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-warning-400 to-warning-500 text-white text-xs font-semibold rounded-full">
                 <Sparkles className="w-3 h-3" />
                 {t('badges.premium')}
               </span>
@@ -915,7 +915,7 @@ function SearchContent() {
                         <div>
                           <div className="border-t border-neutral-200 dark:border-dark-border my-6" />
                           <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4 flex items-center gap-2">
-                            <Sparkles className="w-5 h-5 text-amber-500" />
+                            <Sparkles className="w-5 h-5 text-warning-500" />
                             {t('nearbyQuartiers')}
                             <span className="text-sm font-normal text-neutral-500">({nearbyListings.length})</span>
                           </h2>
@@ -935,8 +935,8 @@ function SearchContent() {
 
                       {/* No exact matches but has nearby */}
                       {exactListings.length === 0 && nearbyListings.length > 0 && (
-                        <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl">
-                          <p className="text-amber-800 dark:text-amber-200 text-sm">
+                        <div className="mb-4 p-4 bg-warning-50 dark:bg-warning-500/10 border border-warning-200 dark:border-warning-500/20 rounded-xl">
+                          <p className="text-warning-800 dark:text-warning-200 text-sm">
                             {t('noExactMatch').replace('{quartier}', selectedQuartier)}
                           </p>
                         </div>
