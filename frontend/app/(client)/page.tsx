@@ -448,15 +448,15 @@ export default function ClientHomePage() {
               icon: Shield,
               title: t('home.features.verified.title'),
               description: t('home.features.verified.description'),
-              color: 'text-emerald-500',
-              bg: 'bg-emerald-50 dark:bg-emerald-500/10',
+              color: 'text-teal-600 dark:text-teal-400',
+              bg: 'bg-teal-50 dark:bg-teal-500/10',
             },
             {
               icon: Clock,
               title: t('home.features.fast.title'),
               description: t('home.features.fast.description'),
-              color: 'text-blue-500',
-              bg: 'bg-blue-50 dark:bg-blue-500/10',
+              color: 'text-success-600 dark:text-success-400',
+              bg: 'bg-success-50 dark:bg-success-500/10',
             },
             {
               icon: Zap,
@@ -489,7 +489,7 @@ export default function ClientHomePage() {
       </section>
 
       {/* Stats Section */}
-      <section className="bg-gradient-to-r from-primary-500 to-orange-500 py-16">
+      <section className="bg-gradient-to-br from-primary-600 via-primary-500 to-primary-400 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
@@ -525,7 +525,7 @@ export default function ClientHomePage() {
         >
           {/* Background decoration */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-orange-500/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-teal-500/20 rounded-full blur-3xl" />
 
           <div className="relative z-10">
             <h2 className="text-2xl md:text-4xl font-bold text-white mb-4">
