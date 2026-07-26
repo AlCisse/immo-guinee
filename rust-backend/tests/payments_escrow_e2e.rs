@@ -175,8 +175,9 @@ async fn pay(s: &axum_test::TestServer, tenant_token: &str, contract_id: uuid::U
         .expect("uuid")
 }
 
-/// Seed a fully signed + paid contract: returns (owner_token, tenant_token, payment_id).
-async fn seed_paid_contract(app: &common::TestApp) -> (String, String, uuid::Uuid) {
+/// Seed a fully signed contract (Brouillon → send → both sign → SigneArchive), NOT
+/// yet paid: returns (owner_token, tenant_token, contract_id).
+async fn seed_signed_contract(app: &common::TestApp) -> (String, String, uuid::Uuid) {
     init_tracing();
     let s = &app.server;
     let owner_token = register_login(s, OWNER_PHONE).await;
@@ -187,10 +188,15 @@ async fn seed_paid_contract(app: &common::TestApp) -> (String, String, uuid::Uui
     let listing_id = create_listing(s, &owner_token).await;
     let contract_id = create_contract(s, &owner_token, listing_id, tenant_id).await;
     send_contract(s, &owner_token, contract_id).await;
-    // Both parties sign → SigneArchive (the tenant cannot pay until signed).
     sign(app, s, &owner_token, OWNER_PHONE, contract_id).await;
     sign(app, s, &tenant_token, TENANT_PHONE, contract_id).await;
-    let payment_id = pay(s, &tenant_token, contract_id).await;
+    (owner_token, tenant_token, contract_id)
+}
+
+/// Seed a fully signed + paid contract: returns (owner_token, tenant_token, payment_id).
+async fn seed_paid_contract(app: &common::TestApp) -> (String, String, uuid::Uuid) {
+    let (owner_token, tenant_token, contract_id) = seed_signed_contract(app).await;
+    let payment_id = pay(&app.server, &tenant_token, contract_id).await;
     (owner_token, tenant_token, payment_id)
 }
 
@@ -306,6 +312,17 @@ async fn refund_is_admin_mediation() {
         .expect("find payment")
         .expect("payment exists");
     assert_eq!(p.statut, StatutPaiement::Rembourse, "payment is refunded");
+
+    // H3: refund also closes the escrow transaction (Annulee), not just the payment.
+    use immog_backend::db::entities::sea_orm_active_enums::StatutTransaction;
+    let cid = p.contrat_id.expect("contract id");
+    let t = transaction::Entity::find()
+        .filter(transaction::Column::ContratId.eq(cid))
+        .one(&app.state.db)
+        .await
+        .expect("query transaction")
+        .expect("escrow transaction exists");
+    assert_eq!(t.statut, StatutTransaction::Annulee, "refund must cancel the escrow transaction");
 
     // A second refund is rejected (the payment is no longer escrowed).
     let r = s
@@ -427,12 +444,13 @@ async fn process_creates_payment_and_transaction_atomically() {
 }
 
 /// A second payment on the same signed contract is rejected (one-active-payment
-/// invariant, shared by `process` and `cash`).
+/// invariant, shared by `process` and `cash`). Cash is owner-only (H2): a tenant
+/// calling cash gets 403; the owner calling cash over an active payment gets 409.
 #[tokio::test]
 async fn one_active_payment_per_contract() {
     let app = setup().await;
     let s = &app.server;
-    let (_owner_token, tenant_token, payment_id) = seed_paid_contract(&app).await;
+    let (owner_token, tenant_token, payment_id) = seed_paid_contract(&app).await;
 
     // Re-pay with mobile money → 409 (an active payment already exists).
     let r = s
@@ -442,13 +460,21 @@ async fn one_active_payment_per_contract() {
         .await;
     assert_eq!(r.status_code(), StatusCode::CONFLICT, "second mobile payment must be rejected");
 
-    // Cash on the same contract → 409 too.
+    // Cash is owner-only: the tenant calling it is forbidden (403), not conflicted.
     let r = s
         .post("/api/payments/cash")
         .add_header(AUTHORIZATION, auth(&tenant_token))
         .json(&json!({ "contract_id": payment_contract(&app, payment_id).await, "methode_paiement": "ESPECES" }))
         .await;
-    assert_eq!(r.status_code(), StatusCode::CONFLICT, "cash over an active payment must be rejected");
+    assert_eq!(r.status_code(), StatusCode::FORBIDDEN, "tenant must not record cash (owner-only)");
+
+    // The owner calling cash over an already-escrowed contract → 409 (active payment).
+    let r = s
+        .post("/api/payments/cash")
+        .add_header(AUTHORIZATION, auth(&owner_token))
+        .json(&json!({ "contract_id": payment_contract(&app, payment_id).await, "methode_paiement": "ESPECES" }))
+        .await;
+    assert_eq!(r.status_code(), StatusCode::CONFLICT, "owner cash over an active payment must be rejected");
 }
 
 /// Resolve the contract id behind a payment (helper for the test above).
@@ -459,4 +485,53 @@ async fn payment_contract(app: &common::TestApp, payment_id: uuid::Uuid) -> uuid
         .expect("find payment")
         .expect("payment exists");
     p.contrat_id.expect("contract id")
+}
+
+/// H2: cash recorded by the OWNER on a fresh signed contract (no prior escrow) →
+/// 200, payment Confirme immediately (no escrow), and a completed transaction row.
+/// A tenant calling cash on the same fresh contract is forbidden (owner-only).
+#[tokio::test]
+async fn cash_by_owner_on_fresh_contract_succeeds() {
+    init_tracing();
+    let app = setup().await;
+    let s = &app.server;
+    let (owner_token, tenant_token, contract_id) = seed_signed_contract(&app).await;
+
+    // Tenant cannot record cash (owner-only).
+    let r = s
+        .post("/api/payments/cash")
+        .add_header(AUTHORIZATION, auth(&tenant_token))
+        .json(&json!({ "contract_id": contract_id, "methode_paiement": "ESPECES" }))
+        .await;
+    assert_eq!(r.status_code(), StatusCode::FORBIDDEN, "tenant cash must be forbidden");
+
+    // Owner records the cash payment.
+    let r = s
+        .post("/api/payments/cash")
+        .add_header(AUTHORIZATION, auth(&owner_token))
+        .json(&json!({ "contract_id": contract_id, "methode_paiement": "ESPECES" }))
+        .await;
+    assert_eq!(r.status_code(), StatusCode::OK, "owner cash on a fresh contract must succeed");
+
+    let pay_id = r.json::<serde_json::Value>()["data"]["payment"]["id"]
+        .as_str()
+        .expect("payment id")
+        .parse::<uuid::Uuid>()
+        .expect("uuid");
+    use immog_backend::db::entities::sea_orm_active_enums::{StatutPaiement, StatutTransaction};
+    let p = payment::Entity::find_by_id(pay_id)
+        .one(&app.state.db)
+        .await
+        .expect("find payment")
+        .expect("payment exists");
+    assert_eq!(p.statut, StatutPaiement::Confirme, "cash payment is confirmed immediately (no escrow)");
+
+    let t = transaction::Entity::find()
+        .filter(transaction::Column::ContratId.eq(contract_id))
+        .one(&app.state.db)
+        .await
+        .expect("query transaction")
+        .expect("cash creates a transaction row");
+    assert_eq!(t.statut, StatutTransaction::Completee, "cash transaction is completed");
+    assert_eq!(t.paiements_ids, json!([pay_id]), "transaction references the cash payment");
 }

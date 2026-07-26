@@ -114,7 +114,7 @@ async fn process(
         .db
         .transaction::<_, payment::Model, AppError>(|txn| {
             Box::pin(async move {
-                let pay = payment::ActiveModel {
+                let pay = match (payment::ActiveModel {
                     id: Set(id),
                     payeur_id: Set(payeur_id),
                     beneficiaire_id: Set(beneficiaire_id),
@@ -133,24 +133,22 @@ async fn process(
                     ..Default::default()
                 }
                 .insert(txn)
-                .await?;
+                .await)
+                {
+                    Ok(p) => p,
+                    // Race: a concurrent process/cash won the partial-unique index
+                    // (uq_payments_contrat_active). Roll back and surface a 409.
+                    Err(e) if is_unique_violation(&e) => {
+                        return Err(AppError::Conflict("un paiement existe déjà pour ce contrat".into()));
+                    }
+                    Err(e) => return Err(AppError::Database(e)),
+                };
 
-                // Open the escrow transaction (same atomic unit as the payment).
-                transaction::ActiveModel {
-                    id: Set(Uuid::new_v4()),
-                    annonce_id: Set(annonce_id),
-                    proprietaire_id: Set(beneficiaire_id),
-                    locataire_acheteur_id: Set(payeur_id),
-                    contrat_id: Set(contrat_id),
-                    paiements_ids: Set(json!([id])),
-                    type_transaction: Set(TypeOperation::Location),
-                    montant_total_gnf: Set(total),
-                    commission_plateforme_gnf: Set(commission),
-                    statut: Set(StatutTransaction::EnCours),
-                    date_debut: Set(now.into()),
-                    ..Default::default()
-                }
-                .insert(txn)
+                // Open (or reset, on a retry after refund) the escrow transaction in
+                // the same atomic unit as the payment.
+                upsert_escrow_transaction(
+                    txn, annonce_id, beneficiaire_id, payeur_id, contrat_id, pay.id, total, commission, now,
+                )
                 .await?;
 
                 Ok(pay)
@@ -187,35 +185,14 @@ async fn validate(
         return Ok(Json(json!({ "success": true, "data": { "payment": payment_json(&p, None, None, None) } })));
     }
 
-    // Atomic conditional update: only one concurrent validate can win (anti double-release).
-    // UPDATE payments SET statut = CONFIRME WHERE id = ? AND statut IN (EN_ESCROW, COMMISSION_COLLECTEE)
-    let result = payment::Entity::update_many()
-        .col_expr(
-            payment::Column::Statut,
-            statut_expr(StatutPaiement::Confirme),
-        )
-        .filter(payment::Column::Id.eq(id))
-        .filter(payment::Column::Statut.is_in([
-            StatutPaiement::EnEscrow,
-            StatutPaiement::CommissionCollectee,
-        ]))
-        .exec(&state.db)
-        .await?;
-    if result.rows_affected == 0 {
-        return Err(AppError::Conflict("paiement déjà validé ou non en séquestre".into()));
-    }
-
-    // Re-fetch the now-Confirme payment (only the winner reaches here).
-    let p = payment::Entity::find_by_id(id).one(&state.db).await?.ok_or(AppError::NotFound)?;
-    let contract = match p.contrat_id {
-        Some(cid) => contract::Entity::find_by_id(cid).one(&state.db).await?,
-        None => None,
-    };
+    // Fetch the parties (for the quittance source) — no state change yet.
     let payeur = user::Entity::find_by_id(p.payeur_id).one(&state.db).await?;
     let beneficiaire = user::Entity::find_by_id(p.beneficiaire_id).one(&state.db).await?;
 
-    // Issue the deposit receipt (quittance) PDF. Typst compilation is CPU-bound
-    // → run on a blocking thread so it cannot stall the async reactor.
+    // Render + store the quittance FIRST (idempotent key, retryable). A failure here
+    // leaves the payment in escrow so the owner can retry. Previously the statut was
+    // flipped to Confirme BEFORE this step, so a render/put failure made the payment
+    // unrecoverable (409 on retry, no quittance, transaction stuck EnCours).
     let quittance_url = match (&payeur, &beneficiaire) {
         (Some(pa), Some(be)) => {
             let src = quittance_source(&p, pa, be);
@@ -230,28 +207,61 @@ async fn validate(
         _ => None,
     };
 
+    // Atomic flip + quittance persist + escrow close, in ONE DB transaction. The
+    // conditional UPDATE still guards double-release (only an escrow-held payment
+    // can flip, only one concurrent validate wins); committing it together with the
+    // quittance URL and the transaction close means a post-flip failure can no
+    // longer leave the escrow released with no quittance and the transaction stuck.
     let now = Utc::now();
     let contrat_id = p.contrat_id;
-    let mut am: payment::ActiveModel = p.into();
-    am.quittance_pdf_url = Set(quittance_url);
-    am.date_validation_beneficiaire = Set(Some(now.into()));
-    am.date_deblocage_escrow = Set(Some(now.into()));
-    let updated = am.update(&state.db).await?;
+    let updated = state
+        .db
+        .transaction::<_, payment::Model, AppError>(|txn| {
+            Box::pin(async move {
+                let result = payment::Entity::update_many()
+                    .col_expr(payment::Column::Statut, statut_expr(StatutPaiement::Confirme))
+                    .filter(payment::Column::Id.eq(id))
+                    .filter(
+                        payment::Column::Statut
+                            .is_in([StatutPaiement::EnEscrow, StatutPaiement::CommissionCollectee]),
+                    )
+                    .exec(txn)
+                    .await?;
+                if result.rows_affected == 0 {
+                    return Err(AppError::Conflict("paiement déjà validé ou non en séquestre".into()));
+                }
+                let p = payment::Entity::find_by_id(id).one(txn).await?.ok_or(AppError::NotFound)?;
+                let mut am: payment::ActiveModel = p.into();
+                am.quittance_pdf_url = Set(quittance_url);
+                am.date_validation_beneficiaire = Set(Some(now.into()));
+                am.date_deblocage_escrow = Set(Some(now.into()));
+                let updated = am.update(txn).await?;
+                // Close the escrow transaction (same atomic unit).
+                if let Some(cid) = contrat_id {
+                    if let Some(t) = transaction::Entity::find()
+                        .filter(transaction::Column::ContratId.eq(cid))
+                        .one(txn)
+                        .await?
+                    {
+                        let mut tam: transaction::ActiveModel = t.into();
+                        tam.statut = Set(StatutTransaction::Completee);
+                        tam.date_completion = Set(Some(now.into()));
+                        tam.update(txn).await?;
+                    }
+                }
+                Ok(updated)
+            })
+        })
+        .await
+        .map_err(|e| match e {
+            sea_orm::TransactionError::Connection(db) => AppError::Database(db),
+            sea_orm::TransactionError::Transaction(app) => app,
+        })?;
 
-    // Close the escrow transaction.
-    if let Some(cid) = contrat_id {
-        if let Some(t) = transaction::Entity::find()
-            .filter(transaction::Column::ContratId.eq(cid))
-            .one(&state.db)
-            .await?
-        {
-            let mut tam: transaction::ActiveModel = t.into();
-            tam.statut = Set(StatutTransaction::Completee);
-            tam.date_completion = Set(Some(now.into()));
-            tam.update(&state.db).await?;
-        }
-    }
-
+    let contract = match contrat_id {
+        Some(cid) => contract::Entity::find_by_id(cid).one(&state.db).await?,
+        None => None,
+    };
     let listing = match &contract {
         Some(c) => load_listing(&state, c.annonce_id).await?,
         None => None,
@@ -356,38 +366,110 @@ async fn pending_invoices(auth: AuthUser, State(state): State<Arc<AppState>>) ->
     Ok(Json(json!({ "success": true, "data": invoices })))
 }
 
-/// `POST /api/payments/cash` — record an out-of-band cash payment.
+/// `POST /api/payments/cash` — record an out-of-band cash payment. Recorded by the
+/// **owner** (beneficiary), not the tenant: the tenant must not be able to
+/// self-record a payment as confirmed. The contract must be signed and have no
+/// prior escrow attempt (transactions.contrat_id is UNIQUE — a fresh cash record is
+/// only possible before any mobile-money flow opened a transaction for it).
 async fn cash(
     auth: AuthUser,
     State(state): State<Arc<AppState>>,
     ValidatedJson(req): ValidatedJson<super::dto::ProcessRequest>,
 ) -> AppResult<Json<Value>> {
     rate_limit::limit_payment(&state.redis, auth.id).await?;
-    let c = fetch_payable_contract(&state, &auth, req.contract_id).await?;
-    // Cash payments share the one-active-payment-per-contract invariant with
-    // mobile-money (otherwise a tenant could record a cash payment on top of an
-    // already-escrowed one).
+
+    // Only the owner (beneficiary) records a cash payment.
+    let c = contract::Entity::find_by_id(req.contract_id)
+        .one(&state.db)
+        .await?
+        .ok_or(AppError::NotFound)?;
+    if c.proprietaire_id != auth.id {
+        return Err(AppError::Forbidden("seul le propriétaire peut enregistrer un paiement espèces".into()));
+    }
+    if !matches!(c.statut, StatutContrat::SigneArchive) {
+        return Err(AppError::Conflict("le contrat doit être signé avant paiement".into()));
+    }
     assert_no_active_payment(&state, c.id).await?;
+    // No prior escrow attempt: a transaction row already exists (even Annulee after a
+    // refund) means a mobile-money flow was started — cash is not the recovery path.
+    if transaction::Entity::find()
+        .filter(transaction::Column::ContratId.eq(c.id))
+        .one(&state.db)
+        .await?
+        .is_some()
+    {
+        return Err(AppError::Conflict(
+            "une transaction existe déjà pour ce contrat (escrow tenté) — cash impossible".into(),
+        ));
+    }
+
     let inv = Invoice::from_contract(&c);
     let now = Utc::now();
-    let pay = payment::ActiveModel {
-        id: Set(Uuid::new_v4()),
-        payeur_id: Set(auth.id),
-        beneficiaire_id: Set(c.proprietaire_id),
-        contrat_id: Set(Some(c.id)),
-        type_paiement: Set(TypePaiement::Caution),
-        montant_gnf: Set(inv.caution),
-        commission_plateforme_gnf: Set(inv.commission),
-        montant_total_gnf: Set(inv.total),
-        methode_paiement: Set(MethodePaiement::Especes),
-        statut: Set(StatutPaiement::Confirme),
-        tentatives_paiement: Set(1),
-        date_creation: Set(now.into()),
-        date_confirmation: Set(Some(now.into())),
-        ..Default::default()
-    }
-    .insert(&state.db)
-    .await?;
+    let payeur_id = c.locataire_acheteur_id;
+    let beneficiaire_id = c.proprietaire_id;
+    let contrat_id = c.id;
+    let annonce_id = c.annonce_id;
+    let caution = inv.caution;
+    let commission = inv.commission;
+    let total = inv.total;
+
+    let pay = state
+        .db
+        .transaction::<_, payment::Model, AppError>(|txn| {
+            Box::pin(async move {
+                let pay = match (payment::ActiveModel {
+                    id: Set(Uuid::new_v4()),
+                    payeur_id: Set(payeur_id),
+                    beneficiaire_id: Set(beneficiaire_id),
+                    contrat_id: Set(Some(contrat_id)),
+                    type_paiement: Set(TypePaiement::Caution),
+                    montant_gnf: Set(caution),
+                    commission_plateforme_gnf: Set(commission),
+                    montant_total_gnf: Set(total),
+                    methode_paiement: Set(MethodePaiement::Especes),
+                    // Cash is immediate (no escrow, no quittance): recorded confirmed.
+                    statut: Set(StatutPaiement::Confirme),
+                    tentatives_paiement: Set(1),
+                    date_creation: Set(now.into()),
+                    date_confirmation: Set(Some(now.into())),
+                    ..Default::default()
+                }
+                .insert(txn)
+                .await)
+                {
+                    Ok(p) => p,
+                    Err(e) if is_unique_violation(&e) => {
+                        return Err(AppError::Conflict("un paiement existe déjà pour ce contrat".into()));
+                    }
+                    Err(e) => return Err(AppError::Database(e)),
+                };
+                // Cash is settled immediately: the transaction is completed.
+                transaction::ActiveModel {
+                    id: Set(Uuid::new_v4()),
+                    annonce_id: Set(annonce_id),
+                    proprietaire_id: Set(beneficiaire_id),
+                    locataire_acheteur_id: Set(payeur_id),
+                    contrat_id: Set(contrat_id),
+                    paiements_ids: Set(json!([pay.id])),
+                    type_transaction: Set(TypeOperation::Location),
+                    montant_total_gnf: Set(total),
+                    commission_plateforme_gnf: Set(commission),
+                    statut: Set(StatutTransaction::Completee),
+                    date_debut: Set(now.into()),
+                    date_completion: Set(Some(now.into())),
+                    ..Default::default()
+                }
+                .insert(txn)
+                .await?;
+                Ok(pay)
+            })
+        })
+        .await
+        .map_err(|e| match e {
+            sea_orm::TransactionError::Connection(db) => AppError::Database(db),
+            sea_orm::TransactionError::Transaction(app) => app,
+        })?;
+
     Ok(Json(json!({ "success": true, "data": { "payment": payment_json(&pay, Some(&c), None, None) } })))
 }
 
@@ -409,21 +491,52 @@ async fn refund(
         .await?
         .ok_or(AppError::NotFound)?;
     let previous_statut = super::dto::statut_str(&p.statut);
+    let contrat_id = p.contrat_id;
 
-    // Atomic conditional update: only an escrow-held payment can be refunded,
-    // and only one concurrent refund can win (anti double-refund).
-    let result = payment::Entity::update_many()
-        .col_expr(
-            payment::Column::Statut,
-            statut_expr(StatutPaiement::Rembourse),
-        )
-        .filter(payment::Column::Id.eq(id))
-        .filter(payment::Column::Statut.is_in([StatutPaiement::EnEscrow, StatutPaiement::CommissionCollectee]))
-        .exec(&state.db)
-        .await?;
-    if result.rows_affected == 0 {
-        return Err(AppError::Conflict("paiement non remboursable (non séquestré ou déjà traité)".into()));
-    }
+    // Atomic: payment -> Rembourse AND the escrow transaction -> Annulee in ONE tx.
+    // The conditional payment UPDATE guards double-refund; closing the transaction
+    // prevents the escrow ledger from staying EnCours forever (and the
+    // transactions.contrat_id UNIQUE from blocking a later retry via `process`'s
+    // upsert, which resets an Annulee row to EnCours).
+    let now = Utc::now();
+    state
+        .db
+        .transaction::<_, (), AppError>(|txn| {
+            Box::pin(async move {
+                let result = payment::Entity::update_many()
+                    .col_expr(payment::Column::Statut, statut_expr(StatutPaiement::Rembourse))
+                    .filter(payment::Column::Id.eq(id))
+                    .filter(
+                        payment::Column::Statut
+                            .is_in([StatutPaiement::EnEscrow, StatutPaiement::CommissionCollectee]),
+                    )
+                    .exec(txn)
+                    .await?;
+                if result.rows_affected == 0 {
+                    return Err(AppError::Conflict(
+                        "paiement non remboursable (non séquestré ou déjà traité)".into(),
+                    ));
+                }
+                if let Some(cid) = contrat_id {
+                    if let Some(t) = transaction::Entity::find()
+                        .filter(transaction::Column::ContratId.eq(cid))
+                        .one(txn)
+                        .await?
+                    {
+                        let mut tam: transaction::ActiveModel = t.into();
+                        tam.statut = Set(StatutTransaction::Annulee);
+                        tam.date_completion = Set(Some(now.into()));
+                        tam.update(txn).await?;
+                    }
+                }
+                Ok(())
+            })
+        })
+        .await
+        .map_err(|e| match e {
+            sea_orm::TransactionError::Connection(db) => AppError::Database(db),
+            sea_orm::TransactionError::Transaction(app) => app,
+        })?;
 
     let updated = payment::Entity::find_by_id(id).one(&state.db).await?.ok_or(AppError::NotFound)?;
 
@@ -493,6 +606,66 @@ async fn assert_no_active_payment(state: &AppState, contract_id: Uuid) -> AppRes
 fn statut_expr(v: StatutPaiement) -> sea_orm::sea_query::SimpleExpr {
     use sea_orm::sea_query::{Alias, Expr};
     Expr::value(v).cast_as(Alias::new("statut_paiement"))
+}
+
+/// Whether a DB error is a unique-constraint violation (Postgres SQLSTATE 23505).
+/// Turns a concurrent-insert race past `assert_no_active_payment` into a friendly
+/// 409 instead of a raw 500.
+fn is_unique_violation(e: &sea_orm::DbErr) -> bool {
+    let s = e.to_string().to_ascii_lowercase();
+    s.contains("unique") || s.contains("duplicate") || s.contains("23505")
+}
+
+/// Insert the escrow transaction for a contract, or reset the existing row to
+/// `EnCours`. `transactions.contrat_id` is UNIQUE, so there is at most one row per
+/// contract — a retry (e.g. after a refund cancelled the prior transaction) must
+/// UPDATE it, not insert, or it hits a 23505.
+async fn upsert_escrow_transaction<C: sea_orm::ConnectionTrait>(
+    db: &C,
+    annonce_id: Option<Uuid>,
+    proprietaire_id: Uuid,
+    locataire_acheteur_id: Uuid,
+    contrat_id: Uuid,
+    payment_id: Uuid,
+    total: i64,
+    commission: i64,
+    now: chrono::DateTime<chrono::Utc>,
+) -> AppResult<()> {
+    if let Some(t) = transaction::Entity::find()
+        .filter(transaction::Column::ContratId.eq(contrat_id))
+        .one(db)
+        .await?
+    {
+        let mut tam: transaction::ActiveModel = t.into();
+        tam.annonce_id = Set(annonce_id);
+        tam.proprietaire_id = Set(proprietaire_id);
+        tam.locataire_acheteur_id = Set(locataire_acheteur_id);
+        tam.paiements_ids = Set(json!([payment_id]));
+        tam.montant_total_gnf = Set(total);
+        tam.commission_plateforme_gnf = Set(commission);
+        tam.statut = Set(StatutTransaction::EnCours);
+        tam.date_debut = Set(now.into());
+        tam.date_completion = Set(None);
+        tam.update(db).await?;
+    } else {
+        transaction::ActiveModel {
+            id: Set(Uuid::new_v4()),
+            annonce_id: Set(annonce_id),
+            proprietaire_id: Set(proprietaire_id),
+            locataire_acheteur_id: Set(locataire_acheteur_id),
+            contrat_id: Set(contrat_id),
+            paiements_ids: Set(json!([payment_id])),
+            type_transaction: Set(TypeOperation::Location),
+            montant_total_gnf: Set(total),
+            commission_plateforme_gnf: Set(commission),
+            statut: Set(StatutTransaction::EnCours),
+            date_debut: Set(now.into()),
+            ..Default::default()
+        }
+        .insert(db)
+        .await?;
+    }
+    Ok(())
 }
 
 async fn fetch_party_payment(state: &AppState, auth: &AuthUser, id: Uuid) -> AppResult<payment::Model> {
