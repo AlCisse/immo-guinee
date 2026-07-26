@@ -7,6 +7,7 @@
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use sea_orm::sea_query::Expr;
+use sea_orm::sea_query::extension::postgres::PgExpr; // .ilike() on Expr (case-insensitive)
 use sea_orm::{ColumnTrait, Condition, EntityTrait, QueryFilter, QueryOrder, Select};
 
 use crate::db::entities::listing;
@@ -100,9 +101,11 @@ pub fn apply_filters(q: &ListingSearchQuery) -> Select<listing::Entity> {
         // fulltext GIN index (to_tsvector('french', titre || ' ' || description)) we
         // could use for relevance/perf — TODO: switch to ts_query in a later iteration.
         let pattern = format!("%{}%", text.trim());
+        // ILIKE (case-insensitive): "Villa" must match "villa". `.like()` is
+        // case-sensitive in Postgres, which silently dropped legitimate matches.
         let text_cond = Condition::any()
-            .add(Expr::col(listing::Column::Titre).like(pattern.clone()))
-            .add(Expr::col(listing::Column::Description).like(pattern));
+            .add(Expr::col(listing::Column::Titre).ilike(pattern.clone()))
+            .add(Expr::col(listing::Column::Description).ilike(pattern));
         select = select.filter(text_cond);
     }
 

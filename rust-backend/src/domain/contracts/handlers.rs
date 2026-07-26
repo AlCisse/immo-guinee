@@ -23,7 +23,7 @@ use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use uuid::Uuid;
 
-use crate::db::entities::sea_orm_active_enums::{StatutContrat, TypeContrat};
+use crate::db::entities::sea_orm_active_enums::{StatutContrat, StatutListing, TypeContrat};
 use crate::db::entities::{contract, listing, user};
 use crate::error::{AppError, AppResult};
 use crate::extractors::{AuthUser, ValidatedJson};
@@ -60,6 +60,14 @@ async fn create(
     // Only the listing's owner can create a contract on it (anti-fraud).
     if listing.createur_id != auth.id {
         return Err(AppError::Forbidden("Vous n'êtes pas le propriétaire de cette annonce".into()));
+    }
+
+    // The listing must still be contractable — not expired/archived/suspended/sold.
+    // (Previously a contract could be generated on a dead listing.)
+    if !matches!(listing.statut, StatutListing::Disponible | StatutListing::EnNegociation) {
+        return Err(AppError::Conflict(
+            "cette annonce n'est plus disponible pour générer un contrat".into(),
+        ));
     }
 
     // One active contract per listing: a non-cancelled contract already exists
@@ -107,7 +115,11 @@ async fn create(
     let ctx = build_ctx(id, &donnees, &json!([]), Some(&listing), &proprietaire, &locataire);
     let (url, hash) = render_and_store(&state, id, &ctx).await?;
 
-    let model = contract::ActiveModel {
+    // The app-level "one active contract per listing" check above is a
+    // check-then-insert TOCTOU (the window spans the Typst render + S3 put). The
+    // partial-unique index uq_contracts_annonce_active is the real guard — a
+    // concurrent create that wins it rejects this insert with a 23505, mapped to 409.
+    let model = match (contract::ActiveModel {
         id: Set(id),
         type_contrat: Set(type_contrat),
         annonce_id: Set(Some(req.listing_id)),
@@ -122,7 +134,14 @@ async fn create(
         ..Default::default()
     }
     .insert(&state.db)
-    .await?;
+    .await)
+    {
+        Ok(m) => m,
+        Err(e) if is_unique_violation(&e) => {
+            return Err(AppError::Conflict("un contrat actif existe déjà pour cette annonce".into()));
+        }
+        Err(e) => return Err(AppError::Database(e)),
+    };
 
     Ok(Json(json!({
         "success": true,
@@ -240,6 +259,19 @@ async fn send(
     if c.proprietaire_id != auth.id {
         return Err(AppError::Forbidden("seul le propriétaire peut envoyer le contrat".into()));
     }
+    // Only a draft (or a pending, unsent-but-already-EnAttente contract) can be
+    // sent. Re-sending a partially/totally signed or cancelled contract would
+    // rewrite its statut to EnAttenteSignature and reset the retraction deadline,
+    // then `cancel` (which blocks only SigneArchive|PartiellementSigne) could
+    // destroy/revive a legally signed lease.
+    if matches!(
+        c.statut,
+        StatutContrat::PartiellementSigne | StatutContrat::SigneArchive | StatutContrat::Annule
+    ) {
+        return Err(AppError::Conflict(
+            "ce contrat ne peut plus être (re)envoyé pour signature".into(),
+        ));
+    }
     let locataire_id = c.locataire_acheteur_id;
     let mut am: contract::ActiveModel = c.into();
     am.statut = Set(StatutContrat::EnAttenteSignature);
@@ -327,13 +359,18 @@ async fn sign(
     // Typst PDF (spawn_blocking) and pushes it to S3. Under a degraded S3 the
     // whole thing can run long; a too-short TTL would let a second signer acquire
     // the lock mid-flight and reintroduce the lost-update race the lock prevents.
-    if !crate::services::redis_atomic::acquire_lock(&state.redis, &lock_key, 60).await? {
-        return Err(AppError::Conflict(
-            "Une signature est déjà en cours sur ce contrat, réessayez dans un instant".into(),
-        ));
-    }
+    // The lock is token-owned: if this holder's TTL expires and a second signer
+    // takes the lock, this holder's release (compare-and-delete) won't drop theirs.
+    let lock_token = match crate::services::redis_atomic::acquire_lock(&state.redis, &lock_key, 60).await? {
+        Some(t) => t,
+        None => {
+            return Err(AppError::Conflict(
+                "Une signature est déjà en cours sur ce contrat, réessayez dans un instant".into(),
+            ))
+        }
+    };
     let res = sign_locked(&state, &auth, id, req).await;
-    let _ = crate::services::redis_atomic::release_lock(&state.redis, &lock_key).await;
+    let _ = crate::services::redis_atomic::release_lock(&state.redis, &lock_key, &lock_token).await;
     res
 }
 
@@ -403,6 +440,14 @@ async fn sign_locked(
 }
 
 // --- helpers ---------------------------------------------------------------
+
+/// Postgres unique-constraint violation (SQLSTATE 23505) — turns a concurrent
+/// create race (two contracts on the same listing past the app-level check) into a
+/// friendly 409 instead of a raw 500.
+fn is_unique_violation(e: &sea_orm::DbErr) -> bool {
+    let s = e.to_string().to_ascii_lowercase();
+    s.contains("unique") || s.contains("duplicate") || s.contains("23505")
+}
 
 /// Fetch a contract and ensure the caller is one of its parties.
 async fn fetch_party_contract(

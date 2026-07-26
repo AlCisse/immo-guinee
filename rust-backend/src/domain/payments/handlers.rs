@@ -20,7 +20,8 @@ use uuid::Uuid;
 
 use crate::auth::rbac::Permission;
 use crate::db::entities::sea_orm_active_enums::{
-    MethodePaiement, StatutContrat, StatutPaiement, StatutTransaction, TypeOperation, TypePaiement,
+    MethodePaiement, StatutContrat, StatutPaiement, StatutTransaction, TypeContrat, TypeOperation,
+    TypePaiement,
 };
 use crate::db::entities::{admin_audit_log, contract, listing, payment, transaction, user};
 use crate::error::{AppError, AppResult};
@@ -110,6 +111,7 @@ async fn process(
     let caution = inv.caution;
     let commission = inv.commission;
     let total = inv.total;
+    let type_operation = type_operation_for(&c.type_contrat);
     let pay = state
         .db
         .transaction::<_, payment::Model, AppError>(|txn| {
@@ -147,7 +149,8 @@ async fn process(
                 // Open (or reset, on a retry after refund) the escrow transaction in
                 // the same atomic unit as the payment.
                 upsert_escrow_transaction(
-                    txn, annonce_id, beneficiaire_id, payeur_id, contrat_id, pay.id, total, commission, now,
+                    txn, annonce_id, beneficiaire_id, payeur_id, contrat_id, pay.id, total,
+                    commission, type_operation, now,
                 )
                 .await?;
 
@@ -415,6 +418,7 @@ async fn cash(
     let caution = inv.caution;
     let commission = inv.commission;
     let total = inv.total;
+    let type_operation = type_operation_for(&c.type_contrat);
 
     let pay = state
         .db
@@ -454,7 +458,7 @@ async fn cash(
                     locataire_acheteur_id: Set(payeur_id),
                     contrat_id: Set(contrat_id),
                     paiements_ids: Set(json!([pay.id])),
-                    type_transaction: Set(TypeOperation::Location),
+                    type_transaction: Set(type_operation),
                     montant_total_gnf: Set(total),
                     commission_plateforme_gnf: Set(commission),
                     statut: Set(StatutTransaction::Completee),
@@ -561,6 +565,16 @@ async fn refund(
 
 // --- helpers ---------------------------------------------------------------
 
+/// Map a contract's `type_contrat` to the escrow transaction's `type_operation`.
+/// Was hardcoded to `Location`, which mislabelled sale promises (terrain) as
+/// rentals in the transaction ledger and analytics.
+fn type_operation_for(tc: &TypeContrat) -> TypeOperation {
+    match tc {
+        TypeContrat::PromesseVenteTerrain => TypeOperation::Vente,
+        _ => TypeOperation::Location,
+    }
+}
+
 /// Parse `limit`/`offset` query params for a user-facing list, with a safe default
 /// page size and a hard cap so the response can never grow O(rows) (was: `.all()`
 /// with no bound → memory + payload unbounded as history accumulates).
@@ -645,6 +659,7 @@ async fn upsert_escrow_transaction<C: sea_orm::ConnectionTrait>(
     payment_id: Uuid,
     total: i64,
     commission: i64,
+    type_operation: TypeOperation,
     now: chrono::DateTime<chrono::Utc>,
 ) -> AppResult<()> {
     if let Some(t) = transaction::Entity::find()
@@ -659,6 +674,7 @@ async fn upsert_escrow_transaction<C: sea_orm::ConnectionTrait>(
         tam.paiements_ids = Set(json!([payment_id]));
         tam.montant_total_gnf = Set(total);
         tam.commission_plateforme_gnf = Set(commission);
+        tam.type_transaction = Set(type_operation);
         tam.statut = Set(StatutTransaction::EnCours);
         tam.date_debut = Set(now.into());
         tam.date_completion = Set(None);
@@ -671,7 +687,7 @@ async fn upsert_escrow_transaction<C: sea_orm::ConnectionTrait>(
             locataire_acheteur_id: Set(locataire_acheteur_id),
             contrat_id: Set(contrat_id),
             paiements_ids: Set(json!([payment_id])),
-            type_transaction: Set(TypeOperation::Location),
+            type_transaction: Set(type_operation),
             montant_total_gnf: Set(total),
             commission_plateforme_gnf: Set(commission),
             statut: Set(StatutTransaction::EnCours),

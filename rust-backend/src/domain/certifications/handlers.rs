@@ -50,7 +50,6 @@ async fn upload(
     let mut type_document: Option<TypeDocument> = None;
     let mut file_bytes: Option<Vec<u8>> = None;
     let mut file_name: Option<String> = None;
-    let mut content_type: String = "application/octet-stream".into();
 
     while let Some(field) = multipart
         .next_field()
@@ -59,7 +58,6 @@ async fn upload(
     {
         let name = field.name().unwrap_or("").to_owned();
         let fname = field.file_name().map(|s| s.to_owned());
-        let ctype = field.content_type().map(|s| s.to_owned());
         let bytes = field
             .bytes()
             .await
@@ -75,9 +73,6 @@ async fn upload(
         } else if name == "file" {
             file_bytes = Some(bytes.to_vec());
             file_name = fname;
-            if let Some(c) = ctype {
-                content_type = c;
-            }
         }
     }
 
@@ -88,14 +83,15 @@ async fn upload(
         return Err(AppError::Validation("fichier vide".into()));
     }
 
-    // Safe extension from the original filename (alphanumeric, ≤ 8 chars), else "bin".
-    let ext = file_name
-        .as_deref()
-        .and_then(|n| n.rsplit_once('.').map(|(_, e)| e.to_owned()))
-        .filter(|e| !e.is_empty() && e.len() <= 8 && e.chars().all(|c| c.is_ascii_alphanumeric()))
-        .unwrap_or_else(|| "bin".into());
+    // Validate the real file type by its magic bytes (the client Content-Type is
+    // trivially spoofable). Only ID documents are accepted: PDF, JPEG, PNG. The
+    // stored content type and extension are derived from the bytes, not the client.
+    let (content_type, ext) = detect_allowed_doc_type(&file_bytes).ok_or_else(|| {
+        AppError::Validation("format de fichier non supporté : PDF, JPEG ou PNG uniquement".into())
+    })?;
+    let _ = &file_name; // original name is not trusted for type/extension
     let key = format!("certifications/{}/{}.{}", auth.id, Uuid::new_v4(), ext);
-    let url = state.storage.put(&key, &file_bytes, &content_type).await?;
+    let url = state.storage.put(&key, &file_bytes, content_type).await?;
 
     let model = certification_document::ActiveModel {
         id: Set(Uuid::new_v4()),
@@ -108,6 +104,21 @@ async fn upload(
     .await?;
 
     Ok(Json(Envelope { success: true, data: CertificationResponse::from(model) }))
+}
+
+/// Identify an uploaded document by its magic bytes and return `(mime, extension)`
+/// for the allowed ID-document formats, or `None` to reject. The client-supplied
+/// Content-Type / filename are not trusted (spoofable).
+fn detect_allowed_doc_type(bytes: &[u8]) -> Option<(&'static str, &'static str)> {
+    if bytes.starts_with(b"%PDF-") {
+        Some(("application/pdf", "pdf"))
+    } else if bytes.starts_with(&[0xFF, 0xD8, 0xFF]) {
+        Some(("image/jpeg", "jpg"))
+    } else if bytes.starts_with(&[0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A]) {
+        Some(("image/png", "png"))
+    } else {
+        None
+    }
 }
 
 /// `GET /api/certifications/me` — the caller's documents, newest first.
