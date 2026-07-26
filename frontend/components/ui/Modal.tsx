@@ -78,7 +78,7 @@ const Modal = ({
       >
         <div
           className={cn(
-            'relative w-full rounded-xl bg-white shadow-xl',
+            'relative w-full rounded-xl bg-white dark:bg-dark-card shadow-xl',
             'animate-fade-in',
             sizes[size]
           )}
@@ -86,18 +86,18 @@ const Modal = ({
         >
           {/* Header */}
           {(title || showCloseButton) && (
-            <div className="flex items-start justify-between border-b border-gray-200 px-6 py-4">
+            <div className="flex items-start justify-between border-b border-neutral-200 dark:border-dark-border px-6 py-4">
               <div>
                 {title && (
                   <h2
                     id="modal-title"
-                    className="font-heading text-lg font-semibold text-gray-900"
+                    className="font-heading text-lg font-semibold text-neutral-900 dark:text-white"
                   >
                     {title}
                   </h2>
                 )}
                 {description && (
-                  <p id="modal-description" className="mt-1 text-sm text-gray-500">
+                  <p id="modal-description" className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
                     {description}
                   </p>
                 )}
@@ -106,7 +106,7 @@ const Modal = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="rounded-lg p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-500 dark:hover:bg-dark-hover dark:hover:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
                   aria-label="Fermer"
                 >
                   <svg
@@ -133,7 +133,7 @@ const Modal = ({
 
           {/* Footer */}
           {footer && (
-            <div className="flex items-center justify-end gap-3 border-t border-gray-200 px-6 py-4">
+            <div className="flex items-center justify-end gap-3 border-t border-neutral-200 dark:border-dark-border px-6 py-4">
               {footer}
             </div>
           )}

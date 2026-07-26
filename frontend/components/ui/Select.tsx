@@ -26,10 +26,10 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div className="w-full">
         {label && (
-          <label htmlFor={selectId} className="mb-1.5 block text-sm font-medium text-gray-700">
+          <label htmlFor={selectId} className="mb-1.5 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
             {label}
             {props.required && (
-              <span className="ml-1 text-red-500" aria-hidden="true">
+              <span className="ml-1 text-error-500" aria-hidden="true">
                 *
               </span>
             )}
@@ -40,11 +40,11 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
             ref={ref}
             id={selectId}
             className={cn(
-              'block w-full appearance-none rounded-xl border border-gray-300 bg-white px-3 py-2.5 pr-10 text-gray-900',
+              'block w-full appearance-none rounded-xl border border-neutral-300 bg-white px-3 py-2.5 pr-10 text-neutral-900 dark:border-dark-border dark:bg-dark-card dark:text-white',
               'transition-colors duration-200',
               'focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20',
-              'disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500',
-              error && 'border-red-500 focus:border-red-500 focus:ring-red-500/20',
+              'disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-500 dark:disabled:bg-dark-hover',
+              error && 'border-error-500 focus:border-error-500 focus:ring-error-500/20',
               className
             )}
             aria-invalid={error ? 'true' : 'false'}
@@ -64,7 +64,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           </select>
           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
             <svg
-              className="h-5 w-5 text-gray-400"
+              className="h-5 w-5 text-neutral-400"
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
               fill="currentColor"
@@ -79,12 +79,12 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           </div>
         </div>
         {error && (
-          <p id={errorId} className="mt-1.5 text-sm text-red-600" role="alert">
+          <p id={errorId} className="mt-1.5 text-sm text-error-600" role="alert">
             {error}
           </p>
         )}
         {hint && !error && (
-          <p id={hintId} className="mt-1.5 text-sm text-gray-500">
+          <p id={hintId} className="mt-1.5 text-sm text-neutral-500 dark:text-neutral-400">
             {hint}
           </p>
         )}

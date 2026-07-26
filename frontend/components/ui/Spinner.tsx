@@ -25,7 +25,7 @@ const Spinner = ({
   const colors = {
     primary: 'text-primary-600',
     white: 'text-white',
-    gray: 'text-gray-400',
+    gray: 'text-neutral-400',
   };
 
   return (
