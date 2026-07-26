@@ -53,7 +53,7 @@ const STATUS_ACTIONS = [
     label: 'Approuver',
     description: 'Rendre l\'annonce visible au public',
     icon: CheckCircle,
-    color: 'bg-green-500 hover:bg-green-600',
+    color: 'bg-success-500 hover:bg-success-600',
     targetStatus: 'ACTIVE'
   },
   {
@@ -61,7 +61,7 @@ const STATUS_ACTIONS = [
     label: 'Suspendre',
     description: 'Masquer temporairement l\'annonce',
     icon: Clock,
-    color: 'bg-orange-500 hover:bg-orange-600',
+    color: 'bg-primary-500 hover:bg-primary-600',
     targetStatus: 'SUSPENDU'
   },
   {
@@ -69,7 +69,7 @@ const STATUS_ACTIONS = [
     label: 'Supprimer',
     description: 'Supprimer définitivement l\'annonce',
     icon: Ban,
-    color: 'bg-red-500 hover:bg-red-600',
+    color: 'bg-error-500 hover:bg-error-600',
     targetStatus: null
   },
 ];
@@ -139,7 +139,7 @@ export default function AdminEditListingPage() {
   if (error || !listing) {
     return (
       <div className="text-center py-12">
-        <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-yellow-500" />
+        <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-warning-500" />
         <h2 className="text-xl font-semibold mb-2">Annonce introuvable</h2>
         <p className="text-neutral-500 mb-4">Cette annonce n'existe pas ou a été supprimée.</p>
         <Link href="/admin/annonces" className="text-primary-500 hover:underline">
@@ -167,11 +167,11 @@ export default function AdminEditListingPage() {
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white flex items-center gap-3">
             <Building2 className="w-7 h-7 text-primary-500" />
             Modérer l'annonce
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <p className="text-neutral-600 dark:text-neutral-400 mt-1">
             Modifier le statut de cette annonce
           </p>
         </div>

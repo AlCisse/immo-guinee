@@ -110,7 +110,7 @@ function CodeBlock({ code, language = 'bash' }: { code: string; language?: strin
         className="absolute top-2 right-2 p-2 bg-neutral-800 hover:bg-neutral-700 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
       >
         {copied ? (
-          <Check className="w-4 h-4 text-green-400" />
+          <Check className="w-4 h-4 text-success-400" />
         ) : (
           <Copy className="w-4 h-4 text-neutral-400" />
         )}
@@ -132,11 +132,11 @@ function ApiEndpoint({
   auth?: boolean;
 }) {
   const methodColors = {
-    GET: 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400',
-    POST: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400',
-    PUT: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-400',
-    DELETE: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400',
-    PATCH: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400',
+    GET: 'bg-success-100 text-success-700 dark:bg-success-500/20 dark:text-success-400',
+    POST: 'bg-secondary-100 text-secondary-700 dark:bg-secondary-500/20 dark:text-secondary-400',
+    PUT: 'bg-warning-100 text-warning-700 dark:bg-warning-500/20 dark:text-warning-400',
+    DELETE: 'bg-error-100 text-error-700 dark:bg-error-500/20 dark:text-error-400',
+    PATCH: 'bg-teal-100 text-teal-700 dark:bg-teal-500/20 dark:text-teal-400',
   };
 
   return (
@@ -198,7 +198,7 @@ export default function AdminDocumentationPage() {
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg pb-8">
       {/* Header */}
-      <div className="bg-gradient-to-br from-primary-500 to-orange-500 pt-6 pb-12 md:pt-8 md:pb-16 px-4 md:px-8">
+      <div className="bg-gradient-to-br from-primary-500 to-primary-500 pt-6 pb-12 md:pt-8 md:pb-16 px-4 md:px-8">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -579,12 +579,12 @@ Authorization: Bearer {token}  # Pour les routes authentifiees`}
 
                 <h3 className="font-semibold text-neutral-900 dark:text-white mt-4">Moyens de paiement</h3>
                 <div className="grid md:grid-cols-2 gap-4">
-                  <div className="p-4 bg-orange-50 dark:bg-orange-500/10 rounded-xl">
-                    <span className="font-medium text-orange-600 dark:text-orange-400">Orange Money</span>
+                  <div className="p-4 bg-primary-50 dark:bg-primary-500/10 rounded-xl">
+                    <span className="font-medium text-primary-600 dark:text-primary-400">Orange Money</span>
                     <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">Principal en Guinee - Frais 0.5%</p>
                   </div>
-                  <div className="p-4 bg-yellow-50 dark:bg-yellow-500/10 rounded-xl">
-                    <span className="font-medium text-yellow-600 dark:text-yellow-400">MTN Mobile Money</span>
+                  <div className="p-4 bg-warning-50 dark:bg-warning-500/10 rounded-xl">
+                    <span className="font-medium text-warning-600 dark:text-warning-400">MTN Mobile Money</span>
                     <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">Alternative disponible</p>
                   </div>
                 </div>
@@ -803,8 +803,8 @@ OR → DIAMANT:
 
                 <h3 className="font-semibold text-neutral-900 dark:text-white mt-4">Types d'assurance</h3>
                 <div className="grid md:grid-cols-2 gap-4">
-                  <div className="p-4 bg-blue-50 dark:bg-blue-500/10 rounded-xl">
-                    <span className="font-medium text-blue-600 dark:text-blue-400">Sejour Serein (Locataire)</span>
+                  <div className="p-4 bg-secondary-50 dark:bg-secondary-500/10 rounded-xl">
+                    <span className="font-medium text-secondary-600 dark:text-secondary-400">Sejour Serein (Locataire)</span>
                     <ul className="text-sm text-neutral-600 dark:text-neutral-400 mt-2 space-y-1">
                       <li>Protection expulsion abusive</li>
                       <li>Garantie caution</li>
@@ -812,8 +812,8 @@ OR → DIAMANT:
                       <li>Prime: 2% du loyer mensuel</li>
                     </ul>
                   </div>
-                  <div className="p-4 bg-green-50 dark:bg-green-500/10 rounded-xl">
-                    <span className="font-medium text-green-600 dark:text-green-400">Loyer Garanti (Proprietaire)</span>
+                  <div className="p-4 bg-success-50 dark:bg-success-500/10 rounded-xl">
+                    <span className="font-medium text-success-600 dark:text-success-400">Loyer Garanti (Proprietaire)</span>
                     <ul className="text-sm text-neutral-600 dark:text-neutral-400 mt-2 space-y-1">
                       <li>Garantie loyers impayes (6 mois)</li>
                       <li>Couverture degats locatifs (2 mois)</li>
@@ -841,19 +841,19 @@ OR → DIAMANT:
 
                 <h3 className="font-semibold text-neutral-900 dark:text-white mt-4">Canaux</h3>
                 <div className="grid md:grid-cols-3 gap-4">
-                  <div className="p-4 bg-green-50 dark:bg-green-500/10 rounded-xl text-center">
-                    <MessageSquare className="w-8 h-8 text-green-500 mx-auto mb-2" />
-                    <span className="font-medium text-green-600 dark:text-green-400">WhatsApp</span>
+                  <div className="p-4 bg-success-50 dark:bg-success-500/10 rounded-xl text-center">
+                    <MessageSquare className="w-8 h-8 text-success-500 mx-auto mb-2" />
+                    <span className="font-medium text-success-600 dark:text-success-400">WhatsApp</span>
                     <p className="text-xs text-neutral-500 mt-1">Via WAHA API</p>
                   </div>
-                  <div className="p-4 bg-blue-50 dark:bg-blue-500/10 rounded-xl text-center">
-                    <Send className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-                    <span className="font-medium text-blue-600 dark:text-blue-400">Email</span>
+                  <div className="p-4 bg-secondary-50 dark:bg-secondary-500/10 rounded-xl text-center">
+                    <Send className="w-8 h-8 text-secondary-500 mx-auto mb-2" />
+                    <span className="font-medium text-secondary-600 dark:text-secondary-400">Email</span>
                     <p className="text-xs text-neutral-500 mt-1">Via SMTP</p>
                   </div>
-                  <div className="p-4 bg-purple-50 dark:bg-purple-500/10 rounded-xl text-center">
-                    <Smartphone className="w-8 h-8 text-purple-500 mx-auto mb-2" />
-                    <span className="font-medium text-purple-600 dark:text-purple-400">SMS</span>
+                  <div className="p-4 bg-teal-50 dark:bg-teal-500/10 rounded-xl text-center">
+                    <Smartphone className="w-8 h-8 text-teal-500 mx-auto mb-2" />
+                    <span className="font-medium text-teal-600 dark:text-teal-400">SMS</span>
                     <p className="text-xs text-neutral-500 mt-1">Via Twilio</p>
                   </div>
                 </div>
@@ -882,7 +882,7 @@ OR → DIAMANT:
             <DocSection id="security" icon={Shield} title="Securite & 2FA" defaultOpen>
               <div className="space-y-4">
                 {/* Security Score Banner */}
-                <div className="p-4 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl text-white">
+                <div className="p-4 bg-gradient-to-r from-success-500 to-accent-500 rounded-xl text-white">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="font-bold text-lg">Score de Securite</h3>
@@ -914,7 +914,7 @@ OR → DIAMANT:
                   ].map(cat => (
                     <div key={cat.name} className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-dark-bg rounded-xl">
                       <span className="text-neutral-700 dark:text-neutral-300">{cat.name}</span>
-                      <span className="font-bold text-green-500">{cat.score}%</span>
+                      <span className="font-bold text-success-500">{cat.score}%</span>
                     </div>
                   ))}
                 </div>
@@ -944,8 +944,8 @@ ai:         10 req/min     # Endpoints IA`}
                 />
 
                 <h3 className="font-semibold text-neutral-900 dark:text-white mt-6">2FA Admin Obligatoire</h3>
-                <div className="p-4 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl">
-                  <p className="text-amber-800 dark:text-amber-300 text-sm">
+                <div className="p-4 bg-warning-50 dark:bg-warning-500/10 border border-warning-200 dark:border-warning-500/20 rounded-xl">
+                  <p className="text-warning-800 dark:text-warning-300 text-sm">
                     <strong>Important:</strong> Le 2FA est OBLIGATOIRE pour tous les administrateurs.
                     Sans configuration 2FA, l'acces au panel admin est bloque avec erreur 403.
                   </p>
@@ -1218,7 +1218,7 @@ docker service ps immog_frontend`}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-gradient-to-br from-primary-500 to-orange-500 rounded-2xl p-6 text-white"
+              className="bg-gradient-to-br from-primary-500 to-primary-500 rounded-2xl p-6 text-white"
             >
               <h3 className="font-semibold text-lg mb-4">Liens utiles</h3>
               <div className="grid sm:grid-cols-2 gap-3">

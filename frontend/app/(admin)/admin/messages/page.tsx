@@ -126,12 +126,12 @@ export default function MessagesPage() {
 
   const getStatutBadge = (statut: string, type: string) => {
     const statusMap: Record<string, { color: string; label: string }> = {
-      EN_ATTENTE: { color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-500/10 dark:text-yellow-400', label: 'En attente' },
-      PENDING: { color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-500/10 dark:text-yellow-400', label: 'En attente' },
-      EN_COURS: { color: 'bg-blue-100 text-blue-800 dark:bg-blue-500/10 dark:text-blue-400', label: 'En cours' },
-      REVIEWING: { color: 'bg-blue-100 text-blue-800 dark:bg-blue-500/10 dark:text-blue-400', label: 'En cours' },
-      TRAITE: { color: 'bg-green-100 text-green-800 dark:bg-green-500/10 dark:text-green-400', label: 'Traité' },
-      RESOLVED: { color: 'bg-green-100 text-green-800 dark:bg-green-500/10 dark:text-green-400', label: 'Résolu' },
+      EN_ATTENTE: { color: 'bg-warning-100 text-warning-800 dark:bg-warning-500/10 dark:text-warning-400', label: 'En attente' },
+      PENDING: { color: 'bg-warning-100 text-warning-800 dark:bg-warning-500/10 dark:text-warning-400', label: 'En attente' },
+      EN_COURS: { color: 'bg-secondary-100 text-secondary-800 dark:bg-secondary-500/10 dark:text-secondary-400', label: 'En cours' },
+      REVIEWING: { color: 'bg-secondary-100 text-secondary-800 dark:bg-secondary-500/10 dark:text-secondary-400', label: 'En cours' },
+      TRAITE: { color: 'bg-success-100 text-success-800 dark:bg-success-500/10 dark:text-success-400', label: 'Traité' },
+      RESOLVED: { color: 'bg-success-100 text-success-800 dark:bg-success-500/10 dark:text-success-400', label: 'Résolu' },
       DISMISSED: { color: 'bg-neutral-100 text-neutral-800 dark:bg-neutral-500/10 dark:text-neutral-400', label: 'Rejeté' },
       ARCHIVE: { color: 'bg-neutral-100 text-neutral-800 dark:bg-neutral-500/10 dark:text-neutral-400', label: 'Archivé' },
     };
@@ -146,10 +146,10 @@ export default function MessagesPage() {
   const getSeverityBadge = (severity?: string) => {
     if (!severity) return null;
     const severityMap: Record<string, { color: string; label: string }> = {
-      LOW: { color: 'bg-blue-100 text-blue-800', label: 'Faible' },
-      MEDIUM: { color: 'bg-yellow-100 text-yellow-800', label: 'Moyen' },
-      HIGH: { color: 'bg-orange-100 text-orange-800', label: 'Élevé' },
-      CRITICAL: { color: 'bg-red-100 text-red-800', label: 'Critique' },
+      LOW: { color: 'bg-secondary-100 text-secondary-800', label: 'Faible' },
+      MEDIUM: { color: 'bg-warning-100 text-warning-800', label: 'Moyen' },
+      HIGH: { color: 'bg-primary-100 text-primary-800', label: 'Élevé' },
+      CRITICAL: { color: 'bg-error-100 text-error-800', label: 'Critique' },
     };
     const sev = severityMap[severity] || { color: 'bg-neutral-100 text-neutral-800', label: severity };
     return (
@@ -163,11 +163,11 @@ export default function MessagesPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-white flex items-center gap-3">
           <MessageSquare className="w-7 h-7 text-primary-500" />
           Messages & Signalements
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
+        <p className="text-neutral-600 dark:text-neutral-400 mt-1">
           Gérez les messages du formulaire contact et les signalements
         </p>
       </div>
@@ -259,8 +259,8 @@ export default function MessagesPage() {
                               <Mail className="w-4 h-4 text-primary-600 dark:text-primary-400" />
                             </div>
                           ) : (
-                            <div className="w-8 h-8 bg-red-100 dark:bg-red-500/10 rounded-lg flex items-center justify-center">
-                              <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400" />
+                            <div className="w-8 h-8 bg-error-100 dark:bg-error-500/10 rounded-lg flex items-center justify-center">
+                              <AlertTriangle className="w-4 h-4 text-error-600 dark:text-error-400" />
                             </div>
                           )}
                           <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
@@ -334,8 +334,8 @@ export default function MessagesPage() {
                     <Mail className="w-5 h-5 text-primary-600 dark:text-primary-400" />
                   </div>
                 ) : (
-                  <div className="w-10 h-10 bg-red-100 dark:bg-red-500/10 rounded-xl flex items-center justify-center">
-                    <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                  <div className="w-10 h-10 bg-error-100 dark:bg-error-500/10 rounded-xl flex items-center justify-center">
+                    <AlertTriangle className="w-5 h-5 text-error-600 dark:text-error-400" />
                   </div>
                 )}
                 <div>

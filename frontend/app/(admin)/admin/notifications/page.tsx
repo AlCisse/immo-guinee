@@ -58,25 +58,25 @@ interface NotificationStats {
 }
 
 const NOTIFICATION_TYPES: Record<string, { label: string; icon: React.ElementType; color: string }> = {
-  'listing_created': { label: 'Nouvelle annonce', icon: Home, color: 'text-blue-500' },
-  'listing_approved': { label: 'Annonce approuvée', icon: Home, color: 'text-green-500' },
-  'listing_rejected': { label: 'Annonce rejetée', icon: XCircle, color: 'text-red-500' },
-  'contract_created': { label: 'Nouveau contrat', icon: FileText, color: 'text-blue-500' },
-  'contract_signed': { label: 'Contrat signé', icon: FileText, color: 'text-green-500' },
-  'contract_cancelled': { label: 'Contrat annulé', icon: FileText, color: 'text-red-500' },
-  'payment_received': { label: 'Paiement reçu', icon: CreditCard, color: 'text-emerald-500' },
-  'payment_reminder': { label: 'Rappel de paiement', icon: CreditCard, color: 'text-orange-500' },
-  'message_received': { label: 'Nouveau message', icon: MessageSquare, color: 'text-purple-500' },
-  'visit_requested': { label: 'Demande de visite', icon: Calendar, color: 'text-orange-500' },
-  'visit_confirmed': { label: 'Visite confirmée', icon: Calendar, color: 'text-green-500' },
-  'visit_cancelled': { label: 'Visite annulée', icon: Calendar, color: 'text-red-500' },
-  'rating_received': { label: 'Nouvelle évaluation', icon: Star, color: 'text-yellow-500' },
-  'dispute_opened': { label: 'Litige ouvert', icon: AlertTriangle, color: 'text-red-500' },
-  'dispute_resolved': { label: 'Litige résolu', icon: AlertTriangle, color: 'text-green-500' },
-  'certification_approved': { label: 'Certification approuvée', icon: Shield, color: 'text-green-500' },
-  'certification_rejected': { label: 'Certification rejetée', icon: Shield, color: 'text-red-500' },
+  'listing_created': { label: 'Nouvelle annonce', icon: Home, color: 'text-secondary-500' },
+  'listing_approved': { label: 'Annonce approuvée', icon: Home, color: 'text-success-500' },
+  'listing_rejected': { label: 'Annonce rejetée', icon: XCircle, color: 'text-error-500' },
+  'contract_created': { label: 'Nouveau contrat', icon: FileText, color: 'text-secondary-500' },
+  'contract_signed': { label: 'Contrat signé', icon: FileText, color: 'text-success-500' },
+  'contract_cancelled': { label: 'Contrat annulé', icon: FileText, color: 'text-error-500' },
+  'payment_received': { label: 'Paiement reçu', icon: CreditCard, color: 'text-accent-500' },
+  'payment_reminder': { label: 'Rappel de paiement', icon: CreditCard, color: 'text-primary-500' },
+  'message_received': { label: 'Nouveau message', icon: MessageSquare, color: 'text-teal-500' },
+  'visit_requested': { label: 'Demande de visite', icon: Calendar, color: 'text-primary-500' },
+  'visit_confirmed': { label: 'Visite confirmée', icon: Calendar, color: 'text-success-500' },
+  'visit_cancelled': { label: 'Visite annulée', icon: Calendar, color: 'text-error-500' },
+  'rating_received': { label: 'Nouvelle évaluation', icon: Star, color: 'text-warning-500' },
+  'dispute_opened': { label: 'Litige ouvert', icon: AlertTriangle, color: 'text-error-500' },
+  'dispute_resolved': { label: 'Litige résolu', icon: AlertTriangle, color: 'text-success-500' },
+  'certification_approved': { label: 'Certification approuvée', icon: Shield, color: 'text-success-500' },
+  'certification_rejected': { label: 'Certification rejetée', icon: Shield, color: 'text-error-500' },
   'system': { label: 'Système', icon: Bell, color: 'text-neutral-500' },
-  'welcome': { label: 'Bienvenue', icon: UserPlus, color: 'text-cyan-500' },
+  'welcome': { label: 'Bienvenue', icon: UserPlus, color: 'text-teal-500' },
   'default': { label: 'Notification', icon: Bell, color: 'text-neutral-500' },
 };
 
@@ -192,9 +192,9 @@ export default function AdminNotificationsPage() {
 
   const getPriorityBadge = (priority: string) => {
     const styles: Record<string, string> = {
-      'URGENT': 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400',
-      'HIGH': 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400',
-      'NORMAL': 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400',
+      'URGENT': 'bg-error-100 text-error-700 dark:bg-error-500/20 dark:text-error-400',
+      'HIGH': 'bg-primary-100 text-primary-700 dark:bg-primary-500/20 dark:text-primary-400',
+      'NORMAL': 'bg-secondary-100 text-secondary-700 dark:bg-secondary-500/20 dark:text-secondary-400',
       'LOW': 'bg-neutral-100 text-neutral-600 dark:bg-neutral-500/20 dark:text-neutral-400',
     };
     return styles[priority] || styles['NORMAL'];
@@ -205,11 +205,11 @@ export default function AdminNotificationsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white flex items-center gap-3">
             <Bell className="w-7 h-7 text-primary-500" />
             Notifications
           </h1>
-          <p className="text-gray-600 dark:text-neutral-400 mt-1">
+          <p className="text-neutral-600 dark:text-neutral-400 mt-1">
             Gérez toutes les notifications de la plateforme
           </p>
         </div>
@@ -218,7 +218,7 @@ export default function AdminNotificationsPage() {
             <button
               onClick={() => markAllAsReadMutation.mutate()}
               disabled={markAllAsReadMutation.isPending}
-              className="flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 rounded-xl hover:bg-green-100 dark:hover:bg-green-500/20 transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 bg-success-50 dark:bg-success-500/10 text-success-600 dark:text-success-400 rounded-xl hover:bg-success-100 dark:hover:bg-success-500/20 transition-colors disabled:opacity-50"
             >
               <CheckCheck className="w-4 h-4" />
               Tout marquer comme lu
@@ -238,8 +238,8 @@ export default function AdminNotificationsPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-dark-card rounded-2xl p-4 shadow-soft">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 dark:bg-blue-500/20 rounded-xl">
-              <Bell className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <div className="p-2 bg-secondary-100 dark:bg-secondary-500/20 rounded-xl">
+              <Bell className="w-5 h-5 text-secondary-600 dark:text-secondary-400" />
             </div>
             <div>
               <p className="text-2xl font-bold text-neutral-900 dark:text-white">{stats.total}</p>
@@ -249,8 +249,8 @@ export default function AdminNotificationsPage() {
         </div>
         <div className="bg-white dark:bg-dark-card rounded-2xl p-4 shadow-soft">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-orange-100 dark:bg-orange-500/20 rounded-xl">
-              <BellOff className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+            <div className="p-2 bg-primary-100 dark:bg-primary-500/20 rounded-xl">
+              <BellOff className="w-5 h-5 text-primary-600 dark:text-primary-400" />
             </div>
             <div>
               <p className="text-2xl font-bold text-neutral-900 dark:text-white">{stats.unread}</p>
@@ -260,8 +260,8 @@ export default function AdminNotificationsPage() {
         </div>
         <div className="bg-white dark:bg-dark-card rounded-2xl p-4 shadow-soft">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-100 dark:bg-green-500/20 rounded-xl">
-              <CheckCheck className="w-5 h-5 text-green-600 dark:text-green-400" />
+            <div className="p-2 bg-success-100 dark:bg-success-500/20 rounded-xl">
+              <CheckCheck className="w-5 h-5 text-success-600 dark:text-success-400" />
             </div>
             <div>
               <p className="text-2xl font-bold text-neutral-900 dark:text-white">{stats.read}</p>
@@ -271,8 +271,8 @@ export default function AdminNotificationsPage() {
         </div>
         <div className="bg-white dark:bg-dark-card rounded-2xl p-4 shadow-soft">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-red-100 dark:bg-red-500/20 rounded-xl">
-              <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
+            <div className="p-2 bg-error-100 dark:bg-error-500/20 rounded-xl">
+              <AlertTriangle className="w-5 h-5 text-error-600 dark:text-error-400" />
             </div>
             <div>
               <p className="text-2xl font-bold text-neutral-900 dark:text-white">{stats.high_priority}</p>
@@ -356,7 +356,7 @@ export default function AdminNotificationsPage() {
               <button
                 onClick={() => markAsReadMutation.mutate(selectedIds)}
                 disabled={markAsReadMutation.isPending}
-                className="flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-500/10 text-green-700 dark:text-green-400 rounded-xl hover:bg-green-200 dark:hover:bg-green-500/20 transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-success-100 dark:bg-success-500/10 text-success-700 dark:text-success-400 rounded-xl hover:bg-success-200 dark:hover:bg-success-500/20 transition-colors disabled:opacity-50"
               >
                 <Check className="w-4 h-4" />
                 Marquer comme lues ({selectedIds.length})
@@ -364,7 +364,7 @@ export default function AdminNotificationsPage() {
               <button
                 onClick={() => deleteMutation.mutate(selectedIds)}
                 disabled={deleteMutation.isPending}
-                className="flex items-center gap-2 px-4 py-2 bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400 rounded-xl hover:bg-red-200 dark:hover:bg-red-500/20 transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-error-100 dark:bg-error-500/10 text-error-700 dark:text-error-400 rounded-xl hover:bg-error-200 dark:hover:bg-error-500/20 transition-colors disabled:opacity-50"
               >
                 <Trash2 className="w-4 h-4" />
                 Supprimer ({selectedIds.length})
@@ -414,7 +414,7 @@ export default function AdminNotificationsPage() {
                     transition={{ delay: index * 0.03 }}
                     className={clsx(
                       'flex items-start gap-4 p-4 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors cursor-pointer',
-                      !notification.is_read && 'bg-blue-50/50 dark:bg-blue-500/5'
+                      !notification.is_read && 'bg-secondary-50/50 dark:bg-secondary-500/5'
                     )}
                     onClick={() => toggleSelect(notification.id)}
                   >
@@ -455,7 +455,7 @@ export default function AdminNotificationsPage() {
                         <div className="text-right flex-shrink-0">
                           <p className="text-xs text-neutral-400">{formatDate(notification.created_at)}</p>
                           {!notification.is_read && (
-                            <span className="inline-block mt-1 w-2 h-2 bg-blue-500 rounded-full"></span>
+                            <span className="inline-block mt-1 w-2 h-2 bg-secondary-500 rounded-full"></span>
                           )}
                         </div>
                       </div>

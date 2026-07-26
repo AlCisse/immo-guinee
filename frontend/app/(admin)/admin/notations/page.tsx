@@ -163,11 +163,11 @@ export default function NotationsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-white flex items-center gap-3">
           <Star className="w-7 h-7 text-warning-500" />
           Gestion des notations
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
+        <p className="text-neutral-600 dark:text-neutral-400 mt-1">
           Modérez les avis et notations des utilisateurs
         </p>
       </div>
@@ -424,27 +424,27 @@ export default function NotationsPage() {
                   {/* Evaluateur & Evalué */}
                   <div className="grid md:grid-cols-2 gap-4">
                     {/* Evaluateur */}
-                    <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-4">
-                      <p className="text-xs text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-3 font-medium">
+                    <div className="bg-secondary-50 dark:bg-secondary-500/10 rounded-xl p-4">
+                      <p className="text-xs text-secondary-600 dark:text-secondary-400 uppercase tracking-wider mb-3 font-medium">
                         Auteur de l'avis
                       </p>
                       {(detail?.evaluateur || selectedRating.evaluateur) ? (
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
-                            <User className="w-4 h-4 text-blue-500" />
+                            <User className="w-4 h-4 text-secondary-500" />
                             <span className="font-medium text-neutral-900 dark:text-white">
                               {detail?.evaluateur?.nom_complet || selectedRating.evaluateur?.nom_complet}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Phone className="w-4 h-4 text-blue-500" />
+                            <Phone className="w-4 h-4 text-secondary-500" />
                             <span className="text-sm text-neutral-600 dark:text-neutral-400">
                               {detail?.evaluateur?.telephone || selectedRating.evaluateur?.telephone}
                             </span>
                           </div>
                           {(detail?.evaluateur?.email || selectedRating.evaluateur?.email) && (
                             <div className="flex items-center gap-2">
-                              <Mail className="w-4 h-4 text-blue-500" />
+                              <Mail className="w-4 h-4 text-secondary-500" />
                               <span className="text-sm text-neutral-600 dark:text-neutral-400">
                                 {detail?.evaluateur?.email || selectedRating.evaluateur?.email}
                               </span>
@@ -457,27 +457,27 @@ export default function NotationsPage() {
                     </div>
 
                     {/* Evalué */}
-                    <div className="bg-green-50 dark:bg-green-500/10 rounded-xl p-4">
-                      <p className="text-xs text-green-600 dark:text-green-400 uppercase tracking-wider mb-3 font-medium">
+                    <div className="bg-success-50 dark:bg-success-500/10 rounded-xl p-4">
+                      <p className="text-xs text-success-600 dark:text-success-400 uppercase tracking-wider mb-3 font-medium">
                         Utilisateur noté
                       </p>
                       {(detail?.evalue || selectedRating.evalue) ? (
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
-                            <User className="w-4 h-4 text-green-500" />
+                            <User className="w-4 h-4 text-success-500" />
                             <span className="font-medium text-neutral-900 dark:text-white">
                               {detail?.evalue?.nom_complet || selectedRating.evalue?.nom_complet}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Phone className="w-4 h-4 text-green-500" />
+                            <Phone className="w-4 h-4 text-success-500" />
                             <span className="text-sm text-neutral-600 dark:text-neutral-400">
                               {detail?.evalue?.telephone || selectedRating.evalue?.telephone}
                             </span>
                           </div>
                           {(detail?.evalue?.email || selectedRating.evalue?.email) && (
                             <div className="flex items-center gap-2">
-                              <Mail className="w-4 h-4 text-green-500" />
+                              <Mail className="w-4 h-4 text-success-500" />
                               <span className="text-sm text-neutral-600 dark:text-neutral-400">
                                 {detail?.evalue?.email || selectedRating.evalue?.email}
                               </span>

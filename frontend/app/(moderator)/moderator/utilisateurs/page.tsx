@@ -74,13 +74,13 @@ export default function UtilisateursPage() {
   const getBadgeColor = (badge: string) => {
     switch (badge) {
       case 'DIAMANT':
-        return 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white';
+        return 'bg-gradient-to-r from-teal-400 to-secondary-500 text-white';
       case 'OR':
-        return 'bg-gradient-to-r from-yellow-400 to-amber-500 text-white';
+        return 'bg-gradient-to-r from-warning-400 to-warning-500 text-white';
       case 'ARGENT':
-        return 'bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800';
+        return 'bg-gradient-to-r from-neutral-300 to-neutral-400 text-neutral-800';
       default:
-        return 'bg-gradient-to-r from-orange-300 to-orange-400 text-white';
+        return 'bg-gradient-to-r from-primary-300 to-primary-400 text-white';
     }
   };
 

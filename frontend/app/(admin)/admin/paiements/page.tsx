@@ -472,11 +472,11 @@ export default function PaiementsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-white flex items-center gap-3">
           <CreditCard className="w-7 h-7 text-primary-500" />
           Gestion des paiements
         </h1>
-        <p className="text-gray-600 dark:text-neutral-400 mt-1">
+        <p className="text-neutral-600 dark:text-neutral-400 mt-1">
           Suivez tous les paiements de la plateforme
         </p>
       </div>

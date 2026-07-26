@@ -62,13 +62,13 @@ interface User {
 // Fonction pour obtenir le statut utilisateur
 const getUserStatus = (user: User): { label: string; color: string } => {
   if (!user.is_active && user.is_suspended) {
-    return { label: 'Banni', color: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400' };
+    return { label: 'Banni', color: 'bg-error-100 text-error-700 dark:bg-error-500/20 dark:text-error-400' };
   }
   if (user.is_suspended) {
-    return { label: 'Suspendu', color: 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400' };
+    return { label: 'Suspendu', color: 'bg-primary-100 text-primary-700 dark:bg-primary-500/20 dark:text-primary-400' };
   }
   if (!user.is_active) {
-    return { label: 'Inactif', color: 'bg-gray-100 text-gray-700 dark:bg-gray-500/20 dark:text-gray-400' };
+    return { label: 'Inactif', color: 'bg-neutral-100 text-neutral-700 dark:bg-neutral-500/20 dark:text-neutral-400' };
   }
   return { label: 'Actif', color: 'bg-success-100 text-success-700 dark:bg-success-500/20 dark:text-success-400' };
 };
@@ -80,12 +80,12 @@ interface Role {
 }
 
 const roleConfig: Record<string, { color: string; icon: React.ElementType; label: string }> = {
-  admin: { color: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400', icon: Crown, label: 'Admin' },
-  moderator: { color: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400', icon: Shield, label: 'Modérateur' },
-  mediator: { color: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400', icon: Briefcase, label: 'Médiateur' },
-  proprietaire: { color: 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400', icon: Home, label: 'Propriétaire' },
-  chercheur: { color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-400', icon: UserIcon, label: 'Chercheur' },
-  agence: { color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400', icon: Building2, label: 'Agence' },
+  admin: { color: 'bg-error-100 text-error-700 dark:bg-error-500/20 dark:text-error-400', icon: Crown, label: 'Admin' },
+  moderator: { color: 'bg-teal-100 text-teal-700 dark:bg-teal-500/20 dark:text-teal-400', icon: Shield, label: 'Modérateur' },
+  mediator: { color: 'bg-secondary-100 text-secondary-700 dark:bg-secondary-500/20 dark:text-secondary-400', icon: Briefcase, label: 'Médiateur' },
+  proprietaire: { color: 'bg-success-100 text-success-700 dark:bg-success-500/20 dark:text-success-400', icon: Home, label: 'Propriétaire' },
+  chercheur: { color: 'bg-warning-100 text-warning-700 dark:bg-warning-500/20 dark:text-warning-400', icon: UserIcon, label: 'Chercheur' },
+  agence: { color: 'bg-secondary-100 text-secondary-700 dark:bg-secondary-500/20 dark:text-secondary-400', icon: Building2, label: 'Agence' },
 };
 
 export default function UtilisateursPage() {
@@ -188,11 +188,11 @@ export default function UtilisateursPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-white flex items-center gap-3">
           <Users className="w-7 h-7 text-primary-500" />
           Gestion des utilisateurs
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
+        <p className="text-neutral-600 dark:text-neutral-400 mt-1">
           Gérez les utilisateurs et attribuez des rôles
         </p>
       </div>
@@ -237,13 +237,13 @@ export default function UtilisateursPage() {
           variants={itemVariants}
           className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-soft"
         >
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4 flex items-center gap-2">
             <Shield className="w-5 h-5 text-primary-500" />
             Répartition des rôles
           </h3>
           <div className="flex flex-wrap gap-3">
             {roles.map((role: Role) => {
-              const config = roleConfig[role.name] || { color: 'bg-gray-100 text-gray-700', icon: UserIcon, label: role.name };
+              const config = roleConfig[role.name] || { color: 'bg-neutral-100 text-neutral-700', icon: UserIcon, label: role.name };
               const IconComponent = config.icon;
               return (
                 <button
@@ -354,10 +354,10 @@ export default function UtilisateursPage() {
                               {user.badge && (
                                 <span className={clsx(
                                   'text-xs px-2 py-0.5 rounded-full',
-                                  user.badge === 'DIAMANT' && 'bg-purple-100 text-purple-700',
-                                  user.badge === 'OR' && 'bg-yellow-100 text-yellow-700',
-                                  user.badge === 'ARGENT' && 'bg-gray-100 text-gray-700',
-                                  user.badge === 'BRONZE' && 'bg-orange-100 text-orange-700',
+                                  user.badge === 'DIAMANT' && 'bg-teal-100 text-teal-700',
+                                  user.badge === 'OR' && 'bg-warning-100 text-warning-700',
+                                  user.badge === 'ARGENT' && 'bg-neutral-100 text-neutral-700',
+                                  user.badge === 'BRONZE' && 'bg-primary-100 text-primary-700',
                                 )}>
                                   {user.badge}
                                 </span>
@@ -378,7 +378,7 @@ export default function UtilisateursPage() {
                           <div className="flex flex-wrap gap-1">
                             {user.roles && user.roles.length > 0 ? (
                               user.roles.map((role) => {
-                                const config = roleConfig[role] || { color: 'bg-gray-100 text-gray-700', icon: UserIcon, label: role };
+                                const config = roleConfig[role] || { color: 'bg-neutral-100 text-neutral-700', icon: UserIcon, label: role };
                                 return (
                                   <span
                                     key={role}
@@ -418,7 +418,7 @@ export default function UtilisateursPage() {
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => openUserInfoModal(user)}
-                              className="p-2 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors"
+                              className="p-2 bg-secondary-50 dark:bg-secondary-500/10 text-secondary-600 dark:text-secondary-400 rounded-lg hover:bg-secondary-100 dark:hover:bg-secondary-500/20 transition-colors"
                               title="Voir les informations"
                             >
                               <Eye className="w-4 h-4" />
@@ -439,8 +439,8 @@ export default function UtilisateursPage() {
                               className={clsx(
                                 'p-2 rounded-lg transition-colors',
                                 user.is_suspended
-                                  ? 'bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-500/20'
-                                  : 'bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-500/20'
+                                  ? 'bg-success-50 dark:bg-success-500/10 text-success-600 dark:text-success-400 hover:bg-success-100 dark:hover:bg-success-500/20'
+                                  : 'bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 hover:bg-primary-100 dark:hover:bg-primary-500/20'
                               )}
                               title={user.is_suspended ? 'Lever la suspension' : 'Suspendre'}
                             >
@@ -455,7 +455,7 @@ export default function UtilisateursPage() {
                               className={clsx(
                                 'p-2 rounded-lg transition-colors',
                                 user.is_active
-                                  ? 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20'
+                                  ? 'bg-error-50 dark:bg-error-500/10 text-error-600 dark:text-error-400 hover:bg-error-100 dark:hover:bg-error-500/20'
                                   : 'bg-success-50 dark:bg-success-500/10 text-success-600 dark:text-success-400 hover:bg-success-100 dark:hover:bg-success-500/20'
                               )}
                               title={user.is_active ? 'Désactiver' : 'Activer'}
@@ -527,7 +527,7 @@ export default function UtilisateursPage() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-neutral-900 dark:text-white flex items-center gap-2">
                   <Shield className="w-5 h-5 text-primary-500" />
                   Gérer les rôles
                 </h3>
@@ -558,7 +558,7 @@ export default function UtilisateursPage() {
 
                 <div className="space-y-2">
                   {roles.map((role: Role) => {
-                    const config = roleConfig[role.name] || { color: 'bg-gray-100 text-gray-700', icon: UserIcon, label: role.name };
+                    const config = roleConfig[role.name] || { color: 'bg-neutral-100 text-neutral-700', icon: UserIcon, label: role.name };
                     const IconComponent = config.icon;
                     const isSelected = selectedRoles.includes(role.name);
 
@@ -635,7 +635,7 @@ export default function UtilisateursPage() {
             >
               {/* Header */}
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-neutral-900 dark:text-white flex items-center gap-2">
                   <UserIcon className="w-5 h-5 text-primary-500" />
                   Informations utilisateur
                 </h3>
@@ -662,10 +662,10 @@ export default function UtilisateursPage() {
                   {selectedUser.badge && (
                     <span className={clsx(
                       'inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium',
-                      selectedUser.badge === 'DIAMANT' && 'bg-purple-100 text-purple-700',
-                      selectedUser.badge === 'OR' && 'bg-yellow-100 text-yellow-700',
-                      selectedUser.badge === 'ARGENT' && 'bg-gray-100 text-gray-700',
-                      selectedUser.badge === 'BRONZE' && 'bg-orange-100 text-orange-700',
+                      selectedUser.badge === 'DIAMANT' && 'bg-teal-100 text-teal-700',
+                      selectedUser.badge === 'OR' && 'bg-warning-100 text-warning-700',
+                      selectedUser.badge === 'ARGENT' && 'bg-neutral-100 text-neutral-700',
+                      selectedUser.badge === 'BRONZE' && 'bg-primary-100 text-primary-700',
                     )}>
                       {selectedUser.badge}
                     </span>
@@ -696,8 +696,8 @@ export default function UtilisateursPage() {
               {/* Contact Info */}
               <div className="space-y-3 mb-6">
                 <div className="flex items-center gap-3 text-sm">
-                  <div className="w-8 h-8 bg-blue-100 dark:bg-blue-500/20 rounded-lg flex items-center justify-center">
-                    <Phone className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  <div className="w-8 h-8 bg-secondary-100 dark:bg-secondary-500/20 rounded-lg flex items-center justify-center">
+                    <Phone className="w-4 h-4 text-secondary-600 dark:text-secondary-400" />
                   </div>
                   <div>
                     <p className="text-neutral-500 text-xs">Telephone</p>
@@ -707,8 +707,8 @@ export default function UtilisateursPage() {
 
                 {selectedUser.email && (
                   <div className="flex items-center gap-3 text-sm">
-                    <div className="w-8 h-8 bg-purple-100 dark:bg-purple-500/20 rounded-lg flex items-center justify-center">
-                      <Mail className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                    <div className="w-8 h-8 bg-teal-100 dark:bg-teal-500/20 rounded-lg flex items-center justify-center">
+                      <Mail className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                     </div>
                     <div>
                       <p className="text-neutral-500 text-xs">Email</p>
@@ -718,8 +718,8 @@ export default function UtilisateursPage() {
                 )}
 
                 <div className="flex items-center gap-3 text-sm">
-                  <div className="w-8 h-8 bg-green-100 dark:bg-green-500/20 rounded-lg flex items-center justify-center">
-                    <Calendar className="w-4 h-4 text-green-600 dark:text-green-400" />
+                  <div className="w-8 h-8 bg-success-100 dark:bg-success-500/20 rounded-lg flex items-center justify-center">
+                    <Calendar className="w-4 h-4 text-success-600 dark:text-success-400" />
                   </div>
                   <div>
                     <p className="text-neutral-500 text-xs">Date d'inscription</p>
@@ -740,7 +740,7 @@ export default function UtilisateursPage() {
                   <p className="text-xs text-neutral-500 mb-2">Roles attribues</p>
                   <div className="flex flex-wrap gap-2">
                     {selectedUser.roles.map((role) => {
-                      const config = roleConfig[role] || { color: 'bg-gray-100 text-gray-700', icon: UserIcon, label: role };
+                      const config = roleConfig[role] || { color: 'bg-neutral-100 text-neutral-700', icon: UserIcon, label: role };
                       const IconComponent = config.icon;
                       return (
                         <span
@@ -783,8 +783,8 @@ export default function UtilisateursPage() {
                     className={clsx(
                       'px-3 py-2.5 rounded-xl transition-colors font-medium flex items-center justify-center gap-2 text-sm',
                       selectedUser.is_suspended
-                        ? 'bg-green-500 hover:bg-green-600 text-white'
-                        : 'bg-orange-500 hover:bg-orange-600 text-white'
+                        ? 'bg-success-500 hover:bg-success-600 text-white'
+                        : 'bg-primary-500 hover:bg-primary-600 text-white'
                     )}
                   >
                     {userActionMutation.isPending ? (
@@ -812,7 +812,7 @@ export default function UtilisateursPage() {
                     className={clsx(
                       'px-3 py-2.5 rounded-xl transition-colors font-medium flex items-center justify-center gap-2 text-sm',
                       selectedUser.is_active
-                        ? 'bg-gray-500 hover:bg-gray-600 text-white'
+                        ? 'bg-neutral-500 hover:bg-neutral-600 text-white'
                         : 'bg-success-500 hover:bg-success-600 text-white'
                     )}
                   >
@@ -843,7 +843,7 @@ export default function UtilisateursPage() {
                         }
                       }}
                       disabled={userActionMutation.isPending}
-                      className="px-3 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl transition-colors font-medium flex items-center justify-center gap-2 text-sm"
+                      className="px-3 py-2.5 bg-error-500 hover:bg-error-600 text-white rounded-xl transition-colors font-medium flex items-center justify-center gap-2 text-sm"
                     >
                       {userActionMutation.isPending ? (
                         <Loader2 className="w-4 h-4 animate-spin" />

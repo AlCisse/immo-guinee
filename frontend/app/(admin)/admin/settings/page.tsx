@@ -317,8 +317,8 @@ function TwoFactorSetupModal({
           ) : (
             <>
               <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-green-100 dark:bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle className="w-8 h-8 text-green-500" />
+                <div className="w-16 h-16 bg-success-100 dark:bg-success-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle className="w-8 h-8 text-success-500" />
                 </div>
                 <h4 className="text-lg font-semibold text-neutral-900 dark:text-white mb-2">
                   2FA Active!
@@ -328,10 +328,10 @@ function TwoFactorSetupModal({
                 </p>
               </div>
 
-              <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-xl p-4 mb-4">
+              <div className="bg-warning-50 dark:bg-warning-500/10 border border-warning-200 dark:border-warning-500/30 rounded-xl p-4 mb-4">
                 <div className="flex items-start gap-3">
-                  <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-amber-800 dark:text-amber-200">
+                  <AlertTriangle className="w-5 h-5 text-warning-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-warning-800 dark:text-warning-200">
                     Ces codes ne seront plus affiches. Conservez-les dans un endroit securise.
                   </p>
                 </div>
@@ -546,7 +546,7 @@ export default function AdminSettingsPage() {
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg pb-8">
       {/* Header */}
-      <div className="bg-gradient-to-br from-primary-500 to-orange-500 pt-6 pb-12 md:pt-8 md:pb-16 px-4 md:px-8">
+      <div className="bg-gradient-to-br from-primary-500 to-primary-500 pt-6 pb-12 md:pt-8 md:pb-16 px-4 md:px-8">
         <div className="max-w-5xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -591,8 +591,8 @@ export default function AdminSettingsPage() {
             <div className="py-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${is2FAEnabled ? 'bg-green-100 dark:bg-green-500/20' : 'bg-neutral-100 dark:bg-dark-bg'}`}>
-                    <Smartphone className={`w-5 h-5 ${is2FAEnabled ? 'text-green-600' : 'text-neutral-500'}`} />
+                  <div className={`p-2 rounded-lg ${is2FAEnabled ? 'bg-success-100 dark:bg-success-500/20' : 'bg-neutral-100 dark:bg-dark-bg'}`}>
+                    <Smartphone className={`w-5 h-5 ${is2FAEnabled ? 'text-success-600' : 'text-neutral-500'}`} />
                   </div>
                   <div>
                     <p className="font-medium text-neutral-900 dark:text-white">
@@ -609,7 +609,7 @@ export default function AdminSettingsPage() {
                   onClick={() => handle2FAToggle(!is2FAEnabled)}
                   disabled={is2FALoading || setup2FAMutation.isPending || disable2FAMutation.isPending}
                   className={`relative w-12 h-6 rounded-full transition-colors ${
-                    is2FAEnabled ? 'bg-green-500' : 'bg-neutral-300 dark:bg-neutral-600'
+                    is2FAEnabled ? 'bg-success-500' : 'bg-neutral-300 dark:bg-neutral-600'
                   } ${(is2FALoading || setup2FAMutation.isPending || disable2FAMutation.isPending) ? 'opacity-50 cursor-wait' : ''}`}
                 >
                   <span
@@ -884,7 +884,7 @@ export default function AdminSettingsPage() {
                             <button
                               onClick={() => handleCommissionEdit(commission, 'is_active', !currentActive)}
                               className={`relative w-12 h-6 rounded-full transition-colors ${
-                                currentActive ? 'bg-green-500' : 'bg-neutral-300 dark:bg-neutral-600'
+                                currentActive ? 'bg-success-500' : 'bg-neutral-300 dark:bg-neutral-600'
                               }`}
                             >
                               <span
@@ -966,17 +966,17 @@ export default function AdminSettingsPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-blue-50 dark:bg-blue-500/10 rounded-2xl p-6"
+          className="bg-secondary-50 dark:bg-secondary-500/10 rounded-2xl p-6"
         >
           <div className="flex items-start gap-4">
-            <div className="p-3 bg-blue-100 dark:bg-blue-500/20 rounded-xl">
-              <Info className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <div className="p-3 bg-secondary-100 dark:bg-secondary-500/20 rounded-xl">
+              <Info className="w-5 h-5 text-secondary-600 dark:text-secondary-400" />
             </div>
             <div>
-              <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
+              <h3 className="font-semibold text-secondary-900 dark:text-secondary-100 mb-2">
                 Information systeme
               </h3>
-              <div className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+              <div className="text-sm text-secondary-700 dark:text-secondary-300 space-y-1">
                 <p>Version: 1.0.0</p>
                 <p>Environnement: Production</p>
                 <p>Derniere mise a jour: {new Date().toLocaleDateString('fr-FR')}</p>
