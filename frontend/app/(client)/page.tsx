@@ -131,7 +131,7 @@ function PropertyCard({ property }: { property: Listing }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       whileHover={{ y: -8 }}
-      className="group bg-white dark:bg-dark-card rounded-2xl shadow-soft overflow-hidden"
+      className="group bg-white dark:bg-dark-card rounded-2xl border border-neutral-200 dark:border-dark-border shadow-sm hover:shadow-card-hover transition-shadow overflow-hidden"
     >
       <Link href={`/bien/${property.id}`}>
         {/* Image */}
@@ -162,7 +162,7 @@ function PropertyCard({ property }: { property: Listing }) {
             className="absolute top-3 right-3 p-2.5 bg-white/90 dark:bg-dark-card/90 backdrop-blur-sm rounded-full shadow-lg z-10"
           >
             <Heart
-              className={`w-5 h-5 transition-colors ${isFavorite ? 'fill-red-500 text-red-500' : 'text-neutral-600'
+              className={`w-5 h-5 transition-colors ${isFavorite ? 'fill-error-500 text-error-500' : 'text-neutral-600'
                 }`}
             />
           </motion.button>
@@ -172,7 +172,7 @@ function PropertyCard({ property }: { property: Listing }) {
             <span className="px-4 py-2 bg-white dark:bg-dark-card rounded-xl font-bold text-lg text-neutral-900 dark:text-white shadow-lg">
               {property.formatted_price || formatPrice(property.loyer_mensuel)}
               {isLocation && <span className="text-sm font-normal text-neutral-500">/mois</span>}
-              {isLocationCourte && <span className="text-sm font-normal text-purple-500">/jour</span>}
+              {isLocationCourte && <span className="text-sm font-normal text-teal-600 dark:text-teal-400">/jour</span>}
               {!isLocation && !isLocationCourte && <span className="text-sm font-normal text-neutral-500">/mois</span>}
             </span>
           </div>
@@ -196,7 +196,7 @@ function PropertyCard({ property }: { property: Listing }) {
           </div>
 
           {/* Features */}
-          <div className="flex items-center gap-4 text-sm text-neutral-600 dark:text-neutral-300">
+          <div className="flex items-center gap-4 text-sm text-neutral-600 dark:text-neutral-300 pt-3 border-t border-neutral-100 dark:border-dark-border">
             {property.nombre_chambres > 0 && <span>{property.nombre_chambres} ch.</span>}
             {property.nombre_salles_bain > 0 && (
               <>
@@ -222,24 +222,24 @@ function CategoryButton({
   icon: Icon,
   label,
   href,
-  color,
+  tint,
 }: {
   icon: React.ElementType;
   label: string;
   href: string;
-  color: string;
+  tint: string;
 }) {
   return (
     <Link href={href}>
       <motion.div
-        whileHover={{ scale: 1.05, y: -4 }}
-        whileTap={{ scale: 0.95 }}
-        className={`flex flex-col items-center gap-3 p-5 ${color} rounded-2xl shadow-soft cursor-pointer transition-shadow hover:shadow-lg`}
+        whileHover={{ y: -3 }}
+        whileTap={{ scale: 0.98 }}
+        className="flex flex-col gap-3 p-4 bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-xl cursor-pointer transition-shadow hover:shadow-card-hover"
       >
-        <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-          <Icon className="w-7 h-7 text-white" />
+        <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${tint}`}>
+          <Icon className="w-5 h-5" />
         </div>
-        <span className="text-white font-semibold text-sm">{label}</span>
+        <span className="text-neutral-900 dark:text-white font-semibold text-sm">{label}</span>
       </motion.div>
     </Link>
   );
@@ -341,25 +341,25 @@ export default function ClientHomePage() {
             icon={Home}
             label={t('home.categories.apartments')}
             href="/recherche?type_bien=APPARTEMENT"
-            color="bg-gradient-to-br from-blue-500 to-blue-600"
+            tint="bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400"
           />
           <CategoryButton
             icon={Building2}
             label={t('home.categories.houses')}
             href="/recherche?type_bien=MAISON"
-            color="bg-gradient-to-br from-emerald-500 to-emerald-600"
+            tint="bg-teal-50 text-teal-600 dark:bg-teal-500/10 dark:text-teal-400"
           />
           <CategoryButton
             icon={Store}
             label={t('home.categories.shops')}
             href="/recherche?type_bien=MAGASIN"
-            color="bg-gradient-to-br from-purple-500 to-purple-600"
+            tint="bg-success-50 text-success-600 dark:bg-success-500/10 dark:text-success-400"
           />
           <CategoryButton
             icon={Briefcase}
             label={t('home.categories.offices')}
             href="/recherche?type_bien=BUREAU"
-            color="bg-gradient-to-br from-amber-500 to-amber-600"
+            tint="bg-neutral-100 text-neutral-600 dark:bg-dark-hover dark:text-neutral-300"
           />
         </div>
       </section>
