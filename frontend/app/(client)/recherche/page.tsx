@@ -203,9 +203,9 @@ function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'gr
             {/* Favorite */}
             <button
               onClick={handleToggleFavorite}
-              className="absolute top-3 right-3 p-2 bg-white/90 rounded-full shadow-lg"
+              className="absolute top-3 right-3 p-2 bg-white/90 dark:bg-dark-card/90 backdrop-blur-sm rounded-full shadow-lg"
             >
-              <Heart className={`w-5 h-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-neutral-600'}`} />
+              <Heart className={`w-5 h-5 ${isFavorite ? 'fill-error-500 text-error-500' : 'text-neutral-600 dark:text-neutral-300'}`} />
             </button>
           </div>
 
@@ -219,10 +219,10 @@ function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'gr
                   </span>
                   <span className={`px-2 py-0.5 text-xs font-medium rounded-md ${
                     isLocation
-                      ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400'
+                      ? 'bg-neutral-100 text-neutral-700 dark:bg-dark-hover dark:text-neutral-300'
                       : isLocationCourte
-                      ? 'bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400'
-                      : 'bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400'
+                      ? 'bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400'
+                      : 'bg-teal-50 text-teal-600 dark:bg-teal-500/10 dark:text-teal-400'
                   }`}>
                     {isLocation ? t('badges.forRent') : isLocationCourte ? t('badges.shortTerm') : t('badges.forSale')}
                   </span>
@@ -244,7 +244,7 @@ function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'gr
                   <span className="text-sm text-neutral-500">{t('perMonth')}</span>
                 )}
                 {isLocationCourte && (
-                  <span className="text-sm text-purple-500">{t('perDay')}</span>
+                  <span className="text-sm text-teal-600 dark:text-teal-400">{t('perDay')}</span>
                 )}
               </div>
             </div>
@@ -314,12 +314,12 @@ function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'gr
 
           {/* Transaction Type Badge */}
           <div className="absolute top-3 right-12">
-            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+            <span className={`px-2 py-1 text-xs font-semibold rounded-full backdrop-blur-sm ${
               isLocation
-                ? 'bg-blue-500 text-white'
+                ? 'bg-white/90 text-neutral-800 dark:bg-dark-card/90 dark:text-white'
                 : isLocationCourte
-                ? 'bg-purple-500 text-white'
-                : 'bg-green-500 text-white'
+                ? 'bg-primary-500 text-white'
+                : 'bg-teal-600 text-white'
             }`}>
               {isLocation ? t('badges.forRent') : isLocationCourte ? t('badges.shortTerm') : t('badges.forSale')}
             </span>
@@ -331,7 +331,7 @@ function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'gr
             onClick={handleToggleFavorite}
             className="absolute top-3 right-3 p-2 bg-white/90 dark:bg-dark-card/90 rounded-full shadow-lg z-10"
           >
-            <Heart className={`w-5 h-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-neutral-600'}`} />
+            <Heart className={`w-5 h-5 ${isFavorite ? 'fill-error-500 text-error-500' : 'text-neutral-600 dark:text-neutral-300'}`} />
           </motion.button>
 
           {/* Price */}
@@ -342,7 +342,7 @@ function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'gr
                 <span className="text-sm font-normal text-neutral-500">{t('perMonth')}</span>
               )}
               {isLocationCourte && (
-                <span className="text-sm font-normal text-purple-500">{t('perDay')}</span>
+                <span className="text-sm font-normal text-teal-600 dark:text-teal-400">{t('perDay')}</span>
               )}
             </span>
           </div>
@@ -652,7 +652,7 @@ function SearchContent() {
               >
                 <SlidersHorizontal className="w-5 h-5" />
                 {activeFiltersCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                     {activeFiltersCount}
                   </span>
                 )}
@@ -702,31 +702,20 @@ function SearchContent() {
 
           {/* Transaction Type Toggle */}
           <div className="flex gap-2 mb-4 overflow-x-auto scrollbar-hide">
-            {[
-              { value: 'all', color: 'primary' },
-              { value: 'LOCATION', color: 'blue' },
-              { value: 'LOCATION_COURTE', color: 'purple' },
-              { value: 'VENTE', color: 'green' },
-            ].map((option) => (
+            {['all', 'LOCATION', 'LOCATION_COURTE', 'VENTE'].map((value) => (
               <button
-                key={option.value}
+                key={value}
                 onClick={() => {
-                  setTransactionType(option.value as typeof transactionType);
-                  updateURL({ type_transaction: option.value === 'all' ? null : option.value });
+                  setTransactionType(value as typeof transactionType);
+                  updateURL({ type_transaction: value === 'all' ? null : value });
                 }}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
-                  transactionType === option.value
-                    ? option.color === 'purple'
-                      ? 'bg-purple-500 text-white'
-                      : option.color === 'blue'
-                      ? 'bg-blue-500 text-white'
-                      : option.color === 'green'
-                      ? 'bg-green-500 text-white'
-                      : 'bg-primary-500 text-white'
+                  transactionType === value
+                    ? 'bg-primary-500 text-white'
                     : 'bg-neutral-100 dark:bg-dark-bg text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-dark-border'
                 }`}
               >
-                {t(`transactionTypes.${option.value}`)}
+                {t(`transactionTypes.${value}`)}
               </button>
             ))}
           </div>
@@ -878,7 +867,7 @@ function SearchContent() {
         {/* Error state */}
         {error && (
           <div className="text-center py-16">
-            <p className="text-red-500">{t('loadingError')}</p>
+            <p className="text-error-500">{t('loadingError')}</p>
           </div>
         )}
 

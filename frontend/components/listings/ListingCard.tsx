@@ -107,10 +107,10 @@ function ListingCard({ listing, priority = false }: ListingCardProps) {
     >
       <Link
         href={`/annonces/${listing.id}`}
-        className="group block bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-200 hover:border-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+        className="group block bg-white dark:bg-dark-card rounded-xl overflow-hidden shadow-sm hover:shadow-card-hover transition-all duration-300 border border-neutral-200 dark:border-dark-border hover:border-neutral-300 dark:hover:border-dark-hover focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-dark-bg"
       >
       {/* Image Container */}
-      <div className="relative aspect-[4/3] bg-gray-200 overflow-hidden">
+      <div className="relative aspect-[4/3] bg-neutral-100 dark:bg-dark-hover overflow-hidden">
         <Image
           src={mainPhoto}
           alt={listing.titre}
@@ -123,12 +123,12 @@ function ListingCard({ listing, priority = false }: ListingCardProps) {
         {/* Operation Type Badge */}
         <div className="absolute top-3 left-3">
           <span
-            className={`px-3 py-1 rounded-full text-xs font-semibold text-white ${
+            className={`px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm ${
               listing.operationType === 'LOCATION' || listing.type_transaction === 'location' || listing.type_transaction === 'LOCATION'
-                ? 'bg-accent-500'
+                ? 'bg-white/90 text-neutral-800 dark:bg-dark-card/90 dark:text-white'
                 : listing.operationType === 'LOCATION_COURTE' || listing.type_transaction === 'location_courte' || listing.type_transaction === 'LOCATION_COURTE'
-                ? 'bg-purple-600'
-                : 'bg-primary-500'
+                ? 'bg-primary-500 text-white'
+                : 'bg-teal-600 text-white'
             }`}
           >
             {listing.operationType === 'LOCATION' || listing.type_transaction === 'location' || listing.type_transaction === 'LOCATION'
@@ -158,28 +158,28 @@ function ListingCard({ listing, priority = false }: ListingCardProps) {
       <div className="p-4">
         {/* Price */}
         <div className="mb-2">
-          <div className="text-2xl font-bold text-gray-900">
+          <div className="text-2xl font-bold text-neutral-900 dark:text-white">
             {displayPrice}
           </div>
           {(listing.operationType === 'LOCATION' || listing.type_transaction === 'location' || listing.type_transaction === 'LOCATION') && (
-            <div className="text-xs text-gray-600">{t('listing.perMonth')}</div>
+            <div className="text-xs text-neutral-500 dark:text-neutral-400">{t('listing.perMonth')}</div>
           )}
           {(listing.operationType === 'LOCATION_COURTE' || listing.type_transaction === 'location_courte' || listing.type_transaction === 'LOCATION_COURTE') && (
-            <div className="text-xs text-purple-600 font-medium">
+            <div className="text-xs text-teal-600 dark:text-teal-400 font-medium">
               {t('listing.perDay')} {listing.duree_minimum_jours && listing.duree_minimum_jours > 1 && t('listing.minDays', { days: listing.duree_minimum_jours })}
             </div>
           )}
         </div>
 
         {/* Title */}
-        <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors">
+        <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-2 line-clamp-2 group-hover:text-primary-500 transition-colors">
           {listing.titre}
         </h3>
 
         {/* Location */}
-        <div className="flex items-center gap-1 text-sm text-gray-600 mb-3">
+        <div className="flex items-center gap-1 text-sm text-neutral-500 dark:text-neutral-400 mb-3">
           <svg
-            className="w-4 h-4 text-gray-500 flex-shrink-0"
+            className="w-4 h-4 text-neutral-400 dark:text-neutral-500 flex-shrink-0"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -203,11 +203,11 @@ function ListingCard({ listing, priority = false }: ListingCardProps) {
         </div>
 
         {/* Features */}
-        <div className="flex items-center gap-4 text-sm text-gray-700 border-t border-gray-200 pt-3">
+        <div className="flex items-center gap-4 text-sm text-neutral-600 dark:text-neutral-300 border-t border-neutral-100 dark:border-dark-border pt-3">
           {/* Type */}
           {typeBien && (
             <div className="flex items-center gap-1" title="Type de bien">
-              <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-4 h-4 text-neutral-400 dark:text-neutral-500" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
               </svg>
               <span className="text-xs">{getTypeBienLabel(typeBien)}</span>
@@ -217,7 +217,7 @@ function ListingCard({ listing, priority = false }: ListingCardProps) {
           {/* Superficie */}
           {superficie > 0 && (
             <div className="flex items-center gap-1" title="Superficie">
-              <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-4 h-4 text-neutral-400 dark:text-neutral-500" fill="currentColor" viewBox="0 0 20 20">
                 <path
                   fillRule="evenodd"
                   d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm3 1h6v4H7V5zm6 6H7v2h6v-2z"
@@ -231,7 +231,7 @@ function ListingCard({ listing, priority = false }: ListingCardProps) {
           {/* Chambres */}
           {nombreChambres > 0 && (
             <div className="flex items-center gap-1" title="Chambres">
-              <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-4 h-4 text-neutral-400 dark:text-neutral-500" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-.5a1.5 1.5 0 00-3 0v.5a1 1 0 01-1 1H6a1 1 0 01-1-1v-3a1 1 0 00-1-1h-.5a1.5 1.5 0 010-3H4a1 1 0 001-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5z" />
               </svg>
               <span className="text-xs">{nombreChambres} ch</span>
@@ -241,7 +241,7 @@ function ListingCard({ listing, priority = false }: ListingCardProps) {
           {/* Salles de bain */}
           {(listing.nombreSallesDeBain || listing.nombre_salles_bain) && (listing.nombreSallesDeBain || listing.nombre_salles_bain || 0) > 0 && (
             <div className="flex items-center gap-1" title="Salles de bain">
-              <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-4 h-4 text-neutral-400 dark:text-neutral-500" fill="currentColor" viewBox="0 0 20 20">
                 <path
                   fillRule="evenodd"
                   d="M3 5a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2h-2.22l.123.489.804.804A1 1 0 0113 18H7a1 1 0 01-.707-1.707l.804-.804L7.22 15H5a2 2 0 01-2-2V5zm5.771 7H5V5h10v7H8.771z"
