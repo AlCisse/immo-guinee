@@ -30,29 +30,48 @@ pub async fn incr_with_ttl(conn: &ConnectionManager, key: &str, ttl_secs: u64) -
     Ok(count)
 }
 
-/// Acquire a short-lived mutex (`SET key 1 NX EX ttl`). Returns `true` if the
-/// lock was acquired, `false` if it was already held. The TTL is a safety net
-/// so a crashed holder cannot deadlock the resource forever; callers should
-/// still release explicitly via [`release_lock`].
-pub async fn acquire_lock(conn: &ConnectionManager, key: &str, ttl_secs: u64) -> AppResult<bool> {
+/// `if GET key == token then DEL key else 0` — release only if the caller still
+/// owns the lock (compare-and-delete). Prevents a holder whose TTL expired (so a
+/// second holder took the lock) from deleting that second holder's lock on exit.
+const RELEASE_IF_OWNER: &str = "if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) else return 0 end";
+
+/// Acquire a short-lived mutex (`SET key <token> NX EX ttl`) with a per-acquire
+/// random token. Returns `Some(token)` if acquired, `None` if already held. The
+/// TTL is a safety net so a crashed holder cannot deadlock the resource forever;
+/// the token makes [`release_lock`] safe across TTL expiry. Callers MUST pass the
+/// returned token to `release_lock`.
+pub async fn acquire_lock(
+    conn: &ConnectionManager,
+    key: &str,
+    ttl_secs: u64,
+) -> AppResult<Option<String>> {
     let mut conn = conn.clone();
+    let token = uuid::Uuid::new_v4().simple().to_string();
     let res: Option<String> = redis::cmd("SET")
         .arg(key)
-        .arg(1i64)
+        .arg(&token)
         .arg("NX")
         .arg("EX")
         .arg(ttl_secs as i64)
         .query_async(&mut conn)
         .await
         .map_err(|e| AppError::Internal(anyhow::anyhow!("redis SET NX: {e}")))?;
-    Ok(res.is_some())
+    Ok(res.map(|_| token))
 }
 
-/// Release a mutex acquired by [`acquire_lock`] (best-effort `DEL`).
-pub async fn release_lock(conn: &ConnectionManager, key: &str) -> AppResult<()> {
-    use redis::AsyncCommands;
+/// Release a mutex acquired by [`acquire_lock`], but only if `token` still owns it
+/// (Lua compare-and-delete). Best-effort: a Redis error is surfaced but a missing
+/// key (already expired / released) is a no-op.
+pub async fn release_lock(conn: &ConnectionManager, key: &str, token: &str) -> AppResult<()> {
     let mut conn = conn.clone();
-    let _: () = conn.del(key).await?;
+    let _: i64 = redis::cmd("EVAL")
+        .arg(RELEASE_IF_OWNER)
+        .arg(1i64) // numkeys
+        .arg(key)
+        .arg(token) // ARGV[1]
+        .query_async(&mut conn)
+        .await
+        .map_err(|e| AppError::Internal(anyhow::anyhow!("redis EVAL release_lock: {e}")))?;
     Ok(())
 }
 

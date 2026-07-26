@@ -28,6 +28,7 @@ mod m20250128_000019_create_favorites;
 mod m20250128_000020_add_role_to_users;
 mod m20250128_000021_create_admin_audit_logs;
 mod m20250128_000022_unique_active_payment_per_contract;
+mod m20250128_000023_unique_active_contract_per_listing;
 
 pub struct Migrator;
 
@@ -56,6 +57,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20250128_000020_add_role_to_users::Migration),
             Box::new(m20250128_000021_create_admin_audit_logs::Migration),
             Box::new(m20250128_000022_unique_active_payment_per_contract::Migration),
+            Box::new(m20250128_000023_unique_active_contract_per_listing::Migration),
         ]
     }
 }
