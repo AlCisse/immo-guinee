@@ -55,3 +55,42 @@ pub async fn setup() -> TestApp {
 
     TestApp { server, state: app_state, _pg: pg, _redis: redis, _minio: minio }
 }
+
+impl TestApp {
+    /// Register `phone`, mark its phone verified, and return a login access token.
+    /// Login now refuses tokens to an unverified phone (FR-001, M-a), so tests that
+    /// don't exercise the OTP flow itself (covered by auth_otp_e2e) verify directly.
+    pub async fn register_verified_login(&self, phone: &str, password: &str) -> String {
+        self.server
+            .post("/api/auth/register")
+            .json(&serde_json::json!({ "telephone": phone, "mot_de_passe": password, "nom_complet": "Test User" }))
+            .await
+            .assert_status_ok();
+        self.mark_phone_verified(phone).await;
+        let login = self
+            .server
+            .post("/api/auth/login")
+            .json(&serde_json::json!({ "telephone": phone, "mot_de_passe": password }))
+            .await;
+        login.assert_status_ok();
+        login.json::<serde_json::Value>()["data"]["access_token"]
+            .as_str()
+            .expect("access_token")
+            .to_owned()
+    }
+
+    /// Mark a phone as verified in the DB (bypasses OTP delivery). Raw SQL keeps the
+    /// helper free of a direct chrono dependency in the test crate.
+    pub async fn mark_phone_verified(&self, phone: &str) {
+        use sea_orm::{ConnectionTrait, DbBackend, Statement};
+        self.state
+            .db
+            .execute(Statement::from_sql_and_values(
+                DbBackend::Postgres,
+                "UPDATE users SET telephone_verifie_at = now() WHERE telephone = $1",
+                [phone.into()],
+            ))
+            .await
+            .expect("mark phone verified");
+    }
+}

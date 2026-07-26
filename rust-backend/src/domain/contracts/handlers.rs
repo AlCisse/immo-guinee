@@ -23,8 +23,10 @@ use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use uuid::Uuid;
 
-use crate::db::entities::sea_orm_active_enums::{StatutContrat, StatutListing, TypeContrat};
-use crate::db::entities::{contract, listing, user};
+use crate::db::entities::sea_orm_active_enums::{
+    StatutContrat, StatutListing, StatutPaiement, TypeContrat,
+};
+use crate::db::entities::{contract, listing, payment, user};
 use crate::error::{AppError, AppResult};
 use crate::extractors::{AuthUser, ValidatedJson};
 use crate::services::pdf;
@@ -305,6 +307,26 @@ async fn cancel(
     ValidatedJson(_req): ValidatedJson<CancelRequest>,
 ) -> AppResult<Json<Value>> {
     let c = fetch_party_contract(&state, &auth, id).await?;
+
+    // Droit de rétractation (Loi 2016/037) : le locataire/acheteur peut se rétracter
+    // d'un contrat signé pendant la fenêtre de 48h (delai_retractation_expire), tant
+    // qu'aucun paiement n'est actif. Un escrow en cours passe par la médiation.
+    let in_retraction_window = c.delai_retractation_expire.map(|d| Utc::now() < d).unwrap_or(false);
+    let is_locataire = c.locataire_acheteur_id == auth.id;
+    if matches!(c.statut, StatutContrat::SigneArchive) && is_locataire && in_retraction_window {
+        if has_active_payment(&state, c.id).await? {
+            return Err(AppError::Conflict(
+                "un paiement est en cours : la rétractation passe par la médiation".into(),
+            ));
+        }
+        let mut am: contract::ActiveModel = c.into();
+        am.statut = Set(StatutContrat::Annule);
+        am.update(&state.db).await?;
+        return Ok(Json(
+            json!({ "success": true, "data": { "id": id, "statut": "ANNULE", "retraction": true } }),
+        ));
+    }
+
     if matches!(c.statut, StatutContrat::SigneArchive | StatutContrat::PartiellementSigne) {
         return Err(AppError::Conflict(
             "un contrat déjà signé (partiellement ou totalement) ne peut être annulé".into(),
@@ -314,6 +336,19 @@ async fn cancel(
     am.statut = Set(StatutContrat::Annule);
     am.update(&state.db).await?;
     Ok(Json(json!({ "success": true, "data": { "id": id, "statut": "ANNULE" } })))
+}
+
+/// Whether a contract has a payment that isn't failed/refunded (an active escrow
+/// or confirmed settlement). Used to gate self-service retraction — a paid escrow
+/// must be unwound through mediation, not a silent contract cancel.
+async fn has_active_payment(state: &AppState, contract_id: Uuid) -> AppResult<bool> {
+    let existing = payment::Entity::find()
+        .filter(payment::Column::ContratId.eq(contract_id))
+        .one(&state.db)
+        .await?;
+    Ok(existing
+        .map(|p| !matches!(p.statut, StatutPaiement::Echoue | StatutPaiement::Rembourse))
+        .unwrap_or(false))
 }
 
 /// `POST /api/contracts/{id}/sign/request-otp` — send the caller a signing OTP.

@@ -44,20 +44,8 @@ fn init_tracing() {
 }
 
 /// register + login → access token (the user is `Actif`, role derived from type).
-async fn register_login(s: &axum_test::TestServer, phone: &str) -> String {
-    s.post("/api/auth/register")
-        .json(&json!({ "telephone": phone, "mot_de_passe": PASSWORD, "nom_complet": "Test User" }))
-        .await
-        .assert_status_ok();
-    let login = s
-        .post("/api/auth/login")
-        .json(&json!({ "telephone": phone, "mot_de_passe": PASSWORD }))
-        .await;
-    login.assert_status_ok();
-    login.json::<serde_json::Value>()["data"]["access_token"]
-        .as_str()
-        .expect("access_token")
-        .to_owned()
+async fn register_login(app: &common::TestApp, phone: &str) -> String {
+    app.register_verified_login(phone, PASSWORD).await
 }
 
 /// The authenticated user's id.
@@ -180,8 +168,8 @@ async fn pay(s: &axum_test::TestServer, tenant_token: &str, contract_id: uuid::U
 async fn seed_signed_contract(app: &common::TestApp) -> (String, String, uuid::Uuid) {
     init_tracing();
     let s = &app.server;
-    let owner_token = register_login(s, OWNER_PHONE).await;
-    let tenant_token = register_login(s, TENANT_PHONE).await;
+    let owner_token = register_login(&app, OWNER_PHONE).await;
+    let tenant_token = register_login(&app, TENANT_PHONE).await;
     let owner_id = user_id(s, &owner_token).await;
     let tenant_id = user_id(s, &tenant_token).await;
     assert_ne!(owner_id, tenant_id);
@@ -342,8 +330,8 @@ async fn concurrent_sign_preserves_both_signatures() {
     init_tracing();
     let app = setup().await;
     let s = &app.server;
-    let owner_token = register_login(s, OWNER_PHONE).await;
-    let tenant_token = register_login(s, TENANT_PHONE).await;
+    let owner_token = register_login(&app, OWNER_PHONE).await;
+    let tenant_token = register_login(&app, TENANT_PHONE).await;
     let tenant_id = user_id(s, &tenant_token).await;
     let listing_id = create_listing(s, &owner_token).await;
     let contract_id = create_contract(s, &owner_token, listing_id, tenant_id).await;
@@ -534,4 +522,224 @@ async fn cash_by_owner_on_fresh_contract_succeeds() {
         .expect("cash creates a transaction row");
     assert_eq!(t.statut, StatutTransaction::Completee, "cash transaction is completed");
     assert_eq!(t.paiements_ids, json!([pay_id]), "transaction references the cash payment");
+}
+
+/// H5: a signed (SigneArchive) contract cannot be re-sent. `send` is guarded so the
+/// owner cannot rewrite it to EnAttenteSignature (resetting the retraction deadline)
+/// and then `cancel` it to unseal/destroy a legally signed lease.
+#[tokio::test]
+async fn send_rejected_for_signed_contract() {
+    init_tracing();
+    let app = setup().await;
+    let s = &app.server;
+    let (owner_token, _tenant_token, contract_id) = seed_signed_contract(&app).await;
+
+    let r = s
+        .post(&format!("/api/contracts/{contract_id}/send"))
+        .add_header(AUTHORIZATION, auth(&owner_token))
+        .await;
+    assert_eq!(r.status_code(), StatusCode::CONFLICT, "re-sending a signed contract must be 409");
+}
+
+/// H7: two concurrent contract creates on the same listing — the partial-unique
+/// index uq_contracts_annonce_active rejects the loser with 409. The app-level
+/// "one active contract per listing" check is a check-then-insert TOCTOU (the
+/// window spans the Typst render + S3 put); the DB index is the real guard.
+#[tokio::test]
+async fn one_active_contract_per_listing_concurrent() {
+    init_tracing();
+    let app = setup().await;
+    let s = &app.server;
+    let owner_token = register_login(&app, OWNER_PHONE).await;
+    let tenant_token = register_login(&app, TENANT_PHONE).await;
+    let tenant_id = user_id(s, &tenant_token).await;
+    let listing_id = create_listing(s, &owner_token).await;
+
+    let body = json!({
+        "listing_id": listing_id,
+        "locataire_id": tenant_id,
+        "type_contrat": "location",
+        "date_debut": "2025-01-01",
+        "montant_loyer": 100_000,
+        "montant_caution": 0,
+    });
+    let do_create = || async {
+        s.post("/api/contracts")
+            .add_header(AUTHORIZATION, auth(&owner_token))
+            .json(&body)
+            .await
+            .status_code()
+    };
+    let (r1, r2) = tokio::join!(do_create(), do_create());
+
+    let mut ok = 0u32;
+    let mut conflict = 0u32;
+    for c in [r1, r2] {
+        match c {
+            StatusCode::OK => ok += 1,
+            StatusCode::CONFLICT => conflict += 1,
+            other => panic!("unexpected contract create status: {other}"),
+        }
+    }
+    assert_eq!(ok, 1, "exactly one concurrent create must win (got {ok} ok, {conflict} 409)");
+    assert_eq!(conflict, 1, "the concurrent create must be rejected as 409");
+}
+
+// ---------------------------------------------------------------------------
+// Concurrency (H4) — the prior one_active_payment test is sequential and misses
+// the cash+cash / process+cash races. These fire the requests together; the
+// partial-unique index uq_payments_contrat_active must serialise them.
+// ---------------------------------------------------------------------------
+
+/// Two OWNER cash records fired at once on the same fresh signed contract →
+/// exactly one 200 and one 409, and a single active payment persists.
+#[tokio::test]
+async fn cash_plus_cash_concurrent_one_wins() {
+    init_tracing();
+    let app = setup().await;
+    let s = &app.server;
+    let (owner_token, _tenant_token, contract_id) = seed_signed_contract(&app).await;
+
+    let call = || async {
+        s.post("/api/payments/cash")
+            .add_header(AUTHORIZATION, auth(&owner_token))
+            .json(&json!({ "contract_id": contract_id, "methode_paiement": "ESPECES" }))
+            .await
+            .status_code()
+    };
+    let (c1, c2) = tokio::join!(call(), call());
+    assert_status_race(c1, c2, "cash+cash");
+    assert_single_active_payment(&app, contract_id).await;
+}
+
+/// A tenant mobile-money `process` and an owner `cash` fired at once on the same
+/// contract → exactly one 200 and one 409, and a single active payment.
+#[tokio::test]
+async fn process_plus_cash_concurrent_one_wins() {
+    init_tracing();
+    let app = setup().await;
+    let s = &app.server;
+    let (owner_token, tenant_token, contract_id) = seed_signed_contract(&app).await;
+
+    let process = || async {
+        s.post("/api/payments")
+            .add_header(AUTHORIZATION, auth(&tenant_token))
+            .json(&json!({ "contract_id": contract_id, "methode_paiement": "ORANGE_MONEY" }))
+            .await
+            .status_code()
+    };
+    let cash = || async {
+        s.post("/api/payments/cash")
+            .add_header(AUTHORIZATION, auth(&owner_token))
+            .json(&json!({ "contract_id": contract_id, "methode_paiement": "ESPECES" }))
+            .await
+            .status_code()
+    };
+    let (c1, c2) = tokio::join!(process(), cash());
+    assert_status_race(c1, c2, "process+cash");
+    assert_single_active_payment(&app, contract_id).await;
+}
+
+/// FR-001 (M-a): login refuses tokens to an unverified phone — it re-issues the OTP
+/// and returns a verify_otp action. After verification, login yields tokens.
+#[tokio::test]
+async fn login_requires_verified_phone() {
+    init_tracing();
+    let app = setup().await;
+    let s = &app.server;
+    s.post("/api/auth/register")
+        .json(&json!({ "telephone": OWNER_PHONE, "mot_de_passe": PASSWORD, "nom_complet": "Test User" }))
+        .await
+        .assert_status_ok();
+
+    // Unverified → no token, action = verify_otp.
+    let r = s
+        .post("/api/auth/login")
+        .json(&json!({ "telephone": OWNER_PHONE, "mot_de_passe": PASSWORD }))
+        .await;
+    r.assert_status_ok();
+    let body = r.json::<serde_json::Value>();
+    assert_eq!(body["data"]["action"], "verify_otp", "unverified login must ask for OTP");
+    assert!(body["data"]["access_token"].is_null(), "no token for an unverified phone");
+
+    // After verification, login yields tokens.
+    app.mark_phone_verified(OWNER_PHONE).await;
+    let r = s
+        .post("/api/auth/login")
+        .json(&json!({ "telephone": OWNER_PHONE, "mot_de_passe": PASSWORD }))
+        .await;
+    r.assert_status_ok();
+    assert!(
+        r.json::<serde_json::Value>()["data"]["access_token"].is_string(),
+        "verified login must yield a token"
+    );
+}
+
+/// M-c: the tenant may retract a signed contract within the 48h window when no
+/// payment is active.
+#[tokio::test]
+async fn tenant_retraction_within_window() {
+    init_tracing();
+    let app = setup().await;
+    let (_owner_token, tenant_token, contract_id) = seed_signed_contract(&app).await;
+    let s = &app.server;
+
+    let r = s
+        .post(&format!("/api/contracts/{contract_id}/cancel"))
+        .add_header(AUTHORIZATION, auth(&tenant_token))
+        .json(&json!({}))
+        .await;
+    assert_eq!(r.status_code(), StatusCode::OK, "tenant retraction within window must succeed");
+    assert_eq!(r.json::<serde_json::Value>()["data"]["retraction"], true);
+}
+
+/// M-c: retraction is refused once an escrow payment exists (must go via mediation).
+#[tokio::test]
+async fn retraction_blocked_with_active_payment() {
+    init_tracing();
+    let app = setup().await;
+    let (_owner_token, tenant_token, contract_id) = seed_signed_contract(&app).await;
+    let s = &app.server;
+    let _pay_id = pay(s, &tenant_token, contract_id).await; // escrow now active
+
+    let r = s
+        .post(&format!("/api/contracts/{contract_id}/cancel"))
+        .add_header(AUTHORIZATION, auth(&tenant_token))
+        .json(&json!({}))
+        .await;
+    assert_eq!(
+        r.status_code(),
+        StatusCode::CONFLICT,
+        "retraction with an active payment must be refused (→ mediation)"
+    );
+}
+
+// --- concurrency assertion helpers ---
+
+fn assert_status_race(c1: StatusCode, c2: StatusCode, label: &str) {
+    let mut ok = 0u32;
+    let mut conflict = 0u32;
+    for c in [c1, c2] {
+        match c {
+            StatusCode::OK => ok += 1,
+            StatusCode::CONFLICT => conflict += 1,
+            other => panic!("{label}: unexpected status {other}"),
+        }
+    }
+    assert_eq!(ok, 1, "{label}: exactly one must win (got {ok} ok, {conflict} 409)");
+    assert_eq!(conflict, 1, "{label}: the loser must be 409");
+}
+
+async fn assert_single_active_payment(app: &common::TestApp, contract_id: uuid::Uuid) {
+    use immog_backend::db::entities::sea_orm_active_enums::StatutPaiement;
+    let payments = payment::Entity::find()
+        .filter(payment::Column::ContratId.eq(contract_id))
+        .all(&app.state.db)
+        .await
+        .expect("query payments");
+    let active = payments
+        .iter()
+        .filter(|p| !matches!(p.statut, StatutPaiement::Echoue | StatutPaiement::Rembourse))
+        .count();
+    assert_eq!(active, 1, "exactly one active payment must persist after the race");
 }

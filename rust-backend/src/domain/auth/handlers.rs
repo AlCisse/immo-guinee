@@ -236,6 +236,21 @@ async fn login(
         return Err(AppError::Forbidden("Compte suspendu ou banni".into()));
     }
 
+    // FR-001: an unverified phone cannot obtain a session. Re-issue the OTP and
+    // signal the client to complete verification (same flow as registration).
+    if user.telephone_verifie_at.is_none() {
+        if let Err(e) = crate::services::notify::issue_and_send_otp(&state, &user.telephone).await {
+            tracing::warn!(error = %e, "renvoi OTP au login (téléphone non vérifié) échoué");
+        }
+        return Ok(Json(Envelope {
+            success: true,
+            data: LoginResponse::RequiresOtp(super::dto::LoginRequiresOtp {
+                action: "verify_otp".into(),
+                telephone: user.telephone.clone(),
+            }),
+        }));
+    }
+
     if user.two_factor_secret.is_some() {
         return Ok(Json(Envelope {
             success: true,

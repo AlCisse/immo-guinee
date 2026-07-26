@@ -125,13 +125,23 @@ pub struct LoginRequires2Fa {
     pub telephone: String,
 }
 
-/// Login returns either tokens (no 2FA) or a 2FA-required marker (then the
-/// client POSTs `/api/auth/otp` with the TOTP code to obtain tokens).
+/// FR-001: the account exists but its phone is not verified yet. The client must
+/// complete OTP verification (a fresh code was re-issued) before it gets a session.
+#[derive(Debug, Serialize)]
+pub struct LoginRequiresOtp {
+    pub action: String, // "verify_otp"
+    pub telephone: String,
+}
+
+/// Login returns tokens (no 2FA), a 2FA-required marker (then the client POSTs
+/// `/api/auth/otp` with the TOTP code), or an OTP-verification-required marker
+/// for an unverified phone (FR-001).
 #[derive(Debug, Serialize)]
 #[serde(untagged)]
 pub enum LoginResponse {
     Tokens(LoginSuccess),
     Requires2Fa(LoginRequires2Fa),
+    RequiresOtp(LoginRequiresOtp),
 }
 
 /// Partial notification preferences (FR-005): each channel is toggled

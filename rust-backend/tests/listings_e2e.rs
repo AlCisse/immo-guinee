@@ -28,23 +28,8 @@ async fn register_login_create_search_show_flow() {
     let app = setup().await;
     let s = &app.server;
 
-    // 1. register
-    let reg = s
-        .post("/api/auth/register")
-        .json(&json!({ "telephone": PHONE, "mot_de_passe": PASSWORD, "nom_complet": "Awa Diallo" }))
-        .await;
-    reg.assert_status_ok();
-
-    // 2. login → access token
-    let login = s
-        .post("/api/auth/login")
-        .json(&json!({ "telephone": PHONE, "mot_de_passe": PASSWORD }))
-        .await;
-    login.assert_status_ok();
-    let token = login.json::<serde_json::Value>()["data"]["access_token"]
-        .as_str()
-        .expect("access_token")
-        .to_owned();
+    // register (+ verify phone — login requires FR-001 verification) → access token
+    let token = app.register_verified_login(PHONE, PASSWORD).await;
 
     // 3. create listing
     let create = s
@@ -108,18 +93,7 @@ async fn upload_photo_stores_in_minio() {
     let app = setup().await;
     let s = &app.server;
 
-    s.post("/api/auth/register")
-        .json(&json!({ "telephone": PHONE, "mot_de_passe": PASSWORD, "nom_complet": "Awa Diallo" }))
-        .await
-        .assert_status_ok();
-    let login = s
-        .post("/api/auth/login")
-        .json(&json!({ "telephone": PHONE, "mot_de_passe": PASSWORD }))
-        .await;
-    let token = login.json::<serde_json::Value>()["data"]["access_token"]
-        .as_str()
-        .unwrap()
-        .to_owned();
+    let token = app.register_verified_login(PHONE, PASSWORD).await;
 
     let create = s
         .post("/api/listings")
@@ -169,18 +143,7 @@ async fn me_and_logout_revoke_token() {
     let app = setup().await;
     let s = &app.server;
 
-    s.post("/api/auth/register")
-        .json(&json!({ "telephone": PHONE, "mot_de_passe": PASSWORD, "nom_complet": "Awa Diallo" }))
-        .await
-        .assert_status_ok();
-    let login = s
-        .post("/api/auth/login")
-        .json(&json!({ "telephone": PHONE, "mot_de_passe": PASSWORD }))
-        .await;
-    let token = login.json::<serde_json::Value>()["data"]["access_token"]
-        .as_str()
-        .unwrap()
-        .to_owned();
+    let token = app.register_verified_login(PHONE, PASSWORD).await;
 
     // /me works with a valid token
     let me = s.get("/api/auth/me").add_header(AUTHORIZATION, bearer(&token)).await;
