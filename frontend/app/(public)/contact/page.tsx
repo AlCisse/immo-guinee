@@ -53,8 +53,8 @@ export default function ContactPage() {
           animate={{ opacity: 1, scale: 1 }}
           className="bg-white dark:bg-dark-card rounded-3xl p-8 text-center max-w-md w-full shadow-xl"
         >
-          <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle className="w-10 h-10 text-emerald-500" />
+          <div className="w-20 h-20 bg-accent-100 dark:bg-accent-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle className="w-10 h-10 text-accent-500" />
           </div>
           <h2 className="text-2xl font-bold text-neutral-900 dark:text-white mb-3">
             Message envoyé !
@@ -64,7 +64,7 @@ export default function ContactPage() {
           </p>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary-500 to-orange-500 text-white font-semibold rounded-xl hover:from-primary-600 hover:to-orange-600 transition-all"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary-500 to-primary-500 text-white font-semibold rounded-xl hover:from-primary-600 hover:to-primary-600 transition-all"
           >
             <ArrowLeft className="w-5 h-5" />
             Retour à l'accueil
@@ -77,7 +77,7 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg">
       {/* Header */}
-      <div className="bg-gradient-to-br from-primary-500 to-orange-500 pt-6 pb-12">
+      <div className="bg-gradient-to-br from-primary-500 to-primary-500 pt-6 pb-12">
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex items-center gap-4 mb-8">
             <Link
@@ -143,8 +143,8 @@ export default function ContactPage() {
 
             <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-soft">
               <div className="flex items-start gap-4">
-                <div className="p-3 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl">
-                  <MessageSquare className="w-6 h-6 text-emerald-500" />
+                <div className="p-3 bg-accent-50 dark:bg-accent-500/10 rounded-xl">
+                  <MessageSquare className="w-6 h-6 text-accent-500" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-neutral-900 dark:text-white mb-1">
@@ -157,7 +157,7 @@ export default function ContactPage() {
                     href="https://wa.me/224613354420"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-emerald-500 font-medium hover:underline"
+                    className="text-accent-500 font-medium hover:underline"
                   >
                     Démarrer une conversation
                   </a>
@@ -167,8 +167,8 @@ export default function ContactPage() {
 
             <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-soft">
               <div className="flex items-start gap-4">
-                <div className="p-3 bg-blue-50 dark:bg-blue-500/10 rounded-xl">
-                  <Mail className="w-6 h-6 text-blue-500" />
+                <div className="p-3 bg-secondary-50 dark:bg-secondary-500/10 rounded-xl">
+                  <Mail className="w-6 h-6 text-secondary-500" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-neutral-900 dark:text-white mb-1">
@@ -177,7 +177,7 @@ export default function ContactPage() {
                   <p className="text-neutral-600 dark:text-neutral-400 text-sm mb-2">
                     Envoyez-nous un email
                   </p>
-                  <a href="mailto:contact@immoguinee.com" className="text-blue-500 font-medium hover:underline">
+                  <a href="mailto:contact@immoguinee.com" className="text-secondary-500 font-medium hover:underline">
                     contact@immoguinee.com
                   </a>
                 </div>
@@ -186,8 +186,8 @@ export default function ContactPage() {
 
             <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-soft">
               <div className="flex items-start gap-4">
-                <div className="p-3 bg-purple-50 dark:bg-purple-500/10 rounded-xl">
-                  <MapPin className="w-6 h-6 text-purple-500" />
+                <div className="p-3 bg-teal-50 dark:bg-teal-500/10 rounded-xl">
+                  <MapPin className="w-6 h-6 text-teal-500" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-neutral-900 dark:text-white mb-1">
@@ -203,8 +203,8 @@ export default function ContactPage() {
 
             <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-soft">
               <div className="flex items-start gap-4">
-                <div className="p-3 bg-orange-50 dark:bg-orange-500/10 rounded-xl">
-                  <Clock className="w-6 h-6 text-orange-500" />
+                <div className="p-3 bg-primary-50 dark:bg-primary-500/10 rounded-xl">
+                  <Clock className="w-6 h-6 text-primary-500" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-neutral-900 dark:text-white mb-1">
@@ -316,7 +316,7 @@ export default function ContactPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full md:w-auto px-8 py-3.5 bg-gradient-to-r from-primary-500 to-orange-500 text-white font-semibold rounded-xl hover:from-primary-600 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-primary-500/25"
+                  className="w-full md:w-auto px-8 py-3.5 bg-gradient-to-r from-primary-500 to-primary-500 text-white font-semibold rounded-xl hover:from-primary-600 hover:to-primary-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-primary-500/25"
                 >
                   {isSubmitting ? (
                     <>

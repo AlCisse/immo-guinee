@@ -126,12 +126,12 @@ export default function EstimerPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
+    <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg">
       {/* Header */}
-      <div className="bg-gradient-to-r from-green-600 to-green-700 text-white py-16">
+      <div className="bg-gradient-to-r from-success-600 to-success-700 text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl font-bold mb-4">{t('title')}</h1>
-          <p className="text-xl text-green-100">
+          <p className="text-xl text-success-100">
             {t('subtitle')}
           </p>
         </div>
@@ -143,7 +143,7 @@ export default function EstimerPage() {
             <form onSubmit={handleCalculate} className="space-y-6">
               {/* Type d'opération */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-3">
+                <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
                   {t('operationType')}
                 </label>
                 <div className="flex gap-4">
@@ -152,8 +152,8 @@ export default function EstimerPage() {
                     onClick={() => setFormData({ ...formData, operationType: 'LOCATION' })}
                     className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
                       formData.operationType === 'LOCATION'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-neutral-300 hover:bg-gray-200 dark:hover:bg-dark-border'
+                        ? 'bg-secondary-600 text-white'
+                        : 'bg-neutral-100 dark:bg-dark-bg text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-dark-border'
                     }`}
                   >
                     {t('rental')}
@@ -163,8 +163,8 @@ export default function EstimerPage() {
                     onClick={() => setFormData({ ...formData, operationType: 'VENTE' })}
                     className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
                       formData.operationType === 'VENTE'
-                        ? 'bg-green-600 text-white'
-                        : 'bg-gray-100 dark:bg-dark-bg text-gray-700 dark:text-neutral-300 hover:bg-gray-200 dark:hover:bg-dark-border'
+                        ? 'bg-success-600 text-white'
+                        : 'bg-neutral-100 dark:bg-dark-bg text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-dark-border'
                     }`}
                   >
                     {t('sale')}
@@ -174,14 +174,14 @@ export default function EstimerPage() {
 
               {/* Type de bien */}
               <div>
-                <label htmlFor="typeBien" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                <label htmlFor="typeBien" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                   {t('propertyType')} *
                 </label>
                 <select
                   id="typeBien"
                   value={formData.typeBien}
                   onChange={(e) => setFormData({ ...formData, typeBien: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all bg-white dark:bg-dark-bg text-gray-900 dark:text-white"
+                  className="w-full px-4 py-3 border border-neutral-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-success-500 focus:border-transparent transition-all bg-white dark:bg-dark-bg text-neutral-900 dark:text-white"
                   required
                 >
                   <option value="">{t('selectType')}</option>
@@ -196,7 +196,7 @@ export default function EstimerPage() {
               {/* Commune et Quartier */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="commune" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                  <label htmlFor="commune" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                     {t('commune')} *
                   </label>
                   <select
@@ -205,7 +205,7 @@ export default function EstimerPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, commune: e.target.value, quartier: '' })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all bg-white dark:bg-dark-bg text-gray-900 dark:text-white"
+                    className="w-full px-4 py-3 border border-neutral-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-success-500 focus:border-transparent transition-all bg-white dark:bg-dark-bg text-neutral-900 dark:text-white"
                     required
                   >
                     <option value="">{t('selectCommune')}</option>
@@ -218,14 +218,14 @@ export default function EstimerPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="quartier" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                  <label htmlFor="quartier" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                     {t('quartier')}
                   </label>
                   <select
                     id="quartier"
                     value={formData.quartier}
                     onChange={(e) => setFormData({ ...formData, quartier: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all bg-white dark:bg-dark-bg text-gray-900 dark:text-white disabled:opacity-50"
+                    className="w-full px-4 py-3 border border-neutral-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-success-500 focus:border-transparent transition-all bg-white dark:bg-dark-bg text-neutral-900 dark:text-white disabled:opacity-50"
                     disabled={!formData.commune}
                   >
                     <option value="">{t('selectQuartier')}</option>
@@ -241,7 +241,7 @@ export default function EstimerPage() {
               {/* Superficie et Chambres */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="superficie" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                  <label htmlFor="superficie" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                     {t('area')} *
                   </label>
                   <input
@@ -252,20 +252,20 @@ export default function EstimerPage() {
                     placeholder={t('areaPlaceholder')}
                     min="10"
                     max="10000"
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all bg-white dark:bg-dark-bg text-gray-900 dark:text-white"
+                    className="w-full px-4 py-3 border border-neutral-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-success-500 focus:border-transparent transition-all bg-white dark:bg-dark-bg text-neutral-900 dark:text-white"
                     required
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="nombreChambres" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                  <label htmlFor="nombreChambres" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                     {t('bedrooms')}
                   </label>
                   <select
                     id="nombreChambres"
                     value={formData.nombreChambres}
                     onChange={(e) => setFormData({ ...formData, nombreChambres: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all bg-white dark:bg-dark-bg text-gray-900 dark:text-white"
+                    className="w-full px-4 py-3 border border-neutral-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-success-500 focus:border-transparent transition-all bg-white dark:bg-dark-bg text-neutral-900 dark:text-white"
                   >
                     <option value="">{t('selectBedrooms')}</option>
                     <option value="1">1 {t('bedroom')}</option>
@@ -285,9 +285,9 @@ export default function EstimerPage() {
                     id="meuble"
                     checked={formData.meuble}
                     onChange={(e) => setFormData({ ...formData, meuble: e.target.checked })}
-                    className="h-5 w-5 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                    className="h-5 w-5 text-success-600 focus:ring-success-500 border-neutral-300 rounded"
                   />
-                  <label htmlFor="meuble" className="ml-3 text-sm text-gray-700 dark:text-neutral-300">
+                  <label htmlFor="meuble" className="ml-3 text-sm text-neutral-700 dark:text-neutral-300">
                     {t('furnished')}
                   </label>
                 </div>
@@ -297,7 +297,7 @@ export default function EstimerPage() {
               <button
                 type="submit"
                 disabled={isCalculating}
-                className="w-full bg-green-600 text-white py-4 px-6 rounded-lg font-semibold hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full bg-success-600 text-white py-4 px-6 rounded-lg font-semibold hover:bg-success-700 transition-colors focus:outline-none focus:ring-2 focus:ring-success-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isCalculating ? (
                   <>
@@ -337,9 +337,9 @@ export default function EstimerPage() {
 
             {/* Results */}
             {result && (
-              <div className="mt-8 p-6 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200 dark:border-green-800">
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="mt-8 p-6 bg-gradient-to-r from-success-50 to-accent-50 dark:from-success-900/20 dark:to-accent-900/20 rounded-xl border border-success-200 dark:border-success-800">
+                <h3 className="text-xl font-semibold text-neutral-900 dark:text-white mb-4 flex items-center gap-2">
+                  <svg className="w-6 h-6 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -352,20 +352,20 @@ export default function EstimerPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                   <div className="bg-white dark:bg-dark-card p-4 rounded-lg shadow-sm">
-                    <div className="text-sm text-gray-600 dark:text-neutral-400 mb-1">{t('minPrice')}</div>
-                    <div className="text-xl font-bold text-gray-900 dark:text-white">{formatPrice(result.minPrice)}</div>
+                    <div className="text-sm text-neutral-600 dark:text-neutral-400 mb-1">{t('minPrice')}</div>
+                    <div className="text-xl font-bold text-neutral-900 dark:text-white">{formatPrice(result.minPrice)}</div>
                   </div>
-                  <div className="bg-white dark:bg-dark-card p-4 rounded-lg shadow-sm border-2 border-green-500">
-                    <div className="text-sm text-green-600 mb-1">{t('estimatedPrice')}</div>
-                    <div className="text-2xl font-bold text-green-600">{formatPrice(result.avgPrice)}</div>
+                  <div className="bg-white dark:bg-dark-card p-4 rounded-lg shadow-sm border-2 border-success-500">
+                    <div className="text-sm text-success-600 mb-1">{t('estimatedPrice')}</div>
+                    <div className="text-2xl font-bold text-success-600">{formatPrice(result.avgPrice)}</div>
                   </div>
                   <div className="bg-white dark:bg-dark-card p-4 rounded-lg shadow-sm">
-                    <div className="text-sm text-gray-600 dark:text-neutral-400 mb-1">{t('maxPrice')}</div>
-                    <div className="text-xl font-bold text-gray-900 dark:text-white">{formatPrice(result.maxPrice)}</div>
+                    <div className="text-sm text-neutral-600 dark:text-neutral-400 mb-1">{t('maxPrice')}</div>
+                    <div className="text-xl font-bold text-neutral-900 dark:text-white">{formatPrice(result.maxPrice)}</div>
                   </div>
                 </div>
 
-                <div className="text-sm text-gray-600 dark:text-neutral-400 mb-4">
+                <div className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
                   {t('pricePerM2')} : <span className="font-semibold">{formatPrice(result.pricePerM2)}</span>
                   {formData.operationType === 'LOCATION' && t('perMonth')}
                 </div>
@@ -373,13 +373,13 @@ export default function EstimerPage() {
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Link
                     href="/publier"
-                    className="flex-1 bg-green-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-green-700 transition-colors text-center"
+                    className="flex-1 bg-success-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-success-700 transition-colors text-center"
                   >
                     {t('publishListing')}
                   </Link>
                   <Link
                     href="/recherche"
-                    className="flex-1 bg-white dark:bg-dark-bg text-green-600 border border-green-600 py-3 px-4 rounded-lg font-semibold hover:bg-green-50 dark:hover:bg-dark-border transition-colors text-center"
+                    className="flex-1 bg-white dark:bg-dark-bg text-success-600 border border-success-600 py-3 px-4 rounded-lg font-semibold hover:bg-success-50 dark:hover:bg-dark-border transition-colors text-center"
                   >
                     {t('viewSimilar')}
                   </Link>
@@ -392,8 +392,8 @@ export default function EstimerPage() {
         {/* Info section */}
         <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white dark:bg-dark-card p-6 rounded-xl shadow-sm">
-            <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mb-4">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 bg-success-100 dark:bg-success-900/30 rounded-lg flex items-center justify-center mb-4">
+              <svg className="w-6 h-6 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -402,15 +402,15 @@ export default function EstimerPage() {
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t('marketData')}</h3>
-            <p className="text-gray-600 dark:text-neutral-400 text-sm">
+            <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-2">{t('marketData')}</h3>
+            <p className="text-neutral-600 dark:text-neutral-400 text-sm">
               {t('marketDataDesc')}
             </p>
           </div>
 
           <div className="bg-white dark:bg-dark-card p-6 rounded-xl shadow-sm">
-            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mb-4">
-              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 bg-secondary-100 dark:bg-secondary-900/30 rounded-lg flex items-center justify-center mb-4">
+              <svg className="w-6 h-6 text-secondary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -425,15 +425,15 @@ export default function EstimerPage() {
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t('preciseLocation')}</h3>
-            <p className="text-gray-600 dark:text-neutral-400 text-sm">
+            <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-2">{t('preciseLocation')}</h3>
+            <p className="text-neutral-600 dark:text-neutral-400 text-sm">
               {t('preciseLocationDesc')}
             </p>
           </div>
 
           <div className="bg-white dark:bg-dark-card p-6 rounded-xl shadow-sm">
-            <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center mb-4">
-              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center mb-4">
+              <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -442,8 +442,8 @@ export default function EstimerPage() {
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t('freeService')}</h3>
-            <p className="text-gray-600 dark:text-neutral-400 text-sm">
+            <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-2">{t('freeService')}</h3>
+            <p className="text-neutral-600 dark:text-neutral-400 text-sm">
               {t('freeServiceDesc')}
             </p>
           </div>
