@@ -208,7 +208,7 @@ function RatingCard({ rating }: { rating: Rating }) {
             </div>
             <button
               onClick={() => setShowReportModal(false)}
-              className="w-full mt-4 px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:text-white"
+              className="w-full mt-4 px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white"
             >
               Annuler
             </button>

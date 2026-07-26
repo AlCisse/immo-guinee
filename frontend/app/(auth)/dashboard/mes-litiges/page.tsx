@@ -176,7 +176,7 @@ export default function MesLitigesPage() {
               'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
               filter === 'all'
                 ? 'bg-primary-500 text-white'
-                : 'bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:bg-dark-bg'
+                : 'bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-dark-hover'
             )}
           >
             Tous ({disputes?.length || 0})
@@ -187,7 +187,7 @@ export default function MesLitigesPage() {
               'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
               filter === 'active'
                 ? 'bg-warning-500 text-white'
-                : 'bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:bg-dark-bg'
+                : 'bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-dark-hover'
             )}
           >
             En cours ({activeCount})
@@ -198,7 +198,7 @@ export default function MesLitigesPage() {
               'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
               filter === 'resolved'
                 ? 'bg-success-500 text-white'
-                : 'bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:bg-dark-bg'
+                : 'bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-dark-hover'
             )}
           >
             Résolus ({resolvedCount})

@@ -131,7 +131,7 @@ function MenuItem({
       className={`flex items-center gap-4 p-4 rounded-xl transition-colors ${
         danger
           ? 'hover:bg-error-50 dark:hover:bg-error-500/10'
-          : 'hover:bg-neutral-50 dark:hover:bg-dark-bg'
+          : 'hover:bg-neutral-50 dark:hover:bg-dark-hover'
       }`}
     >
       <div className={`p-2.5 rounded-xl ${
@@ -248,7 +248,7 @@ export default function ProfilePage() {
                   {user?.nom_complet?.charAt(0) || 'U'}
                 </div>
               )}
-              <Link href="/profil/edit" className="absolute bottom-0 right-0 p-1.5 bg-white rounded-full shadow-lg hover:bg-neutral-50 transition-colors">
+              <Link href="/profil/edit" className="absolute bottom-0 right-0 p-1.5 bg-white dark:bg-dark-card rounded-full shadow-lg hover:bg-neutral-50 transition-colors">
                 <Camera className="w-4 h-4 text-primary-500" />
               </Link>
             </div>
@@ -442,7 +442,7 @@ export default function ProfilePage() {
             ) : contractsArray.length > 0 ? (
               contractsArray.slice(0, 3).map((contract: any) => (
                 <Link key={contract.id} href={`/contrats/${contract.id}`}>
-                  <div className="p-4 flex items-center gap-4 hover:bg-neutral-50 dark:hover:bg-dark-bg">
+                  <div className="p-4 flex items-center gap-4 hover:bg-neutral-50 dark:hover:bg-dark-hover">
                     <div className="p-2 bg-error-100 dark:bg-error-500/10 rounded-lg">
                       <FileText className="w-5 h-5 text-error-500" />
                     </div>
@@ -459,7 +459,7 @@ export default function ProfilePage() {
                         ? 'bg-accent-100 text-accent-700'
                         : contract.statut?.includes('ATTENTE')
                         ? 'bg-warning-100 text-warning-700'
-                        : 'bg-neutral-100 text-neutral-700'
+                        : 'bg-neutral-100 dark:bg-dark-hover text-neutral-700 dark:text-neutral-300'
                     }`}>
                       {contract.statut === 'SIGNE' ? t('profile.contracts.status.signed') :
                        contract.statut === 'ACTIF' ? t('profile.contracts.status.active') :
@@ -494,7 +494,7 @@ export default function ProfilePage() {
                 {isDarkMode ? (
                   <Moon className="w-5 h-5 text-neutral-600 dark:text-neutral-300" />
                 ) : (
-                  <Sun className="w-5 h-5 text-neutral-600" />
+                  <Sun className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
                 )}
               </div>
               <div className="flex-1">
@@ -508,7 +508,7 @@ export default function ProfilePage() {
               >
                 <motion.div
                   animate={{ x: isDarkMode ? 24 : 0 }}
-                  className="w-6 h-6 bg-white rounded-full shadow"
+                  className="w-6 h-6 bg-white dark:bg-dark-card rounded-full shadow"
                 />
               </button>
             </div>

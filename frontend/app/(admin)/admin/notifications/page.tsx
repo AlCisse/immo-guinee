@@ -393,7 +393,7 @@ export default function AdminNotificationsPage() {
                 type="checkbox"
                 checked={selectedIds.length === notifications.length && notifications.length > 0}
                 onChange={selectAll}
-                className="w-4 h-4 rounded border-neutral-300 text-primary-500 focus:ring-primary-500"
+                className="w-4 h-4 rounded border-neutral-300 dark:border-dark-border text-primary-500 focus:ring-primary-500"
               />
               <span className="text-sm text-neutral-600 dark:text-neutral-400">
                 {selectedIds.length > 0 ? `${selectedIds.length} sélectionnée(s)` : 'Tout sélectionner'}
@@ -425,7 +425,7 @@ export default function AdminNotificationsPage() {
                         e.stopPropagation();
                         toggleSelect(notification.id);
                       }}
-                      className="mt-1 w-4 h-4 rounded border-neutral-300 text-primary-500 focus:ring-primary-500"
+                      className="mt-1 w-4 h-4 rounded border-neutral-300 dark:border-dark-border text-primary-500 focus:ring-primary-500"
                     />
 
                     <div className={clsx('p-2 rounded-xl', !notification.is_read ? 'bg-white dark:bg-dark-card' : 'bg-neutral-100 dark:bg-dark-hover')}>

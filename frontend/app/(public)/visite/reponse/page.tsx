@@ -358,7 +358,7 @@ function VisitResponseContent() {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowRescheduleForm(false)}
-                className="flex-1 py-3 border-2 border-neutral-200 dark:border-dark-border text-neutral-700 dark:text-neutral-300 font-semibold rounded-xl hover:bg-neutral-50 dark:hover:bg-dark-border transition-colors"
+                className="flex-1 py-3 border-2 border-neutral-200 dark:border-dark-border text-neutral-700 dark:text-neutral-300 font-semibold rounded-xl hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors"
               >
                 Annuler
               </button>

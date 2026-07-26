@@ -250,7 +250,7 @@ export default function ContractGeneratorContent() {
     <div>
       {/* Header */}
       <div className="mb-8">
-        <Link href={`/annonces/${selectedListingId}`} className="inline-flex items-center text-sm text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-300">
+        <Link href={`/annonces/${selectedListingId}`} className="inline-flex items-center text-sm text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300">
           <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>

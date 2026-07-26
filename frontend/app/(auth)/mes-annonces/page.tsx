@@ -292,7 +292,7 @@ export default function MesAnnoncesPage() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-2 px-4 py-2.5 bg-white text-primary-600 font-semibold rounded-xl shadow-lg"
+                className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-dark-card text-primary-600 font-semibold rounded-xl shadow-lg"
               >
                 <Plus className="w-5 h-5" />
                 <span className="hidden sm:inline">{t('myListings.newListing')}</span>
@@ -524,7 +524,7 @@ export default function MesAnnoncesPage() {
                         <div className="relative">
                           <button
                             onClick={() => setActiveMenu(activeMenu === annonce.id ? null : annonce.id)}
-                            className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-lg transition-colors"
+                            className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg transition-colors"
                           >
                             <MoreVertical className="w-5 h-5 text-neutral-500" />
                           </button>
@@ -539,14 +539,14 @@ export default function MesAnnoncesPage() {
                               >
                                 <Link
                                   href={`/bien/${annonce.id}`}
-                                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-50 dark:hover:bg-dark-bg text-neutral-700 dark:text-neutral-300"
+                                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-50 dark:hover:bg-dark-hover text-neutral-700 dark:text-neutral-300"
                                 >
                                   <Eye className="w-4 h-4" />
                                   {t('myListings.actions.viewListing')}
                                 </Link>
                                 <Link
                                   href={`/mes-annonces/${annonce.id}/modifier`}
-                                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-50 dark:hover:bg-dark-bg text-neutral-700 dark:text-neutral-300"
+                                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-50 dark:hover:bg-dark-hover text-neutral-700 dark:text-neutral-300"
                                 >
                                   <Edit className="w-4 h-4" />
                                   {t('myListings.actions.edit')}
@@ -648,7 +648,7 @@ export default function MesAnnoncesPage() {
                 </h3>
                 <button
                   onClick={() => setShowRentedModal(false)}
-                  className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-lg transition-colors"
+                  className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg transition-colors"
                 >
                   <X className="w-5 h-5 text-neutral-500" />
                 </button>
@@ -687,7 +687,7 @@ export default function MesAnnoncesPage() {
                 <button
                   onClick={() => confirmMarkAsRented(false)}
                   disabled={markAsRentedMutation.isPending}
-                  className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-neutral-200 dark:border-dark-border hover:border-neutral-300 dark:hover:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors disabled:opacity-50"
+                  className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-neutral-200 dark:border-dark-border hover:border-neutral-300 dark:hover:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors disabled:opacity-50"
                 >
                   <div className="p-3 bg-neutral-200 dark:bg-dark-bg rounded-xl">
                     <Users className="w-6 h-6 text-neutral-600 dark:text-neutral-400" />
@@ -709,7 +709,7 @@ export default function MesAnnoncesPage() {
               {/* Cancel button */}
               <button
                 onClick={() => setShowRentedModal(false)}
-                className="w-full mt-4 py-3 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-xl transition-colors"
+                className="w-full mt-4 py-3 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-xl transition-colors"
               >
                 {t('myListings.markAsRentedModal.cancel')}
               </button>

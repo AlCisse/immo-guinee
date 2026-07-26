@@ -245,7 +245,7 @@ export default function PhotoUploader({
                   <button
                     type="button"
                     onClick={() => movePhoto(photo.id, 'left')}
-                    className="p-2 bg-white dark:bg-dark-card rounded-full hover:bg-neutral-100 dark:bg-dark-hover transition-colors"
+                    className="p-2 bg-white dark:bg-dark-card rounded-full hover:bg-neutral-100 dark:hover:bg-dark-hover transition-colors"
                     title={t('photos.moveLeft')}
                   >
                     <svg className="w-4 h-4 text-neutral-700 dark:text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -271,7 +271,7 @@ export default function PhotoUploader({
                   <button
                     type="button"
                     onClick={() => movePhoto(photo.id, 'right')}
-                    className="p-2 bg-white dark:bg-dark-card rounded-full hover:bg-neutral-100 dark:bg-dark-hover transition-colors"
+                    className="p-2 bg-white dark:bg-dark-card rounded-full hover:bg-neutral-100 dark:hover:bg-dark-hover transition-colors"
                     title={t('photos.moveRight')}
                   >
                     <svg className="w-4 h-4 text-neutral-700 dark:text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">

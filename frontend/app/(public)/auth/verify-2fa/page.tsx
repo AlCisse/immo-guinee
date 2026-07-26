@@ -439,7 +439,7 @@ export default function Verify2FAPage() {
 
                   {/* QR Code */}
                   <div className="flex justify-center mb-6">
-                    <div className="p-4 bg-white rounded-xl border-2 border-neutral-200">
+                    <div className="p-4 bg-white dark:bg-dark-card rounded-xl border-2 border-neutral-200 dark:border-dark-border">
                       <img
                         src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(setupData.qr_code_url)}`}
                         alt="QR Code 2FA"
@@ -479,7 +479,7 @@ export default function Verify2FAPage() {
                   <button
                     type="button"
                     onClick={() => setSetupStep('show_qr')}
-                    className="flex items-center text-sm text-neutral-500 hover:text-neutral-700 mb-4"
+                    className="flex items-center text-sm text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 mb-4"
                   >
                     <ArrowLeft className="w-4 h-4 mr-1" />
                     Retour au QR code
@@ -703,7 +703,7 @@ export default function Verify2FAPage() {
                     setError('');
                     setRecoveryCode('');
                   }}
-                  className="flex items-center text-sm text-neutral-500 hover:text-neutral-700 mb-4"
+                  className="flex items-center text-sm text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 mb-4"
                 >
                   <ArrowLeft className="w-4 h-4 mr-1" />
                   {t('auth.verify2fa.back')}

@@ -43,7 +43,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
               'block w-full appearance-none rounded-xl border border-neutral-300 bg-white px-3 py-2.5 pr-10 text-neutral-900 dark:border-dark-border dark:bg-dark-card dark:text-white',
               'transition-colors duration-200',
               'focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20',
-              'disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-500 dark:disabled:bg-dark-hover',
+              'disabled:cursor-not-allowed disabled:bg-neutral-100 dark:disabled:bg-dark-hover disabled:text-neutral-500 dark:disabled:bg-dark-hover',
               error && 'border-error-500 focus:border-error-500 focus:ring-error-500/20',
               className
             )}

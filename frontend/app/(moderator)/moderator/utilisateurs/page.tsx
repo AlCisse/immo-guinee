@@ -78,7 +78,7 @@ export default function UtilisateursPage() {
       case 'OR':
         return 'bg-gradient-to-r from-warning-400 to-warning-500 text-white';
       case 'ARGENT':
-        return 'bg-gradient-to-r from-neutral-300 to-neutral-400 text-neutral-800';
+        return 'bg-gradient-to-r from-neutral-300 to-neutral-400 text-neutral-800 dark:text-neutral-100';
       default:
         return 'bg-gradient-to-r from-primary-300 to-primary-400 text-white';
     }

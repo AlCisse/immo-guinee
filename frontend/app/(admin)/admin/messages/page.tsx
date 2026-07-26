@@ -135,7 +135,7 @@ export default function MessagesPage() {
       DISMISSED: { color: 'bg-neutral-100 text-neutral-800 dark:bg-neutral-500/10 dark:text-neutral-400', label: 'Rejeté' },
       ARCHIVE: { color: 'bg-neutral-100 text-neutral-800 dark:bg-neutral-500/10 dark:text-neutral-400', label: 'Archivé' },
     };
-    const status = statusMap[statut] || { color: 'bg-neutral-100 text-neutral-800', label: statut };
+    const status = statusMap[statut] || { color: 'bg-neutral-100 dark:bg-dark-hover text-neutral-800 dark:text-neutral-100', label: statut };
     return (
       <span className={`px-2 py-1 text-xs font-medium rounded-full ${status.color}`}>
         {status.label}
@@ -151,7 +151,7 @@ export default function MessagesPage() {
       HIGH: { color: 'bg-primary-100 text-primary-800', label: 'Élevé' },
       CRITICAL: { color: 'bg-error-100 text-error-800', label: 'Critique' },
     };
-    const sev = severityMap[severity] || { color: 'bg-neutral-100 text-neutral-800', label: severity };
+    const sev = severityMap[severity] || { color: 'bg-neutral-100 dark:bg-dark-hover text-neutral-800 dark:text-neutral-100', label: severity };
     return (
       <span className={`px-2 py-1 text-xs font-medium rounded-full ${sev.color}`}>
         {sev.label}

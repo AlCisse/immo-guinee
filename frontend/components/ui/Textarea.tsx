@@ -43,7 +43,7 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
               'block w-full resize-y rounded-xl border border-neutral-300 bg-white px-3 py-2.5 text-neutral-900 placeholder-neutral-400 dark:border-dark-border dark:bg-dark-card dark:text-white dark:placeholder-neutral-500',
               'transition-colors duration-200',
               'focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20',
-              'disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-500 dark:disabled:bg-dark-hover',
+              'disabled:cursor-not-allowed disabled:bg-neutral-100 dark:disabled:bg-dark-hover disabled:text-neutral-500 dark:disabled:bg-dark-hover',
               error && 'border-error-500 focus:border-error-500 focus:ring-error-500/20',
               className
             )}

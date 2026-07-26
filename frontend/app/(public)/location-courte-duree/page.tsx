@@ -250,7 +250,7 @@ export default function LocationCourteDureePage() {
             </p>
             <Link
               href="/recherche?type_transaction=LOCATION_COURTE"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-teal-600 font-semibold rounded-xl hover:bg-teal-50 transition-all"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-white dark:bg-dark-card text-teal-600 font-semibold rounded-xl hover:bg-teal-50 transition-all"
             >
               Explorer les annonces
               <ArrowRight className="w-5 h-5" />

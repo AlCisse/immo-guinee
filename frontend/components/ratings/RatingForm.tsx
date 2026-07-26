@@ -143,7 +143,7 @@ export default function RatingForm({ contractId, onSuccess, onCancel }: RatingFo
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Overall Rating Preview */}
-      <div className="text-center py-4 bg-neutral-50 rounded-lg">
+      <div className="text-center py-4 bg-neutral-50 dark:bg-dark-bg rounded-lg">
         <p className="text-sm text-neutral-500 mb-2">Note globale</p>
         <div className="flex items-center justify-center gap-2">
           <span className="text-4xl font-bold text-primary-600">{overallRating || '–'}</span>
@@ -156,12 +156,12 @@ export default function RatingForm({ contractId, onSuccess, onCancel }: RatingFo
 
       {/* Criteria Ratings */}
       <div className="space-y-4">
-        <h3 className="font-medium text-neutral-900">Évaluez chaque critère</h3>
+        <h3 className="font-medium text-neutral-900 dark:text-white">Évaluez chaque critère</h3>
 
         {(Object.keys(CRITERIA_LABELS) as Array<keyof CriteriaRating>).map((key) => (
-          <div key={key} className="flex items-center justify-between py-3 border-b border-neutral-100">
+          <div key={key} className="flex items-center justify-between py-3 border-b border-neutral-100 dark:border-dark-border">
             <div>
-              <p className="font-medium text-neutral-900">{CRITERIA_LABELS[key].label}</p>
+              <p className="font-medium text-neutral-900 dark:text-white">{CRITERIA_LABELS[key].label}</p>
               <p className="text-sm text-neutral-500">{CRITERIA_LABELS[key].description}</p>
             </div>
             <StarRating
@@ -174,7 +174,7 @@ export default function RatingForm({ contractId, onSuccess, onCancel }: RatingFo
 
       {/* Comment */}
       <div>
-        <label htmlFor="comment" className="block font-medium text-neutral-900 mb-2">
+        <label htmlFor="comment" className="block font-medium text-neutral-900 dark:text-white mb-2">
           Votre commentaire
         </label>
         <textarea
@@ -185,7 +185,7 @@ export default function RatingForm({ contractId, onSuccess, onCancel }: RatingFo
           rows={4}
           className={clsx(
             'w-full rounded-lg border px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
-            comment.length > 0 && !isCommentValid ? 'border-warning-500' : 'border-neutral-200'
+            comment.length > 0 && !isCommentValid ? 'border-warning-500' : 'border-neutral-200 dark:border-dark-border'
           )}
           maxLength={500}
         />
@@ -213,7 +213,7 @@ export default function RatingForm({ contractId, onSuccess, onCancel }: RatingFo
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 px-4 py-3 border border-neutral-300 rounded-lg text-neutral-700 hover:bg-neutral-50 transition-colors"
+            className="flex-1 px-4 py-3 border border-neutral-300 dark:border-dark-border rounded-lg text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors"
           >
             Annuler
           </button>
@@ -225,7 +225,7 @@ export default function RatingForm({ contractId, onSuccess, onCancel }: RatingFo
             'flex-1 px-4 py-3 rounded-lg font-medium transition-colors',
             canSubmit
               ? 'bg-primary-500 text-white hover:bg-primary-600'
-              : 'bg-neutral-100 text-neutral-400 cursor-not-allowed'
+              : 'bg-neutral-100 dark:bg-dark-hover text-neutral-400 cursor-not-allowed'
           )}
         >
           {createRating.isPending ? 'Envoi...' : 'Publier mon avis'}

@@ -209,7 +209,7 @@ export default function InsuranceSubscriptionPage() {
     <div>
       <button
         onClick={() => setStep('select-contract')}
-        className="flex items-center text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:text-white mb-4"
+        className="flex items-center text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white mb-4"
       >
         <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -244,7 +244,7 @@ export default function InsuranceSubscriptionPage() {
       <div>
         <button
           onClick={() => setStep('select-insurance')}
-          className="flex items-center text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:text-white mb-4"
+          className="flex items-center text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white mb-4"
         >
           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -331,7 +331,7 @@ export default function InsuranceSubscriptionPage() {
         <button
           onClick={handleSubscribe}
           disabled={!acceptedTerms || subscribeMutation.isPending}
-          className="w-full py-3 bg-secondary-600 text-white font-medium rounded-xl hover:bg-secondary-700 disabled:bg-neutral-300 dark:bg-dark-hover disabled:cursor-not-allowed transition-colors"
+          className="w-full py-3 bg-secondary-600 text-white font-medium rounded-xl hover:bg-secondary-700 disabled:bg-neutral-300 dark:disabled:bg-dark-hover disabled:cursor-not-allowed transition-colors"
         >
           {subscribeMutation.isPending ? (
             <span className="flex items-center justify-center gap-2">
@@ -376,7 +376,7 @@ export default function InsuranceSubscriptionPage() {
         </Link>
         <Link
           href="/dashboard"
-          className="px-6 py-3 bg-neutral-100 dark:bg-dark-hover text-neutral-700 dark:text-neutral-300 font-medium rounded-xl hover:bg-neutral-200 dark:bg-dark-hover"
+          className="px-6 py-3 bg-neutral-100 dark:bg-dark-hover text-neutral-700 dark:text-neutral-300 font-medium rounded-xl hover:bg-neutral-200 dark:hover:bg-dark-hover"
         >
           Retour au dashboard
         </Link>
@@ -389,7 +389,7 @@ export default function InsuranceSubscriptionPage() {
       <div className="max-w-2xl mx-auto px-4">
         {/* Header */}
         <div className="mb-8">
-          <Link href="/dashboard" className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:text-white flex items-center gap-1 mb-4">
+          <Link href="/dashboard" className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white flex items-center gap-1 mb-4">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>

@@ -121,7 +121,7 @@ function ToggleSwitch({
         } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
         <span
-          className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
+          className={`absolute top-1 left-1 w-4 h-4 bg-white dark:bg-dark-card rounded-full transition-transform ${
             enabled ? 'translate-x-6' : ''
           }`}
         />
@@ -256,7 +256,7 @@ function TwoFactorSetupModal({
             <h3 className="text-xl font-bold text-neutral-900 dark:text-white">
               Configuration 2FA
             </h3>
-            <button onClick={onClose} className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-border rounded-lg">
+            <button onClick={onClose} className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -349,7 +349,7 @@ function TwoFactorSetupModal({
 
               <button
                 onClick={copyRecoveryCodes}
-                className="w-full py-2 border border-neutral-200 dark:border-dark-border text-neutral-700 dark:text-neutral-300 font-medium rounded-xl hover:bg-neutral-50 dark:hover:bg-dark-border flex items-center justify-center gap-2 mb-4"
+                className="w-full py-2 border border-neutral-200 dark:border-dark-border text-neutral-700 dark:text-neutral-300 font-medium rounded-xl hover:bg-neutral-50 dark:hover:bg-dark-hover flex items-center justify-center gap-2 mb-4"
               >
                 <Copy className="w-4 h-4" />
                 Copier les codes
@@ -566,7 +566,7 @@ export default function AdminSettingsPage() {
               whileTap={{ scale: 0.98 }}
               onClick={handleSave}
               disabled={isSaving}
-              className="flex items-center gap-2 px-6 py-3 bg-white text-primary-600 font-semibold rounded-xl shadow-lg disabled:opacity-50"
+              className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-dark-card text-primary-600 font-semibold rounded-xl shadow-lg disabled:opacity-50"
             >
               {isSaving ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -613,7 +613,7 @@ export default function AdminSettingsPage() {
                   } ${(is2FALoading || setup2FAMutation.isPending || disable2FAMutation.isPending) ? 'opacity-50 cursor-wait' : ''}`}
                 >
                   <span
-                    className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                    className={`absolute top-1 left-1 w-4 h-4 bg-white dark:bg-dark-card rounded-full transition-transform ${
                       is2FAEnabled ? 'translate-x-6' : ''
                     }`}
                   />
@@ -816,7 +816,7 @@ export default function AdminSettingsPage() {
                                   return newEdits;
                                 });
                               }}
-                              className="px-3 py-1.5 text-sm text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-dark-border rounded-lg"
+                              className="px-3 py-1.5 text-sm text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg"
                             >
                               Annuler
                             </button>
@@ -888,7 +888,7 @@ export default function AdminSettingsPage() {
                               }`}
                             >
                               <span
-                                className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                                className={`absolute top-1 left-1 w-4 h-4 bg-white dark:bg-dark-card rounded-full transition-transform ${
                                   currentActive ? 'translate-x-6' : ''
                                 }`}
                               />

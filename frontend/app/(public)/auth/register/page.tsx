@@ -179,7 +179,7 @@ export default function RegisterPage() {
               <button
                 onClick={() => handleSocialRegister('google')}
                 disabled={socialLoading !== null}
-                className="w-full flex items-center justify-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 bg-white border border-neutral-200 dark:border-dark-border rounded-xl hover:bg-neutral-50 dark:bg-dark-bg dark:hover:bg-dark-hover transition-colors disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 bg-white border border-neutral-200 dark:border-dark-border rounded-xl hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors disabled:opacity-50"
               >
                 {socialLoading === 'google' ? (
                   <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-neutral-500" />
@@ -312,7 +312,7 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 sm:pr-4 text-neutral-400 hover:text-neutral-600"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 sm:pr-4 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-400"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <Eye className="w-4 h-4 sm:w-5 sm:h-5" />}
                   </button>
@@ -338,7 +338,7 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 sm:pr-4 text-neutral-400 hover:text-neutral-600"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 sm:pr-4 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-400"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <Eye className="w-4 h-4 sm:w-5 sm:h-5" />}
                   </button>

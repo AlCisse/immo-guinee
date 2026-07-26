@@ -184,7 +184,7 @@ export default function HistoriquePage() {
           >
             <span
               className={clsx(
-                'absolute top-1 w-4 h-4 bg-white rounded-full transition-transform',
+                'absolute top-1 w-4 h-4 bg-white dark:bg-dark-card rounded-full transition-transform',
                 showMyActions ? 'translate-x-7' : 'translate-x-1'
               )}
             />

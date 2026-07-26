@@ -149,7 +149,7 @@ export default function DocumentUploader({ onUploadSuccess, className }: Documen
               className={`relative flex cursor-pointer rounded-lg border p-4 focus:outline-none ${
                 selectedType === docType.value
                   ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-500'
-                  : 'border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card hover:bg-neutral-50 dark:bg-dark-bg'
+                  : 'border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card hover:bg-neutral-50 dark:hover:bg-dark-hover'
               }`}
             >
               <input

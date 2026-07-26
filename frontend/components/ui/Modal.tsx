@@ -106,7 +106,7 @@ const Modal = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-lg p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-500 dark:hover:bg-dark-hover dark:hover:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="rounded-lg p-1 text-neutral-400 hover:bg-neutral-100 dark:hover:bg-dark-hover hover:text-neutral-500 dark:hover:bg-dark-hover dark:hover:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
                   aria-label="Fermer"
                 >
                   <svg

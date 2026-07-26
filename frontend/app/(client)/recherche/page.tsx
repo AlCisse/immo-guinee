@@ -637,7 +637,7 @@ function SearchContent() {
                     setQuartierSearchInput('');
                     setShowQuartierDropdown(false);
                   }}>
-                    <X className="w-4 h-4 text-neutral-400 hover:text-neutral-600" />
+                    <X className="w-4 h-4 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-400" />
                   </button>
                 )}
               </div>
@@ -678,7 +678,7 @@ function SearchContent() {
                         setShowQuartierDropdown(false);
                         updateURL({ quartier: quartier.name, commune: quartier.commune });
                       }}
-                      className="w-full px-4 py-3 text-left hover:bg-neutral-50 dark:hover:bg-dark-border transition-colors flex items-center gap-3"
+                      className="w-full px-4 py-3 text-left hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors flex items-center gap-3"
                     >
                       <MapPin className="w-4 h-4 text-neutral-400" />
                       <div>
@@ -838,7 +838,7 @@ function SearchContent() {
                 className={`p-2 rounded-md transition-colors ${
                   viewMode === 'grid'
                     ? 'bg-primary-500 text-white'
-                    : 'text-neutral-500 hover:text-neutral-700'
+                    : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'
                 }`}
               >
                 <Grid3X3 className="w-4 h-4" />
@@ -848,7 +848,7 @@ function SearchContent() {
                 className={`p-2 rounded-md transition-colors ${
                   viewMode === 'list'
                     ? 'bg-primary-500 text-white'
-                    : 'text-neutral-500 hover:text-neutral-700'
+                    : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'
                 }`}
               >
                 <List className="w-4 h-4" />

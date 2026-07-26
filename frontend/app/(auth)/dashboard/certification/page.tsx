@@ -144,7 +144,7 @@ export default function CertificationPage() {
             className={`border-b-2 py-4 px-1 text-sm font-medium ${
               activeTab === 'overview'
                 ? 'border-primary-500 text-primary-600'
-                : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:border-neutral-300 dark:border-dark-border hover:text-neutral-700 dark:text-neutral-300'
+                : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:border-neutral-300 dark:hover:border-dark-border hover:text-neutral-700 dark:hover:text-neutral-300'
             }`}
           >
             Vue d&apos;ensemble
@@ -154,7 +154,7 @@ export default function CertificationPage() {
             className={`border-b-2 py-4 px-1 text-sm font-medium ${
               activeTab === 'documents'
                 ? 'border-primary-500 text-primary-600'
-                : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:border-neutral-300 dark:border-dark-border hover:text-neutral-700 dark:text-neutral-300'
+                : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:border-neutral-300 dark:hover:border-dark-border hover:text-neutral-700 dark:hover:text-neutral-300'
             }`}
           >
             Mes documents

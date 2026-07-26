@@ -54,7 +54,7 @@ export default function ConversationList({
             key={conversation.id}
             onClick={() => onSelect(conversation.id)}
             className={clsx(
-              'w-full px-4 py-3 text-left transition-colors hover:bg-neutral-50 focus:outline-none focus:bg-neutral-50',
+              'w-full px-4 py-3 text-left transition-colors hover:bg-neutral-50 dark:hover:bg-dark-hover focus:outline-none focus:bg-neutral-50',
               isSelected && 'bg-primary-50 hover:bg-primary-50'
             )}
           >
@@ -83,7 +83,7 @@ export default function ConversationList({
                     <span
                       className={clsx(
                         'font-medium truncate',
-                        hasUnread ? 'text-neutral-900' : 'text-neutral-700'
+                        hasUnread ? 'text-neutral-900 dark:text-white' : 'text-neutral-700'
                       )}
                     >
                       {otherParticipant.nom_complet}

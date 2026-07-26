@@ -404,7 +404,7 @@ export default function PaymentHistory({ initialStatus }: PaymentHistoryProps) {
               <th className="px-6 py-3">
                 <button
                   onClick={() => handleSort('date')}
-                  className="flex items-center hover:text-neutral-700 dark:text-neutral-300"
+                  className="flex items-center hover:text-neutral-700 dark:hover:text-neutral-300"
                 >
                   Date
                   {sortField === 'date' && (
@@ -418,7 +418,7 @@ export default function PaymentHistory({ initialStatus }: PaymentHistoryProps) {
               <th className="px-6 py-3">
                 <button
                   onClick={() => handleSort('amount')}
-                  className="flex items-center hover:text-neutral-700 dark:text-neutral-300"
+                  className="flex items-center hover:text-neutral-700 dark:hover:text-neutral-300"
                 >
                   Montant
                   {sortField === 'amount' && (
@@ -450,7 +450,7 @@ export default function PaymentHistory({ initialStatus }: PaymentHistoryProps) {
               </tr>
             ) : (
               filteredPayments.map((payment: Payment) => (
-                <tr key={payment.id} className="hover:bg-neutral-50 dark:bg-dark-bg">
+                <tr key={payment.id} className="hover:bg-neutral-50 dark:hover:bg-dark-hover">
                   <td className="px-6 py-4">
                     <div>
                       <p className="text-sm font-medium text-neutral-900 dark:text-white">{payment.reference_paiement}</p>

@@ -454,7 +454,7 @@ export default function DashboardContent() {
                     <Link
                       key={listing.id}
                       href={`/bien/${listing.id}`}
-                      className="flex items-center gap-4 p-4 hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors"
+                      className="flex items-center gap-4 p-4 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors"
                     >
                       <div className="w-16 h-16 rounded-xl overflow-hidden bg-neutral-100 dark:bg-dark-bg flex-shrink-0">
                         {listing.photo_principale ? (

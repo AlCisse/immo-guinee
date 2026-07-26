@@ -166,7 +166,7 @@ export default function EditProfilePage() {
         <div className="max-w-3xl mx-auto px-4 py-4 flex items-center gap-4">
           <button
             onClick={() => router.back()}
-            className="p-2 -ml-2 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-full"
+            className="p-2 -ml-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-full"
           >
             <ChevronLeft className="w-6 h-6 text-neutral-700 dark:text-white" />
           </button>

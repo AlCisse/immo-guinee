@@ -147,7 +147,7 @@ export default function AnnoncesList() {
         <button
           onClick={() => handlePageChange(page - 1)}
           disabled={page === 1}
-          className="px-4 py-2 rounded-lg border border-neutral-300 dark:border-dark-border text-neutral-700 dark:text-neutral-300 font-medium hover:bg-neutral-50 dark:bg-dark-bg disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-success-500"
+          className="px-4 py-2 rounded-lg border border-neutral-300 dark:border-dark-border text-neutral-700 dark:text-neutral-300 font-medium hover:bg-neutral-50 dark:hover:bg-dark-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-success-500"
           aria-label="Page précédente"
         >
           ← Précédent
@@ -158,7 +158,7 @@ export default function AnnoncesList() {
           <>
             <button
               onClick={() => handlePageChange(1)}
-              className="px-4 py-2 rounded-lg border border-neutral-300 dark:border-dark-border text-neutral-700 dark:text-neutral-300 font-medium hover:bg-neutral-50 dark:bg-dark-bg transition-colors focus:outline-none focus:ring-2 focus:ring-success-500"
+              className="px-4 py-2 rounded-lg border border-neutral-300 dark:border-dark-border text-neutral-700 dark:text-neutral-300 font-medium hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors focus:outline-none focus:ring-2 focus:ring-success-500"
             >
               1
             </button>
@@ -174,7 +174,7 @@ export default function AnnoncesList() {
             className={`px-4 py-2 rounded-lg border font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-success-500 ${
               pageNum === page
                 ? 'bg-success-600 text-white border-success-600'
-                : 'border-neutral-300 dark:border-dark-border text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:bg-dark-bg'
+                : 'border-neutral-300 dark:border-dark-border text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-dark-hover'
             }`}
             aria-label={`Page ${pageNum}`}
             aria-current={pageNum === page ? 'page' : undefined}
@@ -189,7 +189,7 @@ export default function AnnoncesList() {
             {endPage < lastPage - 1 && <span className="text-neutral-500 dark:text-neutral-400">...</span>}
             <button
               onClick={() => handlePageChange(lastPage)}
-              className="px-4 py-2 rounded-lg border border-neutral-300 dark:border-dark-border text-neutral-700 dark:text-neutral-300 font-medium hover:bg-neutral-50 dark:bg-dark-bg transition-colors focus:outline-none focus:ring-2 focus:ring-success-500"
+              className="px-4 py-2 rounded-lg border border-neutral-300 dark:border-dark-border text-neutral-700 dark:text-neutral-300 font-medium hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors focus:outline-none focus:ring-2 focus:ring-success-500"
             >
               {lastPage}
             </button>
@@ -200,7 +200,7 @@ export default function AnnoncesList() {
         <button
           onClick={() => handlePageChange(page + 1)}
           disabled={page === lastPage}
-          className="px-4 py-2 rounded-lg border border-neutral-300 dark:border-dark-border text-neutral-700 dark:text-neutral-300 font-medium hover:bg-neutral-50 dark:bg-dark-bg disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-success-500"
+          className="px-4 py-2 rounded-lg border border-neutral-300 dark:border-dark-border text-neutral-700 dark:text-neutral-300 font-medium hover:bg-neutral-50 dark:hover:bg-dark-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-success-500"
           aria-label="Page suivante"
         >
           Suivant →
@@ -256,7 +256,7 @@ export default function AnnoncesList() {
           <div className="lg:hidden mb-4">
             <button
               onClick={() => setShowMobileFilters(true)}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white dark:bg-dark-card border border-neutral-300 dark:border-dark-border rounded-lg font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:bg-dark-bg transition-colors focus:outline-none focus:ring-2 focus:ring-success-500"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white dark:bg-dark-card border border-neutral-300 dark:border-dark-border rounded-lg font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors focus:outline-none focus:ring-2 focus:ring-success-500"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path

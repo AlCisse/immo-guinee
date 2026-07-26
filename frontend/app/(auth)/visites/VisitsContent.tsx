@@ -132,7 +132,7 @@ function VisitCard({
         <div className="relative">
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="p-1.5 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-lg transition-colors"
+            className="p-1.5 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg transition-colors"
             disabled={isLoading}
           >
             {isLoading ? (
@@ -152,7 +152,7 @@ function VisitCard({
                 {visit.statut === 'PENDING' && onConfirm && (
                   <button
                     onClick={() => { onConfirm(); setShowMenu(false); }}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50 dark:hover:bg-dark-bg flex items-center gap-2 text-success-600"
+                    className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50 dark:hover:bg-dark-hover flex items-center gap-2 text-success-600"
                   >
                     <Check className="w-4 h-4" />
                     {t('visits.actions.confirm')}
@@ -161,13 +161,13 @@ function VisitCard({
                 {visit.statut === 'CONFIRMED' && onComplete && (
                   <button
                     onClick={() => { onComplete(); setShowMenu(false); }}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50 dark:hover:bg-dark-bg flex items-center gap-2 text-success-600"
+                    className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50 dark:hover:bg-dark-hover flex items-center gap-2 text-success-600"
                   >
                     <Check className="w-4 h-4" />
                     {t('visits.actions.markComplete')}
                   </button>
                 )}
-                <button className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50 dark:hover:bg-dark-bg flex items-center gap-2">
+                <button className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50 dark:hover:bg-dark-hover flex items-center gap-2">
                   <MessageSquare className="w-4 h-4" />
                   {t('visits.actions.message')}
                 </button>
@@ -391,7 +391,7 @@ function NewVisitModal({
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-lg transition-colors"
+            className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg transition-colors"
           >
             <X className="w-5 h-5 text-neutral-500" />
           </button>
@@ -458,7 +458,7 @@ function NewVisitModal({
                       key={contact.id}
                       type="button"
                       onClick={() => handleSelectContact(contact)}
-                      className="w-full px-4 py-3 flex items-center gap-3 hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors border-b border-neutral-100 dark:border-dark-border last:border-b-0"
+                      className="w-full px-4 py-3 flex items-center gap-3 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors border-b border-neutral-100 dark:border-dark-border last:border-b-0"
                     >
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-medium overflow-hidden">
                         {contact.photo_profil_url ? (
@@ -591,7 +591,7 @@ function NewVisitModal({
               id="send_notification"
               checked={formData.send_notification}
               onChange={(e) => setFormData({ ...formData, send_notification: e.target.checked })}
-              className="w-4 h-4 text-primary-500 rounded border-neutral-300 focus:ring-primary-500"
+              className="w-4 h-4 text-primary-500 rounded border-neutral-300 dark:border-dark-border focus:ring-primary-500"
             />
             <label htmlFor="send_notification" className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
               <Bell className="w-4 h-4 text-primary-500" />
@@ -606,7 +606,7 @@ function NewVisitModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-6 py-3 border border-neutral-200 dark:border-dark-border text-neutral-700 dark:text-neutral-300 rounded-xl hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors font-medium"
+              className="flex-1 px-6 py-3 border border-neutral-200 dark:border-dark-border text-neutral-700 dark:text-neutral-300 rounded-xl hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors font-medium"
             >
               {t('visits.modal.cancel')}
             </button>
@@ -795,7 +795,7 @@ export default function VisitsContent() {
                 className={`p-2 rounded-lg transition-colors ${
                   viewMode === 'calendar'
                     ? 'bg-primary-500 text-white'
-                    : 'text-neutral-500 hover:text-neutral-700'
+                    : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'
                 }`}
               >
                 <Calendar className="w-5 h-5" />
@@ -805,7 +805,7 @@ export default function VisitsContent() {
                 className={`p-2 rounded-lg transition-colors ${
                   viewMode === 'list'
                     ? 'bg-primary-500 text-white'
-                    : 'text-neutral-500 hover:text-neutral-700'
+                    : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'
                 }`}
               >
                 <List className="w-5 h-5" />
@@ -858,13 +858,13 @@ export default function VisitsContent() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={prevMonth}
-                    className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-lg transition-colors"
+                    className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg transition-colors"
                   >
                     <ChevronLeft className="w-5 h-5 text-neutral-600 dark:text-neutral-300" />
                   </button>
                   <button
                     onClick={nextMonth}
-                    className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-lg transition-colors"
+                    className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg transition-colors"
                   >
                     <ChevronRight className="w-5 h-5 text-neutral-600 dark:text-neutral-300" />
                   </button>
@@ -906,7 +906,7 @@ export default function VisitsContent() {
                           ? 'bg-primary-500 text-white'
                           : isToday
                           ? 'bg-primary-100 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400'
-                          : 'hover:bg-neutral-100 dark:hover:bg-dark-bg text-neutral-700 dark:text-neutral-300'
+                          : 'hover:bg-neutral-100 dark:hover:bg-dark-hover text-neutral-700 dark:text-neutral-300'
                       }`}
                     >
                       <span className="text-sm font-medium">{date.getDate()}</span>
@@ -919,7 +919,7 @@ export default function VisitsContent() {
                               key={i}
                               className={`w-1.5 h-1.5 rounded-full ${
                                 isSelected
-                                  ? 'bg-white'
+                                  ? 'bg-white dark:bg-dark-card'
                                   : visit.statut === 'CONFIRMED'
                                   ? 'bg-primary-500'
                                   : visit.statut === 'PENDING'
@@ -1022,7 +1022,7 @@ export default function VisitsContent() {
                       key={visit.id}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="p-4 hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors"
+                      className="p-4 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors"
                     >
                       <div className="flex items-start gap-4">
                         {/* Date Column */}
@@ -1067,11 +1067,11 @@ export default function VisitsContent() {
                         <div className="flex items-center gap-2">
                           <a
                             href={`tel:${visit.client_telephone}`}
-                            className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-lg transition-colors"
+                            className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg transition-colors"
                           >
                             <Phone className="w-4 h-4 text-neutral-400" />
                           </a>
-                          <button className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-lg transition-colors">
+                          <button className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg transition-colors">
                             <MessageSquare className="w-4 h-4 text-neutral-400" />
                           </button>
                         </div>

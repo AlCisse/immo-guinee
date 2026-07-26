@@ -155,7 +155,7 @@ export default function MessagingPage() {
             <div className="flex items-center gap-4 border-b border-neutral-200 dark:border-dark-border px-4 py-3">
               <button
                 onClick={handleBackToList}
-                className="md:hidden p-2 -ml-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-300"
+                className="md:hidden p-2 -ml-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300"
                 aria-label="Retour à la liste"
               >
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -180,7 +180,7 @@ export default function MessagingPage() {
               </div>
 
               {/* Options menu */}
-              <button className="p-2 text-neutral-400 hover:text-neutral-600 dark:text-neutral-400">
+              <button className="p-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-400">
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"

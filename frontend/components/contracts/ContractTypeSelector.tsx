@@ -74,7 +74,7 @@ export default function ContractTypeSelector({
                 'relative flex flex-col items-start rounded-xl border-2 p-4 text-left transition-all duration-200',
                 isSelected
                   ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-500/20'
-                  : 'border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card hover:border-primary-300 hover:bg-neutral-50 dark:bg-dark-bg',
+                  : 'border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card hover:border-primary-300 hover:bg-neutral-50 dark:hover:bg-dark-hover',
                 isHovered && !isSelected && 'shadow-md'
               )}
               aria-pressed={isSelected}

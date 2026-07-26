@@ -190,7 +190,7 @@ export default function MessageInput({ conversationId }: MessageInputProps) {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="p-2 text-neutral-400 hover:text-neutral-600 dark:text-neutral-400"
+            className="p-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-400"
             aria-label="Joindre une image"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -228,7 +228,7 @@ export default function MessageInput({ conversationId }: MessageInputProps) {
               <button
                 type="button"
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className="p-1 text-neutral-400 hover:text-neutral-600 dark:text-neutral-400"
+                className="p-1 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-400"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -252,7 +252,7 @@ export default function MessageInput({ conversationId }: MessageInputProps) {
                         setShowEmojiPicker(false);
                         textareaRef.current?.focus();
                       }}
-                      className="p-1 hover:bg-neutral-100 dark:bg-dark-hover rounded"
+                      className="p-1 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded"
                     >
                       {emoji}
                     </button>
@@ -287,7 +287,7 @@ export default function MessageInput({ conversationId }: MessageInputProps) {
             <button
               type="button"
               onClick={startRecording}
-              className="p-2 rounded-full text-neutral-400 hover:text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-dark-hover"
+              className="p-2 rounded-full text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-dark-hover"
               aria-label="Enregistrer un message vocal"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

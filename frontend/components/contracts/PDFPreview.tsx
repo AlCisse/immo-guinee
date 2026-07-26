@@ -77,7 +77,7 @@ export default function PDFPreview({
             <button
               onClick={handleZoomOut}
               disabled={zoom === zoomLevels[0]}
-              className="rounded p-1 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-dark-hover disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded p-1 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-dark-hover disabled:cursor-not-allowed disabled:opacity-50"
               aria-label="Zoom arrière"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,7 +101,7 @@ export default function PDFPreview({
             <button
               onClick={handleZoomIn}
               disabled={zoom === zoomLevels[zoomLevels.length - 1]}
-              className="rounded p-1 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-dark-hover disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded p-1 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-dark-hover disabled:cursor-not-allowed disabled:opacity-50"
               aria-label="Zoom avant"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,7 +113,7 @@ export default function PDFPreview({
           {/* Fullscreen toggle */}
           <button
             onClick={toggleFullscreen}
-            className="rounded-lg border border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card p-2 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-dark-hover"
+            className="rounded-lg border border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card p-2 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-dark-hover"
             aria-label={isFullscreen ? 'Quitter le plein écran' : 'Plein écran'}
           >
             {isFullscreen ? (

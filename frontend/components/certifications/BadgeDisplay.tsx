@@ -35,9 +35,9 @@ const BADGE_CONFIG = {
       </svg>
     ),
     gradient: 'from-neutral-400 to-neutral-600',
-    textColor: 'text-neutral-600',
-    bgColor: 'bg-neutral-100',
-    borderColor: 'border-neutral-300',
+    textColor: 'text-neutral-600 dark:text-neutral-400',
+    bgColor: 'bg-neutral-100 dark:bg-dark-hover',
+    borderColor: 'border-neutral-300 dark:border-dark-border',
     discount: 5,
   },
   OR: {

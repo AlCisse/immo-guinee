@@ -239,7 +239,7 @@ function VoiceMessage({ url, isMine }: { url: string; isMine: boolean }) {
       <div className="flex-1">
         <div className={`h-1 rounded-full overflow-hidden ${isMine ? 'bg-white/30' : 'bg-neutral-200 dark:bg-dark-border'}`}>
           <div
-            className={`h-full transition-all ${isMine ? 'bg-white' : 'bg-primary-500'}`}
+            className={`h-full transition-all ${isMine ? 'bg-white dark:bg-dark-card' : 'bg-primary-500'}`}
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -549,7 +549,7 @@ export default function MessagesPage() {
                   className={`w-full p-4 flex gap-3 border-b border-neutral-50 dark:border-neutral-800/50 text-left transition-colors ${
                     selectedConversation?.id === conv.id
                       ? 'bg-primary-50 dark:bg-primary-500/10'
-                      : 'hover:bg-neutral-50 dark:hover:bg-dark-bg'
+                      : 'hover:bg-neutral-50 dark:hover:bg-dark-hover'
                   }`}
                 >
                   {/* Avatar */}
@@ -616,7 +616,7 @@ export default function MessagesPage() {
             <div className="px-4 py-3 bg-white dark:bg-dark-card border-b border-neutral-100 dark:border-neutral-800 flex items-center gap-3">
               <button
                 onClick={() => setShowMobileChat(false)}
-                className="md:hidden p-2 -ml-2 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-full"
+                className="md:hidden p-2 -ml-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-full"
               >
                 <ChevronLeft className="w-6 h-6 text-neutral-700 dark:text-white" />
               </button>
@@ -637,7 +637,7 @@ export default function MessagesPage() {
               </div>
 
               <div className="flex items-center gap-1">
-                <button className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-full">
+                <button className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-full">
                   <MoreVertical className="w-5 h-5 text-neutral-600 dark:text-neutral-300" />
                 </button>
               </div>

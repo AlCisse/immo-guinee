@@ -258,14 +258,14 @@ export default function RetractionCountdown({
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium text-neutral-700 mb-2">
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
               Motif de l&apos;annulation <span className="text-error-500">*</span>
             </label>
             <textarea
               value={cancelMotif}
               onChange={(e) => setCancelMotif(e.target.value)}
               placeholder="Veuillez expliquer la raison de votre annulation..."
-              className="w-full rounded-lg border border-neutral-300 p-3 text-sm focus:border-primary-500 focus:ring-primary-500"
+              className="w-full rounded-lg border border-neutral-300 dark:border-dark-border p-3 text-sm focus:border-primary-500 focus:ring-primary-500"
               rows={4}
               required
             />

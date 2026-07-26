@@ -249,7 +249,7 @@ function PaymentDetailsModal({ payment, isOpen, onClose }: { payment: Payment | 
                     {payment.frais_plateforme && payment.frais_plateforme > 0 && (
                       <div className="bg-white dark:bg-dark-card rounded-lg p-3 shadow-sm">
                         <span className="text-xs text-neutral-500 block">Frais plateforme</span>
-                        <span className="text-lg font-bold text-neutral-600">{formatMoney(payment.frais_plateforme)}</span>
+                        <span className="text-lg font-bold text-neutral-600 dark:text-neutral-400">{formatMoney(payment.frais_plateforme)}</span>
                       </div>
                     )}
                   </div>

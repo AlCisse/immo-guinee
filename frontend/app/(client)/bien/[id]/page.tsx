@@ -378,7 +378,7 @@ export default function PropertyDetailPage() {
           <div className="flex items-center gap-2 flex-shrink-0">
             <button
               onClick={handleShare}
-              className="flex items-center gap-2 px-3 py-2 hover:bg-neutral-100 dark:hover:bg-dark-card rounded-lg transition-colors"
+              className="flex items-center gap-2 px-3 py-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg transition-colors"
             >
               <Share2 className="w-4 h-4" />
               <span className="hidden sm:inline text-sm font-medium underline">{t('listingDetail.share')}</span>
@@ -392,7 +392,7 @@ export default function PropertyDetailPage() {
                 if (!requirePhoneVerification(VERIFICATION_ACTIONS.favorite)) return;
                 setIsFavorite(!isFavorite);
               }}
-              className="flex items-center gap-2 px-3 py-2 hover:bg-neutral-100 dark:hover:bg-dark-card rounded-lg transition-colors"
+              className="flex items-center gap-2 px-3 py-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg transition-colors"
             >
               <Heart className={`w-4 h-4 ${isFavorite ? 'fill-error-500 text-error-500' : ''}`} />
               <span className="hidden sm:inline text-sm font-medium underline">{t('listingDetail.save')}</span>
@@ -489,9 +489,9 @@ export default function PropertyDetailPage() {
                         e.stopPropagation();
                         setGalleryPage(prev => prev - 1);
                       }}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-colors"
+                      className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white dark:hover:bg-dark-card transition-colors"
                     >
-                      <ChevronLeft className="w-5 h-5 text-neutral-900" />
+                      <ChevronLeft className="w-5 h-5 text-neutral-900 dark:text-white" />
                     </button>
                   )}
 
@@ -502,9 +502,9 @@ export default function PropertyDetailPage() {
                         e.stopPropagation();
                         setGalleryPage(prev => prev + 1);
                       }}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-colors"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white dark:hover:bg-dark-card transition-colors"
                     >
-                      <ChevronRight className="w-5 h-5 text-neutral-900" />
+                      <ChevronRight className="w-5 h-5 text-neutral-900 dark:text-white" />
                     </button>
                   )}
 
@@ -519,7 +519,7 @@ export default function PropertyDetailPage() {
                         }}
                         className={`w-2 h-2 rounded-full transition-all ${
                           idx === galleryPage
-                            ? 'bg-white w-6'
+                            ? 'bg-white dark:bg-dark-card w-6'
                             : 'bg-white/50 hover:bg-white/75'
                         }`}
                       />
@@ -536,7 +536,7 @@ export default function PropertyDetailPage() {
                     setCurrentImageIndex(0);
                     setShowGallery(true);
                   }}
-                  className="absolute bottom-4 right-4 flex items-center gap-2 px-4 py-2 bg-white text-neutral-900 text-sm font-medium rounded-lg shadow-lg hover:bg-neutral-100 transition-colors"
+                  className="absolute bottom-4 right-4 flex items-center gap-2 px-4 py-2 bg-white dark:bg-dark-card text-neutral-900 dark:text-white text-sm font-medium rounded-lg shadow-lg hover:bg-neutral-100 transition-colors"
                 >
                   <Grid3X3 className="w-4 h-4" />
                   {totalImages > 1 ? t('listingDetail.viewPhotos', { count: totalImages }) : t('listingDetail.viewPhoto')}
@@ -888,7 +888,7 @@ export default function PropertyDetailPage() {
                         if (!requirePhoneVerification(VERIFICATION_ACTIONS.booking)) return;
                         setShowBookingModal(true);
                       }}
-                      className="w-full py-3 border-2 border-neutral-900 dark:border-white text-neutral-900 dark:text-white font-semibold rounded-lg hover:bg-neutral-100 dark:hover:bg-dark-border transition-all"
+                      className="w-full py-3 border-2 border-neutral-900 dark:border-white text-neutral-900 dark:text-white font-semibold rounded-lg hover:bg-neutral-100 dark:hover:bg-dark-hover transition-all"
                     >
                       {t('listingDetail.scheduleVisit')}
                     </motion.button>
@@ -1003,7 +1003,7 @@ export default function PropertyDetailPage() {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <Home className="w-16 h-16 text-neutral-600" />
+                    <Home className="w-16 h-16 text-neutral-600 dark:text-neutral-400" />
                   </div>
                 )}
               </div>

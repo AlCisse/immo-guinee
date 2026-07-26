@@ -720,7 +720,7 @@ export default function MyContractsPage() {
               className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                 activeTab === tab.key
                   ? 'bg-primary-600 text-white'
-                  : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:bg-dark-hover'
+                  : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-dark-hover'
               }`}
             >
               {t(tab.labelKey)}

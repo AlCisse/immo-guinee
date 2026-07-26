@@ -573,7 +573,7 @@ export default function AidePage() {
                       <div key={i} className="border-b border-neutral-100 dark:border-dark-border last:border-0">
                         <button
                           onClick={() => setOpenQuestion(isOpen ? null : questionId)}
-                          className="w-full px-6 py-4 text-left flex items-center justify-between gap-4 hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors"
+                          className="w-full px-6 py-4 text-left flex items-center justify-between gap-4 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors"
                         >
                           <span className="font-medium text-neutral-900 dark:text-white">
                             {faq.q}
@@ -626,7 +626,7 @@ export default function AidePage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/contact"
-              className="w-full sm:w-auto px-6 py-3 bg-white text-primary-600 font-semibold rounded-xl hover:bg-neutral-100 transition-colors flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-6 py-3 bg-white dark:bg-dark-card text-primary-600 font-semibold rounded-xl hover:bg-neutral-100 transition-colors flex items-center justify-center gap-2"
             >
               <MessageSquare className="w-5 h-5" />
               {t('help.cta.contactUs')}

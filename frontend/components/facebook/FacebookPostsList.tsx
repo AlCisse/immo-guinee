@@ -221,7 +221,7 @@ export default function FacebookPostsList({ showStats = true }: FacebookPostsLis
           </div>
         ) : (
           postsData.posts.map((post) => (
-            <div key={post.id} className="p-4 hover:bg-neutral-50 dark:hover:bg-dark-bg/50 transition-colors">
+            <div key={post.id} className="p-4 hover:bg-neutral-50 dark:hover:bg-dark-hover/50 transition-colors">
               <div className="flex items-start gap-4">
                 {/* Listing Image */}
                 <div className="w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-neutral-100 dark:bg-dark-bg">
@@ -321,7 +321,7 @@ export default function FacebookPostsList({ showStats = true }: FacebookPostsLis
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="p-2 rounded-lg border border-neutral-200 dark:border-dark-border hover:bg-neutral-100 dark:hover:bg-dark-bg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-2 rounded-lg border border-neutral-200 dark:border-dark-border hover:bg-neutral-100 dark:hover:bg-dark-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -331,7 +331,7 @@ export default function FacebookPostsList({ showStats = true }: FacebookPostsLis
             <button
               onClick={() => setPage((p) => Math.min(postsData.pagination.last_page, p + 1))}
               disabled={page >= postsData.pagination.last_page}
-              className="p-2 rounded-lg border border-neutral-200 dark:border-dark-border hover:bg-neutral-100 dark:hover:bg-dark-bg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-2 rounded-lg border border-neutral-200 dark:border-dark-border hover:bg-neutral-100 dark:hover:bg-dark-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronRight className="w-4 h-4" />
             </button>

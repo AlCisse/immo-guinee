@@ -79,7 +79,7 @@ function OptionCard({
           ? isSejourSerein
             ? 'border-success-500 bg-success-50 shadow-lg'
             : 'border-warning-500 bg-warning-50 shadow-lg'
-          : 'border-neutral-200 dark:border-dark-border hover:border-neutral-300 dark:border-dark-border hover:shadow-md'
+          : 'border-neutral-200 dark:border-dark-border hover:border-neutral-300 dark:hover:border-dark-border hover:shadow-md'
       )}
     >
       {/* Selection indicator */}

@@ -11,7 +11,7 @@ export default function PolitiqueConfidentialitePage() {
         <div className="max-w-4xl mx-auto px-4 py-4">
           <Link
             href="/legal"
-            className="inline-flex items-center text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:text-white mb-4"
+            className="inline-flex items-center text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Retour aux informations legales
@@ -34,7 +34,7 @@ export default function PolitiqueConfidentialitePage() {
             <a
               href="/legal/politique-confidentialite.md"
               download
-              className="hidden sm:flex items-center gap-2 px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-lg hover:bg-neutral-50 dark:bg-dark-bg"
+              className="hidden sm:flex items-center gap-2 px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-lg hover:bg-neutral-50 dark:hover:bg-dark-hover"
             >
               <Download className="w-4 h-4" />
               Telecharger

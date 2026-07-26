@@ -172,13 +172,13 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
               </button>
               <button
                 onClick={this.handleReload}
-                className="inline-flex items-center justify-center rounded-lg border border-neutral-300 dark:border-dark-border bg-white dark:bg-dark-card px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 transition-colors hover:bg-neutral-50 dark:bg-dark-bg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                className="inline-flex items-center justify-center rounded-lg border border-neutral-300 dark:border-dark-border bg-white dark:bg-dark-card px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 transition-colors hover:bg-neutral-50 dark:hover:bg-dark-hover focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
               >
                 Recharger la page
               </button>
               <button
                 onClick={this.handleGoHome}
-                className="inline-flex items-center justify-center rounded-lg border border-neutral-300 dark:border-dark-border bg-white dark:bg-dark-card px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 transition-colors hover:bg-neutral-50 dark:bg-dark-bg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                className="inline-flex items-center justify-center rounded-lg border border-neutral-300 dark:border-dark-border bg-white dark:bg-dark-card px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 transition-colors hover:bg-neutral-50 dark:hover:bg-dark-hover focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
               >
                 Retour à l&apos;accueil
               </button>

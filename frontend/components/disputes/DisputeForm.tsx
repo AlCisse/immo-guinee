@@ -155,8 +155,8 @@ export default function DisputeForm({ contractId, onSuccess, onCancel }: Dispute
       {step === 1 && (
         <div className="space-y-4">
           <div className="text-center mb-6">
-            <h3 className="text-lg font-semibold text-neutral-900">Type de litige</h3>
-            <p className="text-neutral-600 text-sm">Sélectionnez la catégorie qui correspond à votre situation</p>
+            <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">Type de litige</h3>
+            <p className="text-neutral-600 dark:text-neutral-400 text-sm">Sélectionnez la catégorie qui correspond à votre situation</p>
           </div>
 
           <div className="grid gap-3">
@@ -172,10 +172,10 @@ export default function DisputeForm({ contractId, onSuccess, onCancel }: Dispute
                   'p-4 rounded-lg border text-left transition-all',
                   category === cat
                     ? 'border-primary-500 bg-primary-50'
-                    : 'border-neutral-200 hover:border-primary-300 hover:bg-neutral-50'
+                    : 'border-neutral-200 dark:border-dark-border hover:border-primary-300 hover:bg-neutral-50 dark:hover:bg-dark-hover'
                 )}
               >
-                <span className="font-medium text-neutral-900">{getCategoryLabel(cat)}</span>
+                <span className="font-medium text-neutral-900 dark:text-white">{getCategoryLabel(cat)}</span>
               </button>
             ))}
           </div>
@@ -186,12 +186,12 @@ export default function DisputeForm({ contractId, onSuccess, onCancel }: Dispute
       {step === 2 && (
         <div className="space-y-4">
           <div className="text-center mb-6">
-            <h3 className="text-lg font-semibold text-neutral-900">Description du litige</h3>
-            <p className="text-neutral-600 text-sm">Décrivez votre situation en détail</p>
+            <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">Description du litige</h3>
+            <p className="text-neutral-600 dark:text-neutral-400 text-sm">Décrivez votre situation en détail</p>
           </div>
 
           {/* Category Badge */}
-          <div className="flex items-center gap-2 p-3 bg-neutral-50 rounded-lg">
+          <div className="flex items-center gap-2 p-3 bg-neutral-50 dark:bg-dark-bg rounded-lg">
             <span className="text-sm text-neutral-500">Catégorie:</span>
             <span className="px-2 py-1 bg-primary-100 text-primary-700 rounded text-sm font-medium">
               {category && getCategoryLabel(category)}
@@ -207,7 +207,7 @@ export default function DisputeForm({ contractId, onSuccess, onCancel }: Dispute
 
           {/* Motif */}
           <div>
-            <label htmlFor="motif" className="block font-medium text-neutral-900 mb-2">
+            <label htmlFor="motif" className="block font-medium text-neutral-900 dark:text-white mb-2">
               Motif (titre court)
             </label>
             <input
@@ -218,7 +218,7 @@ export default function DisputeForm({ contractId, onSuccess, onCancel }: Dispute
               placeholder="Ex: Loyers impayés depuis 3 mois"
               className={clsx(
                 'w-full rounded-lg border px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
-                motif.length > 0 && !isMotifValid ? 'border-warning-500' : 'border-neutral-200'
+                motif.length > 0 && !isMotifValid ? 'border-warning-500' : 'border-neutral-200 dark:border-dark-border'
               )}
               maxLength={100}
             />
@@ -227,7 +227,7 @@ export default function DisputeForm({ contractId, onSuccess, onCancel }: Dispute
 
           {/* Description */}
           <div>
-            <label htmlFor="description" className="block font-medium text-neutral-900 mb-2">
+            <label htmlFor="description" className="block font-medium text-neutral-900 dark:text-white mb-2">
               Description détaillée
             </label>
             <textarea
@@ -238,7 +238,7 @@ export default function DisputeForm({ contractId, onSuccess, onCancel }: Dispute
               rows={6}
               className={clsx(
                 'w-full rounded-lg border px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
-                description.length > 0 && !isDescriptionValid ? 'border-warning-500' : 'border-neutral-200'
+                description.length > 0 && !isDescriptionValid ? 'border-warning-500' : 'border-neutral-200 dark:border-dark-border'
               )}
               maxLength={2000}
             />
@@ -259,7 +259,7 @@ export default function DisputeForm({ contractId, onSuccess, onCancel }: Dispute
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="px-6 py-3 border border-neutral-300 rounded-lg text-neutral-700 hover:bg-neutral-50"
+              className="px-6 py-3 border border-neutral-300 dark:border-dark-border rounded-lg text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-dark-hover"
             >
               Retour
             </button>
@@ -271,7 +271,7 @@ export default function DisputeForm({ contractId, onSuccess, onCancel }: Dispute
                 'flex-1 px-6 py-3 rounded-lg font-medium transition-colors',
                 isMotifValid && isDescriptionValid
                   ? 'bg-primary-500 text-white hover:bg-primary-600'
-                  : 'bg-neutral-100 text-neutral-400 cursor-not-allowed'
+                  : 'bg-neutral-100 dark:bg-dark-hover text-neutral-400 cursor-not-allowed'
               )}
             >
               Continuer
@@ -284,14 +284,14 @@ export default function DisputeForm({ contractId, onSuccess, onCancel }: Dispute
       {step === 3 && (
         <div className="space-y-4">
           <div className="text-center mb-6">
-            <h3 className="text-lg font-semibold text-neutral-900">Preuves (optionnel)</h3>
-            <p className="text-neutral-600 text-sm">Ajoutez des documents pour appuyer votre demande</p>
+            <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">Preuves (optionnel)</h3>
+            <p className="text-neutral-600 dark:text-neutral-400 text-sm">Ajoutez des documents pour appuyer votre demande</p>
           </div>
 
           {/* File Upload */}
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-neutral-300 rounded-lg p-8 text-center cursor-pointer hover:border-primary-400 hover:bg-primary-50/50 transition-colors"
+            className="border-2 border-dashed border-neutral-300 dark:border-dark-border rounded-lg p-8 text-center cursor-pointer hover:border-primary-400 hover:bg-primary-50/50 transition-colors"
           >
             <svg
               className="w-12 h-12 text-neutral-400 mx-auto mb-3"
@@ -306,7 +306,7 @@ export default function DisputeForm({ contractId, onSuccess, onCancel }: Dispute
                 d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
               />
             </svg>
-            <p className="text-neutral-600">Cliquez pour ajouter des fichiers</p>
+            <p className="text-neutral-600 dark:text-neutral-400">Cliquez pour ajouter des fichiers</p>
             <p className="text-sm text-neutral-500 mt-1">JPG, PNG, PDF - Max 5 Mo par fichier</p>
           </div>
           <input
@@ -321,12 +321,12 @@ export default function DisputeForm({ contractId, onSuccess, onCancel }: Dispute
           {/* Files Preview */}
           {files.length > 0 && (
             <div className="space-y-2">
-              <p className="text-sm font-medium text-neutral-700">{files.length}/5 fichiers</p>
+              <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{files.length}/5 fichiers</p>
               <div className="grid grid-cols-2 gap-3">
                 {files.map((f, index) => (
                   <div
                     key={index}
-                    className="relative bg-neutral-50 rounded-lg p-3 flex items-center gap-3"
+                    className="relative bg-neutral-50 dark:bg-dark-bg rounded-lg p-3 flex items-center gap-3"
                   >
                     {f.preview ? (
                       <img
@@ -342,7 +342,7 @@ export default function DisputeForm({ contractId, onSuccess, onCancel }: Dispute
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-neutral-900 truncate">{f.file.name}</p>
+                      <p className="text-sm text-neutral-900 dark:text-white truncate">{f.file.name}</p>
                       <p className="text-xs text-neutral-500">
                         {(f.file.size / 1024 / 1024).toFixed(1)} Mo
                       </p>
@@ -372,7 +372,7 @@ export default function DisputeForm({ contractId, onSuccess, onCancel }: Dispute
             <button
               type="button"
               onClick={() => setStep(2)}
-              className="px-6 py-3 border border-neutral-300 rounded-lg text-neutral-700 hover:bg-neutral-50"
+              className="px-6 py-3 border border-neutral-300 dark:border-dark-border rounded-lg text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-dark-hover"
             >
               Retour
             </button>
@@ -383,7 +383,7 @@ export default function DisputeForm({ contractId, onSuccess, onCancel }: Dispute
                 'flex-1 px-6 py-3 rounded-lg font-medium transition-colors',
                 canSubmit
                   ? 'bg-error-500 text-white hover:bg-error-600'
-                  : 'bg-neutral-100 text-neutral-400 cursor-not-allowed'
+                  : 'bg-neutral-100 dark:bg-dark-hover text-neutral-400 cursor-not-allowed'
               )}
             >
               {createDispute.isPending ? 'Création...' : 'Ouvrir le litige'}

@@ -327,7 +327,7 @@ export default function PaymentsContent() {
             </thead>
             <tbody className="bg-white dark:bg-dark-card divide-y divide-neutral-200">
               {payments.map((payment) => (
-                <tr key={payment.id} className="hover:bg-neutral-50 dark:bg-dark-bg">
+                <tr key={payment.id} className="hover:bg-neutral-50 dark:hover:bg-dark-hover">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-neutral-900 dark:text-white">
                       {payment.reference_paiement}

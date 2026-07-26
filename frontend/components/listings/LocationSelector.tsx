@@ -568,7 +568,7 @@ export default function LocationSelector({
                         onClick={() => handleQuartierSelect(q.nom)}
                         className={`
                           w-full px-4 py-2.5 text-left flex items-center justify-between
-                          hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors
+                          hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors
                           ${selectedQuartier === q.nom ? 'bg-primary-50 dark:bg-primary-500/10' : ''}
                         `}
                       >

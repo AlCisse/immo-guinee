@@ -345,7 +345,7 @@ export default function ModifierAnnoncePage() {
                   name="meuble"
                   checked={formData.meuble}
                   onChange={handleInputChange}
-                  className="w-5 h-5 rounded border-neutral-300 text-primary-500 focus:ring-primary-500"
+                  className="w-5 h-5 rounded border-neutral-300 dark:border-dark-border text-primary-500 focus:ring-primary-500"
                 />
                 <span className="text-neutral-700 dark:text-neutral-300">Meuble</span>
               </label>

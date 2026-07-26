@@ -243,7 +243,7 @@ export default function UtilisateursPage() {
           </h3>
           <div className="flex flex-wrap gap-3">
             {roles.map((role: Role) => {
-              const config = roleConfig[role.name] || { color: 'bg-neutral-100 text-neutral-700', icon: UserIcon, label: role.name };
+              const config = roleConfig[role.name] || { color: 'bg-neutral-100 dark:bg-dark-hover text-neutral-700 dark:text-neutral-300', icon: UserIcon, label: role.name };
               const IconComponent = config.icon;
               return (
                 <button
@@ -356,7 +356,7 @@ export default function UtilisateursPage() {
                                   'text-xs px-2 py-0.5 rounded-full',
                                   user.badge === 'DIAMANT' && 'bg-teal-100 text-teal-700',
                                   user.badge === 'OR' && 'bg-warning-100 text-warning-700',
-                                  user.badge === 'ARGENT' && 'bg-neutral-100 text-neutral-700',
+                                  user.badge === 'ARGENT' && 'bg-neutral-100 dark:bg-dark-hover text-neutral-700 dark:text-neutral-300',
                                   user.badge === 'BRONZE' && 'bg-primary-100 text-primary-700',
                                 )}>
                                   {user.badge}
@@ -378,7 +378,7 @@ export default function UtilisateursPage() {
                           <div className="flex flex-wrap gap-1">
                             {user.roles && user.roles.length > 0 ? (
                               user.roles.map((role) => {
-                                const config = roleConfig[role] || { color: 'bg-neutral-100 text-neutral-700', icon: UserIcon, label: role };
+                                const config = roleConfig[role] || { color: 'bg-neutral-100 dark:bg-dark-hover text-neutral-700 dark:text-neutral-300', icon: UserIcon, label: role };
                                 return (
                                   <span
                                     key={role}
@@ -558,7 +558,7 @@ export default function UtilisateursPage() {
 
                 <div className="space-y-2">
                   {roles.map((role: Role) => {
-                    const config = roleConfig[role.name] || { color: 'bg-neutral-100 text-neutral-700', icon: UserIcon, label: role.name };
+                    const config = roleConfig[role.name] || { color: 'bg-neutral-100 dark:bg-dark-hover text-neutral-700 dark:text-neutral-300', icon: UserIcon, label: role.name };
                     const IconComponent = config.icon;
                     const isSelected = selectedRoles.includes(role.name);
 
@@ -664,7 +664,7 @@ export default function UtilisateursPage() {
                       'inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium',
                       selectedUser.badge === 'DIAMANT' && 'bg-teal-100 text-teal-700',
                       selectedUser.badge === 'OR' && 'bg-warning-100 text-warning-700',
-                      selectedUser.badge === 'ARGENT' && 'bg-neutral-100 text-neutral-700',
+                      selectedUser.badge === 'ARGENT' && 'bg-neutral-100 dark:bg-dark-hover text-neutral-700 dark:text-neutral-300',
                       selectedUser.badge === 'BRONZE' && 'bg-primary-100 text-primary-700',
                     )}>
                       {selectedUser.badge}
@@ -740,7 +740,7 @@ export default function UtilisateursPage() {
                   <p className="text-xs text-neutral-500 mb-2">Roles attribues</p>
                   <div className="flex flex-wrap gap-2">
                     {selectedUser.roles.map((role) => {
-                      const config = roleConfig[role] || { color: 'bg-neutral-100 text-neutral-700', icon: UserIcon, label: role };
+                      const config = roleConfig[role] || { color: 'bg-neutral-100 dark:bg-dark-hover text-neutral-700 dark:text-neutral-300', icon: UserIcon, label: role };
                       const IconComponent = config.icon;
                       return (
                         <span

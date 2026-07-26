@@ -255,7 +255,7 @@ export default function AdminDashboardPage() {
                 onClick={() => setPeriod(days)}
                 className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
                   period === days
-                    ? 'bg-white text-primary-600'
+                    ? 'bg-white dark:bg-dark-card text-primary-600'
                     : 'bg-white/20 text-white hover:bg-white/30'
                 }`}
               >

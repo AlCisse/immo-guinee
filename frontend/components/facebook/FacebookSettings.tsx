@@ -295,7 +295,7 @@ export default function FacebookSettings() {
           {!showConfirmDisconnect ? (
             <button
               onClick={() => setShowConfirmDisconnect(true)}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-neutral-200 dark:border-dark-border text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-dark-bg font-medium rounded-xl transition-colors"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-neutral-200 dark:border-dark-border text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-dark-hover font-medium rounded-xl transition-colors"
             >
               <Unlink className="w-5 h-5" />
               {t('facebook.disconnectButton')}
@@ -308,7 +308,7 @@ export default function FacebookSettings() {
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowConfirmDisconnect(false)}
-                  className="flex-1 px-4 py-2 border border-neutral-300 dark:border-dark-border text-neutral-700 dark:text-neutral-300 font-medium rounded-lg hover:bg-neutral-100 dark:hover:bg-dark-bg transition-colors"
+                  className="flex-1 px-4 py-2 border border-neutral-300 dark:border-dark-border text-neutral-700 dark:text-neutral-300 font-medium rounded-lg hover:bg-neutral-100 dark:hover:bg-dark-hover transition-colors"
                 >
                   {t('common.cancel')}
                 </button>

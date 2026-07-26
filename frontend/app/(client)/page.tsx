@@ -162,7 +162,7 @@ function PropertyCard({ property }: { property: Listing }) {
             className="absolute top-3 right-3 p-2.5 bg-white/90 dark:bg-dark-card/90 backdrop-blur-sm rounded-full shadow-lg z-10"
           >
             <Heart
-              className={`w-5 h-5 transition-colors ${isFavorite ? 'fill-error-500 text-error-500' : 'text-neutral-600'
+              className={`w-5 h-5 transition-colors ${isFavorite ? 'fill-error-500 text-error-500' : 'text-neutral-600 dark:text-neutral-400'
                 }`}
             />
           </motion.button>

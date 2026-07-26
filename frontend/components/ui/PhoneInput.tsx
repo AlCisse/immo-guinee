@@ -237,7 +237,7 @@ export default function PhoneInput({
           className={clsx(
             'flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3',
             'bg-white dark:bg-dark-card',
-            'hover:bg-neutral-50 dark:hover:bg-neutral-800',
+            'hover:bg-neutral-50 dark:hover:bg-dark-hover',
             'transition-colors min-w-[105px] sm:min-w-[115px]',
             'border-r',
             error ? 'border-error-300' : 'border-neutral-200 dark:border-neutral-700'
@@ -303,7 +303,7 @@ export default function PhoneInput({
                   onClick={() => handleCountrySelect(country)}
                   className={clsx(
                     'w-full flex items-center gap-3 px-4 py-3 text-left transition-colors',
-                    'hover:bg-neutral-50 dark:hover:bg-neutral-800',
+                    'hover:bg-neutral-50 dark:hover:bg-dark-hover',
                     selectedCountry.code === country.code && 'bg-primary-50 dark:bg-primary-500/10'
                   )}
                 >

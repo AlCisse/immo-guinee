@@ -167,7 +167,7 @@ export default function ParametresPage() {
           <div className="divide-y divide-neutral-100 dark:divide-dark-border">
             <Link
               href="/profil"
-              className="flex items-center justify-between px-4 py-4 hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors"
+              className="flex items-center justify-between px-4 py-4 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors"
             >
               <div>
                 <p className="font-medium text-neutral-900 dark:text-white">{t('settings.account.myProfile')}</p>
@@ -178,7 +178,7 @@ export default function ParametresPage() {
 
             <button
               onClick={() => setShowPasswordForm(!showPasswordForm)}
-              className="w-full flex items-center justify-between px-4 py-4 hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors text-left"
+              className="w-full flex items-center justify-between px-4 py-4 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors text-left"
             >
               <div className="flex items-center gap-3">
                 <Lock className="w-5 h-5 text-neutral-500" />
@@ -308,7 +308,7 @@ export default function ParametresPage() {
               >
                 <motion.div
                   animate={{ x: isDarkMode ? 20 : 0 }}
-                  className="w-5 h-5 bg-white rounded-full shadow"
+                  className="w-5 h-5 bg-white dark:bg-dark-card rounded-full shadow"
                 />
               </button>
             </div>
@@ -362,7 +362,7 @@ export default function ParametresPage() {
                     >
                       <motion.div
                         animate={{ x: notifications[item.key] ? 20 : 0 }}
-                        className="w-5 h-5 bg-white rounded-full shadow"
+                        className="w-5 h-5 bg-white dark:bg-dark-card rounded-full shadow"
                       />
                     </button>
                   </div>
@@ -387,7 +387,7 @@ export default function ParametresPage() {
                     >
                       <motion.div
                         animate={{ x: notifications[item.key] ? 20 : 0 }}
-                        className="w-5 h-5 bg-white rounded-full shadow"
+                        className="w-5 h-5 bg-white dark:bg-dark-card rounded-full shadow"
                       />
                     </button>
                   </div>
@@ -414,14 +414,14 @@ export default function ParametresPage() {
           <div className="divide-y divide-neutral-100 dark:divide-dark-border">
             <Link
               href="/conditions"
-              className="flex items-center justify-between px-4 py-4 hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors"
+              className="flex items-center justify-between px-4 py-4 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors"
             >
               <span className="text-neutral-900 dark:text-white">{t('settings.privacy.terms')}</span>
               <ChevronRight className="w-5 h-5 text-neutral-400" />
             </Link>
             <Link
               href="/confidentialite"
-              className="flex items-center justify-between px-4 py-4 hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors"
+              className="flex items-center justify-between px-4 py-4 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors"
             >
               <span className="text-neutral-900 dark:text-white">{t('settings.privacy.privacyPolicy')}</span>
               <ChevronRight className="w-5 h-5 text-neutral-400" />
@@ -465,7 +465,7 @@ export default function ParametresPage() {
           <div className="divide-y divide-neutral-100 dark:divide-dark-border">
             <button
               onClick={logout}
-              className="w-full flex items-center gap-3 px-4 py-4 hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors text-left"
+              className="w-full flex items-center gap-3 px-4 py-4 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors text-left"
             >
               <LogOut className="w-5 h-5 text-neutral-500" />
               <div>

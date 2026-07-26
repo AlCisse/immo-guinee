@@ -208,7 +208,7 @@ export default function AdminSidebar({ onToggle }: AdminSidebarProps) {
       >
         {/* Active indicator */}
         {active && (
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full" />
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white dark:bg-dark-card rounded-r-full" />
         )}
 
         <Icon className={`w-5 h-5 flex-shrink-0 ${active ? 'text-white' : 'text-neutral-500 dark:text-neutral-400 group-hover:text-primary-500'} transition-colors`} />
@@ -226,7 +226,7 @@ export default function AdminSidebar({ onToggle }: AdminSidebarProps) {
               ${isCollapsed ? 'absolute -top-1 -right-1' : 'ml-auto'}
               min-w-[20px] h-5 px-1.5 flex items-center justify-center
               text-xs font-bold rounded-full
-              ${active ? 'bg-white text-primary-500' : 'bg-primary-500 text-white'}
+              ${active ? 'bg-white dark:bg-dark-card text-primary-500' : 'bg-primary-500 text-white'}
             `}
           >
             {badge > 99 ? '99+' : badge}

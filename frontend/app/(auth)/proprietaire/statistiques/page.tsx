@@ -106,7 +106,7 @@ function PropertyPerformance({
     <motion.div
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
-      className="flex items-center gap-4 p-4 hover:bg-neutral-50 dark:hover:bg-dark-bg rounded-xl transition-colors"
+      className="flex items-center gap-4 p-4 hover:bg-neutral-50 dark:hover:bg-dark-hover rounded-xl transition-colors"
     >
       <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-500/20 dark:to-primary-600/20 flex items-center justify-center flex-shrink-0">
         <Building2 className="w-8 h-8 text-primary-500" />
@@ -141,7 +141,7 @@ function PropertyPerformance({
         </div>
       </div>
 
-      <button className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-border rounded-lg transition-colors">
+      <button className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg transition-colors">
         <MoreHorizontal className="w-5 h-5 text-neutral-400" />
       </button>
     </motion.div>
@@ -442,7 +442,7 @@ export default function OwnerStatisticsPage() {
                   </motion.div>
                 ))}
               </div>
-              <button className="w-full mt-4 py-2.5 border border-neutral-200 dark:border-dark-border rounded-xl text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors">
+              <button className="w-full mt-4 py-2.5 border border-neutral-200 dark:border-dark-border rounded-xl text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors">
                 Voir toutes les demandes
               </button>
             </div>

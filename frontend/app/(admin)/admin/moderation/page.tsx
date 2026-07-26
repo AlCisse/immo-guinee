@@ -180,7 +180,7 @@ export default function ModerationPage() {
                             setSelectedListing(null);
                             setModerationReason('');
                           }}
-                          className="px-4 py-2 bg-neutral-100 dark:bg-dark-hover text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:bg-dark-hover"
+                          className="px-4 py-2 bg-neutral-100 dark:bg-dark-hover text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-dark-hover"
                         >
                           Annuler
                         </button>
@@ -198,7 +198,7 @@ export default function ModerationPage() {
                         href={`/bien/${listing.id}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-4 py-2 bg-neutral-100 dark:bg-dark-hover text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:bg-dark-hover"
+                        className="px-4 py-2 bg-neutral-100 dark:bg-dark-hover text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-200 dark:hover:bg-dark-hover"
                       >
                         Voir l&apos;annonce
                       </a>

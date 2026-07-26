@@ -99,7 +99,7 @@ export default function SearchFilters({
           <h2 className="text-xl font-semibold text-neutral-900 dark:text-white">Filtres</h2>
           <button
             onClick={onCloseMobileFilters}
-            className="p-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-success-500 rounded-lg"
+            className="p-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-success-500 rounded-lg"
             aria-label="Fermer les filtres"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -194,7 +194,7 @@ export default function SearchFilters({
           value={filters.quartier || ''}
           onChange={(e) => handleFilterChange('quartier', e.target.value || undefined)}
           disabled={!filters.commune}
-          className="w-full px-4 py-2 border border-neutral-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-success-500 focus:border-success-500 transition-colors disabled:bg-neutral-100 dark:bg-dark-hover disabled:cursor-not-allowed"
+          className="w-full px-4 py-2 border border-neutral-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-success-500 focus:border-success-500 transition-colors disabled:bg-neutral-100 dark:disabled:bg-dark-hover disabled:cursor-not-allowed"
         >
           <option value="">Tous les quartiers</option>
           {availableQuartiers.map((quartier) => (
@@ -369,7 +369,7 @@ export default function SearchFilters({
         <button
           type="button"
           onClick={handleReset}
-          className="w-full bg-white dark:bg-dark-card text-neutral-700 dark:text-neutral-300 py-2 px-6 rounded-lg font-medium border border-neutral-300 dark:border-dark-border hover:bg-neutral-50 dark:bg-dark-bg transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
+          className="w-full bg-white dark:bg-dark-card text-neutral-700 dark:text-neutral-300 py-2 px-6 rounded-lg font-medium border border-neutral-300 dark:border-dark-border hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
         >
           Réinitialiser les filtres
         </button>

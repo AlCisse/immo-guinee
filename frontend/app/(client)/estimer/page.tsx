@@ -285,7 +285,7 @@ export default function EstimerPage() {
                     id="meuble"
                     checked={formData.meuble}
                     onChange={(e) => setFormData({ ...formData, meuble: e.target.checked })}
-                    className="h-5 w-5 text-success-600 focus:ring-success-500 border-neutral-300 rounded"
+                    className="h-5 w-5 text-success-600 focus:ring-success-500 border-neutral-300 dark:border-dark-border rounded"
                   />
                   <label htmlFor="meuble" className="ml-3 text-sm text-neutral-700 dark:text-neutral-300">
                     {t('furnished')}

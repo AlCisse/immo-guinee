@@ -251,7 +251,7 @@ export default function TypeBienSelector({
                           w-full px-3 py-3 rounded-xl flex items-center gap-3 transition-all
                           ${isSelected
                             ? 'bg-primary-50 dark:bg-primary-500/10 border-2 border-primary-500'
-                            : 'hover:bg-neutral-50 dark:hover:bg-dark-bg border-2 border-transparent'
+                            : 'hover:bg-neutral-50 dark:hover:bg-dark-hover border-2 border-transparent'
                           }
                         `}
                       >
@@ -300,7 +300,7 @@ export default function TypeBienSelector({
                           w-full px-3 py-3 rounded-xl flex items-center gap-3 transition-all
                           ${isSelected
                             ? 'bg-primary-50 dark:bg-primary-500/10 border-2 border-primary-500'
-                            : 'hover:bg-neutral-50 dark:hover:bg-dark-bg border-2 border-transparent'
+                            : 'hover:bg-neutral-50 dark:hover:bg-dark-hover border-2 border-transparent'
                           }
                         `}
                       >
