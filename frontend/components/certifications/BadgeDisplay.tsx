@@ -20,10 +20,10 @@ const BADGE_CONFIG = {
         <text x="12" y="16" textAnchor="middle" fontSize="8" fill="white" fontWeight="bold">B</text>
       </svg>
     ),
-    gradient: 'from-amber-600 to-amber-800',
-    textColor: 'text-amber-700',
-    bgColor: 'bg-amber-100',
-    borderColor: 'border-amber-300',
+    gradient: 'from-warning-600 to-warning-800',
+    textColor: 'text-warning-700',
+    bgColor: 'bg-warning-100',
+    borderColor: 'border-warning-300',
     discount: 0,
   },
   ARGENT: {
@@ -34,10 +34,10 @@ const BADGE_CONFIG = {
         <text x="12" y="16" textAnchor="middle" fontSize="8" fill="white" fontWeight="bold">A</text>
       </svg>
     ),
-    gradient: 'from-gray-400 to-gray-600',
-    textColor: 'text-gray-600',
-    bgColor: 'bg-gray-100',
-    borderColor: 'border-gray-300',
+    gradient: 'from-neutral-400 to-neutral-600',
+    textColor: 'text-neutral-600',
+    bgColor: 'bg-neutral-100',
+    borderColor: 'border-neutral-300',
     discount: 5,
   },
   OR: {
@@ -48,10 +48,10 @@ const BADGE_CONFIG = {
         <text x="12" y="16" textAnchor="middle" fontSize="8" fill="#8B6914" fontWeight="bold">O</text>
       </svg>
     ),
-    gradient: 'from-yellow-400 to-yellow-600',
-    textColor: 'text-yellow-700',
-    bgColor: 'bg-yellow-100',
-    borderColor: 'border-yellow-300',
+    gradient: 'from-warning-400 to-warning-600',
+    textColor: 'text-warning-700',
+    bgColor: 'bg-warning-100',
+    borderColor: 'border-warning-300',
     discount: 10,
   },
   DIAMANT: {
@@ -62,10 +62,10 @@ const BADGE_CONFIG = {
         <polygon points="12,2 17,9 12,16 7,9" fill="#00BFFF" opacity="0.7" />
       </svg>
     ),
-    gradient: 'from-blue-400 to-cyan-500',
-    textColor: 'text-blue-600',
-    bgColor: 'bg-blue-100',
-    borderColor: 'border-blue-300',
+    gradient: 'from-secondary-400 to-teal-500',
+    textColor: 'text-secondary-600',
+    bgColor: 'bg-secondary-100',
+    borderColor: 'border-secondary-300',
     discount: 15,
   },
 };
@@ -125,7 +125,7 @@ export default function BadgeDisplay({
             </span>
           )}
           {showDiscount && badgeConfig.discount > 0 && (
-            <span className={clsx('text-green-600 font-medium', sizeConfig.discount)}>
+            <span className={clsx('text-success-600 font-medium', sizeConfig.discount)}>
               -{badgeConfig.discount}% commission
             </span>
           )}

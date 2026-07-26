@@ -55,11 +55,11 @@ export default function FacebookPostsList({ showStats = true }: FacebookPostsLis
   const getStatusIcon = (status: FacebookPost['status']) => {
     switch (status) {
       case 'published':
-        return <CheckCircle className="w-4 h-4 text-emerald-500" />;
+        return <CheckCircle className="w-4 h-4 text-accent-500" />;
       case 'pending':
-        return <Clock className="w-4 h-4 text-amber-500" />;
+        return <Clock className="w-4 h-4 text-warning-500" />;
       case 'failed':
-        return <XCircle className="w-4 h-4 text-red-500" />;
+        return <XCircle className="w-4 h-4 text-error-500" />;
       case 'deleted':
         return <Trash2 className="w-4 h-4 text-neutral-400" />;
       default:
@@ -85,11 +85,11 @@ export default function FacebookPostsList({ showStats = true }: FacebookPostsLis
   const getStatusColor = (status: FacebookPost['status']) => {
     switch (status) {
       case 'published':
-        return 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400';
+        return 'bg-accent-100 dark:bg-accent-500/20 text-accent-700 dark:text-accent-400';
       case 'pending':
-        return 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400';
+        return 'bg-warning-100 dark:bg-warning-500/20 text-warning-700 dark:text-warning-400';
       case 'failed':
-        return 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400';
+        return 'bg-error-100 dark:bg-error-500/20 text-error-700 dark:text-error-400';
       case 'deleted':
         return 'bg-neutral-100 dark:bg-neutral-500/20 text-neutral-600 dark:text-neutral-400';
       default:
@@ -142,14 +142,14 @@ export default function FacebookPostsList({ showStats = true }: FacebookPostsLis
               </p>
               <p className="text-xs text-neutral-500">{t('facebook.statTotal')}</p>
             </div>
-            <div className="p-3 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl">
-              <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+            <div className="p-3 bg-accent-50 dark:bg-accent-500/10 rounded-xl">
+              <p className="text-xl font-bold text-accent-600 dark:text-accent-400">
                 {statistics.published_posts}
               </p>
               <p className="text-xs text-neutral-500">{t('facebook.statPublished')}</p>
             </div>
-            <div className="p-3 bg-red-50 dark:bg-red-500/10 rounded-xl">
-              <p className="text-xl font-bold text-red-600 dark:text-red-400">
+            <div className="p-3 bg-error-50 dark:bg-error-500/10 rounded-xl">
+              <p className="text-xl font-bold text-error-600 dark:text-error-400">
                 {statistics.failed_posts}
               </p>
               <p className="text-xs text-neutral-500">{t('facebook.statFailed')}</p>
@@ -179,7 +179,7 @@ export default function FacebookPostsList({ showStats = true }: FacebookPostsLis
             onClick={() => setStatusFilter('published')}
             className={`px-3 py-1.5 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
               statusFilter === 'published'
-                ? 'bg-emerald-500 text-white'
+                ? 'bg-accent-500 text-white'
                 : 'bg-neutral-100 dark:bg-dark-bg text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-dark-border'
             }`}
           >
@@ -189,7 +189,7 @@ export default function FacebookPostsList({ showStats = true }: FacebookPostsLis
             onClick={() => setStatusFilter('pending')}
             className={`px-3 py-1.5 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
               statusFilter === 'pending'
-                ? 'bg-amber-500 text-white'
+                ? 'bg-warning-500 text-white'
                 : 'bg-neutral-100 dark:bg-dark-bg text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-dark-border'
             }`}
           >
@@ -199,7 +199,7 @@ export default function FacebookPostsList({ showStats = true }: FacebookPostsLis
             onClick={() => setStatusFilter('failed')}
             className={`px-3 py-1.5 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
               statusFilter === 'failed'
-                ? 'bg-red-500 text-white'
+                ? 'bg-error-500 text-white'
                 : 'bg-neutral-100 dark:bg-dark-bg text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-dark-border'
             }`}
           >
@@ -263,7 +263,7 @@ export default function FacebookPostsList({ showStats = true }: FacebookPostsLis
                       <span>{t('facebook.publishedAt')}: {formatDate(post.published_at)}</span>
                     )}
                     {post.status === 'failed' && post.error_message && (
-                      <span className="flex items-center gap-1 text-red-500">
+                      <span className="flex items-center gap-1 text-error-500">
                         <AlertTriangle className="w-3 h-3" />
                         {post.error_message}
                       </span>
@@ -289,7 +289,7 @@ export default function FacebookPostsList({ showStats = true }: FacebookPostsLis
                         whileTap={{ scale: 0.98 }}
                         onClick={() => handleDelete(post.listing_id)}
                         disabled={deletingId === post.listing_id}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 rounded-lg transition-colors disabled:opacity-50"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-error-600 bg-error-50 dark:bg-error-500/10 hover:bg-error-100 dark:hover:bg-error-500/20 rounded-lg transition-colors disabled:opacity-50"
                       >
                         {deletingId === post.listing_id ? (
                           <Loader2 className="w-3 h-3 animate-spin" />

@@ -54,7 +54,7 @@ export default function ConversationList({
             key={conversation.id}
             onClick={() => onSelect(conversation.id)}
             className={clsx(
-              'w-full px-4 py-3 text-left transition-colors hover:bg-gray-50 focus:outline-none focus:bg-gray-50',
+              'w-full px-4 py-3 text-left transition-colors hover:bg-neutral-50 focus:outline-none focus:bg-neutral-50',
               isSelected && 'bg-primary-50 hover:bg-primary-50'
             )}
           >
@@ -83,7 +83,7 @@ export default function ConversationList({
                     <span
                       className={clsx(
                         'font-medium truncate',
-                        hasUnread ? 'text-gray-900' : 'text-gray-700'
+                        hasUnread ? 'text-neutral-900' : 'text-neutral-700'
                       )}
                     >
                       {otherParticipant.nom_complet}
@@ -93,14 +93,14 @@ export default function ConversationList({
                       size="sm"
                     />
                   </div>
-                  <span className="text-xs text-gray-400 flex-shrink-0">
+                  <span className="text-xs text-neutral-400 flex-shrink-0">
                     {formatRelativeTime(conversation.date_dernier_message)}
                   </span>
                 </div>
 
                 {/* Listing title */}
                 {conversation.listing && (
-                  <p className="text-sm text-gray-500 truncate mt-0.5">
+                  <p className="text-sm text-neutral-500 truncate mt-0.5">
                     {conversation.listing.titre}
                   </p>
                 )}

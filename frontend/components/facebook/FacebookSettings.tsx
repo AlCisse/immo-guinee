@@ -90,26 +90,26 @@ export default function FacebookSettings() {
     if (!status.connection.is_token_valid || daysUntilExpiry <= 0) {
       return {
         status: 'expired',
-        icon: <AlertTriangle className="w-4 h-4 text-red-500" />,
+        icon: <AlertTriangle className="w-4 h-4 text-error-500" />,
         text: t('facebook.tokenExpired'),
-        color: 'text-red-600 dark:text-red-400',
+        color: 'text-error-600 dark:text-error-400',
       };
     }
 
     if (daysUntilExpiry <= 7) {
       return {
         status: 'expiring',
-        icon: <Clock className="w-4 h-4 text-amber-500" />,
+        icon: <Clock className="w-4 h-4 text-warning-500" />,
         text: t('facebook.tokenExpiresSoon', { days: daysUntilExpiry }),
-        color: 'text-amber-600 dark:text-amber-400',
+        color: 'text-warning-600 dark:text-warning-400',
       };
     }
 
     return {
       status: 'valid',
-      icon: <CheckCircle className="w-4 h-4 text-emerald-500" />,
+      icon: <CheckCircle className="w-4 h-4 text-accent-500" />,
       text: t('facebook.tokenValid', { days: daysUntilExpiry }),
-      color: 'text-emerald-600 dark:text-emerald-400',
+      color: 'text-accent-600 dark:text-accent-400',
     };
   };
 
@@ -221,14 +221,14 @@ export default function FacebookSettings() {
 
           {/* Token Refresh Warning */}
           {tokenStatus?.status === 'expired' && (
-            <div className="p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl">
+            <div className="p-4 bg-error-50 dark:bg-error-500/10 border border-error-200 dark:border-error-500/20 rounded-xl">
               <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5" />
+                <AlertTriangle className="w-5 h-5 text-error-500 mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-red-700 dark:text-red-400">
+                  <p className="text-sm font-medium text-error-700 dark:text-error-400">
                     {t('facebook.tokenExpiredTitle')}
                   </p>
-                  <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                  <p className="text-sm text-error-600 dark:text-error-400 mt-1">
                     {t('facebook.tokenExpiredDescription')}
                   </p>
                   <motion.button
@@ -236,7 +236,7 @@ export default function FacebookSettings() {
                     whileTap={{ scale: 0.98 }}
                     onClick={handleRefreshToken}
                     disabled={refreshTokenMutation.isPending}
-                    className="mt-3 flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+                    className="mt-3 flex items-center gap-2 px-4 py-2 bg-error-600 hover:bg-error-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
                   >
                     {refreshTokenMutation.isPending ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -301,8 +301,8 @@ export default function FacebookSettings() {
               {t('facebook.disconnectButton')}
             </button>
           ) : (
-            <div className="p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl">
-              <p className="text-sm text-red-700 dark:text-red-400 mb-3">
+            <div className="p-4 bg-error-50 dark:bg-error-500/10 border border-error-200 dark:border-error-500/20 rounded-xl">
+              <p className="text-sm text-error-700 dark:text-error-400 mb-3">
                 {t('facebook.disconnectConfirm')}
               </p>
               <div className="flex gap-3">
@@ -317,7 +317,7 @@ export default function FacebookSettings() {
                   whileTap={{ scale: 0.98 }}
                   onClick={handleDisconnect}
                   disabled={disconnectMutation.isPending}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-error-600 hover:bg-error-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
                 >
                   {disconnectMutation.isPending ? (
                     <Loader2 className="w-4 h-4 animate-spin" />

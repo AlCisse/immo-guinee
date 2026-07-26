@@ -70,7 +70,7 @@ function StarRating({
             className={clsx(
               sizeClasses[size],
               'transition-colors',
-              (hoverValue || value) >= star ? 'text-yellow-400 fill-current' : 'text-gray-300'
+              (hoverValue || value) >= star ? 'text-warning-400 fill-current' : 'text-neutral-300'
             )}
             fill="none"
             stroke="currentColor"
@@ -143,11 +143,11 @@ export default function RatingForm({ contractId, onSuccess, onCancel }: RatingFo
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Overall Rating Preview */}
-      <div className="text-center py-4 bg-gray-50 rounded-lg">
-        <p className="text-sm text-gray-500 mb-2">Note globale</p>
+      <div className="text-center py-4 bg-neutral-50 rounded-lg">
+        <p className="text-sm text-neutral-500 mb-2">Note globale</p>
         <div className="flex items-center justify-center gap-2">
           <span className="text-4xl font-bold text-primary-600">{overallRating || '–'}</span>
-          <span className="text-2xl text-gray-400">/5</span>
+          <span className="text-2xl text-neutral-400">/5</span>
         </div>
         {overallRating > 0 && (
           <StarRating value={Math.round(overallRating)} onChange={() => {}} size="lg" />
@@ -156,13 +156,13 @@ export default function RatingForm({ contractId, onSuccess, onCancel }: RatingFo
 
       {/* Criteria Ratings */}
       <div className="space-y-4">
-        <h3 className="font-medium text-gray-900">Évaluez chaque critère</h3>
+        <h3 className="font-medium text-neutral-900">Évaluez chaque critère</h3>
 
         {(Object.keys(CRITERIA_LABELS) as Array<keyof CriteriaRating>).map((key) => (
-          <div key={key} className="flex items-center justify-between py-3 border-b border-gray-100">
+          <div key={key} className="flex items-center justify-between py-3 border-b border-neutral-100">
             <div>
-              <p className="font-medium text-gray-900">{CRITERIA_LABELS[key].label}</p>
-              <p className="text-sm text-gray-500">{CRITERIA_LABELS[key].description}</p>
+              <p className="font-medium text-neutral-900">{CRITERIA_LABELS[key].label}</p>
+              <p className="text-sm text-neutral-500">{CRITERIA_LABELS[key].description}</p>
             </div>
             <StarRating
               value={criteria[key]}
@@ -174,7 +174,7 @@ export default function RatingForm({ contractId, onSuccess, onCancel }: RatingFo
 
       {/* Comment */}
       <div>
-        <label htmlFor="comment" className="block font-medium text-gray-900 mb-2">
+        <label htmlFor="comment" className="block font-medium text-neutral-900 mb-2">
           Votre commentaire
         </label>
         <textarea
@@ -185,7 +185,7 @@ export default function RatingForm({ contractId, onSuccess, onCancel }: RatingFo
           rows={4}
           className={clsx(
             'w-full rounded-lg border px-4 py-3 focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
-            comment.length > 0 && !isCommentValid ? 'border-yellow-500' : 'border-gray-200'
+            comment.length > 0 && !isCommentValid ? 'border-warning-500' : 'border-neutral-200'
           )}
           maxLength={500}
         />
@@ -193,18 +193,18 @@ export default function RatingForm({ contractId, onSuccess, onCancel }: RatingFo
           <p
             className={clsx(
               'text-sm',
-              comment.length > 0 && !isCommentValid ? 'text-yellow-600' : 'text-gray-500'
+              comment.length > 0 && !isCommentValid ? 'text-warning-600' : 'text-neutral-500'
             )}
           >
             {comment.length < 20 ? `${20 - comment.length} caractères minimum` : 'OK'}
           </p>
-          <p className="text-sm text-gray-400">{comment.length}/500</p>
+          <p className="text-sm text-neutral-400">{comment.length}/500</p>
         </div>
       </div>
 
       {/* Error */}
       {error && (
-        <div className="p-3 bg-red-50 text-red-700 rounded-lg text-sm">{error}</div>
+        <div className="p-3 bg-error-50 text-error-700 rounded-lg text-sm">{error}</div>
       )}
 
       {/* Actions */}
@@ -213,7 +213,7 @@ export default function RatingForm({ contractId, onSuccess, onCancel }: RatingFo
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+            className="flex-1 px-4 py-3 border border-neutral-300 rounded-lg text-neutral-700 hover:bg-neutral-50 transition-colors"
           >
             Annuler
           </button>
@@ -225,7 +225,7 @@ export default function RatingForm({ contractId, onSuccess, onCancel }: RatingFo
             'flex-1 px-4 py-3 rounded-lg font-medium transition-colors',
             canSubmit
               ? 'bg-primary-500 text-white hover:bg-primary-600'
-              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-neutral-100 text-neutral-400 cursor-not-allowed'
           )}
         >
           {createRating.isPending ? 'Envoi...' : 'Publier mon avis'}
@@ -233,7 +233,7 @@ export default function RatingForm({ contractId, onSuccess, onCancel }: RatingFo
       </div>
 
       {/* Guidelines */}
-      <div className="text-xs text-gray-500 space-y-1">
+      <div className="text-xs text-neutral-500 space-y-1">
         <p>En publiant cet avis, vous confirmez que :</p>
         <ul className="list-disc list-inside space-y-0.5 ml-2">
           <li>Votre évaluation est basée sur une expérience réelle</li>

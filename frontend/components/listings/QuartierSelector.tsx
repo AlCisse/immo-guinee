@@ -108,8 +108,8 @@ export default function QuartierSelector({
     <div className="w-full space-y-6">
       {/* Commune Selector */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          {t('publish.location.commune')} {required && <span className="text-red-500">*</span>}
+        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+          {t('publish.location.commune')} {required && <span className="text-error-500">*</span>}
         </label>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -125,23 +125,23 @@ export default function QuartierSelector({
                   relative p-4 rounded-lg border-2 transition-all duration-200 text-left
                   ${
                     isSelected
-                      ? 'border-green-600 bg-green-50 shadow-md'
-                      : 'border-gray-200 bg-white hover:border-green-300 hover:shadow-sm'
+                      ? 'border-success-600 bg-success-50 shadow-md'
+                      : 'border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card hover:border-success-300 hover:shadow-sm'
                   }
-                  focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
+                  focus:outline-none focus:ring-2 focus:ring-success-500 focus:ring-offset-2
                 `}
               >
-                <div className="font-medium text-gray-900 mb-1">
+                <div className="font-medium text-neutral-900 dark:text-white mb-1">
                   {communeData.commune}
                 </div>
-                <div className="text-xs text-gray-600">
+                <div className="text-xs text-neutral-600 dark:text-neutral-400">
                   {t('publish.location.quartiersCount', { count: communeData.quartiers.length })}
                 </div>
 
                 {isSelected && (
                   <div className="absolute top-2 right-2">
                     <svg
-                      className="w-5 h-5 text-green-600"
+                      className="w-5 h-5 text-success-600"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -159,15 +159,15 @@ export default function QuartierSelector({
         </div>
 
         {communeError && (
-          <p className="mt-2 text-sm text-red-600">{communeError}</p>
+          <p className="mt-2 text-sm text-error-600">{communeError}</p>
         )}
       </div>
 
       {/* Quartier Selector */}
       {selectedCommune && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            {t('publish.location.quartier')} {required && <span className="text-red-500">*</span>}
+          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+            {t('publish.location.quartier')} {required && <span className="text-error-500">*</span>}
           </label>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
@@ -183,10 +183,10 @@ export default function QuartierSelector({
                     p-3 rounded-lg border-2 transition-all duration-200 text-sm
                     ${
                       isSelected
-                        ? 'border-green-600 bg-green-50 text-green-900 font-medium shadow-sm'
-                        : 'border-gray-200 bg-white text-gray-700 hover:border-green-300'
+                        ? 'border-success-600 bg-success-50 text-success-900 font-medium shadow-sm'
+                        : 'border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card text-neutral-700 dark:text-neutral-300 hover:border-success-300'
                     }
-                    focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1
+                    focus:outline-none focus:ring-2 focus:ring-success-500 focus:ring-offset-1
                   `}
                 >
                   {quartierName}
@@ -196,7 +196,7 @@ export default function QuartierSelector({
           </div>
 
           {quartierError && (
-            <p className="mt-2 text-sm text-red-600">{quartierError}</p>
+            <p className="mt-2 text-sm text-error-600">{quartierError}</p>
           )}
         </div>
       )}
@@ -206,7 +206,7 @@ export default function QuartierSelector({
         <button
           type="button"
           onClick={() => setShowMap(!showMap)}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-success-700 bg-success-50 rounded-lg hover:bg-success-100 transition-colors"
         >
           <svg
             className="w-5 h-5"
@@ -227,7 +227,7 @@ export default function QuartierSelector({
 
       {/* Map */}
       {showMap && (
-        <div className="w-full h-96 rounded-lg overflow-hidden border-2 border-gray-200 shadow-sm">
+        <div className="w-full h-96 rounded-lg overflow-hidden border-2 border-neutral-200 dark:border-dark-border shadow-sm">
           <MapContainer
             center={conakryCenter}
             zoom={12}
@@ -245,10 +245,10 @@ export default function QuartierSelector({
               >
                 <Popup>
                   <div className="text-sm">
-                    <div className="font-bold text-green-700">
+                    <div className="font-bold text-success-700">
                       {communeData.commune}
                     </div>
-                    <div className="mt-1 text-gray-600">
+                    <div className="mt-1 text-neutral-600 dark:text-neutral-400">
                       {communeData.quartiers.join(', ')}
                     </div>
                   </div>
@@ -261,7 +261,7 @@ export default function QuartierSelector({
 
       {/* Helper text */}
       {!communeError && !quartierError && (
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-neutral-500 dark:text-neutral-400">
           {t('publish.location.selectCommuneFirst')}
         </p>
       )}

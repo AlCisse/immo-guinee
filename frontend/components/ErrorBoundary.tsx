@@ -107,11 +107,11 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
           aria-live="assertive"
           className="flex min-h-[400px] flex-col items-center justify-center px-4 py-8"
         >
-          <div className="w-full max-w-md rounded-lg border border-red-200 bg-red-50 p-6 text-center shadow-lg">
+          <div className="w-full max-w-md rounded-lg border border-error-200 bg-error-50 p-6 text-center shadow-lg">
             {/* Error Icon */}
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-error-100">
               <svg
-                className="h-8 w-8 text-red-600"
+                className="h-8 w-8 text-error-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -127,10 +127,10 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
             </div>
 
             {/* Error Message */}
-            <h2 className="mb-2 text-xl font-semibold text-gray-900">
+            <h2 className="mb-2 text-xl font-semibold text-neutral-900 dark:text-white">
               Une erreur s&apos;est produite
             </h2>
-            <p className="mb-6 text-gray-600">
+            <p className="mb-6 text-neutral-600 dark:text-neutral-400">
               Nous sommes désolés, quelque chose s&apos;est mal passé. Veuillez réessayer ou
               retourner à l&apos;accueil.
             </p>
@@ -138,10 +138,10 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
             {/* Error Details (dev only) */}
             {process.env.NODE_ENV === 'development' && this.state.error && (
               <details className="mb-6 text-left">
-                <summary className="cursor-pointer text-sm font-medium text-red-700">
+                <summary className="cursor-pointer text-sm font-medium text-error-700">
                   Détails de l&apos;erreur (dev)
                 </summary>
-                <pre className="mt-2 overflow-auto rounded bg-red-100 p-2 text-xs text-red-800">
+                <pre className="mt-2 overflow-auto rounded bg-error-100 p-2 text-xs text-error-800">
                   {this.state.error.message}
                   {this.state.errorInfo?.componentStack}
                 </pre>
@@ -172,13 +172,13 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
               </button>
               <button
                 onClick={this.handleReload}
-                className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                className="inline-flex items-center justify-center rounded-lg border border-neutral-300 dark:border-dark-border bg-white dark:bg-dark-card px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 transition-colors hover:bg-neutral-50 dark:bg-dark-bg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
               >
                 Recharger la page
               </button>
               <button
                 onClick={this.handleGoHome}
-                className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                className="inline-flex items-center justify-center rounded-lg border border-neutral-300 dark:border-dark-border bg-white dark:bg-dark-card px-4 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 transition-colors hover:bg-neutral-50 dark:bg-dark-bg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
               >
                 Retour à l&apos;accueil
               </button>

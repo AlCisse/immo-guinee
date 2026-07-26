@@ -35,7 +35,7 @@ const TYPE_BIEN_OPTIONS: TypeBienOption[] = [
     icon: Home,
     category: 'residential',
     emoji: '🏠',
-    color: 'from-blue-500 to-cyan-500',
+    color: 'from-secondary-500 to-teal-500',
   },
   {
     value: 'CHAMBRE_SALON',
@@ -44,7 +44,7 @@ const TYPE_BIEN_OPTIONS: TypeBienOption[] = [
     icon: Home,
     category: 'residential',
     emoji: '🛋️',
-    color: 'from-violet-500 to-purple-500',
+    color: 'from-teal-500 to-teal-500',
   },
   {
     value: 'APPARTEMENT_2CH',
@@ -53,7 +53,7 @@ const TYPE_BIEN_OPTIONS: TypeBienOption[] = [
     icon: Building,
     category: 'residential',
     emoji: '🏢',
-    color: 'from-indigo-500 to-blue-500',
+    color: 'from-secondary-500 to-secondary-500',
   },
   {
     value: 'APPARTEMENT_3CH',
@@ -62,7 +62,7 @@ const TYPE_BIEN_OPTIONS: TypeBienOption[] = [
     icon: Building,
     category: 'residential',
     emoji: '🏬',
-    color: 'from-primary-500 to-orange-500',
+    color: 'from-primary-500 to-primary-500',
   },
   {
     value: 'VILLA',
@@ -71,7 +71,7 @@ const TYPE_BIEN_OPTIONS: TypeBienOption[] = [
     icon: Castle,
     category: 'residential',
     emoji: '🏡',
-    color: 'from-emerald-500 to-teal-500',
+    color: 'from-accent-500 to-teal-500',
   },
   {
     value: 'DUPLEX',
@@ -80,7 +80,7 @@ const TYPE_BIEN_OPTIONS: TypeBienOption[] = [
     icon: Building2,
     category: 'residential',
     emoji: '🏘️',
-    color: 'from-amber-500 to-orange-500',
+    color: 'from-warning-500 to-primary-500',
   },
   {
     value: 'BUREAU',
@@ -89,7 +89,7 @@ const TYPE_BIEN_OPTIONS: TypeBienOption[] = [
     icon: Building2,
     category: 'commercial',
     emoji: '🏢',
-    color: 'from-slate-500 to-gray-500',
+    color: 'from-neutral-500 to-neutral-500',
   },
   {
     value: 'MAGASIN',
@@ -98,7 +98,7 @@ const TYPE_BIEN_OPTIONS: TypeBienOption[] = [
     icon: Store,
     category: 'commercial',
     emoji: '🏪',
-    color: 'from-pink-500 to-rose-500',
+    color: 'from-accent-500 to-error-500',
   },
   {
     value: 'ENTREPOT',
@@ -116,7 +116,7 @@ const TYPE_BIEN_OPTIONS: TypeBienOption[] = [
     icon: LandPlot,
     category: 'residential',
     emoji: '🌳',
-    color: 'from-green-500 to-emerald-500',
+    color: 'from-success-500 to-accent-500',
   },
 ];
 
@@ -171,7 +171,7 @@ export default function TypeBienSelector({
           w-full px-4 py-4 rounded-xl border-2 text-left flex items-center gap-4
           bg-white dark:bg-dark-card transition-all duration-200
           ${error
-            ? 'border-red-500 focus:border-red-600'
+            ? 'border-error-500 focus:border-error-600'
             : isOpen
               ? 'border-primary-500 ring-4 ring-primary-500/10 shadow-lg'
               : 'border-neutral-200 dark:border-dark-border hover:border-primary-300 hover:shadow-md'
@@ -336,9 +336,9 @@ export default function TypeBienSelector({
         <motion.p
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-3 text-sm text-red-500 bg-red-50 dark:bg-red-500/10 p-3 rounded-xl flex items-center gap-2"
+          className="mt-3 text-sm text-error-500 bg-error-50 dark:bg-error-500/10 p-3 rounded-xl flex items-center gap-2"
         >
-          <span className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs">!</span>
+          <span className="w-5 h-5 bg-error-500 rounded-full flex items-center justify-center text-white text-xs">!</span>
           {error}
         </motion.p>
       )}

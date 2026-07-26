@@ -95,11 +95,11 @@ export default function SearchFilters({
     <div className="space-y-6">
       {/* Header for mobile */}
       {showMobileFilters && (
-        <div className="flex items-center justify-between pb-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Filtres</h2>
+        <div className="flex items-center justify-between pb-4 border-b border-neutral-200 dark:border-dark-border">
+          <h2 className="text-xl font-semibold text-neutral-900 dark:text-white">Filtres</h2>
           <button
             onClick={onCloseMobileFilters}
-            className="p-2 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 rounded-lg"
+            className="p-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-success-500 rounded-lg"
             aria-label="Fermer les filtres"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,7 +111,7 @@ export default function SearchFilters({
 
       {/* Type d'opération */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
           Type d&apos;opération
         </label>
         <div className="grid grid-cols-2 gap-2">
@@ -120,10 +120,10 @@ export default function SearchFilters({
             onClick={() =>
               handleFilterChange('operationType', filters.operationType === 'LOCATION' ? undefined : 'LOCATION')
             }
-            className={`py-2 px-4 rounded-lg border-2 font-medium transition-all focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
+            className={`py-2 px-4 rounded-lg border-2 font-medium transition-all focus:outline-none focus:ring-2 focus:ring-success-500 focus:ring-offset-2 ${
               filters.operationType === 'LOCATION'
-                ? 'border-blue-600 bg-blue-50 text-blue-700'
-                : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                ? 'border-secondary-600 bg-secondary-50 text-secondary-700'
+                : 'border-neutral-300 dark:border-dark-border bg-white dark:bg-dark-card text-neutral-700 dark:text-neutral-300 hover:border-neutral-400'
             }`}
           >
             Location
@@ -133,10 +133,10 @@ export default function SearchFilters({
             onClick={() =>
               handleFilterChange('operationType', filters.operationType === 'VENTE' ? undefined : 'VENTE')
             }
-            className={`py-2 px-4 rounded-lg border-2 font-medium transition-all focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
+            className={`py-2 px-4 rounded-lg border-2 font-medium transition-all focus:outline-none focus:ring-2 focus:ring-success-500 focus:ring-offset-2 ${
               filters.operationType === 'VENTE'
-                ? 'border-green-600 bg-green-50 text-green-700'
-                : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                ? 'border-success-600 bg-success-50 text-success-700'
+                : 'border-neutral-300 dark:border-dark-border bg-white dark:bg-dark-card text-neutral-700 dark:text-neutral-300 hover:border-neutral-400'
             }`}
           >
             Vente
@@ -146,14 +146,14 @@ export default function SearchFilters({
 
       {/* Type de bien */}
       <div>
-        <label htmlFor="filter-type-bien" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="filter-type-bien" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
           Type de bien
         </label>
         <select
           id="filter-type-bien"
           value={filters.typeBien || ''}
           onChange={(e) => handleFilterChange('typeBien', e.target.value || undefined)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+          className="w-full px-4 py-2 border border-neutral-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-success-500 focus:border-success-500 transition-colors"
         >
           <option value="">Tous les types</option>
           {typeBienOptions.map((option) => (
@@ -166,14 +166,14 @@ export default function SearchFilters({
 
       {/* Commune */}
       <div>
-        <label htmlFor="filter-commune" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="filter-commune" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
           Commune
         </label>
         <select
           id="filter-commune"
           value={filters.commune || ''}
           onChange={(e) => handleFilterChange('commune', e.target.value || undefined)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+          className="w-full px-4 py-2 border border-neutral-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-success-500 focus:border-success-500 transition-colors"
         >
           <option value="">Toutes les communes</option>
           {CONAKRY_COMMUNES.map((commune) => (
@@ -186,7 +186,7 @@ export default function SearchFilters({
 
       {/* Quartier */}
       <div>
-        <label htmlFor="filter-quartier" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="filter-quartier" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
           Quartier
         </label>
         <select
@@ -194,7 +194,7 @@ export default function SearchFilters({
           value={filters.quartier || ''}
           onChange={(e) => handleFilterChange('quartier', e.target.value || undefined)}
           disabled={!filters.commune}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
+          className="w-full px-4 py-2 border border-neutral-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-success-500 focus:border-success-500 transition-colors disabled:bg-neutral-100 dark:bg-dark-hover disabled:cursor-not-allowed"
         >
           <option value="">Tous les quartiers</option>
           {availableQuartiers.map((quartier) => (
@@ -204,16 +204,16 @@ export default function SearchFilters({
           ))}
         </select>
         {!filters.commune && (
-          <p className="mt-1 text-xs text-gray-500">Sélectionnez d&apos;abord une commune</p>
+          <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">Sélectionnez d&apos;abord une commune</p>
         )}
       </div>
 
       {/* Prix min/max */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Prix (GNF)</label>
+        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Prix (GNF)</label>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label htmlFor="filter-prix-min" className="block text-xs text-gray-600 mb-1">
+            <label htmlFor="filter-prix-min" className="block text-xs text-neutral-600 dark:text-neutral-400 mb-1">
               Min
             </label>
             <input
@@ -224,11 +224,11 @@ export default function SearchFilters({
               placeholder="0"
               min="0"
               step="100000"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+              className="w-full px-3 py-2 border border-neutral-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-success-500 focus:border-success-500 transition-colors"
             />
           </div>
           <div>
-            <label htmlFor="filter-prix-max" className="block text-xs text-gray-600 mb-1">
+            <label htmlFor="filter-prix-max" className="block text-xs text-neutral-600 dark:text-neutral-400 mb-1">
               Max
             </label>
             <input
@@ -239,7 +239,7 @@ export default function SearchFilters({
               placeholder="Illimité"
               min="0"
               step="100000"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+              className="w-full px-3 py-2 border border-neutral-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-success-500 focus:border-success-500 transition-colors"
             />
           </div>
         </div>
@@ -247,10 +247,10 @@ export default function SearchFilters({
 
       {/* Superficie min/max */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Superficie (m²)</label>
+        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Superficie (m²)</label>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label htmlFor="filter-superficie-min" className="block text-xs text-gray-600 mb-1">
+            <label htmlFor="filter-superficie-min" className="block text-xs text-neutral-600 dark:text-neutral-400 mb-1">
               Min
             </label>
             <input
@@ -263,11 +263,11 @@ export default function SearchFilters({
               placeholder="0"
               min="0"
               step="10"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+              className="w-full px-3 py-2 border border-neutral-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-success-500 focus:border-success-500 transition-colors"
             />
           </div>
           <div>
-            <label htmlFor="filter-superficie-max" className="block text-xs text-gray-600 mb-1">
+            <label htmlFor="filter-superficie-max" className="block text-xs text-neutral-600 dark:text-neutral-400 mb-1">
               Max
             </label>
             <input
@@ -280,7 +280,7 @@ export default function SearchFilters({
               placeholder="Illimité"
               min="0"
               step="10"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+              className="w-full px-3 py-2 border border-neutral-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-success-500 focus:border-success-500 transition-colors"
             />
           </div>
         </div>
@@ -288,10 +288,10 @@ export default function SearchFilters({
 
       {/* Nombre de chambres min/max */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Nombre de chambres</label>
+        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Nombre de chambres</label>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label htmlFor="filter-chambres-min" className="block text-xs text-gray-600 mb-1">
+            <label htmlFor="filter-chambres-min" className="block text-xs text-neutral-600 dark:text-neutral-400 mb-1">
               Min
             </label>
             <select
@@ -300,7 +300,7 @@ export default function SearchFilters({
               onChange={(e) =>
                 handleFilterChange('nombreChambresMin', e.target.value ? parseInt(e.target.value, 10) : undefined)
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+              className="w-full px-3 py-2 border border-neutral-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-success-500 focus:border-success-500 transition-colors"
             >
               <option value="">Min</option>
               {[1, 2, 3, 4, 5, 6].map((num) => (
@@ -311,7 +311,7 @@ export default function SearchFilters({
             </select>
           </div>
           <div>
-            <label htmlFor="filter-chambres-max" className="block text-xs text-gray-600 mb-1">
+            <label htmlFor="filter-chambres-max" className="block text-xs text-neutral-600 dark:text-neutral-400 mb-1">
               Max
             </label>
             <select
@@ -320,7 +320,7 @@ export default function SearchFilters({
               onChange={(e) =>
                 handleFilterChange('nombreChambresMax', e.target.value ? parseInt(e.target.value, 10) : undefined)
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+              className="w-full px-3 py-2 border border-neutral-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-success-500 focus:border-success-500 transition-colors"
             >
               <option value="">Max</option>
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
@@ -336,7 +336,7 @@ export default function SearchFilters({
       {/* Caution max (only for locations) */}
       {filters.operationType === 'LOCATION' && (
         <div>
-          <label htmlFor="filter-caution-max" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="filter-caution-max" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
             Caution maximale (mois de loyer)
           </label>
           <select
@@ -345,7 +345,7 @@ export default function SearchFilters({
             onChange={(e) =>
               handleFilterChange('cautionMax', e.target.value ? parseInt(e.target.value, 10) : undefined)
             }
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+            className="w-full px-4 py-2 border border-neutral-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-success-500 focus:border-success-500 transition-colors"
           >
             <option value="">Peu importe</option>
             {[1, 2, 3, 4, 5, 6].map((num) => (
@@ -358,18 +358,18 @@ export default function SearchFilters({
       )}
 
       {/* Action buttons */}
-      <div className="pt-4 border-t border-gray-200 space-y-3">
+      <div className="pt-4 border-t border-neutral-200 dark:border-dark-border space-y-3">
         <button
           type="button"
           onClick={onSearch}
-          className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+          className="w-full bg-success-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-success-700 transition-colors focus:outline-none focus:ring-2 focus:ring-success-500 focus:ring-offset-2"
         >
           Rechercher
         </button>
         <button
           type="button"
           onClick={handleReset}
-          className="w-full bg-white text-gray-700 py-2 px-6 rounded-lg font-medium border border-gray-300 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+          className="w-full bg-white dark:bg-dark-card text-neutral-700 dark:text-neutral-300 py-2 px-6 rounded-lg font-medium border border-neutral-300 dark:border-dark-border hover:bg-neutral-50 dark:bg-dark-bg transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
         >
           Réinitialiser les filtres
         </button>
@@ -380,7 +380,7 @@ export default function SearchFilters({
   // Mobile: Full screen overlay
   if (showMobileFilters) {
     return (
-      <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
+      <div className="fixed inset-0 z-50 bg-white dark:bg-dark-card overflow-y-auto">
         <div className="p-6">{filterContent}</div>
       </div>
     );
@@ -388,9 +388,9 @@ export default function SearchFilters({
 
   // Desktop: Regular component
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm border border-neutral-200 dark:border-dark-border p-6">
+      <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-6 flex items-center gap-2">
+        <svg className="w-5 h-5 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"

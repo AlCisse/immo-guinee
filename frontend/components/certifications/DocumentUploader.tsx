@@ -139,7 +139,7 @@ export default function DocumentUploader({ onUploadSuccess, className }: Documen
     <div className={className}>
       {/* Document type selector */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
           Type de document
         </label>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -149,7 +149,7 @@ export default function DocumentUploader({ onUploadSuccess, className }: Documen
               className={`relative flex cursor-pointer rounded-lg border p-4 focus:outline-none ${
                 selectedType === docType.value
                   ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-500'
-                  : 'border-gray-200 bg-white hover:bg-gray-50'
+                  : 'border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card hover:bg-neutral-50 dark:bg-dark-bg'
               }`}
             >
               <input
@@ -162,10 +162,10 @@ export default function DocumentUploader({ onUploadSuccess, className }: Documen
               />
               <span className="flex flex-1">
                 <span className="flex flex-col">
-                  <span className="block text-sm font-medium text-gray-900">
+                  <span className="block text-sm font-medium text-neutral-900 dark:text-white">
                     {docType.label}
                   </span>
-                  <span className="mt-1 text-xs text-gray-500">
+                  <span className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
                     {docType.description}
                   </span>
                 </span>
@@ -185,7 +185,7 @@ export default function DocumentUploader({ onUploadSuccess, className }: Documen
         className={`relative rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
           dragActive
             ? 'border-primary-500 bg-primary-50'
-            : 'border-gray-300 hover:border-gray-400'
+            : 'border-neutral-300 dark:border-dark-border hover:border-neutral-400'
         }`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -204,7 +204,7 @@ export default function DocumentUploader({ onUploadSuccess, className }: Documen
         {!selectedFile ? (
           <>
             <svg
-              className="mx-auto h-12 w-12 text-gray-400"
+              className="mx-auto h-12 w-12 text-neutral-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -223,11 +223,11 @@ export default function DocumentUploader({ onUploadSuccess, className }: Documen
               >
                 Cliquez pour sélectionner
               </label>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
                 ou glissez-déposez un fichier ici
               </p>
             </div>
-            <p className="text-xs text-gray-400 mt-2">
+            <p className="text-xs text-neutral-400 mt-2">
               JPG, PNG, WebP ou PDF. Max 10 Mo.
             </p>
           </>
@@ -244,7 +244,7 @@ export default function DocumentUploader({ onUploadSuccess, className }: Documen
               </div>
             ) : (
               <div className="flex items-center justify-center">
-                <svg className="h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-16 w-16 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
@@ -252,8 +252,8 @@ export default function DocumentUploader({ onUploadSuccess, className }: Documen
 
             {/* File info */}
             <div className="text-sm">
-              <p className="font-medium text-gray-900">{selectedFile.name}</p>
-              <p className="text-gray-500">
+              <p className="font-medium text-neutral-900 dark:text-white">{selectedFile.name}</p>
+              <p className="text-neutral-500 dark:text-neutral-400">
                 {(selectedFile.size / 1024 / 1024).toFixed(2)} Mo
               </p>
             </div>
@@ -290,27 +290,27 @@ export default function DocumentUploader({ onUploadSuccess, className }: Documen
 
       {/* Error message */}
       {uploadMutation.isError && (
-        <div className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+        <div className="mt-4 rounded-lg bg-error-50 p-3 text-sm text-error-700">
           Une erreur est survenue lors de l&apos;envoi. Veuillez réessayer.
         </div>
       )}
 
       {/* Success message */}
       {uploadMutation.isSuccess && (
-        <div className="mt-4 rounded-lg bg-green-50 p-3 text-sm text-green-700">
+        <div className="mt-4 rounded-lg bg-success-50 p-3 text-sm text-success-700">
           Document envoyé avec succès ! Il sera vérifié sous 24-48h.
         </div>
       )}
 
       {/* Important notice */}
-      <div className="mt-6 rounded-lg bg-yellow-50 p-4">
+      <div className="mt-6 rounded-lg bg-warning-50 p-4">
         <div className="flex">
-          <svg className="h-5 w-5 text-yellow-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+          <svg className="h-5 w-5 text-warning-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
           </svg>
           <div className="ml-3">
-            <h3 className="text-sm font-medium text-yellow-800">Important</h3>
-            <div className="mt-1 text-sm text-yellow-700">
+            <h3 className="text-sm font-medium text-warning-800">Important</h3>
+            <div className="mt-1 text-sm text-warning-700">
               <ul className="list-disc pl-5 space-y-1">
                 <li>Assurez-vous que le document est lisible et en cours de validité</li>
                 <li>Les informations doivent correspondre à votre profil</li>

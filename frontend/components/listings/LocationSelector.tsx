@@ -278,7 +278,7 @@ export default function LocationSelector({
         <div className="flex items-center gap-2">
           <MapPin className="w-5 h-5 text-primary-500" />
           <h3 className="font-semibold text-neutral-900 dark:text-white">
-            {t('cityRegion')} {required && <span className="text-red-500">*</span>}
+            {t('cityRegion')} {required && <span className="text-error-500">*</span>}
           </h3>
         </div>
 
@@ -289,7 +289,7 @@ export default function LocationSelector({
           whileTap={{ scale: 0.98 }}
           onClick={handleDetectPosition}
           disabled={isDetecting}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl hover:from-blue-600 hover:to-cyan-600 transition-all font-medium text-sm shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-secondary-500 to-teal-500 text-white rounded-xl hover:from-secondary-600 hover:to-teal-600 transition-all font-medium text-sm shadow-lg shadow-secondary-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isDetecting ? (
             <>
@@ -311,10 +311,10 @@ export default function LocationSelector({
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-3 bg-red-50 dark:bg-red-500/10 rounded-xl border border-red-200 dark:border-red-500/20 flex items-center gap-2"
+          className="p-3 bg-error-50 dark:bg-error-500/10 rounded-xl border border-error-200 dark:border-error-500/20 flex items-center gap-2"
         >
-          <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
-          <span className="text-sm text-red-700 dark:text-red-300">{geoError}</span>
+          <AlertCircle className="w-4 h-4 text-error-500 flex-shrink-0" />
+          <span className="text-sm text-error-700 dark:text-error-300">{geoError}</span>
         </motion.div>
       )}
 
@@ -323,19 +323,19 @@ export default function LocationSelector({
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-500/10 dark:to-teal-500/10 rounded-xl border border-emerald-200 dark:border-emerald-500/20"
+          className="p-4 bg-gradient-to-br from-accent-50 to-teal-50 dark:from-accent-500/10 dark:to-teal-500/10 rounded-xl border border-accent-200 dark:border-accent-500/20"
         >
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Navigation className="w-5 h-5 text-emerald-500" />
-              <span className="font-semibold text-emerald-800 dark:text-emerald-200">{t('positionDetected')}</span>
+              <Navigation className="w-5 h-5 text-accent-500" />
+              <span className="font-semibold text-accent-800 dark:text-accent-200">{t('positionDetected')}</span>
             </div>
             <motion.button
               type="button"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleUseDetectedLocation}
-              className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors text-sm font-medium flex items-center gap-2"
+              className="px-4 py-2 bg-accent-500 text-white rounded-lg hover:bg-accent-600 transition-colors text-sm font-medium flex items-center gap-2"
             >
               <Check className="w-4 h-4" />
               {t('useThisLocation')}
@@ -344,22 +344,22 @@ export default function LocationSelector({
 
           {/* Detected Quartier/Commune */}
           {(detectedLocation.detectedQuartier || detectedLocation.detectedCommune) && (
-            <div className="mb-3 p-3 bg-white dark:bg-dark-card rounded-lg border border-emerald-200 dark:border-emerald-500/30">
-              <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-2">{t('detectedLocation')} :</p>
+            <div className="mb-3 p-3 bg-white dark:bg-dark-card rounded-lg border border-accent-200 dark:border-accent-500/30">
+              <p className="text-xs font-medium text-accent-600 dark:text-accent-400 mb-2">{t('detectedLocation')} :</p>
               <div className="flex flex-wrap gap-2">
                 {detectedLocation.detectedQuartier && (
-                  <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-100 dark:bg-emerald-500/20 rounded-lg text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                  <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-accent-100 dark:bg-accent-500/20 rounded-lg text-sm font-medium text-accent-700 dark:text-accent-300">
                     <MapPin className="w-4 h-4" />
                     {t('quartier')}: {detectedLocation.detectedQuartier}
                   </span>
                 )}
                 {detectedLocation.detectedCommune && (
-                  <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-100 dark:bg-blue-500/20 rounded-lg text-sm font-medium text-blue-700 dark:text-blue-300">
+                  <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-secondary-100 dark:bg-secondary-500/20 rounded-lg text-sm font-medium text-secondary-700 dark:text-secondary-300">
                     {t('prefecture')}: {detectedLocation.detectedCommune}
                   </span>
                 )}
                 {detectedLocation.detectedCity && (
-                  <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-purple-100 dark:bg-purple-500/20 rounded-lg text-sm font-medium text-purple-700 dark:text-purple-300">
+                  <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-teal-100 dark:bg-teal-500/20 rounded-lg text-sm font-medium text-teal-700 dark:text-teal-300">
                     {detectedLocation.detectedCity}
                   </span>
                 )}
@@ -370,14 +370,14 @@ export default function LocationSelector({
           {/* Nearby Places */}
           {detectedLocation.nearbyPlaces.length > 0 && (
             <div className="space-y-2 mb-3">
-              <p className="text-xs font-medium text-emerald-700 dark:text-emerald-300 uppercase tracking-wide">
+              <p className="text-xs font-medium text-accent-700 dark:text-accent-300 uppercase tracking-wide">
                 {t('nearbyPlaces')} ({detectedLocation.nearbyPlaces.length > 3 ? 3 : detectedLocation.nearbyPlaces.length})
               </p>
               <div className="flex flex-wrap gap-2">
                 {detectedLocation.nearbyPlaces.slice(0, 3).map((place, index) => (
                   <span
                     key={index}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-white dark:bg-dark-card rounded-lg text-sm text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-white dark:bg-dark-card rounded-lg text-sm text-accent-700 dark:text-accent-300 border border-accent-200 dark:border-accent-500/30"
                   >
                     <MapPin className="w-3 h-3" />
                     {place.name} {place.distance > 0 && `- ${place.distance}m`}
@@ -389,8 +389,8 @@ export default function LocationSelector({
 
           {/* Generated Description */}
           {detectedLocation.locationDescription && (
-            <div className="p-3 bg-white dark:bg-dark-card rounded-lg border border-emerald-200 dark:border-emerald-500/30">
-              <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-1">{t('generatedDescription')} :</p>
+            <div className="p-3 bg-white dark:bg-dark-card rounded-lg border border-accent-200 dark:border-accent-500/30">
+              <p className="text-xs font-medium text-accent-600 dark:text-accent-400 mb-1">{t('generatedDescription')} :</p>
               <p className="text-sm text-neutral-700 dark:text-neutral-300 italic">
                 "{detectedLocation.locationDescription}"
               </p>
@@ -398,7 +398,7 @@ export default function LocationSelector({
           )}
 
           {/* Coordinates */}
-          <div className="mt-3 flex items-center gap-4 text-xs text-emerald-600 dark:text-emerald-400">
+          <div className="mt-3 flex items-center gap-4 text-xs text-accent-600 dark:text-accent-400">
             <span>Lat: {detectedLocation.coordinates.latitude.toFixed(6)}</span>
             <span>Lon: {detectedLocation.coordinates.longitude.toFixed(6)}</span>
           </div>
@@ -420,7 +420,7 @@ export default function LocationSelector({
                 w-full px-4 py-3 pr-10 rounded-xl border-2 appearance-none cursor-pointer
                 bg-white dark:bg-dark-card transition-all duration-200
                 ${regionError
-                  ? 'border-red-500 focus:border-red-600'
+                  ? 'border-error-500 focus:border-error-600'
                   : 'border-neutral-200 dark:border-dark-border focus:border-primary-500'
                 }
                 focus:outline-none focus:ring-2 focus:ring-primary-500/20
@@ -436,7 +436,7 @@ export default function LocationSelector({
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400 pointer-events-none" />
           </div>
           {regionError && (
-            <p className="mt-1.5 text-sm text-red-500">{regionError}</p>
+            <p className="mt-1.5 text-sm text-error-500">{regionError}</p>
           )}
         </div>
 
@@ -453,7 +453,7 @@ export default function LocationSelector({
                 w-full px-4 py-3 pr-10 rounded-xl border-2 appearance-none cursor-pointer
                 bg-white dark:bg-dark-card transition-all duration-200
                 ${prefectureError
-                  ? 'border-red-500 focus:border-red-600'
+                  ? 'border-error-500 focus:border-error-600'
                   : 'border-neutral-200 dark:border-dark-border focus:border-primary-500'
                 }
                 focus:outline-none focus:ring-2 focus:ring-primary-500/20
@@ -470,7 +470,7 @@ export default function LocationSelector({
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400 pointer-events-none" />
           </div>
           {prefectureError && (
-            <p className="mt-1.5 text-sm text-red-500">{prefectureError}</p>
+            <p className="mt-1.5 text-sm text-error-500">{prefectureError}</p>
           )}
         </div>
 
@@ -486,7 +486,7 @@ export default function LocationSelector({
               w-full px-4 py-3 rounded-xl border-2 text-left flex items-center justify-between
               bg-white dark:bg-dark-card transition-all duration-200
               ${quartierError
-                ? 'border-red-500 focus:border-red-600'
+                ? 'border-error-500 focus:border-error-600'
                 : isQuartierDropdownOpen
                   ? 'border-primary-500 ring-2 ring-primary-500/20'
                   : 'border-neutral-200 dark:border-dark-border hover:border-primary-300'
@@ -591,7 +591,7 @@ export default function LocationSelector({
           </AnimatePresence>
 
           {quartierError && (
-            <p className="mt-1.5 text-sm text-red-500">{quartierError}</p>
+            <p className="mt-1.5 text-sm text-error-500">{quartierError}</p>
           )}
         </div>
       </div>

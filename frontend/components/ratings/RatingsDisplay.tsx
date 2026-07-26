@@ -36,7 +36,7 @@ function StarDisplay({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'm
           key={star}
           className={clsx(
             sizeClasses[size],
-            rating >= star ? 'text-yellow-400 fill-current' : 'text-gray-200'
+            rating >= star ? 'text-warning-400 fill-current' : 'text-neutral-200'
           )}
           fill="currentColor"
           viewBox="0 0 20 20"
@@ -52,13 +52,13 @@ function RatingStatsCard({ stats }: { stats: RatingStats }) {
   const maxDistribution = Math.max(...Object.values(stats.distribution));
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
+    <div className="bg-white dark:bg-dark-card rounded-xl border border-neutral-200 dark:border-dark-border p-6">
       <div className="flex items-start gap-6">
         {/* Overall Score */}
         <div className="text-center">
-          <div className="text-5xl font-bold text-gray-900">{stats.average.toFixed(1)}</div>
+          <div className="text-5xl font-bold text-neutral-900 dark:text-white">{stats.average.toFixed(1)}</div>
           <StarDisplay rating={Math.round(stats.average)} size="md" />
-          <p className="text-sm text-gray-500 mt-1">{stats.total} avis</p>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">{stats.total} avis</p>
         </div>
 
         {/* Distribution */}
@@ -69,17 +69,17 @@ function RatingStatsCard({ stats }: { stats: RatingStats }) {
 
             return (
               <div key={star} className="flex items-center gap-2">
-                <span className="text-sm text-gray-600 w-3">{star}</span>
-                <svg className="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
+                <span className="text-sm text-neutral-600 dark:text-neutral-400 w-3">{star}</span>
+                <svg className="w-4 h-4 text-warning-400 fill-current" viewBox="0 0 20 20">
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                 </svg>
-                <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div className="flex-1 h-2 bg-neutral-100 dark:bg-dark-hover rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-yellow-400 rounded-full transition-all"
+                    className="h-full bg-warning-400 rounded-full transition-all"
                     style={{ width: `${percentage}%` }}
                   />
                 </div>
-                <span className="text-sm text-gray-500 w-8">{count}</span>
+                <span className="text-sm text-neutral-500 dark:text-neutral-400 w-8">{count}</span>
               </div>
             );
           })}
@@ -88,8 +88,8 @@ function RatingStatsCard({ stats }: { stats: RatingStats }) {
 
       {/* Criteria Breakdown */}
       {stats.criteria && (
-        <div className="mt-6 pt-6 border-t border-gray-100">
-          <h4 className="text-sm font-medium text-gray-700 mb-3">Notes par critère</h4>
+        <div className="mt-6 pt-6 border-t border-neutral-100 dark:border-dark-border">
+          <h4 className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">Notes par critère</h4>
           <div className="grid grid-cols-2 gap-4">
             {[
               { key: 'communication', label: 'Communication' },
@@ -98,12 +98,12 @@ function RatingStatsCard({ stats }: { stats: RatingStats }) {
               { key: 'respect_contrat', label: 'Respect contrat' },
             ].map(({ key, label }) => (
               <div key={key} className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">{label}</span>
+                <span className="text-sm text-neutral-600 dark:text-neutral-400">{label}</span>
                 <div className="flex items-center gap-1">
                   <span className={clsx('text-sm font-medium', getRatingColor(stats.criteria[key as keyof typeof stats.criteria]))}>
                     {stats.criteria[key as keyof typeof stats.criteria]?.toFixed(1) || '–'}
                   </span>
-                  <svg className="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
+                  <svg className="w-4 h-4 text-warning-400 fill-current" viewBox="0 0 20 20">
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
                 </div>
@@ -131,7 +131,7 @@ function RatingCard({ rating }: { rating: Rating }) {
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4">
+    <div className="bg-white dark:bg-dark-card rounded-lg border border-neutral-200 dark:border-dark-border p-4">
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
@@ -141,8 +141,8 @@ function RatingCard({ rating }: { rating: Rating }) {
             </span>
           </div>
           <div>
-            <p className="font-medium text-gray-900">{rating.evaluateur.nom_complet}</p>
-            <p className="text-sm text-gray-500">{formatRatingDate(rating.created_at)}</p>
+            <p className="font-medium text-neutral-900 dark:text-white">{rating.evaluateur.nom_complet}</p>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">{formatRatingDate(rating.created_at)}</p>
           </div>
         </div>
         <div className="text-right">
@@ -154,22 +154,22 @@ function RatingCard({ rating }: { rating: Rating }) {
       </div>
 
       {/* Comment */}
-      <p className="text-gray-700 mb-3">{rating.commentaire}</p>
+      <p className="text-neutral-700 dark:text-neutral-300 mb-3">{rating.commentaire}</p>
 
       {/* Response */}
       {rating.reponse && (
-        <div className="bg-gray-50 rounded-lg p-3 mb-3">
-          <p className="text-sm text-gray-500 mb-1">Réponse du propriétaire :</p>
-          <p className="text-gray-700 text-sm">{rating.reponse}</p>
+        <div className="bg-neutral-50 dark:bg-dark-bg rounded-lg p-3 mb-3">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">Réponse du propriétaire :</p>
+          <p className="text-neutral-700 dark:text-neutral-300 text-sm">{rating.reponse}</p>
         </div>
       )}
 
       {/* Actions */}
-      <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+      <div className="flex items-center justify-between pt-3 border-t border-neutral-100 dark:border-dark-border">
         <button
           onClick={handleHelpful}
           disabled={markHelpful.isPending}
-          className="flex items-center gap-1 text-sm text-gray-500 hover:text-primary-600 transition-colors"
+          className="flex items-center gap-1 text-sm text-neutral-500 dark:text-neutral-400 hover:text-primary-600 transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -184,7 +184,7 @@ function RatingCard({ rating }: { rating: Rating }) {
 
         <button
           onClick={() => setShowReportModal(true)}
-          className="text-sm text-gray-400 hover:text-red-500 transition-colors"
+          className="text-sm text-neutral-400 hover:text-error-500 transition-colors"
         >
           Signaler
         </button>
@@ -193,14 +193,14 @@ function RatingCard({ rating }: { rating: Rating }) {
       {/* Report Modal */}
       {showReportModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6">
+          <div className="bg-white dark:bg-dark-card rounded-xl max-w-md w-full p-6">
             <h3 className="font-semibold text-lg mb-4">Signaler cet avis</h3>
             <div className="space-y-2">
               {['Contenu inapproprié', 'Faux avis', 'Spam', 'Autre'].map((reason) => (
                 <button
                   key={reason}
                   onClick={() => handleReport(reason)}
-                  className="w-full text-left px-4 py-3 rounded-lg border border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition-colors"
+                  className="w-full text-left px-4 py-3 rounded-lg border border-neutral-200 dark:border-dark-border hover:border-primary-500 hover:bg-primary-50 transition-colors"
                 >
                   {reason}
                 </button>
@@ -208,7 +208,7 @@ function RatingCard({ rating }: { rating: Rating }) {
             </div>
             <button
               onClick={() => setShowReportModal(false)}
-              className="w-full mt-4 px-4 py-2 text-gray-600 hover:text-gray-900"
+              className="w-full mt-4 px-4 py-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:text-white"
             >
               Annuler
             </button>
@@ -232,9 +232,9 @@ export default function RatingsDisplay({
   if (ratingsLoading || statsLoading) {
     return (
       <div className="space-y-4">
-        {showStats && <div className="h-48 bg-gray-100 rounded-xl animate-pulse" />}
+        {showStats && <div className="h-48 bg-neutral-100 dark:bg-dark-hover rounded-xl animate-pulse" />}
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-32 bg-gray-100 rounded-lg animate-pulse" />
+          <div key={i} className="h-32 bg-neutral-100 dark:bg-dark-hover rounded-lg animate-pulse" />
         ))}
       </div>
     );
@@ -244,7 +244,7 @@ export default function RatingsDisplay({
     return (
       <div className="text-center py-12">
         <svg
-          className="w-16 h-16 text-gray-300 mx-auto mb-4"
+          className="w-16 h-16 text-neutral-300 mx-auto mb-4"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -256,7 +256,7 @@ export default function RatingsDisplay({
             d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
           />
         </svg>
-        <p className="text-gray-500">Aucun avis pour le moment</p>
+        <p className="text-neutral-500 dark:text-neutral-400">Aucun avis pour le moment</p>
       </div>
     );
   }
