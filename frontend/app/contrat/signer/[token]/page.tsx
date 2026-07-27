@@ -61,6 +61,30 @@ async function signContract(token: string, otp: string) {
   return response.data;
 }
 
+const SIGN_STEPS = ['Détails', 'Vérification', 'Signature'];
+function SignSteps({ current }: { current: 'view' | 'otp' | 'success' }) {
+  const idx = current === 'view' ? 0 : current === 'otp' ? 1 : 2;
+  return (
+    <div className="flex items-center mb-8">
+      {SIGN_STEPS.map((label, i) => (
+        <div key={label} className="flex items-center flex-1 last:flex-none">
+          <div className="flex items-center gap-2">
+            <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 ${
+              i < idx ? 'bg-success-500 text-white' : i === idx ? 'bg-primary-500 text-white' : 'bg-neutral-200 dark:bg-dark-hover text-neutral-500 dark:text-neutral-400'
+            }`}>
+              {i < idx ? '✓' : i + 1}
+            </span>
+            <span className={`text-sm font-medium whitespace-nowrap ${i === idx ? 'text-neutral-900 dark:text-white' : 'text-neutral-500 dark:text-neutral-400'}`}>{label}</span>
+          </div>
+          {i < SIGN_STEPS.length - 1 && (
+            <div className={`flex-1 h-px mx-3 ${i < idx ? 'bg-success-500' : 'bg-neutral-200 dark:bg-dark-border'}`} />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function PublicContractSigningPage() {
   const params = useParams();
   const token = params.token as string;
@@ -176,6 +200,7 @@ export default function PublicContractSigningPage() {
     return (
       <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white dark:bg-dark-card rounded-2xl shadow-lg p-8">
+          <SignSteps current="otp" />
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Phone className="w-8 h-8 text-primary-600" />
@@ -237,6 +262,7 @@ export default function PublicContractSigningPage() {
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg py-8 px-4">
       <div className="max-w-2xl mx-auto">
+        <SignSteps current="view" />
         {/* Header */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
