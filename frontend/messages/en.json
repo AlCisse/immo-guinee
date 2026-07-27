@@ -2040,6 +2040,37 @@
       "submit": "Post review",
       "submitting": "Posting..."
     },
+    "display": {
+      "reviewsCount": "{count} reviews",
+      "criteriaTitle": "Ratings by criteria",
+      "criteria": {
+        "communication": "Communication",
+        "ponctualite": "Punctuality",
+        "proprete": "Cleanliness",
+        "respect_contrat": "Contract compliance"
+      },
+      "ownerResponse": "Owner's response:",
+      "helpful": "Helpful ({count})",
+      "report": "Report",
+      "reportTitle": "Report this review",
+      "reportReasons": {
+        "inappropriate": "Inappropriate content",
+        "fake": "Fake review",
+        "spam": "Spam",
+        "other": "Other"
+      },
+      "cancel": "Cancel",
+      "empty": "No reviews yet",
+      "showAll": "See all reviews ({count})",
+      "labels": {
+        "excellent": "Excellent",
+        "veryGood": "Very good",
+        "good": "Good",
+        "fair": "Fair",
+        "average": "Average",
+        "poor": "Needs improvement"
+      }
+    },
     "success": "Thank you for your review!",
     "error": "Error submitting review"
   },

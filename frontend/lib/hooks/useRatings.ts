@@ -260,13 +260,17 @@ export function calculateOverallRating(criteria: {
 /**
  * Get rating label
  */
-export function getRatingLabel(rating: number): string {
-  if (rating >= 4.5) return 'Excellent';
-  if (rating >= 4.0) return 'Très bien';
-  if (rating >= 3.5) return 'Bien';
-  if (rating >= 3.0) return 'Correct';
-  if (rating >= 2.0) return 'Moyen';
-  return 'À améliorer';
+/**
+ * Return the i18n key suffix for a rating's qualitative label. The caller resolves
+ * it via `t('ratings.display.labels.<key>')` so the label follows the active locale.
+ */
+export function getRatingLabelKey(rating: number): string {
+  if (rating >= 4.5) return 'excellent';
+  if (rating >= 4.0) return 'veryGood';
+  if (rating >= 3.5) return 'good';
+  if (rating >= 3.0) return 'fair';
+  if (rating >= 2.0) return 'average';
+  return 'poor';
 }
 
 /**
@@ -283,11 +287,12 @@ export function getRatingColor(rating: number): string {
 }
 
 /**
- * Format rating date
+ * Format a rating date in the active locale (defaults to French for GN).
  */
-export function formatRatingDate(dateString: string): string {
+export function formatRatingDate(dateString: string, locale: string = 'fr'): string {
   const date = new Date(dateString);
-  return new Intl.DateTimeFormat('fr-GN', {
+  const intlLocale = locale === 'en' ? 'en-GB' : 'fr-GN';
+  return new Intl.DateTimeFormat(intlLocale, {
     year: 'numeric',
     month: 'long',
     day: 'numeric',

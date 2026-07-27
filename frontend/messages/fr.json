@@ -2038,6 +2038,37 @@
       "submit": "Publier l'avis",
       "submitting": "Publication..."
     },
+    "display": {
+      "reviewsCount": "{count} avis",
+      "criteriaTitle": "Notes par critere",
+      "criteria": {
+        "communication": "Communication",
+        "ponctualite": "Ponctualite",
+        "proprete": "Proprete",
+        "respect_contrat": "Respect contrat"
+      },
+      "ownerResponse": "Reponse du proprietaire :",
+      "helpful": "Utile ({count})",
+      "report": "Signaler",
+      "reportTitle": "Signaler cet avis",
+      "reportReasons": {
+        "inappropriate": "Contenu inapproprie",
+        "fake": "Faux avis",
+        "spam": "Spam",
+        "other": "Autre"
+      },
+      "cancel": "Annuler",
+      "empty": "Aucun avis pour le moment",
+      "showAll": "Voir tous les avis ({count})",
+      "labels": {
+        "excellent": "Excellent",
+        "veryGood": "Tres bien",
+        "good": "Bien",
+        "fair": "Correct",
+        "average": "Moyen",
+        "poor": "A ameliorer"
+      }
+    },
     "success": "Merci pour votre avis !",
     "error": "Erreur lors de l'envoi de l'avis"
   },
