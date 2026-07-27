@@ -225,7 +225,7 @@ export default function PhoneInput({
   return (
     <div className={clsx('relative', className)} ref={dropdownRef}>
       <div className={clsx(
-        'flex items-stretch rounded-xl overflow-hidden bg-white dark:bg-white-card',
+        'flex items-stretch rounded-xl overflow-hidden bg-white dark:bg-dark-card',
         error
           ? 'ring-1 ring-error-300 focus-within:ring-2 focus-within:ring-error-400'
           : 'ring-1 ring-neutral-200 dark:ring-neutral-700 focus-within:ring-2 focus-within:ring-primary-400'
