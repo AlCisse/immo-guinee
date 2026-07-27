@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Eye, EyeOff, Lock, Loader2, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Lock, Loader2, ArrowRight, Shield, MessageCircle } from 'lucide-react';
 import { ROUTES } from '@/lib/routes';
 import { inputStyles } from '@/lib/utils';
 import PhoneInput from '@/components/ui/PhoneInput';
@@ -80,29 +80,26 @@ export default function LoginPage() {
             height={80}
             className="rounded-2xl shadow-2xl mb-8"
           />
-          <h1 className="text-4xl font-bold mb-4 text-center">ImmoGuinée</h1>
-          <p className="text-xl text-white/90 text-center max-w-md">
+          <h1 className="text-3xl font-bold mb-3 text-center">ImmoGuinée</h1>
+          <p className="text-lg text-white/90 text-center max-w-md">
             {t('auth.login.promo.platform')}
           </p>
-          <div className="mt-12 space-y-4 text-white/80">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                <span className="text-lg">🏠</span>
+          <div className="mt-10 space-y-5 max-w-sm w-full">
+            {[
+              { Icon: Shield, title: t('home.trust.verifiedTitle'), desc: t('home.trust.verifiedDesc') },
+              { Icon: Lock, title: t('home.trust.depositTitle'), desc: t('home.trust.depositDesc') },
+              { Icon: MessageCircle, title: t('home.trust.whatsappTitle'), desc: t('home.trust.whatsappDesc') },
+            ].map(({ Icon, title, desc }, i) => (
+              <div key={i} className="flex gap-3.5">
+                <div className="shrink-0 w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center">
+                  <Icon className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="font-semibold leading-tight">{title}</div>
+                  <div className="text-sm text-white/75 mt-0.5">{desc}</div>
+                </div>
               </div>
-              <span>{t('auth.login.promo.listings')}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                <span className="text-lg">👥</span>
-              </div>
-              <span>{t('auth.login.promo.community')}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                <span className="text-lg">🔒</span>
-              </div>
-              <span>{t('auth.login.promo.secure')}</span>
-            </div>
+            ))}
           </div>
         </div>
       </div>
