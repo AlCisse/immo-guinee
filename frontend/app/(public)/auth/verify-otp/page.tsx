@@ -3,6 +3,8 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Suspense } from 'react';
 import OtpVerification from '@/components/auth/OtpVerification';
+import AuthBrandPanel from '@/components/auth/AuthBrandPanel';
+import AuthTopControls from '@/components/auth/AuthTopControls';
 import { useTranslations } from '@/lib/i18n';
 
 function VerifyOtpContent() {
@@ -24,21 +26,20 @@ function VerifyOtpContent() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-dark-bg py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full bg-white dark:bg-dark-card p-8 rounded-2xl shadow-xl border border-neutral-200 dark:border-dark-border">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold">
-            <span className="text-neutral-900 dark:text-white">Immo</span>
-            <span className="text-primary-500">Guinée</span>
-          </h1>
-        </div>
+    <div className="flex min-h-[100dvh] lg:min-h-screen overflow-x-hidden">
+      {/* Left brand panel (shared, matches the mockup) */}
+      <AuthBrandPanel />
 
-        <OtpVerification
-          telephone={telephone}
-          onSuccess={handleSuccess}
-          onCancel={handleCancel}
-        />
+      {/* Right: OTP form */}
+      <div className="relative flex-1 flex items-center justify-center px-4 py-6 sm:p-6 lg:p-12 w-full max-w-full overflow-x-hidden">
+        <AuthTopControls className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20" />
+        <div className="w-full max-w-md mx-auto">
+          <OtpVerification
+            telephone={telephone}
+            onSuccess={handleSuccess}
+            onCancel={handleCancel}
+          />
+        </div>
       </div>
     </div>
   );
