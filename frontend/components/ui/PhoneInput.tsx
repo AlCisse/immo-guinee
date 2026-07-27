@@ -1,7 +1,7 @@
 'use client';
 
 import { clsx } from 'clsx';
-import { ChevronDown, Phone, Search } from 'lucide-react';
+import { ChevronDown, Search } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 export interface Country {
@@ -236,15 +236,15 @@ export default function PhoneInput({
           onClick={() => setIsOpen(!isOpen)}
           className={clsx(
             'flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3',
-            'bg-neutral-50 dark:bg-dark-bg',
-            'hover:bg-neutral-100 dark:hover:bg-dark-hover',
-            'transition-colors min-w-[105px] sm:min-w-[115px]',
+            'bg-neutral-100 dark:bg-dark-hover',
+            'hover:bg-neutral-200 dark:hover:bg-dark-border',
+            'transition-colors min-w-[100px] sm:min-w-[108px]',
             'border-r',
             error ? 'border-error-300' : 'border-neutral-200 dark:border-dark-border'
           )}
         >
-          <span className="text-lg sm:text-xl">{selectedCountry.flag}</span>
-          <span className="text-sm font-medium text-neutral-700 dark:text-neutral-200">
+          <span className="text-base sm:text-lg">{selectedCountry.flag}</span>
+          <span className="text-sm font-semibold text-neutral-800 dark:text-white">
             {selectedCountry.dialCode}
           </span>
           <ChevronDown className={clsx(
@@ -254,8 +254,7 @@ export default function PhoneInput({
         </button>
 
         {/* Phone Number Input */}
-        <div className="flex-1 flex items-center gap-2 sm:gap-2.5 px-2 sm:px-3 min-w-0">
-          <Phone className="w-4 h-4 shrink-0 text-neutral-400" />
+        <div className="flex-1 flex items-center min-w-0">
           <input
             ref={inputRef}
             type="tel"
@@ -266,7 +265,7 @@ export default function PhoneInput({
             placeholder={placeholder}
             required={required}
             aria-label="Numéro de téléphone"
-            className="flex-1 min-w-0 py-3 bg-transparent text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none text-base"
+            className="flex-1 min-w-0 py-3 px-3 sm:px-4 bg-transparent text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none text-base"
           />
         </div>
       </div>

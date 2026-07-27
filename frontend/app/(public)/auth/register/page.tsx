@@ -320,14 +320,11 @@ export default function RegisterPage() {
                   {t('auth.register.password')} *
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 sm:pl-4">
-                    <Lock className="w-4 h-4 text-neutral-500" />
-                  </div>
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={formData.mot_de_passe}
                     onChange={(e) => setFormData({ ...formData, mot_de_passe: e.target.value })}
-                    className={`${inputStyles.base} ${inputStyles.withIconRight}`}
+                    className={`${inputStyles.base} pl-3 sm:pl-4 pr-10 sm:pr-11`}
                     placeholder={t('auth.register.passwordPlaceholder')}
                   />
                   <button
@@ -346,14 +343,11 @@ export default function RegisterPage() {
                   {t('auth.register.confirmPasswordShort')} *
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 sm:pl-4">
-                    <Lock className="w-4 h-4 text-neutral-500" />
-                  </div>
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={formData.mot_de_passe_confirmation}
                     onChange={(e) => setFormData({ ...formData, mot_de_passe_confirmation: e.target.value })}
-                    className={`${inputStyles.base} ${inputStyles.withIconRight}`}
+                    className={`${inputStyles.base} pl-3 sm:pl-4 pr-10 sm:pr-11`}
                     placeholder={t('auth.register.confirmPasswordShort')}
                   />
                   <button
