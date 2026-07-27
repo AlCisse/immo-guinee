@@ -265,7 +265,7 @@ export default function PhoneInput({
             placeholder={placeholder}
             required={required}
             aria-label="Numéro de téléphone"
-            className="flex-1 min-w-0 py-3 px-3 sm:px-4 bg-transparent text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none text-base"
+            className="flex-1 min-w-0 py-3 px-3 sm:px-4 bg-transparent border-0 text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none focus:ring-0 text-base"
           />
         </div>
       </div>
