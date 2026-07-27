@@ -273,12 +273,13 @@ export function getRatingLabel(rating: number): string {
  * Get rating color
  */
 export function getRatingColor(rating: number): string {
-  if (rating >= 4.5) return 'text-green-600';
-  if (rating >= 4.0) return 'text-green-500';
-  if (rating >= 3.5) return 'text-yellow-500';
-  if (rating >= 3.0) return 'text-yellow-600';
-  if (rating >= 2.0) return 'text-orange-500';
-  return 'text-red-500';
+  // Charte « Argile de Conakry » quality scale (dark-aware): success → warning → error.
+  if (rating >= 4.5) return 'text-success-600 dark:text-success-400';
+  if (rating >= 4.0) return 'text-success-500 dark:text-success-400';
+  if (rating >= 3.5) return 'text-warning-500 dark:text-warning-400';
+  if (rating >= 3.0) return 'text-warning-600 dark:text-warning-400';
+  if (rating >= 2.0) return 'text-warning-700 dark:text-warning-500';
+  return 'text-error-500 dark:text-error-400';
 }
 
 /**
