@@ -225,10 +225,10 @@ export default function PhoneInput({
   return (
     <div className={clsx('relative', className)} ref={dropdownRef}>
       <div className={clsx(
-        'flex items-stretch rounded-xl overflow-hidden bg-white dark:bg-dark-card',
+        'flex items-stretch rounded-xl overflow-hidden bg-white dark:bg-dark-card border-[1.5px] transition-all',
         error
-          ? 'ring-1 ring-error-300 focus-within:ring-2 focus-within:ring-error-400'
-          : 'ring-1 ring-neutral-200 dark:ring-neutral-700 focus-within:ring-2 focus-within:ring-primary-400'
+          ? 'border-error-400 focus-within:border-error-500 focus-within:ring-[3px] focus-within:ring-error-500/15'
+          : 'border-neutral-200 dark:border-dark-border focus-within:border-primary-500 focus-within:ring-[3px] focus-within:ring-primary-500/15'
       )}>
         {/* Country Selector */}
         <button
@@ -236,11 +236,11 @@ export default function PhoneInput({
           onClick={() => setIsOpen(!isOpen)}
           className={clsx(
             'flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3',
-            'bg-white dark:bg-dark-card',
-            'hover:bg-neutral-50 dark:hover:bg-dark-hover',
+            'bg-neutral-50 dark:bg-dark-bg',
+            'hover:bg-neutral-100 dark:hover:bg-dark-hover',
             'transition-colors min-w-[105px] sm:min-w-[115px]',
             'border-r',
-            error ? 'border-error-300' : 'border-neutral-200 dark:border-neutral-700'
+            error ? 'border-error-300' : 'border-neutral-200 dark:border-dark-border'
           )}
         >
           <span className="text-lg sm:text-xl">{selectedCountry.flag}</span>
