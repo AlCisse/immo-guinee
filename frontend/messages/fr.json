@@ -2327,7 +2327,9 @@
     "loadingMap": "Chargement de la carte...",
     "loadingError": "Erreur de chargement",
     "retry": "Reessayer",
-    "unableToLoad": "Impossible de charger cette annonce"
+    "unableToLoad": "Impossible de charger cette annonce",
+    "surface": "Surface",
+    "equipment": "Ameublement"
   },
   "facebook": {
     "title": "Page Facebook",

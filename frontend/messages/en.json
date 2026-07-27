@@ -2329,7 +2329,9 @@
     "loadingMap": "Loading map...",
     "loadingError": "Loading error",
     "retry": "Retry",
-    "unableToLoad": "Unable to load this listing"
+    "unableToLoad": "Unable to load this listing",
+    "surface": "Area",
+    "equipment": "Furnishing"
   },
   "facebook": {
     "title": "Facebook Page",

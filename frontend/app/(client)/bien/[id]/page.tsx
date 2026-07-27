@@ -565,28 +565,44 @@ export default function PropertyDetailPage() {
               <h2 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
                 {getPropertyTypeLabel(listing.type_bien)} · {listing.quartier}, {listing.commune}
               </h2>
-              <div className="flex flex-wrap items-center gap-1 text-neutral-600 dark:text-neutral-400">
-                {listing.nombre_chambres && (
-                  <>
-                    <span>{listing.nombre_chambres} {listing.nombre_chambres > 1 ? t('listingDetail.bedrooms') : t('listingDetail.bedroom')}</span>
-                    <span>·</span>
-                  </>
-                )}
-                {listing.nombre_salons && (
-                  <>
-                    <span>{listing.nombre_salons} {listing.nombre_salons > 1 ? t('listingDetail.livingRooms') : t('listingDetail.livingRoom')}</span>
-                    <span>·</span>
-                  </>
-                )}
-                {listing.nombre_salles_bain && (
-                  <>
-                    <span>{listing.nombre_salles_bain} {listing.nombre_salles_bain > 1 ? t('listingDetail.bathrooms') : t('listingDetail.bathroom')}</span>
-                    <span>·</span>
-                  </>
-                )}
-                {listing.surface_m2 && (
-                  <span>{listing.surface_m2} m²</span>
-                )}
+              {/* Spec tiles */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+                {listing.nombre_chambres ? (
+                  <div className="flex items-center gap-3 p-3.5 bg-neutral-50 dark:bg-dark-hover rounded-xl border border-neutral-200 dark:border-dark-border">
+                    <div className="shrink-0 w-9 h-9 rounded-lg bg-white dark:bg-dark-card flex items-center justify-center text-primary-600 dark:text-primary-400"><Bed className="w-5 h-5" /></div>
+                    <div>
+                      <div className="font-semibold text-neutral-900 dark:text-white leading-tight">{listing.nombre_chambres}</div>
+                      <div className="text-xs text-neutral-500 dark:text-neutral-400">{listing.nombre_chambres > 1 ? t('listingDetail.bedrooms') : t('listingDetail.bedroom')}</div>
+                    </div>
+                  </div>
+                ) : null}
+                {listing.surface_m2 ? (
+                  <div className="flex items-center gap-3 p-3.5 bg-neutral-50 dark:bg-dark-hover rounded-xl border border-neutral-200 dark:border-dark-border">
+                    <div className="shrink-0 w-9 h-9 rounded-lg bg-white dark:bg-dark-card flex items-center justify-center text-teal-600 dark:text-teal-400"><Square className="w-5 h-5" /></div>
+                    <div>
+                      <div className="font-semibold text-neutral-900 dark:text-white leading-tight tabular-nums">{listing.surface_m2} m²</div>
+                      <div className="text-xs text-neutral-500 dark:text-neutral-400">{t('listingDetail.surface')}</div>
+                    </div>
+                  </div>
+                ) : null}
+                {listing.nombre_salles_bain ? (
+                  <div className="flex items-center gap-3 p-3.5 bg-neutral-50 dark:bg-dark-hover rounded-xl border border-neutral-200 dark:border-dark-border">
+                    <div className="shrink-0 w-9 h-9 rounded-lg bg-white dark:bg-dark-card flex items-center justify-center text-primary-600 dark:text-primary-400"><Bath className="w-5 h-5" /></div>
+                    <div>
+                      <div className="font-semibold text-neutral-900 dark:text-white leading-tight">{listing.nombre_salles_bain}</div>
+                      <div className="text-xs text-neutral-500 dark:text-neutral-400">{listing.nombre_salles_bain > 1 ? t('listingDetail.bathrooms') : t('listingDetail.bathroom')}</div>
+                    </div>
+                  </div>
+                ) : null}
+                {listing.meuble ? (
+                  <div className="flex items-center gap-3 p-3.5 bg-neutral-50 dark:bg-dark-hover rounded-xl border border-neutral-200 dark:border-dark-border">
+                    <div className="shrink-0 w-9 h-9 rounded-lg bg-white dark:bg-dark-card flex items-center justify-center text-success-600 dark:text-success-400"><Check className="w-5 h-5" /></div>
+                    <div>
+                      <div className="font-semibold text-neutral-900 dark:text-white leading-tight">{t('listingDetail.furnished')}</div>
+                      <div className="text-xs text-neutral-500 dark:text-neutral-400">{t('listingDetail.equipment')}</div>
+                    </div>
+                  </div>
+                ) : null}
               </div>
 
               {/* Badges */}
