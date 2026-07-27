@@ -568,6 +568,19 @@
         "completed": "Terminee",
         "cancelled": "Annulee"
       }
+    },
+    "nav": {
+      "dashboard": "Tableau de bord",
+      "listings": "Mes annonces",
+      "contracts": "Mes contrats",
+      "payments": "Mes paiements",
+      "visits": "Mes visites",
+      "messages": "Messagerie",
+      "favorites": "Favoris",
+      "certification": "Certification",
+      "disputes": "Mes litiges",
+      "profile": "Profil",
+      "settings": "Paramètres"
     }
   },
   "publish": {

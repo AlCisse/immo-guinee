@@ -568,6 +568,19 @@
         "completed": "Completed",
         "cancelled": "Cancelled"
       }
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "listings": "My listings",
+      "contracts": "My contracts",
+      "payments": "My payments",
+      "visits": "My visits",
+      "messages": "Messages",
+      "favorites": "Favorites",
+      "certification": "Certification",
+      "disputes": "My disputes",
+      "profile": "Profile",
+      "settings": "Settings"
     }
   },
   "publish": {
