@@ -8,6 +8,7 @@ import { Eye, EyeOff, Lock, Loader2, ArrowRight, Shield, MessageCircle, Home } f
 import { ROUTES } from '@/lib/routes';
 import { inputStyles } from '@/lib/utils';
 import PhoneInput from '@/components/ui/PhoneInput';
+import AuthTopControls from '@/components/auth/AuthTopControls';
 import { useTranslations } from '@/lib/i18n';
 
 export default function LoginPage() {
@@ -131,7 +132,11 @@ export default function LoginPage() {
       </div>
 
       {/* Right side - Form */}
-      <div className="flex-1 flex items-center justify-center px-4 py-6 sm:p-6 lg:p-12 w-full max-w-full overflow-x-hidden">
+      <div className="relative flex-1 flex items-center justify-center px-4 py-6 sm:p-6 lg:p-12 w-full max-w-full overflow-x-hidden">
+        {/* Top-right controls (language + theme) — the auth screens are full-bleed
+            so they carry their own controls, matching the mockup. */}
+        <AuthTopControls className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20" />
+
         <div className="w-full max-w-md mx-auto">
           {/* Mobile logo */}
           <div className="lg:hidden text-center mb-6">

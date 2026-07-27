@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
 
 export default function PublicLayout({
@@ -8,6 +9,15 @@ export default function PublicLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+
+  // Auth screens (login / register / OTP …) are full-bleed by design — they own
+  // their own split-panel layout and must not sit under the site Navbar/footer
+  // (matches the design mockups). Render the page raw, edge to edge.
+  if (pathname?.startsWith('/auth')) {
+    return <div className="min-h-[100dvh] bg-neutral-50 dark:bg-dark-bg">{children}</div>;
+  }
+
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg flex flex-col">
       {/* Minimal Navbar - Only shows logo and home link */}

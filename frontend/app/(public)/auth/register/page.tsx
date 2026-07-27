@@ -9,6 +9,7 @@ import { Eye, EyeOff, Lock, User, Building2, Loader2, ChevronDown, ArrowRight, A
 import { ROUTES } from '@/lib/routes';
 import { inputStyles } from '@/lib/utils';
 import PhoneInput from '@/components/ui/PhoneInput';
+import AuthTopControls from '@/components/auth/AuthTopControls';
 import toast from 'react-hot-toast';
 import { useTranslations } from '@/lib/i18n';
 
@@ -171,7 +172,8 @@ export default function RegisterPage() {
       </div>
 
       {/* Right side - Form */}
-      <div className="flex-1 flex items-start lg:items-center justify-center px-4 py-4 sm:p-6 lg:p-12 overflow-y-auto overflow-x-hidden w-full max-w-full">
+      <div className="relative flex-1 flex items-start lg:items-center justify-center px-4 py-4 sm:p-6 lg:p-12 overflow-y-auto overflow-x-hidden w-full max-w-full">
+        <AuthTopControls className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20" />
         <div className="w-full max-w-md mx-auto py-2 sm:py-8">
           {/* Mobile logo */}
           <div className="lg:hidden text-center mb-4 sm:mb-6">
