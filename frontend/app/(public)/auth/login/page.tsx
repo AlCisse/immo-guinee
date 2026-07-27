@@ -276,19 +276,19 @@ export default function LoginPage() {
               <div className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-1 sm:mb-2 rounded-full bg-primary-100 dark:bg-primary-500/10 flex items-center justify-center">
                 <span className="text-primary-500 text-xs sm:text-sm">✓</span>
               </div>
-              <span className="block text-[11px] sm:text-xs leading-tight">{t('auth.login.features.freeListings')}</span>
+              <span className="block text-[11px] sm:text-xs leading-tight">{t('home.trust.verifiedTitle')}</span>
             </div>
             <div>
               <div className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-1 sm:mb-2 rounded-full bg-primary-100 dark:bg-primary-500/10 flex items-center justify-center">
                 <span className="text-primary-500 text-xs sm:text-sm">✓</span>
               </div>
-              <span className="block text-[11px] sm:text-xs leading-tight">{t('auth.login.features.advancedSearch')}</span>
+              <span className="block text-[11px] sm:text-xs leading-tight">{t('home.trust.depositTitle')}</span>
             </div>
             <div>
               <div className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-1 sm:mb-2 rounded-full bg-primary-100 dark:bg-primary-500/10 flex items-center justify-center">
                 <span className="text-primary-500 text-xs sm:text-sm">✓</span>
               </div>
-              <span className="block text-[11px] sm:text-xs leading-tight">{t('auth.login.features.secureMessaging')}</span>
+              <span className="block text-[11px] sm:text-xs leading-tight">{t('home.trust.whatsappTitle')}</span>
             </div>
           </div>
         </div>
