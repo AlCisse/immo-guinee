@@ -258,6 +258,12 @@
     }
   },
   "auth": {
+    "brand": {
+      "headline": "Find your place in Conakry, with confidence.",
+      "subtitle": "Join Guinea's #1 real-estate platform — verified listings, protected deposit, direct contact.",
+      "testimonialQuote": "Found my studio in 3 days, deposit secured. Simple and reassuring.",
+      "testimonialAuthor": "Mariama C. · tenant in Ratoma"
+    },
     "login": {
       "title": "Log in",
       "subtitle": "Welcome to ImmoGuinee",

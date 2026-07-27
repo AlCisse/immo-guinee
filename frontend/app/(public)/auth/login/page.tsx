@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Eye, EyeOff, Lock, Loader2, ArrowRight, Shield, MessageCircle } from 'lucide-react';
+import { Eye, EyeOff, Lock, Loader2, ArrowRight, Shield, MessageCircle, Home } from 'lucide-react';
 import { ROUTES } from '@/lib/routes';
 import { inputStyles } from '@/lib/utils';
 import PhoneInput from '@/components/ui/PhoneInput';
@@ -69,37 +69,63 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-[100dvh] lg:min-h-screen overflow-x-hidden">
-      {/* Left side - Image (hidden on mobile) */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-primary-500 to-primary-700">
-        <div className="absolute inset-0 bg-black/20" />
-        <div className="relative z-10 flex flex-col justify-center items-center p-12 text-white">
-          <Image
-            src="/images/iOS/Icon-60.png"
-            alt="ImmoGuinée"
-            width={80}
-            height={80}
-            className="rounded-2xl shadow-2xl mb-8"
-          />
-          <h1 className="text-3xl font-bold mb-3 text-center">ImmoGuinée</h1>
-          <p className="text-lg text-white/90 text-center max-w-md">
-            {t('auth.login.promo.platform')}
+      {/* Left side - Brand panel (hidden on mobile) — matches the design mockup */}
+      <div
+        className="hidden lg:flex lg:w-[52%] relative overflow-hidden text-white flex-col justify-between p-10 xl:p-14"
+        style={{ background: 'linear-gradient(155deg, #c0421c, #DB5327 55%, #e8703a)' }}
+      >
+        {/* soft radial highlights */}
+        <div
+          className="absolute inset-0 opacity-50 pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(50% 55% at 85% 10%, rgba(255,255,255,.22), transparent 60%), radial-gradient(45% 50% at 5% 95%, rgba(0,0,0,.18), transparent 60%)',
+          }}
+        />
+
+        {/* top: logo + wordmark */}
+        <div className="relative flex items-center gap-2.5 font-bold text-lg tracking-tight">
+          <span className="w-9 h-9 rounded-[10px] bg-white/15 backdrop-blur-sm grid place-items-center">
+            <Home className="w-5 h-5" />
+          </span>
+          ImmoGuinée
+        </div>
+
+        {/* middle: headline + trust list */}
+        <div className="relative">
+          <h2 className="text-3xl xl:text-[2.5rem] font-bold leading-[1.12] max-w-[15ch]">
+            {t('auth.brand.headline')}
+          </h2>
+          <p className="mt-4 text-white/90 text-base max-w-[42ch]">
+            {t('auth.brand.subtitle')}
           </p>
-          <div className="mt-10 space-y-5 max-w-sm w-full">
+          <div className="mt-8 space-y-4 max-w-md">
             {[
               { Icon: Shield, title: t('home.trust.verifiedTitle'), desc: t('home.trust.verifiedDesc') },
               { Icon: Lock, title: t('home.trust.depositTitle'), desc: t('home.trust.depositDesc') },
               { Icon: MessageCircle, title: t('home.trust.whatsappTitle'), desc: t('home.trust.whatsappDesc') },
             ].map(({ Icon, title, desc }, i) => (
-              <div key={i} className="flex gap-3.5">
-                <div className="shrink-0 w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center">
-                  <Icon className="w-5 h-5" />
+              <div key={i} className="flex gap-3.5 items-start">
+                <div className="shrink-0 w-[30px] h-[30px] rounded-[9px] bg-white/[.18] grid place-items-center">
+                  <Icon className="w-4 h-4" />
                 </div>
                 <div>
-                  <div className="font-semibold leading-tight">{title}</div>
-                  <div className="text-sm text-white/75 mt-0.5">{desc}</div>
+                  <div className="font-semibold text-[.98rem] leading-tight">{title}</div>
+                  <div className="text-[.86rem] text-white/80 mt-0.5">{desc}</div>
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* bottom: testimonial */}
+        <div className="relative flex items-center gap-3.5 bg-white/[.12] backdrop-blur-sm rounded-[13px] p-4">
+          <div className="shrink-0 w-[38px] h-[38px] rounded-full bg-white/90 text-primary-700 grid place-items-center font-bold">
+            MC
+          </div>
+          <div>
+            <div className="text-[.86rem]">« {t('auth.brand.testimonialQuote')} »</div>
+            <div className="text-[.78rem] text-white/80 mt-0.5">{t('auth.brand.testimonialAuthor')}</div>
           </div>
         </div>
       </div>
@@ -267,28 +293,6 @@ export default function LoginPage() {
               <Link href={ROUTES.REGISTER} className="text-primary-500 hover:text-primary-600 font-semibold">
                 {t('auth.login.registerFree')}
               </Link>
-            </div>
-          </div>
-
-          {/* Features - hidden on mobile for cleaner display */}
-          <div className="hidden sm:grid mt-6 sm:mt-8 grid-cols-3 gap-2 sm:gap-4 text-center text-xs text-neutral-500">
-            <div>
-              <div className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-1 sm:mb-2 rounded-full bg-primary-100 dark:bg-primary-500/10 flex items-center justify-center">
-                <span className="text-primary-500 text-xs sm:text-sm">✓</span>
-              </div>
-              <span className="block text-[11px] sm:text-xs leading-tight">{t('home.trust.verifiedTitle')}</span>
-            </div>
-            <div>
-              <div className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-1 sm:mb-2 rounded-full bg-primary-100 dark:bg-primary-500/10 flex items-center justify-center">
-                <span className="text-primary-500 text-xs sm:text-sm">✓</span>
-              </div>
-              <span className="block text-[11px] sm:text-xs leading-tight">{t('home.trust.depositTitle')}</span>
-            </div>
-            <div>
-              <div className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-1 sm:mb-2 rounded-full bg-primary-100 dark:bg-primary-500/10 flex items-center justify-center">
-                <span className="text-primary-500 text-xs sm:text-sm">✓</span>
-              </div>
-              <span className="block text-[11px] sm:text-xs leading-tight">{t('home.trust.whatsappTitle')}</span>
             </div>
           </div>
         </div>

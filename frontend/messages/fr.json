@@ -258,6 +258,12 @@
     }
   },
   "auth": {
+    "brand": {
+      "headline": "Trouvez votre place à Conakry, en toute confiance.",
+      "subtitle": "Rejoignez la plateforme immobilière n°1 en Guinée — annonces vérifiées, caution protégée, contact direct.",
+      "testimonialQuote": "Trouvé mon studio en 3 jours, caution sécurisée. Simple et rassurant.",
+      "testimonialAuthor": "Mariama C. · locataire à Ratoma"
+    },
     "login": {
       "title": "Connexion",
       "subtitle": "Bienvenue sur ImmoGuinee",
