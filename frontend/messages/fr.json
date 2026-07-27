@@ -216,7 +216,10 @@
     "perMonth": "/mois",
     "perDay": "/jour",
     "bedrooms": "ch.",
-    "bathrooms": "sdb."
+    "bathrooms": "sdb.",
+    "filters": "Filtres",
+    "transaction": "Transaction",
+    "propertyType": "Type de bien"
   },
   "listing": {
     "details": "Details",

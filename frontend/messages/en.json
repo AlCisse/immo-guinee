@@ -216,7 +216,10 @@
     "perMonth": "/month",
     "perDay": "/day",
     "bedrooms": "bd.",
-    "bathrooms": "ba."
+    "bathrooms": "ba.",
+    "filters": "Filters",
+    "transaction": "Transaction",
+    "propertyType": "Property type"
   },
   "listing": {
     "details": "Details",

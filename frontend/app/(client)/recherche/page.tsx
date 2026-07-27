@@ -700,90 +700,17 @@ function SearchContent() {
             )}
           </div>
 
-          {/* Transaction Type Toggle */}
-          <div className="flex gap-2 mb-4 overflow-x-auto scrollbar-hide">
-            {['all', 'LOCATION', 'LOCATION_COURTE', 'VENTE'].map((value) => (
-              <button
-                key={value}
-                onClick={() => {
-                  setTransactionType(value as typeof transactionType);
-                  updateURL({ type_transaction: value === 'all' ? null : value });
-                }}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
-                  transactionType === value
-                    ? 'bg-primary-500 text-white'
-                    : 'bg-neutral-100 dark:bg-dark-bg text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-dark-border'
-                }`}
-              >
-                {t(`transactionTypes.${value}`)}
-              </button>
-            ))}
-          </div>
-
-          {/* Quick Filters - Property Types */}
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {propertyTypes.map((type) => (
-              <FilterChip
-                key={type}
-                label={type === 'Tous' ? t('propertyTypes.all') : t(`propertyTypes.${type}`) || type}
-                isActive={selectedType === type}
-                onClick={() => {
-                  setSelectedType(type);
-                  updateURL({ type_bien: type === 'Tous' ? null : type });
-                }}
-              />
-            ))}
-          </div>
         </div>
+      </div>
 
-        {/* Extended Filters */}
-        <AnimatePresence>
-          {showFilters && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="border-t border-neutral-200 dark:border-dark-border overflow-hidden"
-            >
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-4">
-                {/* Commune */}
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                    {t('commune')}
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {quartiersWithTous.map((commune) => (
-                      <FilterChip
-                        key={commune}
-                        label={commune}
-                        isActive={selectedCommune === commune}
-                        onClick={() => {
-                          setSelectedCommune(commune);
-                          updateURL({ commune: commune === 'Tous' ? null : commune });
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Price Range */}
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                    {t('budget')}
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {priceRangeKeys.map((key, index) => (
-                      <FilterChip
-                        key={key}
-                        label={t(`priceRanges.${key}`)}
-                        isActive={selectedPriceRange === index}
-                        onClick={() => setSelectedPriceRange(index)}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Reset Filters */}
+      {/* Shell: sidebar filters + results */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="grid lg:grid-cols-[280px_1fr] gap-6 items-start">
+          {/* SIDEBAR FILTERS */}
+          <aside className={`${showFilters ? 'block' : 'hidden'} lg:block lg:sticky lg:top-32`}>
+            <div className="bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-2xl overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3.5 border-b border-neutral-200 dark:border-dark-border">
+                <h2 className="font-semibold text-neutral-900 dark:text-white">{t('filters')}</h2>
                 {activeFiltersCount > 0 && (
                   <button
                     onClick={() => {
@@ -795,67 +722,139 @@ function SearchContent() {
                       setSearchQuery('');
                       router.push('/recherche');
                     }}
-                    className="text-primary-500 text-sm font-medium"
+                    className="text-sm font-semibold text-primary-600 dark:text-primary-400"
                   >
                     {t('resetFilters')}
                   </button>
                 )}
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
 
-      {/* Results */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Results Header */}
-        <div className="flex items-center justify-between mb-6">
-          <p className="text-neutral-600 dark:text-neutral-400">
-            <span className="font-semibold text-neutral-900 dark:text-white">{pagination.total}</span> {t('resultsFound')}
-          </p>
+              {/* Transaction */}
+              <div className="px-4 py-4 border-b border-neutral-200 dark:border-dark-border">
+                <div className="text-[11px] font-semibold tracking-wider uppercase text-neutral-400 mb-2.5">{t('transaction')}</div>
+                <div className="flex flex-wrap gap-2">
+                  {['all', 'LOCATION', 'LOCATION_COURTE', 'VENTE'].map((value) => (
+                    <button
+                      key={value}
+                      onClick={() => {
+                        setTransactionType(value as typeof transactionType);
+                        updateURL({ type_transaction: value === 'all' ? null : value });
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                        transactionType === value
+                          ? 'bg-primary-500 text-white'
+                          : 'bg-neutral-100 dark:bg-dark-hover text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-dark-border'
+                      }`}
+                    >
+                      {t(`transactionTypes.${value}`)}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-          <div className="flex items-center gap-3">
-            {/* Sort */}
-            <div className="relative">
-              <select
-                value={selectedSort}
-                onChange={(e) => setSelectedSort(e.target.value)}
-                className="appearance-none pl-3 pr-8 py-2 bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-xl text-sm focus:ring-2 focus:ring-primary-500 dark:text-white"
-              >
-                {sortOptionKeys.map((key, index) => (
-                  <option key={sortOptionValues[index]} value={sortOptionValues[index]}>
-                    {t(`sortOptions.${key}`)}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
+              {/* Property type */}
+              <div className="px-4 py-4 border-b border-neutral-200 dark:border-dark-border">
+                <div className="text-[11px] font-semibold tracking-wider uppercase text-neutral-400 mb-2.5">{t('propertyType')}</div>
+                <div className="flex flex-wrap gap-2">
+                  {propertyTypes.map((type) => (
+                    <FilterChip
+                      key={type}
+                      label={type === 'Tous' ? t('propertyTypes.all') : t(`propertyTypes.${type}`) || type}
+                      isActive={selectedType === type}
+                      onClick={() => {
+                        setSelectedType(type);
+                        updateURL({ type_bien: type === 'Tous' ? null : type });
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Commune */}
+              <div className="px-4 py-4 border-b border-neutral-200 dark:border-dark-border">
+                <div className="text-[11px] font-semibold tracking-wider uppercase text-neutral-400 mb-2.5">{t('commune')}</div>
+                <div className="flex flex-wrap gap-2">
+                  {quartiersWithTous.map((commune) => (
+                    <FilterChip
+                      key={commune}
+                      label={commune}
+                      isActive={selectedCommune === commune}
+                      onClick={() => {
+                        setSelectedCommune(commune);
+                        updateURL({ commune: commune === 'Tous' ? null : commune });
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Budget */}
+              <div className="px-4 py-4">
+                <div className="text-[11px] font-semibold tracking-wider uppercase text-neutral-400 mb-2.5">{t('budget')}</div>
+                <div className="flex flex-wrap gap-2">
+                  {priceRangeKeys.map((key, index) => (
+                    <FilterChip
+                      key={key}
+                      label={t(`priceRanges.${key}`)}
+                      isActive={selectedPriceRange === index}
+                      onClick={() => setSelectedPriceRange(index)}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
+          </aside>
 
-            {/* View Toggle */}
-            <div className="hidden sm:flex items-center bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-lg p-1">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-md transition-colors ${
-                  viewMode === 'grid'
-                    ? 'bg-primary-500 text-white'
-                    : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'
-                }`}
-              >
-                <Grid3X3 className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded-md transition-colors ${
-                  viewMode === 'list'
-                    ? 'bg-primary-500 text-white'
-                    : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'
-                }`}
-              >
-                <List className="w-4 h-4" />
-              </button>
+          {/* RESULTS COLUMN */}
+          <div>
+            {/* Toolbar */}
+            <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
+              <p className="text-neutral-600 dark:text-neutral-400">
+                <span className="font-semibold text-neutral-900 dark:text-white tabular-nums">{pagination.total}</span> {t('resultsFound')}
+              </p>
+
+              <div className="flex items-center gap-3">
+                {/* Sort */}
+                <div className="relative">
+                  <select
+                    value={selectedSort}
+                    onChange={(e) => setSelectedSort(e.target.value)}
+                    className="appearance-none pl-3 pr-8 py-2 bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-xl text-sm focus:ring-2 focus:ring-primary-500 dark:text-white"
+                  >
+                    {sortOptionKeys.map((key, index) => (
+                      <option key={sortOptionValues[index]} value={sortOptionValues[index]}>
+                        {t(`sortOptions.${key}`)}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
+                </div>
+
+                {/* View Toggle */}
+                <div className="hidden sm:flex items-center bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-lg p-1">
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    className={`p-2 rounded-md transition-colors ${
+                      viewMode === 'grid'
+                        ? 'bg-primary-500 text-white'
+                        : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'
+                    }`}
+                  >
+                    <Grid3X3 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`p-2 rounded-md transition-colors ${
+                      viewMode === 'list'
+                        ? 'bg-primary-500 text-white'
+                        : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'
+                    }`}
+                  >
+                    <List className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
         {/* Loading state */}
         {isLoading && (
@@ -1013,6 +1012,8 @@ function SearchContent() {
             </button>
           </div>
         )}
+          </div>
+        </div>
       </div>
     </div>
   );
