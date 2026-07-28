@@ -199,7 +199,7 @@ function VisitResponseContent() {
   return (
     <div className="space-y-6">
       {/* Visit Details Card */}
-      <div className="bg-white dark:bg-dark-card rounded-2xl shadow-lg overflow-hidden">
+      <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft overflow-hidden">
         {/* Property Image */}
         <div className="relative h-48 bg-neutral-200">
           <Image
@@ -310,7 +310,7 @@ function VisitResponseContent() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-dark-card rounded-2xl shadow-lg p-6"
+          className="bg-white dark:bg-dark-card rounded-2xl shadow-soft p-6"
         >
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
             Proposer une autre date
@@ -413,7 +413,7 @@ export default function VisitResponsePage() {
           className="w-full max-w-md"
         >
           <Suspense fallback={
-            <div className="bg-white dark:bg-dark-card rounded-3xl shadow-2xl p-8 flex items-center justify-center">
+            <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft p-8 flex items-center justify-center">
               <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
             </div>
           }>

@@ -505,7 +505,7 @@ export default function UsersPage() {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-white dark:bg-dark-card rounded-2xl p-6 w-full max-w-md shadow-xl"
+              className="bg-white dark:bg-dark-card rounded-2xl p-6 w-full max-w-md shadow-soft"
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-neutral-900 dark:text-white flex items-center gap-2">
@@ -674,7 +674,7 @@ export default function UsersPage() {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-white dark:bg-dark-card rounded-2xl p-6 w-full max-w-md shadow-xl"
+              className="bg-white dark:bg-dark-card rounded-2xl p-6 w-full max-w-md shadow-soft"
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-neutral-900 dark:text-white flex items-center gap-2">
@@ -862,7 +862,7 @@ export default function UsersPage() {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-white dark:bg-dark-card rounded-2xl p-6 w-full max-w-md shadow-xl"
+              className="bg-white dark:bg-dark-card rounded-2xl p-6 w-full max-w-md shadow-soft"
             >
               <div className="flex items-center justify-center mb-4">
                 <div className="p-3 bg-error-100 dark:bg-error-500/20 rounded-full">

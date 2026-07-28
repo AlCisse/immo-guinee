@@ -12,6 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { VoiceRecorder } from './VoiceRecorder';
+import Colors from '@/constants/Colors';
 
 interface MessageInputProps {
   onSendText: (text: string) => Promise<void>;
@@ -30,7 +31,7 @@ export function MessageInput({
   onTyping,
   placeholder = 'Message...',
   disabled = false,
-  primaryColor = '#10B981',
+  primaryColor = Colors.accent[500],
 }: MessageInputProps) {
   const { t } = useTranslation();
   const [text, setText] = useState('');
@@ -164,7 +165,7 @@ export function MessageInput({
           value={text}
           onChangeText={handleTextChange}
           placeholder={placeholder}
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={Colors.neutral[400]}
           multiline
           maxLength={2000}
           editable={!disabled && !isSending}
@@ -186,9 +187,9 @@ export function MessageInput({
           disabled={disabled || isSending}
         >
           {isSending ? (
-            <Ionicons name="ellipsis-horizontal" size={20} color="#FFFFFF" />
+            <Ionicons name="ellipsis-horizontal" size={20} color={Colors.text.inverse} />
           ) : (
-            <Ionicons name="send" size={18} color="#FFFFFF" />
+            <Ionicons name="send" size={18} color={Colors.text.inverse} />
           )}
         </TouchableOpacity>
       ) : (
@@ -216,14 +217,14 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.background.primary,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: Colors.border.light,
     gap: 8,
   },
   inputContainer: {
     flex: 1,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: Colors.neutral[100],
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: Platform.OS === 'ios' ? 10 : 6,
@@ -231,7 +232,7 @@ const styles = StyleSheet.create({
   },
   textInput: {
     fontSize: 16,
-    color: '#1F2937',
+    color: Colors.text.primary,
     maxHeight: 100,
     ...Platform.select({
       ios: {
@@ -255,7 +256,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   micButton: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: Colors.neutral[100],
   },
   disabledButton: {
     opacity: 0.5,
@@ -263,9 +264,9 @@ const styles = StyleSheet.create({
   voiceRecorderContainer: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.background.primary,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: Colors.border.light,
   },
 });
 

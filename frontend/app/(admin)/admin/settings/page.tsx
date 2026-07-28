@@ -566,7 +566,7 @@ export default function AdminSettingsPage() {
               whileTap={{ scale: 0.98 }}
               onClick={handleSave}
               disabled={isSaving}
-              className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-dark-card text-primary-600 font-semibold rounded-xl shadow-lg disabled:opacity-50"
+              className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-dark-card text-primary-600 font-semibold rounded-xl shadow-soft disabled:opacity-50"
             >
               {isSaving ? (
                 <Loader2 className="w-5 h-5 animate-spin" />

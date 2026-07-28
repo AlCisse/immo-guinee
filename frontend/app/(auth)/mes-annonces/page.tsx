@@ -292,7 +292,7 @@ export default function MesAnnoncesPage() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-dark-card text-primary-600 font-semibold rounded-xl shadow-lg"
+                className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-dark-card text-primary-600 font-semibold rounded-xl shadow-soft"
               >
                 <Plus className="w-5 h-5" />
                 <span className="hidden sm:inline">{t('myListings.newListing')}</span>
@@ -535,7 +535,7 @@ export default function MesAnnoncesPage() {
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
-                                className="absolute right-0 top-10 w-44 bg-white dark:bg-dark-card rounded-xl shadow-lg border border-neutral-200 dark:border-dark-border py-2 z-10 max-h-[60vh] overflow-y-auto"
+                                className="absolute right-0 top-10 w-44 bg-white dark:bg-dark-card rounded-xl shadow-soft border border-neutral-200 dark:border-dark-border py-2 z-10 max-h-[60vh] overflow-y-auto"
                               >
                                 <Link
                                   href={`/bien/${annonce.id}`}
@@ -638,7 +638,7 @@ export default function MesAnnoncesPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white dark:bg-dark-card rounded-2xl shadow-xl max-w-md w-full p-6"
+              className="bg-white dark:bg-dark-card rounded-2xl shadow-soft max-w-md w-full p-6"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}

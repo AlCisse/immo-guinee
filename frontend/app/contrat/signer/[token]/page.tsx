@@ -143,7 +143,7 @@ export default function PublicContractSigningPage() {
     const errorMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Lien invalide ou expiré';
     return (
       <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white dark:bg-dark-card rounded-2xl shadow-lg p-8 text-center">
+        <div className="max-w-md w-full bg-white dark:bg-dark-card rounded-2xl shadow-soft p-8 text-center">
           <div className="w-16 h-16 bg-error-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <AlertCircle className="w-8 h-8 text-error-600" />
           </div>
@@ -161,7 +161,7 @@ export default function PublicContractSigningPage() {
   if (contract?.locataire_signed_at) {
     return (
       <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white dark:bg-dark-card rounded-2xl shadow-lg p-8 text-center">
+        <div className="max-w-md w-full bg-white dark:bg-dark-card rounded-2xl shadow-soft p-8 text-center">
           <div className="w-16 h-16 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <Check className="w-8 h-8 text-success-600" />
           </div>
@@ -176,7 +176,7 @@ export default function PublicContractSigningPage() {
   if (step === 'success') {
     return (
       <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white dark:bg-dark-card rounded-2xl shadow-lg p-8 text-center">
+        <div className="max-w-md w-full bg-white dark:bg-dark-card rounded-2xl shadow-soft p-8 text-center">
           <div className="w-16 h-16 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <Check className="w-8 h-8 text-success-600" />
           </div>
@@ -199,7 +199,7 @@ export default function PublicContractSigningPage() {
   if (step === 'otp') {
     return (
       <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white dark:bg-dark-card rounded-2xl shadow-lg p-8">
+        <div className="max-w-md w-full bg-white dark:bg-dark-card rounded-2xl shadow-soft p-8">
           <SignSteps current="otp" />
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -275,7 +275,7 @@ export default function PublicContractSigningPage() {
         </div>
 
         {/* Contract details */}
-        <div className="bg-white dark:bg-dark-card rounded-2xl shadow-lg p-6 mb-6">
+        <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft p-6 mb-6">
           <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">Détails du contrat</h2>
 
           <dl className="space-y-3">
@@ -311,7 +311,7 @@ export default function PublicContractSigningPage() {
         </div>
 
         {/* Signature status */}
-        <div className="bg-white dark:bg-dark-card rounded-2xl shadow-lg p-6 mb-6">
+        <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft p-6 mb-6">
           <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">Statut des signatures</h2>
 
           <div className="space-y-4">

@@ -453,7 +453,7 @@ export default function ClientHomePage() {
           <span className="text-xs font-semibold tracking-[0.15em] uppercase text-primary-600 dark:text-primary-400">{t('home.alerts.eyebrow')}</span>
           <h2 className="mt-1.5 text-2xl md:text-3xl font-bold tracking-tight text-neutral-900 dark:text-white">{t('home.alerts.title')}</h2>
         </div>
-        <div className="rounded-3xl border border-dashed border-neutral-300 dark:border-dark-border bg-white dark:bg-dark-card px-6 py-12 md:py-16 text-center">
+        <div className="rounded-2xl border border-dashed border-neutral-300 dark:border-dark-border bg-white dark:bg-dark-card px-6 py-12 md:py-16 text-center">
           <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-neutral-100 dark:bg-dark-hover border border-neutral-200 dark:border-dark-border flex items-center justify-center text-neutral-400">
             <Bell className="w-6 h-6" />
           </div>

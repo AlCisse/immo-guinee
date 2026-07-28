@@ -359,7 +359,7 @@ export default function AidePage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t('help.searchPlaceholder')}
-                className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-white dark:bg-dark-card text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/50 shadow-lg"
+                className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-white dark:bg-dark-card text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/50 shadow-soft"
               />
             </div>
           </motion.div>

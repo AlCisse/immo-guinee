@@ -112,7 +112,7 @@ export default function LanguageSelector({
         </button>
 
         {isOpen && (
-          <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-dark-card rounded-xl shadow-xl border border-neutral-200 dark:border-dark-border py-1 z-50">
+          <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-dark-card rounded-xl shadow-soft-lg border border-neutral-200 dark:border-dark-border py-1 z-50">
             {SUPPORTED_LOCALES.map((loc) => (
               <button
                 type="button"
@@ -226,7 +226,7 @@ export default function LanguageSelector({
       </button>
 
       {isOpen && (
-        <div className="absolute w-full mt-2 bg-white dark:bg-dark-card rounded-xl shadow-lg border border-neutral-200 dark:border-dark-border py-2" style={{ zIndex: 9999 }}>
+        <div className="absolute w-full mt-2 bg-white dark:bg-dark-card rounded-xl shadow-soft-lg border border-neutral-200 dark:border-dark-border py-2" style={{ zIndex: 9999 }}>
           {SUPPORTED_LOCALES.map((loc) => (
             <button
               type="button"

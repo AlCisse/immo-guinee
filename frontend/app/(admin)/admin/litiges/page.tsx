@@ -375,7 +375,7 @@ export default function LitigesPage() {
       {/* Detail Modal */}
       {selectedDispute && !showAssignModal && !showResolveModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
             {/* Header */}
             <div className="px-6 py-4 border-b border-neutral-200 dark:border-dark-border flex items-center justify-between shrink-0">
               <div className="flex items-center gap-3">
@@ -606,7 +606,7 @@ export default function LitigesPage() {
       {/* Assign Mediator Modal */}
       {showAssignModal && selectedDispute && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-2xl max-w-md w-full">
+          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft max-w-md w-full">
             <div className="px-6 py-4 border-b border-neutral-200 dark:border-dark-border flex items-center justify-between">
               <h3 className="font-semibold text-lg text-neutral-900 dark:text-white">Assigner un médiateur</h3>
               <button
@@ -669,7 +669,7 @@ export default function LitigesPage() {
       {/* Resolve Modal */}
       {showResolveModal && selectedDispute && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-2xl max-w-md w-full">
+          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft max-w-md w-full">
             <div className="px-6 py-4 border-b border-neutral-200 dark:border-dark-border flex items-center justify-between">
               <h3 className="font-semibold text-lg text-neutral-900 dark:text-white">Résoudre le litige</h3>
               <button

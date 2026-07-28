@@ -475,7 +475,7 @@ export default function AnnoncesContent() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-dark-card rounded-2xl shadow-xl w-full max-w-sm overflow-hidden"
+              className="bg-white dark:bg-dark-card rounded-2xl shadow-soft w-full max-w-sm overflow-hidden"
             >
               <div className="p-6 text-center">
                 <div className="w-14 h-14 bg-error-100 dark:bg-error-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -531,7 +531,7 @@ export default function AnnoncesContent() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-dark-card rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
+              className="bg-white dark:bg-dark-card rounded-2xl shadow-soft w-full max-w-md overflow-hidden"
             >
               {/* Modal Header */}
               <div className="flex items-center justify-between p-4 border-b border-neutral-100 dark:border-dark-border">

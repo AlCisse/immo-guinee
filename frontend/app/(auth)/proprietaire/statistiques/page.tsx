@@ -234,9 +234,9 @@ export default function OwnerStatisticsPage() {
   // Mock data
   const viewsData = [120, 150, 180, 140, 200, 230, 190, 210, 250, 220, 280, 260];
   const propertyDistribution = [
-    { label: 'Appartements', value: 5, color: '#f97316' },
-    { label: 'Villas', value: 2, color: '#22c55e' },
-    { label: 'Bureaux', value: 3, color: '#3b82f6' },
+    { label: 'Appartements', value: 5, color: '#2C6E7D' }, // teal.500
+    { label: 'Villas', value: 2, color: '#f59e0b' }, // warning.500
+    { label: 'Bureaux', value: 3, color: '#79808B' }, // neutral.500
   ];
 
   const recentInquiries = [

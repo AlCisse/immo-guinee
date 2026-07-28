@@ -166,7 +166,7 @@ function PaymentDetailsModal({ payment, isOpen, onClose }: { payment: Payment | 
             className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"
           >
             <div
-              className="relative w-full max-w-2xl bg-white dark:bg-dark-card rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden"
+              className="relative w-full max-w-2xl bg-white dark:bg-dark-card rounded-2xl shadow-soft max-h-[90vh] overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}

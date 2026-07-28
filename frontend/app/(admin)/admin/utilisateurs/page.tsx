@@ -523,7 +523,7 @@ export default function UtilisateursPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white dark:bg-dark-card rounded-2xl shadow-xl max-w-md w-full p-6"
+              className="bg-white dark:bg-dark-card rounded-2xl shadow-soft max-w-md w-full p-6"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-6">
@@ -630,7 +630,7 @@ export default function UtilisateursPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white dark:bg-dark-card rounded-2xl shadow-xl max-w-md w-full p-6"
+              className="bg-white dark:bg-dark-card rounded-2xl shadow-soft max-w-md w-full p-6"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}

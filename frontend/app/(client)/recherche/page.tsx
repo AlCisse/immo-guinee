@@ -666,7 +666,7 @@ function SearchContent() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-xl shadow-lg z-50 overflow-hidden"
+                  className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-xl shadow-soft z-50 overflow-hidden"
                 >
                   {filteredQuartiers.map((quartier) => (
                     <button

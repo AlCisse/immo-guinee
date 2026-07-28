@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useAudioPlayer, AudioPlayer } from 'expo-audio';
 import { Ionicons } from '@expo/vector-icons';
+import Colors from '@/constants/Colors';
 
 interface VoiceMessageProps {
   uri: string;
@@ -26,7 +27,7 @@ export function VoiceMessage({
   uri,
   duration: initialDuration,
   isOwn = false,
-  primaryColor = '#10B981',
+  primaryColor = Colors.accent[500],
   onPlaybackStart,
   onPlaybackEnd,
 }: VoiceMessageProps) {
@@ -153,14 +154,14 @@ export function VoiceMessage({
       style={[
         styles.container,
         isOwn ? styles.ownMessage : styles.otherMessage,
-        { backgroundColor: isOwn ? primaryColor : '#F3F4F6' },
+        { backgroundColor: isOwn ? primaryColor : Colors.neutral[100] },
       ]}
     >
       {/* Play/Pause button */}
       <TouchableOpacity
         style={[
           styles.playButton,
-          { backgroundColor: isOwn ? 'rgba(255,255,255,0.2)' : '#E5E7EB' },
+          { backgroundColor: isOwn ? 'rgba(255,255,255,0.2)' : Colors.neutral[200] },
         ]}
         onPress={togglePlayback}
         disabled={isLoading}
@@ -168,13 +169,13 @@ export function VoiceMessage({
         {isLoading ? (
           <ActivityIndicator
             size="small"
-            color={isOwn ? '#FFFFFF' : '#6B7280'}
+            color={isOwn ? Colors.text.inverse : Colors.neutral[500]}
           />
         ) : (
           <Ionicons
             name={isPlaying ? 'pause' : 'play'}
             size={20}
-            color={isOwn ? '#FFFFFF' : '#1F2937'}
+            color={isOwn ? Colors.text.inverse : Colors.text.primary}
           />
         )}
       </TouchableOpacity>
@@ -193,11 +194,11 @@ export function VoiceMessage({
                     backgroundColor:
                       index / waveformBars.length <= currentPosition / (totalDuration || 1)
                         ? isOwn
-                          ? '#FFFFFF'
+                          ? Colors.text.inverse
                           : primaryColor
                         : isOwn
                         ? 'rgba(255,255,255,0.4)'
-                        : '#D1D5DB',
+                        : Colors.neutral[300],
                   },
                 ]}
               />
@@ -210,7 +211,7 @@ export function VoiceMessage({
           <Text
             style={[
               styles.timeText,
-              { color: isOwn ? 'rgba(255,255,255,0.8)' : '#6B7280' },
+              { color: isOwn ? 'rgba(255,255,255,0.8)' : Colors.neutral[500] },
             ]}
           >
             {isPlaying || currentPosition > 0
@@ -224,14 +225,14 @@ export function VoiceMessage({
       <TouchableOpacity
         style={[
           styles.speedButton,
-          { backgroundColor: isOwn ? 'rgba(255,255,255,0.2)' : '#E5E7EB' },
+          { backgroundColor: isOwn ? 'rgba(255,255,255,0.2)' : Colors.neutral[200] },
         ]}
         onPress={cycleSpeed}
       >
         <Text
           style={[
             styles.speedText,
-            { color: isOwn ? '#FFFFFF' : '#1F2937' },
+            { color: isOwn ? Colors.text.inverse : Colors.text.primary },
           ]}
         >
           {PLAYBACK_SPEEDS[speedIndex]}x

@@ -10,6 +10,7 @@ import {
 import { useAudioRecorder, AudioModule, RecordingPresets } from 'expo-audio';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import Colors from '@/constants/Colors';
 
 interface VoiceRecorderProps {
   onRecordingComplete: (uri: string, duration: number) => void;
@@ -22,7 +23,7 @@ export function VoiceRecorder({
   onRecordingComplete,
   onCancel,
   maxDuration = 300, // 5 minutes default
-  primaryColor = '#10B981',
+  primaryColor = Colors.accent[500],
 }: VoiceRecorderProps) {
   const { t } = useTranslation();
   const [isRecording, setIsRecording] = useState(false);
@@ -207,7 +208,7 @@ export function VoiceRecorder({
           style={[
             styles.recordingDot,
             {
-              backgroundColor: '#EF4444',
+              backgroundColor: Colors.error[500],
               transform: [{ scale: pulseAnim }],
             },
           ]}
@@ -223,7 +224,7 @@ export function VoiceRecorder({
           style={[styles.controlButton, styles.cancelButton]}
           onPress={() => stopRecording(true)}
         >
-          <Ionicons name="close" size={24} color="#6B7280" />
+          <Ionicons name="close" size={24} color={Colors.neutral[500]} />
         </TouchableOpacity>
 
         {/* Stop/Send button */}
@@ -231,7 +232,7 @@ export function VoiceRecorder({
           style={[styles.controlButton, styles.sendButton, { backgroundColor: primaryColor }]}
           onPress={() => stopRecording(false)}
         >
-          <Ionicons name="send" size={20} color="#FFFFFF" />
+          <Ionicons name="send" size={20} color={Colors.text.inverse} />
         </TouchableOpacity>
       </View>
 
@@ -245,7 +246,7 @@ export function VoiceRecorder({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: Colors.neutral[50],
     borderRadius: 16,
     padding: 16,
     alignItems: 'center',
@@ -277,12 +278,12 @@ const styles = StyleSheet.create({
   durationText: {
     fontSize: 24,
     fontWeight: '600',
-    color: '#1F2937',
+    color: Colors.text.primary,
     fontVariant: ['tabular-nums'],
   },
   maxDurationText: {
     fontSize: 14,
-    color: '#9CA3AF',
+    color: Colors.neutral[400],
     marginLeft: 4,
   },
   controls: {
@@ -299,7 +300,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   cancelButton: {
-    backgroundColor: '#E5E7EB',
+    backgroundColor: Colors.neutral[200],
   },
   sendButton: {
     shadowColor: '#000',
@@ -310,7 +311,7 @@ const styles = StyleSheet.create({
   },
   hintText: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: Colors.neutral[400],
     textAlign: 'center',
   },
 });

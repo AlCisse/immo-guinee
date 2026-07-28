@@ -728,7 +728,7 @@ export default function PropertyDetailPage() {
 
             {/* Mobile Pricing Card - After Amenities */}
             <div className="lg:hidden border-b border-neutral-200 dark:border-dark-border pb-6">
-              <div className="bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-xl p-5 shadow-lg">
+              <div className="bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-xl p-5 shadow-soft">
                 {/* Price */}
                 <div className="flex items-baseline gap-1 mb-4">
                   <span className="text-2xl font-semibold text-neutral-900 dark:text-white">
@@ -840,7 +840,7 @@ export default function PropertyDetailPage() {
           {/* Right Column: Booking Card (Sticky) - Desktop only */}
           <div className="hidden lg:block lg:col-span-1">
             <div className="sticky top-24">
-              <div className="bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-xl p-6 shadow-xl">
+              <div className="bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-xl p-6 shadow-soft">
                 {/* Price */}
                 <div className="flex items-baseline gap-1 mb-4">
                   <span className="text-2xl font-semibold text-neutral-900 dark:text-white">

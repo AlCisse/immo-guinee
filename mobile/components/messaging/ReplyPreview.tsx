@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Colors from '@/constants/Colors';
 
 interface ReplyPreviewProps {
   senderName: string;
@@ -22,9 +23,9 @@ export function ReplyPreview({
   const getMessageTypeIcon = () => {
     switch (messageType) {
       case 'VOCAL':
-        return <Ionicons name="mic" size={14} color="#6B7280" />;
+        return <Ionicons name="mic" size={14} color={Colors.neutral[500]} />;
       case 'PHOTO':
-        return <Ionicons name="image" size={14} color="#6B7280" />;
+        return <Ionicons name="image" size={14} color={Colors.neutral[500]} />;
       default:
         return null;
     }
@@ -76,7 +77,7 @@ export function ReplyPreview({
       </View>
       {onClear && (
         <TouchableOpacity onPress={onClear} style={styles.clearButton}>
-          <Ionicons name="close" size={20} color="#6B7280" />
+          <Ionicons name="close" size={20} color={Colors.neutral[500]} />
         </TouchableOpacity>
       )}
     </View>
@@ -87,7 +88,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: Colors.neutral[100],
     borderRadius: 8,
     paddingVertical: 8,
     paddingHorizontal: 12,
@@ -98,7 +99,7 @@ const styles = StyleSheet.create({
     width: 3,
     height: '100%',
     minHeight: 32,
-    backgroundColor: '#10B981',
+    backgroundColor: Colors.accent[500],
     borderRadius: 2,
     marginRight: 10,
   },
@@ -108,7 +109,7 @@ const styles = StyleSheet.create({
   sender: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#10B981',
+    color: Colors.accent[500],
     marginBottom: 2,
   },
   preview: {
@@ -118,7 +119,7 @@ const styles = StyleSheet.create({
   },
   previewText: {
     fontSize: 13,
-    color: '#6B7280',
+    color: Colors.neutral[500],
   },
   clearButton: {
     padding: 4,
@@ -141,12 +142,12 @@ const styles = StyleSheet.create({
     width: 2,
     height: '100%',
     minHeight: 24,
-    backgroundColor: '#10B981',
+    backgroundColor: Colors.accent[500],
     borderRadius: 1,
     marginRight: 8,
   },
   inlineBarSelf: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.text.inverse,
   },
   inlineContent: {
     flex: 1,
@@ -154,7 +155,7 @@ const styles = StyleSheet.create({
   inlineSender: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#10B981',
+    color: Colors.accent[500],
     marginBottom: 1,
   },
   inlineSenderSelf: {
@@ -167,7 +168,7 @@ const styles = StyleSheet.create({
   },
   inlineText: {
     fontSize: 12,
-    color: '#6B7280',
+    color: Colors.neutral[500],
   },
 });
 

@@ -507,7 +507,7 @@ export default function LocationSelector({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.15 }}
-                className="absolute z-50 w-full mt-2 bg-white dark:bg-dark-card rounded-xl shadow-lg border border-neutral-200 dark:border-dark-border overflow-hidden"
+                className="absolute z-50 w-full mt-2 bg-white dark:bg-dark-card rounded-xl shadow-soft-lg border border-neutral-200 dark:border-dark-border overflow-hidden"
               >
                 {/* Search Input */}
                 <div className="p-3 border-b border-neutral-100 dark:border-dark-border">

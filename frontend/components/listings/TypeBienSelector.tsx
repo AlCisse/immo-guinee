@@ -227,7 +227,7 @@ export default function TypeBienSelector({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ duration: 0.2, ease: 'easeOut' }}
-              className="absolute z-50 w-full mt-2 bg-white dark:bg-dark-card rounded-2xl shadow-2xl border border-neutral-200 dark:border-dark-border overflow-hidden"
+              className="absolute z-50 w-full mt-2 bg-white dark:bg-dark-card rounded-2xl shadow-soft border border-neutral-200 dark:border-dark-border overflow-hidden"
             >
               {/* Residential Section */}
               <div className="p-3">

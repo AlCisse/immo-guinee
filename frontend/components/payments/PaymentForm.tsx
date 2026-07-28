@@ -596,7 +596,7 @@ export default function PaymentForm({ contractId, invoice, onSuccess, onCancel }
   );
 
   return (
-    <div className="bg-white dark:bg-dark-card rounded-xl shadow-lg p-6 max-w-lg mx-auto">
+    <div className="bg-white dark:bg-dark-card rounded-xl shadow-soft p-6 max-w-lg mx-auto">
       {/* Progress indicator */}
       {!['processing', 'success', 'error'].includes(step) && (
         <div className="flex items-center justify-center mb-6">

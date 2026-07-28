@@ -78,7 +78,7 @@ const Modal = ({
       >
         <div
           className={cn(
-            'relative w-full rounded-xl bg-white dark:bg-dark-card shadow-xl',
+            'relative w-full rounded-xl bg-white dark:bg-dark-card shadow-soft-lg',
             'animate-fade-in',
             sizes[size]
           )}

@@ -138,7 +138,7 @@ export default function EstimerPage() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-white dark:bg-dark-card rounded-2xl shadow-lg overflow-hidden">
+        <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft overflow-hidden">
           <div className="p-8">
             <form onSubmit={handleCalculate} className="space-y-6">
               {/* Type d'opération */}

@@ -1,5 +1,5 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
@@ -8,7 +8,6 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 
-import { useColorScheme } from '@/components/useColorScheme';
 import { AuthProvider, useAuth } from '@/lib/auth/AuthContext';
 import { SecurityProvider } from '@/lib/security';
 import '@/lib/i18n';
@@ -73,11 +72,11 @@ function SecureAppWrapper() {
 }
 
 function RootLayoutNav() {
-  const colorScheme = useColorScheme();
-
+  // Mobile is explicitly light-only (see useColorScheme.ts). Dark mode is scaffolded in
+  // Colors.dark / themeColors.dark but not wired to screens.
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+    <ThemeProvider value={DefaultTheme}>
+      <StatusBar style="dark" />
       <Stack
         screenOptions={{
           headerBackTitle: '',

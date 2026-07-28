@@ -108,7 +108,7 @@ function NotificationDropdown({
   return (
     <div
       ref={dropdownRef}
-      className="absolute right-0 top-12 w-80 bg-white dark:bg-dark-card rounded-xl shadow-2xl z-50 overflow-hidden border border-neutral-200 dark:border-dark-border"
+      className="absolute right-0 top-12 w-80 bg-white dark:bg-dark-card rounded-xl shadow-soft-lg z-50 overflow-hidden border border-neutral-200 dark:border-dark-border"
     >
       {/* Header */}
       <div className="px-4 py-3 border-b border-neutral-100 dark:border-dark-border flex items-center justify-between">
@@ -490,7 +490,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
 
                   {showUserMenu && (
                     <div
-                      className="absolute right-0 top-12 w-56 bg-white dark:bg-dark-card rounded-xl shadow-2xl py-2 z-50 border border-neutral-200 dark:border-dark-border"
+                      className="absolute right-0 top-12 w-56 bg-white dark:bg-dark-card rounded-xl shadow-soft-lg py-2 z-50 border border-neutral-200 dark:border-dark-border"
                     >
                       <div className="px-4 py-3 border-b border-neutral-100 dark:border-dark-border">
                         <p className="font-semibold text-neutral-900 dark:text-white">{user.nom_complet || 'Utilisateur'}</p>

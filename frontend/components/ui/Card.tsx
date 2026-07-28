@@ -11,10 +11,12 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
 
 const Card = forwardRef<HTMLDivElement, CardProps>(
   ({ className, variant = 'default', padding = 'md', hoverable = false, ...props }, ref) => {
+    // Canonical « Argile de Conakry » card: rounded-2xl + shadow-soft (matches the
+    // de-facto majority of hand-rolled cards and .card in globals.css).
     const variants = {
-      default: 'bg-white border border-neutral-200 dark:bg-dark-card dark:border-dark-border',
+      default: 'bg-white border border-neutral-200 shadow-soft dark:bg-dark-card dark:border-dark-border',
       outlined: 'bg-transparent border-2 border-neutral-300 dark:border-dark-border',
-      elevated: 'bg-white shadow-card dark:bg-dark-card',
+      elevated: 'bg-white border border-neutral-200 shadow-soft-lg dark:bg-dark-card dark:border-dark-border',
     };
 
     const paddings = {
@@ -28,10 +30,10 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
       <div
         ref={ref}
         className={cn(
-          'rounded-xl',
+          'rounded-2xl',
           variants[variant],
           paddings[padding],
-          hoverable && 'transition-shadow duration-200 hover:shadow-card-hover',
+          hoverable && 'transition-shadow duration-200 hover:shadow-soft-lg',
           className
         )}
         {...props}

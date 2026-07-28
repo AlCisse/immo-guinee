@@ -51,7 +51,7 @@ export default function ContactPage() {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white dark:bg-dark-card rounded-3xl p-8 text-center max-w-md w-full shadow-xl"
+          className="bg-white dark:bg-dark-card rounded-2xl p-8 text-center max-w-md w-full shadow-soft"
         >
           <div className="w-20 h-20 bg-accent-100 dark:bg-accent-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-10 h-10 text-accent-500" />

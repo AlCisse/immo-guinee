@@ -16,21 +16,21 @@ const BADGE_CONFIG = {
     label: 'Bronze',
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="h-full w-full">
-        <circle cx="12" cy="12" r="10" fill="#CD7F32" />
+        <circle cx="12" cy="12" r="10" fill="#DB5327" />
         <text x="12" y="16" textAnchor="middle" fontSize="8" fill="white" fontWeight="bold">B</text>
       </svg>
     ),
-    gradient: 'from-warning-600 to-warning-800',
-    textColor: 'text-warning-700',
-    bgColor: 'bg-warning-100',
-    borderColor: 'border-warning-300',
+    gradient: 'from-primary-500 to-primary-700',
+    textColor: 'text-primary-700',
+    bgColor: 'bg-primary-100',
+    borderColor: 'border-primary-300',
     discount: 0,
   },
   ARGENT: {
     label: 'Argent',
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="h-full w-full">
-        <circle cx="12" cy="12" r="10" fill="#C0C0C0" />
+        <circle cx="12" cy="12" r="10" fill="#A9B0BA" />
         <text x="12" y="16" textAnchor="middle" fontSize="8" fill="white" fontWeight="bold">A</text>
       </svg>
     ),
@@ -44,8 +44,8 @@ const BADGE_CONFIG = {
     label: 'Or',
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="h-full w-full">
-        <circle cx="12" cy="12" r="10" fill="#FFD700" />
-        <text x="12" y="16" textAnchor="middle" fontSize="8" fill="#8B6914" fontWeight="bold">O</text>
+        <circle cx="12" cy="12" r="10" fill="#fbbf24" />
+        <text x="12" y="16" textAnchor="middle" fontSize="8" fill="#92400e" fontWeight="bold">O</text>
       </svg>
     ),
     gradient: 'from-warning-400 to-warning-600',
@@ -58,14 +58,14 @@ const BADGE_CONFIG = {
     label: 'Diamant',
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="h-full w-full">
-        <polygon points="12,2 22,9 12,22 2,9" fill="#B9F2FF" stroke="#00BFFF" strokeWidth="1" />
-        <polygon points="12,2 17,9 12,16 7,9" fill="#00BFFF" opacity="0.7" />
+        <polygon points="12,2 22,9 12,22 2,9" fill="#9DC7CF" stroke="#2C6E7D" strokeWidth="1" />
+        <polygon points="12,2 17,9 12,16 7,9" fill="#2C6E7D" opacity="0.7" />
       </svg>
     ),
-    gradient: 'from-secondary-400 to-teal-500',
-    textColor: 'text-secondary-600',
-    bgColor: 'bg-secondary-100',
-    borderColor: 'border-secondary-300',
+    gradient: 'from-teal-400 to-teal-600',
+    textColor: 'text-teal-700',
+    bgColor: 'bg-teal-100',
+    borderColor: 'border-teal-300',
     discount: 15,
   },
 };

@@ -188,7 +188,7 @@ export default function ContractClausesModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white dark:bg-dark-card shadow-xl transition-all">
+              <Dialog.Panel className="w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white dark:bg-dark-card shadow-soft-lg transition-all">
                 {/* Header */}
                 <div className="bg-primary-600 px-6 py-4">
                   <Dialog.Title className="text-xl font-bold text-white">

@@ -345,7 +345,7 @@ export default function NotationsPage() {
       {/* Detail Modal */}
       {selectedRating && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
             {/* Header */}
             <div className="px-6 py-4 border-b border-neutral-200 dark:border-dark-border flex items-center justify-between shrink-0">
               <div className="flex items-center gap-3">
@@ -573,7 +573,7 @@ export default function NotationsPage() {
       {/* Delete Confirmation Modal */}
       {showDeleteModal && ratingToDelete && (
         <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-2xl max-w-md w-full">
+          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft max-w-md w-full">
             <div className="p-6">
               <div className="w-16 h-16 bg-error-100 dark:bg-error-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <AlertTriangle className="w-8 h-8 text-error-600 dark:text-error-400" />

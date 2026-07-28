@@ -425,7 +425,7 @@ export default function CertificationsPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white dark:bg-dark-card rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              className="bg-white dark:bg-dark-card rounded-2xl shadow-soft max-w-2xl w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
@@ -616,7 +616,7 @@ export default function CertificationsPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white dark:bg-dark-card rounded-2xl shadow-xl max-w-md w-full"
+              className="bg-white dark:bg-dark-card rounded-2xl shadow-soft max-w-md w-full"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}

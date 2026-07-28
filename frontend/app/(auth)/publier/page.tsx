@@ -164,7 +164,7 @@ export default function PublierPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white dark:bg-dark-card rounded-2xl shadow-xl p-4 md:p-6 border border-neutral-100 dark:border-dark-border"
+          className="bg-white dark:bg-dark-card rounded-2xl shadow-soft p-4 md:p-6 border border-neutral-100 dark:border-dark-border"
         >
           {/* Steps Navigation */}
           <div className="flex items-center justify-between mb-2">

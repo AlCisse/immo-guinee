@@ -131,7 +131,7 @@ export default function InscriptionPage() {
           animate={{ opacity: 1, y: 0 }}
           className="w-full max-w-md"
         >
-          <div className="bg-white dark:bg-dark-card rounded-3xl shadow-2xl p-8">
+          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft p-8">
             <div className="text-center mb-8">
               <h1 className="text-2xl font-bold text-neutral-900 dark:text-white mb-2">
                 Créer un compte

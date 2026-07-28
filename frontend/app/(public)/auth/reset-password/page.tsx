@@ -267,7 +267,7 @@ export default function ResetPasswordPage() {
           animate={{ opacity: 1, y: 0 }}
           className="w-full max-w-md"
         >
-          <div className="bg-white dark:bg-dark-card rounded-3xl shadow-2xl p-8">
+          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft p-8">
             <Suspense fallback={
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-primary-500" />

@@ -629,7 +629,7 @@ export default function ListingFormStepper({
             className="space-y-6"
           >
             {/* Operation Type */}
-            <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-lg border border-neutral-100 dark:border-dark-border">
+            <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-soft border border-neutral-100 dark:border-dark-border">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-3 bg-gradient-to-br from-primary-500 to-primary-500 rounded-xl shadow-lg shadow-primary-500/30">
                   <Key className="w-5 h-5 text-white" />
@@ -739,7 +739,7 @@ export default function ListingFormStepper({
             </div>
 
             {/* Property Type */}
-            <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-lg border border-neutral-100 dark:border-dark-border">
+            <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-soft border border-neutral-100 dark:border-dark-border">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-3 bg-gradient-to-br from-teal-500 to-accent-500 rounded-xl shadow-lg shadow-teal-500/30">
                   <Building2 className="w-5 h-5 text-white" />
@@ -779,7 +779,7 @@ export default function ListingFormStepper({
             className="space-y-6"
           >
             {/* Title & Description */}
-            <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-lg border border-neutral-100 dark:border-dark-border">
+            <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-soft border border-neutral-100 dark:border-dark-border">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                   <div className="p-3 bg-gradient-to-br from-secondary-500 to-teal-500 rounded-xl shadow-lg shadow-secondary-500/30">
@@ -1027,7 +1027,7 @@ export default function ListingFormStepper({
             </div>
 
             {/* Prix et Caractéristiques */}
-            <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-lg border border-neutral-100 dark:border-dark-border">
+            <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-soft border border-neutral-100 dark:border-dark-border">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-3 bg-gradient-to-br from-accent-500 to-teal-500 rounded-xl shadow-lg shadow-accent-500/30">
                   <DollarSign className="w-5 h-5 text-white" />
@@ -1264,7 +1264,7 @@ export default function ListingFormStepper({
 
             {/* Équipements - Only show for property types that need it */}
             {needsAmenities(formData.typeBien) && (
-              <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-lg border border-neutral-100 dark:border-dark-border">
+              <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-soft border border-neutral-100 dark:border-dark-border">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="p-3 bg-gradient-to-br from-primary-500 to-warning-500 rounded-xl shadow-lg shadow-primary-500/30">
                     <Wifi className="w-5 h-5 text-white" />
@@ -1321,7 +1321,7 @@ export default function ListingFormStepper({
             exit="exit"
             transition={{ duration: 0.3, ease: 'easeInOut' }}
           >
-            <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-lg border border-neutral-100 dark:border-dark-border">
+            <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-soft border border-neutral-100 dark:border-dark-border">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-3 bg-gradient-to-br from-error-500 to-accent-500 rounded-xl shadow-lg shadow-error-500/30">
                   <MapPin className="w-5 h-5 text-white" />
@@ -1426,7 +1426,7 @@ export default function ListingFormStepper({
             exit="exit"
             transition={{ duration: 0.3, ease: 'easeInOut' }}
           >
-            <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-lg border border-neutral-100 dark:border-dark-border">
+            <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-soft border border-neutral-100 dark:border-dark-border">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-3 bg-gradient-to-br from-teal-500 to-teal-500 rounded-xl shadow-lg shadow-teal-500/30">
                   <Camera className="w-5 h-5 text-white" />

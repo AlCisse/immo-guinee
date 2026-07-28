@@ -272,7 +272,7 @@ export default function PhoneInput({
 
       {/* Country Dropdown */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-dark-card rounded-xl ring-1 ring-neutral-200 dark:ring-neutral-700 shadow-xl z-50 max-h-80 overflow-hidden">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-dark-card rounded-xl ring-1 ring-neutral-200 dark:ring-neutral-700 shadow-soft-lg z-50 max-h-80 overflow-hidden">
           {/* Search */}
           <div className="p-3 border-b border-neutral-200 dark:border-neutral-700">
             <div className="relative">
