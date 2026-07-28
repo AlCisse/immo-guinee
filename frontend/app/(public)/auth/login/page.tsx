@@ -84,13 +84,13 @@ export default function LoginPage() {
           }}
         />
 
-        {/* top: logo + wordmark */}
-        <div className="relative flex items-center gap-2.5 font-bold text-lg tracking-tight">
+        {/* top: logo + wordmark — clickable → home */}
+        <Link href={ROUTES.HOME} className="relative flex items-center gap-2.5 font-bold text-lg tracking-tight text-white dark:text-white">
           <span className="w-9 h-9 rounded-[10px] bg-white/15 backdrop-blur-sm grid place-items-center">
             <Home className="w-5 h-5" />
           </span>
           ImmoGuinée
-        </div>
+        </Link>
 
         {/* middle: headline + trust list */}
         <div className="relative">
@@ -139,7 +139,7 @@ export default function LoginPage() {
 
         <div className="w-full max-w-md mx-auto">
           {/* Mobile logo */}
-          <div className="lg:hidden text-center mb-6">
+          <Link href={ROUTES.HOME} className="lg:hidden text-center mb-6 block">
             <Image
               src="/images/iOS/Icon-60.png"
               alt="ImmoGuinée"
@@ -148,7 +148,7 @@ export default function LoginPage() {
               className="rounded-xl mx-auto mb-2"
             />
             <h1 className="text-xl font-bold text-primary-500">ImmoGuinée</h1>
-          </div>
+          </Link>
 
           <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft p-5 sm:p-8">
             <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-white mb-1">
