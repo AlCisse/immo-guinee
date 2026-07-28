@@ -217,7 +217,7 @@ export default function LocationCourteDureePage() {
               <Link
                 key={commune.name}
                 href={`/recherche?type_transaction=LOCATION_COURTE&commune=${commune.name}`}
-                className="group flex items-start gap-4 p-5 bg-white dark:bg-dark-card rounded-xl border border-neutral-200 dark:border-dark-border hover:border-teal-300 dark:hover:border-teal-500 hover:shadow-lg transition-all"
+                className="group flex items-start gap-4 p-5 bg-white dark:bg-dark-card rounded-xl border border-neutral-200 dark:border-dark-border hover:border-teal-300 dark:hover:border-teal-500 hover:shadow-soft-lg transition-all"
               >
                 <div className="p-2 bg-teal-100 dark:bg-teal-500/20 rounded-lg group-hover:bg-teal-200 dark:group-hover:bg-teal-500/30 transition-colors">
                   <MapPin className="w-5 h-5 text-teal-600 dark:text-teal-400" />

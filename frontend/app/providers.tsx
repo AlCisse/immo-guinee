@@ -34,7 +34,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             toastOptions={{
               duration: 4000,
               style: {
-                background: '#333',
+                background: '#262B32',
                 color: '#fff',
                 borderRadius: '12px',
                 padding: '12px 16px',

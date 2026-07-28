@@ -197,7 +197,7 @@ function StatCard({
     <Link href={href}>
       <motion.div
         whileHover={{ y: -4 }}
-        className="bg-white dark:bg-dark-card rounded-2xl p-5 shadow-soft hover:shadow-lg transition-all cursor-pointer"
+        className="bg-white dark:bg-dark-card rounded-2xl p-5 shadow-soft hover:shadow-soft-lg transition-all cursor-pointer"
       >
         <div className="flex items-start justify-between mb-3">
           <div className={`p-3 rounded-xl bg-gradient-to-br ${colorClasses[color]}`}>
