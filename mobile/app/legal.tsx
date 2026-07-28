@@ -112,8 +112,8 @@ export default function LegalScreen() {
           <View style={styles.card}>
             {KEY_POINTS_KEYS.map((key, index) => (
               <View key={key} style={[styles.keyPoint, index === KEY_POINTS_KEYS.length - 1 && { borderBottomWidth: 0 }]}>
-                <View style={[styles.keyPointIcon, { backgroundColor: '#DCFCE7' }]}>
-                  <Ionicons name="checkmark-circle" size={20} color="#22C55E" />
+                <View style={[styles.keyPointIcon, { backgroundColor: Colors.success[100] }]}>
+                  <Ionicons name="checkmark-circle" size={20} color={Colors.success[500]} />
                 </View>
                 <View style={styles.keyPointContent}>
                   <Text style={styles.keyPointTitle}>{t(`legal.keyPointsList.${key}.title`)}</Text>
@@ -160,8 +160,8 @@ export default function LegalScreen() {
               style={[styles.contactItem, { borderBottomWidth: 0 }]}
               onPress={() => Linking.openURL('mailto:security@immoguinee.com')}
             >
-              <View style={[styles.contactIcon, { backgroundColor: '#FEE2E2' }]}>
-                <Ionicons name="alert-circle-outline" size={22} color="#EF4444" />
+              <View style={[styles.contactIcon, { backgroundColor: Colors.error[100] }]}>
+                <Ionicons name="alert-circle-outline" size={22} color={Colors.error[500]} />
               </View>
               <View style={styles.contactContent}>
                 <Text style={styles.contactLabel}>{t('legal.contactItems.security.label')}</Text>

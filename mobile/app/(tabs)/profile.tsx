@@ -18,8 +18,8 @@ import Colors, { lightTheme } from '@/constants/Colors';
 const BADGE_COLORS: Record<string, string> = {
   DEBUTANT: Colors.neutral[400],
   VERIFIE: Colors.success[500],
-  PREMIUM: '#F59E0B',
-  SUPER_PROPRIO: '#8B5CF6',
+  PREMIUM: Colors.warning[500],
+  SUPER_PROPRIO: Colors.teal[500],
 };
 
 export default function ProfileScreen() {
@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    backgroundColor: '#FEE2E2',
+    backgroundColor: Colors.error[100],
     marginTop: 24,
     paddingVertical: 16,
     borderRadius: 16,
@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
   logoutText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#EF4444',
+    color: Colors.error[500],
   },
   version: {
     textAlign: 'center',
