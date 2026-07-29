@@ -99,3 +99,11 @@ impl Config {
         Ok(cfg)
     }
 }
+
+/// Whether the process runs in production. Drives boot-time guards (S5/S6):
+/// refuse unsafe dev defaults (CORS `*`, webhook non authentifié) when `IMMOG_APP_ENV=production`.
+pub fn is_prod() -> bool {
+    std::env::var("IMMOG_APP_ENV")
+        .map(|v| v == "production")
+        .unwrap_or(false)
+}

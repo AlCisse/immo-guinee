@@ -78,6 +78,14 @@ async fn receive(
 fn verify_webhook_token(cfg: &Config, headers: &HeaderMap) -> AppResult<()> {
     let expected = cfg.evolution_webhook_token.as_bytes();
     if expected.is_empty() {
+        // S6 — en production, un webhook non authentifié est une faille (n'importe
+        // qui peut imiter Evolution et injecter des accusés/messages). On refuse
+        // au boot-time n'est pas possible ici (le token vient de Config), donc on
+        // rejette chaque requête. En dev, on laisse passer avec un avertissement.
+        if crate::config::is_prod() {
+            tracing::error!("webhook Evolution refusé en production : IMMOG_EVOLUTION_WEBHOOK_TOKEN non défini");
+            return Err(AppError::Unauthorized);
+        }
         tracing::warn!("webhook Evolution non authentifié (IMMOG_EVOLUTION_WEBHOOK_TOKEN non défini)");
         return Ok(());
     }

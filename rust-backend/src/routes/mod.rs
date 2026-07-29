@@ -11,6 +11,7 @@ use axum::Router;
 use axum::extract::DefaultBodyLimit;
 use axum::http::StatusCode;
 use tower_http::{
+    compression::CompressionLayer,
     cors::{AllowOrigin, CorsLayer},
     timeout::TimeoutLayer,
     trace::TraceLayer,
@@ -54,7 +55,11 @@ pub fn router(state: Arc<AppState>, cfg: &Config) -> Router {
             Duration::from_secs(cfg.request_timeout_secs),
         ))
         .layer(cors)
-        .layer(TraceLayer::new_for_http());
+        .layer(TraceLayer::new_for_http())
+        // Response compression (gzip + Brotli, negotiated via Accept-Encoding).
+        // Huge win on 2G/3G: JSON payloads shrink ~70-85% with Brotli. Skips
+        // already-compressed bodies (images) and tiny responses automatically.
+        .layer(CompressionLayer::new().gzip(true).br(true));
 
     // Security headers last (outermost), so they apply to every response.
     let mut app = app;
@@ -66,8 +71,14 @@ pub fn router(state: Arc<AppState>, cfg: &Config) -> Router {
 
 fn build_cors(cfg: &Config) -> CorsLayer {
     use axum::http::HeaderName;
+    // S8 — `*` + credentials est invalide côté navigateur (les cookies HttpOnly
+    // d'auth ne seraient jamais envoyés). En dev on veut malgré tout laisser les
+    // cookies passer depuis n'importe quelle origine locale (localhost:3000,
+    // :3001…), donc on reflète l'origine de la requête (mirror_request) plutôt
+    // que d'émettre un `*` qui casse `allow_credentials`. En prod, S5 garantit
+    // au boot que cors_allowed_origin != "*", donc on tombe sur AllowOrigin::exact.
     let origin: AllowOrigin = if cfg.cors_allowed_origin == "*" {
-        AllowOrigin::any()
+        AllowOrigin::mirror_request()
     } else {
         AllowOrigin::exact(
             cfg.cors_allowed_origin
@@ -77,6 +88,7 @@ fn build_cors(cfg: &Config) -> CorsLayer {
     };
     CorsLayer::new()
         .allow_origin(origin)
+        .allow_credentials(true)
         .allow_methods([
             axum::http::Method::GET,
             axum::http::Method::POST,

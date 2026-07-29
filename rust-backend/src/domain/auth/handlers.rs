@@ -62,15 +62,39 @@ async fn me(
     Ok(Json(Envelope { success: true, data: UserPublic::from(user) }))
 }
 
-/// `POST /api/auth/logout` — revoke the current access token (Redis deny-list,
-/// TTL = the token's remaining lifetime).
+/// `POST /api/auth/logout` — revoke the current access token AND the refresh
+/// token (Redis deny-list, TTL = each token's remaining lifetime). Revoking the
+/// refresh token too is what actually ends the session: without it, a stolen
+/// refresh cookie could keep minting new access tokens for 7 days after the
+/// user logs out.
 async fn logout(
     auth: AuthUser,
     State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
 ) -> AppResult<axum::response::Response> {
-    let ttl = auth.exp.saturating_sub(jsonwebtoken::get_current_timestamp()).max(1);
+    let now = jsonwebtoken::get_current_timestamp();
     let mut conn = state.redis.clone();
+
+    // Revoke the access token (deny-list its jti for its remaining lifetime).
+    let ttl = auth.exp.saturating_sub(now).max(1);
     let _: () = conn.set_ex(revoked_key(auth.jti), 1, ttl).await?;
+
+    // Revoke the refresh token carried by the HttpOnly cookie, so a stolen
+    // refresh cookie can no longer be exchanged for fresh access tokens. The
+    // `Authorization` header here holds the *access* token (consumed by the
+    // AuthUser extractor), so only the cookie can carry the refresh token on
+    // this route.
+    if let Some(rt) = headers
+        .get(axum::http::header::COOKIE)
+        .and_then(|v| v.to_str().ok())
+        .and_then(crate::auth::cookie::refresh_from_cookie_header)
+    {
+        if let Ok(claims) = jwt::verify(&state.jwt_secret, rt, jwt::TokenType::Refresh) {
+            let rttl = claims.exp.saturating_sub(now).max(1);
+            let _: () = conn.set_ex(revoked_key(claims.jti), 1, rttl).await?;
+        }
+    }
+
     // Also clear both HttpOnly cookies so a cookie-based session ends here too.
     let mut resp = Json(Envelope { success: true, data: json!({ "message": "Déconnecté" }) }).into_response();
     append_cookie(&mut resp, &crate::auth::cookie::clear_auth_cookie(&state.cfg));
@@ -119,15 +143,34 @@ async fn refresh(
 
     let claims = jwt::verify(&state.jwt_secret, token, jwt::TokenType::Refresh)?;
 
+    let mut conn = state.redis.clone();
+
+    // Reject refresh tokens that were revoked — either explicitly at logout, or
+    // rotated out on a previous refresh (see rotation below). This closes the
+    // "stolen refresh cookie survives logout" gap: a revoked jti can no longer
+    // mint new tokens.
+    let revoked: bool = conn.exists(revoked_key(claims.jti)).await?;
+    if revoked {
+        return Err(AppError::Unauthorized);
+    }
+
     // Honour the per-user deny-list: a token issued before an admin ban/role
     // change is rejected (mirrors the AuthUser extractor).
-    let mut conn = state.redis.clone();
     let invalid_before: Option<i64> = conn.get(user_invalid_before_key(claims.sub)).await?;
     if let Some(ts) = invalid_before {
         if (claims.iat as i64) < ts {
             return Err(AppError::Unauthorized);
         }
     }
+
+    // Rotate the refresh token: invalidate the presented token before issuing
+    // the new pair, so each refresh token is single-use. A replay of the old
+    // token now hits the deny-list above and is rejected — which also signals a
+    // stolen-token reuse (a future hardening can invalidate the whole family
+    // via `user_invalid_before` on detected reuse).
+    let now = jsonwebtoken::get_current_timestamp();
+    let rttl = claims.exp.saturating_sub(now).max(1);
+    let _: () = conn.set_ex(revoked_key(claims.jti), 1, rttl).await?;
 
     let tokens = jwt::issue_pair(&state.jwt_secret, claims.sub, &claims.role)?;
     Ok(token_response(&state.cfg, LoginSuccess { tokens: tokens.clone() }, &tokens))

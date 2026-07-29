@@ -5,7 +5,10 @@
 
 use std::sync::Arc;
 
+use axum::body::Body;
 use axum::extract::{DefaultBodyLimit, Multipart, Path, Query, State};
+use axum::http::{HeaderMap, HeaderName, HeaderValue, StatusCode};
+use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::Json;
 use axum::Router;
@@ -21,14 +24,36 @@ use crate::db::entities::sea_orm_active_enums::StatutListing;
 use crate::db::entities::{listing, user};
 use crate::error::{AppError, AppResult};
 use crate::extractors::{AuthUser, ValidatedJson};
-use crate::services::listing_photo;
+use crate::services::{cache, listing_photo};
 use crate::state::AppState;
 
 use super::dto::{
-    CreateListingRequest, Envelope, ListingResponse, ListingSearchResponse, Pagination,
-    PhotoUploadResponse, UpdateListingRequest,
+    CreateListingRequest, Envelope, ListingResponse, ListingSearchResponse, ListingSummary,
+    Pagination, PhotoUploadResponse, UpdateListingRequest,
 };
 use super::query::{apply_filters, normalize_pagination, ListingSearchQuery};
+
+/// `Cache-Control` for public read endpoints: browser caches 30s, a shared CDN
+/// 120s, and both may serve stale while revalidating for 10 min. Combined with
+/// ETag/304 (detail) and Redis (search), re-navigation on 2G/3G costs ~200 bytes.
+const CACHE_CONTROL_PUBLIC: &str = "public, max-age=30, s-maxage=120, stale-while-revalidate=600";
+
+fn cache_headers() -> HeaderMap {
+    let mut h = HeaderMap::new();
+    h.insert(
+        HeaderName::from_static("cache-control"),
+        HeaderValue::from_static(CACHE_CONTROL_PUBLIC),
+    );
+    h
+}
+
+/// Invalidate the public search cache after any listing mutation (create, edit,
+/// archive, reactivate, mark-as-rented, photo upload). Best-effort: a missed
+/// bump only means up to 30s of stale results (the entry TTL), never corruption.
+async fn invalidate_search_cache(state: &AppState) {
+    let mut conn = state.redis.clone();
+    cache::bump_search_version(&mut conn).await;
+}
 
 /// Photo uploads may carry up to 10 photos × 5 MB (FR-009); raise the body limit
 /// for this route only (the global default stays modest).
@@ -52,24 +77,45 @@ pub fn routes() -> Router<Arc<AppState>> {
 async fn search(
     State(state): State<Arc<AppState>>,
     Query(q): Query<ListingSearchQuery>,
-) -> AppResult<Json<Envelope<ListingSearchResponse>>> {
+) -> AppResult<Response> {
     let (page, per_page) = normalize_pagination(q.page, q.per_page);
-    let select = apply_filters(&q);
 
+    // Best-effort Redis hit: skip the DB entirely (no count(), no page fetch).
+    let mut conn = state.redis.clone();
+    // Generation in the key: any listing mutation bumps it → all stale entries
+    // orphaned in O(1) (they expire on their own TTL), so writes never leak
+    // outdated results into the cached search.
+    let version = cache::search_version(&mut conn).await;
+    let cache_key = format!(
+        "cache:search:v{version}:p{page}:n{per_page}:{}",
+        serde_json::to_string(&q).unwrap_or_default()
+    );
+
+    if let Some(bytes) = cache::get_bytes(&mut conn, &cache_key).await {
+        if let Ok(data) = serde_json::from_slice::<ListingSearchResponse<ListingSummary>>(&bytes) {
+            return Ok((cache_headers(), Json(Envelope { success: true, data })).into_response());
+        }
+    }
+
+    let select = apply_filters(&q);
     let total = select.clone().count(&state.db).await?;
     let offset = ((page - 1) * per_page) as u64;
     let rows = select.offset(offset).limit(per_page as u64).all(&state.db).await?;
 
-    let listings = rows.into_iter().map(ListingResponse::from).collect::<Vec<_>>();
+    let listings = rows.into_iter().map(ListingSummary::from).collect::<Vec<_>>();
     let total_pages = ((total as u32) + per_page - 1) / per_page;
+    let data = ListingSearchResponse {
+        listings,
+        pagination: Pagination { page, per_page, total, total_pages },
+    };
 
-    Ok(Json(Envelope {
-        success: true,
-        data: ListingSearchResponse {
-            listings,
-            pagination: Pagination { page, per_page, total, total_pages },
-        },
-    }))
+    // Warm the cache (30s TTL — short enough to stay fresh, long enough to absorb
+    // a homepage/search burst). Failure is non-fatal.
+    if let Ok(bytes) = serde_json::to_vec(&data) {
+        cache::set_bytes(&mut conn, &cache_key, &bytes, 30).await;
+    }
+
+    Ok((cache_headers(), Json(Envelope { success: true, data })).into_response())
 }
 
 /// `GET /api/listings/my` — the authenticated caller's own listings (all statuses,
@@ -78,7 +124,7 @@ async fn my_listings(
     auth: AuthUser,
     State(state): State<Arc<AppState>>,
     Query(q): Query<ListingSearchQuery>,
-) -> AppResult<Json<Envelope<ListingSearchResponse>>> {
+) -> AppResult<Json<Envelope<ListingSearchResponse<ListingResponse>>>> {
     let (page, per_page) = normalize_pagination(q.page, q.per_page);
     let select = listing::Entity::find()
         .filter(listing::Column::CreateurId.eq(auth.id))
@@ -103,7 +149,8 @@ async fn my_listings(
 async fn show(
     State(state): State<Arc<AppState>>,
     Path(id): Path<Uuid>,
-) -> AppResult<Json<serde_json::Value>> {
+    req_headers: HeaderMap,
+) -> AppResult<Response> {
     let model = listing::Entity::find_by_id(id).one(&state.db).await?;
     let model = model.ok_or(AppError::NotFound)?;
     // Public detail is for listings on the market or concluded via the platform.
@@ -113,14 +160,46 @@ async fn show(
     if matches!(model.statut, StatutListing::Expire | StatutListing::Archive | StatutListing::Suspendu) {
         return Err(AppError::NotFound);
     }
+
+    // Weak ETag from the listing identity + last update — deliberately NOT
+    // nombre_vues (which changes every view and would defeat 304s). Stable across
+    // views, changes on edit/reactivate.
+    let etag = format!(
+        "W/\"{}-{}\"",
+        id,
+        model
+            .date_derniere_maj
+            .map(|d| d.timestamp())
+            .unwrap_or_else(|| model.date_publication.timestamp())
+    );
+
+    // Conditional request: a 304 costs ~200 bytes on the wire instead of the full
+    // listing JSON — the decisive win when re-navigating on 2G/3G.
+    if let Some(if_none_match) = req_headers.get("if-none-match") {
+        if if_none_match.as_bytes() == etag.as_bytes() {
+            let mut h = cache_headers();
+            if let Ok(v) = HeaderValue::from_str(&etag) {
+                h.insert(HeaderName::from_static("etag"), v);
+            }
+            return Ok((StatusCode::NOT_MODIFIED, h, Body::empty()).into_response());
+        }
+    }
+
     let createur_id = model.createur_id;
 
-    // Increment the view counter (FR: nombre_vues) atomically in the DB.
-    listing::Entity::update_many()
-        .col_expr(listing::Column::NombreVues, Expr::col(listing::Column::NombreVues).add(1))
-        .filter(listing::Column::Id.eq(id))
-        .exec(&state.db)
-        .await?;
+    // Increment the view counter fire-and-forget: the GET stays non-mutating
+    // (cacheable) and the response isn't blocked on a DB write. The displayed
+    // count is still bumped optimistically below.
+    {
+        let db = state.db.clone();
+        tokio::spawn(async move {
+            let _ = listing::Entity::update_many()
+                .col_expr(listing::Column::NombreVues, Expr::col(listing::Column::NombreVues).add(1))
+                .filter(listing::Column::Id.eq(id))
+                .exec(&db)
+                .await;
+        });
+    }
 
     let mut data = ListingResponse::from(model);
     data.nombre_vues += 1;
@@ -142,7 +221,12 @@ async fn show(
     if let Some(obj) = body.as_object_mut() {
         obj.insert("user".into(), user_json.unwrap_or(serde_json::Value::Null));
     }
-    Ok(Json(json!({ "success": true, "data": body })))
+
+    let mut resp_headers = cache_headers();
+    if let Ok(v) = HeaderValue::from_str(&etag) {
+        resp_headers.insert(HeaderName::from_static("etag"), v);
+    }
+    Ok((resp_headers, Json(json!({ "success": true, "data": body }))).into_response())
 }
 
 /// `POST /api/listings` — create a listing owned by the authenticated user
@@ -175,6 +259,7 @@ async fn create(
     .insert(&state.db)
     .await?;
 
+    invalidate_search_cache(&state).await;
     Ok(Json(Envelope { success: true, data: ListingResponse::from(model) }))
 }
 
@@ -256,6 +341,7 @@ async fn upload_photos_locked(
     let mut am: listing::ActiveModel = listing.into();
     am.photos = Set(photos_json.clone());
     am.update(&state.db).await?;
+    invalidate_search_cache(&state).await;
 
     Ok(Json(Envelope { success: true, data: PhotoUploadResponse { count, photos: photos_json } }))
 }
@@ -279,6 +365,7 @@ async fn update(
     am.date_derniere_maj = Set(Some(chrono::Utc::now().fixed_offset()));
 
     let updated = am.update(&state.db).await?;
+    invalidate_search_cache(&state).await;
     Ok(Json(Envelope { success: true, data: ListingResponse::from(updated) }))
 }
 
@@ -293,6 +380,7 @@ async fn destroy(
     let mut am: listing::ActiveModel = listing.into();
     am.statut = Set(StatutListing::Archive);
     am.update(&state.db).await?;
+    invalidate_search_cache(&state).await;
 
     Ok(Json(Envelope { success: true, data: json!({ "message": "Annonce archivée" }) }))
 }
@@ -310,6 +398,7 @@ async fn mark_as_rented(
     am.statut = Set(StatutListing::LoueVendu);
     am.date_derniere_maj = Set(Some(chrono::Utc::now().fixed_offset()));
     let updated = am.update(&state.db).await?;
+    invalidate_search_cache(&state).await;
     Ok(Json(Envelope { success: true, data: ListingResponse::from(updated) }))
 }
 
@@ -327,6 +416,7 @@ async fn reactivate(
     am.date_expiration = Set((now + chrono::Duration::days(90)).fixed_offset());
     am.date_derniere_maj = Set(Some(now.fixed_offset()));
     let updated = am.update(&state.db).await?;
+    invalidate_search_cache(&state).await;
     Ok(Json(Envelope { success: true, data: ListingResponse::from(updated) }))
 }
 

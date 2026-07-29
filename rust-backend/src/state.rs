@@ -34,6 +34,18 @@ pub struct AppState {
 
 impl AppState {
     pub async fn init(cfg: &Config) -> AppResult<Self> {
+        // S5 — garde au boot : en production, refuser CORS `*`. Les cookies
+        // d'auth (HttpOnly, refresh token) nécessitent `allow_credentials`, ce
+        // qui est incompatible avec une origine `*` côté navigateur. Une origine
+        // explicite (IMMOG_CORS_ALLOWED_ORIGIN=https://immoguinee.com) est donc
+        // obligatoire en prod. Échec rapide et explicite plutôt que de booter
+        // avec une config qui cassera l'auth cross-origin en silence.
+        if crate::config::is_prod() && cfg.cors_allowed_origin == "*" {
+            return Err(AppError::Internal(anyhow::anyhow!(
+                "IMMOG_CORS_ALLOWED_ORIGIN=* interdit en production (credentials cookies requièrent une origine explicite)"
+            )));
+        }
+
         let db = sea_orm::Database::connect(&cfg.database_url)
             .await
             .map_err(|e| crate::error::AppError::Internal(anyhow::anyhow!("DB connect: {e}")))?;

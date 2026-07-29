@@ -13,6 +13,7 @@
 
 use serde::Deserialize;
 use serde_json::json;
+use std::time::Duration;
 
 use crate::config::Config;
 use crate::error::{AppError, AppResult};
@@ -53,7 +54,13 @@ impl VaultClient {
             return Ok(None);
         }
         let secret_id = load_secret_id()?;
-        let http = reqwest::Client::new();
+        // S4 — Vault est un secret à risque : un appel bloqué (réseau/Vault down)
+        // ne doit pas tenir un thread indéfiniment. Timeout total 5 s, connect 3 s.
+        let http = reqwest::Client::builder()
+            .timeout(Duration::from_secs(5))
+            .connect_timeout(Duration::from_secs(3))
+            .build()
+            .map_err(|e| AppError::Internal(anyhow::anyhow!("vault client: {e}")))?;
 
         let resp: LoginResponse = http
             .post(format!("{}/v1/auth/approle/login", cfg.vault_addr))

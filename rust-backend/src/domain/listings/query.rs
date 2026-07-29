@@ -5,7 +5,7 @@
 //! nombre_chambres (>=). Ordering: date_publication desc. Pagination by the caller.
 
 use serde::de::DeserializeOwned;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use sea_orm::sea_query::Expr;
 use sea_orm::sea_query::extension::postgres::PgExpr; // .ilike() on Expr (case-insensitive)
 use sea_orm::{ColumnTrait, Condition, EntityTrait, QueryFilter, QueryOrder, Select};
@@ -20,7 +20,7 @@ use crate::db::entities::sea_orm_active_enums::{Quartier, StatutListing, TypeBie
 /// `type_operation`, `type_bien` and `quartier` accept a **comma-separated list**
 /// (e.g. `type_bien=BUREAU,MAGASIN`) → matched with `IN`. They are raw strings so a
 /// list doesn't fail enum deserialization; invalid tokens are ignored (not a 400).
-#[derive(Debug, Clone, Default, Deserialize)]
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct ListingSearchQuery {
     pub q: Option<String>,
     pub type_operation: Option<String>,

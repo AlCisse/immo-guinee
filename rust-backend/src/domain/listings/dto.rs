@@ -24,10 +24,17 @@ pub struct ListingResponse {
     pub description: String,
     pub prix_gnf: i64,
     pub quartier: Quartier,
+    // Omit absent optional fields instead of emitting `null` — trims the list
+    // payload (the most-called endpoint) on low-bandwidth clients.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub adresse_complete: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub superficie_m2: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub nombre_chambres: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub nombre_salons: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub caution_mois: Option<i32>,
     pub equipements: serde_json::Value,
     pub photos: serde_json::Value,
@@ -65,7 +72,7 @@ impl From<listing::Model> for ListingResponse {
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Pagination {
     pub page: u32,
     pub per_page: u32,
@@ -73,10 +80,64 @@ pub struct Pagination {
     pub total_pages: u32,
 }
 
-#[derive(Debug, Serialize)]
-pub struct ListingSearchResponse {
-    pub listings: Vec<ListingResponse>,
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ListingSearchResponse<T> {
+    pub listings: Vec<T>,
     pub pagination: Pagination,
+}
+
+/// Lean list-item shape for the search endpoint (the most-called one).
+///
+/// Drops the heavy fields a card never needs: `description` (up to 2000 chars),
+/// `equipements`, `options_premium`, `date_expiration`, `createur_id`, `nombre_vues`.
+/// On a 20-item page that removes ~40 KB+ of raw JSON before compression — the
+/// single biggest low-bandwidth win. Detail (`show`) still returns the full
+/// `ListingResponse` + owner.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ListingSummary {
+    pub id: Uuid,
+    pub type_operation: TypeOperation,
+    pub type_bien: TypeBien,
+    pub titre: String,
+    pub prix_gnf: i64,
+    pub quartier: Quartier,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub adresse_complete: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub superficie_m2: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub nombre_chambres: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub nombre_salons: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub caution_mois: Option<i32>,
+    /// Photo rendition URLs (`{thumb, medium, large}` per photo) — the card only
+    /// needs the first photo's small rendition, but keep the array shape to stay
+    /// wire-compatible with the existing frontend mapping.
+    pub photos: serde_json::Value,
+    pub statut: StatutListing,
+    pub date_publication: DateTimeWithTimeZone,
+}
+
+impl From<listing::Model> for ListingSummary {
+    fn from(m: listing::Model) -> Self {
+        Self {
+            id: m.id,
+            type_operation: m.type_operation,
+            type_bien: m.type_bien,
+            titre: m.titre,
+            prix_gnf: m.prix_gnf,
+            quartier: m.quartier,
+            adresse_complete: m.adresse_complete,
+            superficie_m2: m.superficie_m2,
+            nombre_chambres: m.nombre_chambres,
+            nombre_salons: m.nombre_salons,
+            caution_mois: m.caution_mois,
+            photos: m.photos,
+            statut: m.statut,
+            date_publication: m.date_publication,
+        }
+    }
 }
 
 /// Create-listing payload (FR-011). Mandatory fields validated by `ValidatedJson`.

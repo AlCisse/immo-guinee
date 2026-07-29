@@ -6,6 +6,7 @@
 
 use reqwest::Client;
 use serde_json::json;
+use std::time::Duration;
 
 use crate::config::Config;
 use crate::error::{AppError, AppResult};
@@ -25,8 +26,18 @@ impl WhatsAppClient {
         let api_key = evolution_key
             .filter(|k| !k.is_empty())
             .unwrap_or_else(|| std::env::var("IMMOG_EVOLUTION_API_KEY").unwrap_or_default());
+        // S4 — Evolution API est un service externe (réseau). Un appel bloqué
+        // (Evolution down, réseau congesté) ne doit pas tenir un thread indéfiniment.
+        // Timeout total 10 s (envoi WhatsApp peut être lent), connect 3 s. Le builder
+        // est infallible ici (from_config ne retourne pas AppResult) : repli sur un
+        // client sans timeout dédié plutôt que de paniquer au boot.
+        let http = Client::builder()
+            .timeout(Duration::from_secs(10))
+            .connect_timeout(Duration::from_secs(3))
+            .build()
+            .unwrap_or_else(|_| Client::new());
         Self {
-            http: Client::new(),
+            http,
             base_url: cfg.evolution_base_url.trim_end_matches('/').to_owned(),
             instance: cfg.evolution_instance.clone(),
             api_key,
