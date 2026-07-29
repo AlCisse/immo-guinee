@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api, ApiResponse } from '../api/client';
 import toast from 'react-hot-toast';
@@ -105,7 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loadUser();
   }, []);
 
-  const login = async (telephone: string, mot_de_passe: string) => {
+  const login = useCallback(async (telephone: string, mot_de_passe: string) => {
     try {
       const response = await api.auth.login({ telephone, mot_de_passe });
       const data: ApiResponse<{
@@ -117,8 +117,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         requires_2fa_setup?: boolean;
         setup_token?: string;
       }> = response.data;
-
-      console.log('Login response:', data);
 
       // Handle both possible response structures (token vs access_token)
       const responseData = data.data || data;
@@ -213,9 +211,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // don't double-log here.
       throw error;
     }
-  };
+  }, [router]);
 
-  const register = async (data: RegisterData) => {
+  const register = useCallback(async (data: RegisterData) => {
     try {
       const response = await api.auth.register(data);
       const result: ApiResponse<{ action?: string; telephone?: string; user?: any }> = response.data;
@@ -261,9 +259,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       throw error;
     }
-  };
+  }, [router]);
 
-  const verifyOtp = async (telephone: string, otp_code: string) => {
+  const verifyOtp = useCallback(async (telephone: string, otp_code: string) => {
     try {
       const response = await api.auth.verifyOtp({ telephone, otp_code });
       const data: ApiResponse<{
@@ -271,8 +269,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user: User;
         redirect: RedirectData;
       }> = response.data;
-
-      console.log('OTP verification response:', data);
 
       // Handle both possible response structures (token vs access_token)
       const responseData = data.data || data;
@@ -311,9 +307,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('OTP verification error:', error);
       throw error;
     }
-  };
+  }, [router]);
 
-  const resendOtp = async (telephone: string) => {
+  const resendOtp = useCallback(async (telephone: string) => {
     try {
       const response = await api.auth.resendOtp({ telephone });
       const data: ApiResponse = response.data;
@@ -325,9 +321,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Resend OTP error:', error);
       throw error;
     }
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       // Call logout API - server will clear the httpOnly cookie
       await api.auth.logout().catch(() => {
@@ -355,9 +351,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Redirect to home
       router.push('/');
     }
-  };
+  }, [router]);
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     try {
       // Token is sent automatically via httpOnly cookie
       const response = await api.auth.me();
@@ -388,40 +384,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setRedirectData(null);
     }
-  };
+  }, []);
 
   // Role checking functions
-  const hasRole = (role: string): boolean => {
+  const hasRole = useCallback((role: string): boolean => {
     return user?.roles?.includes(role) || false;
-  };
+  }, [user]);
 
-  const hasAnyRole = (roles: string[]): boolean => {
+  const hasAnyRole = useCallback((roles: string[]): boolean => {
     return roles.some(role => user?.roles?.includes(role)) || false;
-  };
+  }, [user]);
 
-  const hasPermission = (permission: string): boolean => {
+  const hasPermission = useCallback((permission: string): boolean => {
     return user?.permissions?.includes(permission) || false;
-  };
+  }, [user]);
 
-  const isAdmin = (): boolean => {
+  const isAdmin = useCallback((): boolean => {
     return hasRole('admin');
-  };
+  }, [hasRole]);
 
-  const isMediator = (): boolean => {
+  const isMediator = useCallback((): boolean => {
     return hasRole('mediator');
-  };
+  }, [hasRole]);
 
   // Phone verification functions
-  const hasVerifiedPhone = (): boolean => {
+  const hasVerifiedPhone = useCallback((): boolean => {
     return !!user?.telephone_verified_at;
-  };
+  }, [user]);
 
   /**
    * Check if phone is verified, if not redirect to verify page with OTP
    * @param action - Optional action description to show in toast
    * @returns true if verified, false if redirecting to verify
    */
-  const requirePhoneVerification = (action?: string): boolean => {
+  const requirePhoneVerification = useCallback((action?: string): boolean => {
     if (!user) {
       // Not logged in, redirect to login
       router.push('/auth/login');
@@ -450,9 +446,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Redirect to verify page
     router.push(`/auth/verify-otp?telephone=${encodeURIComponent(user.telephone)}`);
     return false;
-  };
+  }, [user, hasVerifiedPhone, resendOtp, router]);
 
-  const value: AuthContextType = {
+  // P7 — Mémoïser le value du contexte. Sans cela, l'objet `value` était recréé à
+  // chaque rendu du provider → tous les consommateurs (useAuth) re-rendaient même
+  // quand seul isLoading changeait. Avec useCallback sur les fonctions + useMemo
+  // ici, l'identité de `value` n'est stable que sur ses véritables dépendances.
+  const value: AuthContextType = useMemo(() => ({
     user,
     isLoading,
     isAuthenticated: !!user,
@@ -470,7 +470,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isMediator,
     hasVerifiedPhone,
     requirePhoneVerification,
-  };
+  }), [user, isLoading, redirectData, login, register, verifyOtp, resendOtp, logout, refreshUser, hasRole, hasAnyRole, hasPermission, isAdmin, isMediator, hasVerifiedPhone, requirePhoneVerification]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
