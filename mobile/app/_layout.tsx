@@ -33,7 +33,25 @@ export default function RootLayout() {
     defaultOptions: {
       queries: {
         staleTime: 1000 * 60 * 5, // 5 minutes
-        retry: 2,
+        // Resilience for the Guinean network context (frequent 2G/3G, drops):
+        // keep cached data for 24h so the app stays usable offline, and serve
+        // the cache when the network is down instead of showing an error.
+        gcTime: 24 * 60 * 60 * 1000, // 24 hours
+        networkMode: 'offlineFirst',
+        refetchOnReconnect: true,
+        // Don't retry client errors (4xx) — they won't resolve by repeating.
+        // Network/5xx errors retry with exponential backoff (capped at 30s).
+        retry: (failureCount: number, error: Error) => {
+          const status = (error as { response?: { status?: number } })?.response?.status;
+          if (typeof status === 'number' && status >= 400 && status < 500) return false;
+          return failureCount < 3;
+        },
+        retryDelay: (attempt: number) => Math.min(1000 * 2 ** attempt, 30_000),
+      },
+      mutations: {
+        // Mutations are queued when offline and replayed on reconnect, so a
+        // favorite toggle / message send made on a flaky network isn't lost.
+        networkMode: 'offlineFirst',
       },
     },
   }));
