@@ -4,11 +4,13 @@ import { useState, useMemo, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api/client';
 import { CONAKRY_COMMUNES, CONAKRY_QUARTIERS } from '@/lib/data/communes';
 import { useTranslations } from '@/lib/i18n';
+import { Badge } from '@/components/ui/Badge';
 import {
   Search,
   SlidersHorizontal,
@@ -127,14 +129,19 @@ const formatPrice = (price: number | string | undefined | null) => {
 function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'grid' | 'list' }) {
   const { t } = useTranslations('search');
   const [isFavorite, setIsFavorite] = useState(false);
+  const queryClient = useQueryClient();
 
   const handleToggleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault();
+    // R6 — mutation optimiste : l'UI bascule immédiatement (cœur rempli/vidé),
+    // puis l'API est appelée. En cas d'échec, on annule l'état local (rollback).
+    const next = !isFavorite;
+    setIsFavorite(next);
     try {
       await api.favorites.toggle(property.id);
-      setIsFavorite(!isFavorite);
+      queryClient.invalidateQueries({ queryKey: ['favorites'] });
     } catch {
-      // User not authenticated
+      setIsFavorite(!next); // rollback
     }
   };
 
@@ -180,7 +187,16 @@ function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'gr
           {/* Image */}
           <div className="relative w-full sm:w-64 h-48 sm:h-auto flex-shrink-0">
             {photoUrl ? (
-              <img src={photoUrl} alt={property.titre} className="absolute inset-0 w-full h-full object-cover" />
+              // P6 — next/image (fill) au lieu d'un <img> brut : sert des formats
+              // AVIF/WebP adaptés à la taille de l'écran (deviceSizes) et évite le
+              // reflow. Le parent est `position: relative`, requis pour fill.
+              <Image
+                src={photoUrl}
+                alt={property.titre}
+                fill
+                sizes="(max-width: 640px) 100vw, 256px"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
             ) : (
               <div className="absolute inset-0 bg-gradient-to-br from-primary-200 to-primary-300 dark:from-primary-900 dark:to-primary-800" />
             )}
@@ -188,10 +204,10 @@ function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'gr
             {/* Badges */}
             <div className="absolute top-3 left-3 flex gap-2">
               {property.is_premium && (
-                <span className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-warning-400 to-warning-500 text-white text-xs font-semibold rounded-full">
+                <Badge variant="premium" size="sm" className="gap-1 py-1 font-semibold">
                   <Sparkles className="w-3 h-3" />
                   {t('badges.premium')}
-                </span>
+                </Badge>
               )}
               {isNew && (
                 <span className="px-2 py-1 bg-primary-500 text-white text-xs font-semibold rounded-full">
@@ -300,10 +316,10 @@ function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'gr
           {/* Badges */}
           <div className="absolute top-3 left-3 flex gap-2">
             {property.is_premium && (
-              <span className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-warning-400 to-warning-500 text-white text-xs font-semibold rounded-full">
+              <Badge variant="premium" size="sm" className="gap-1 py-1 font-semibold">
                 <Sparkles className="w-3 h-3" />
                 {t('badges.premium')}
-              </span>
+              </Badge>
             )}
             {isNew && (
               <span className="px-2 py-1 bg-primary-500 text-white text-xs font-semibold rounded-full">

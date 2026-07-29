@@ -3,7 +3,7 @@
 import { api } from '@/lib/api/client';
 import { CONAKRY_COMMUNES } from '@/lib/data/communes';
 import { useTranslations } from '@/lib/i18n';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
@@ -87,14 +87,20 @@ const formatPrice = (price: number | string | undefined | null) => {
 function PropertyCard({ property }: { property: Listing }) {
   const { t } = useTranslations();
   const [isFavorite, setIsFavorite] = useState(false);
+  const queryClient = useQueryClient();
 
   const handleToggleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault();
+    // R6 — mutation optimiste : l'UI bascule immédiatement (cœur rempli/vidé),
+    // puis l'API est appelée. En cas d'échec (ex. utilisateur non authentifié),
+    // on annule l'état local (rollback) — le cœur revient à sa valeur précédente.
+    const next = !isFavorite;
+    setIsFavorite(next);
     try {
       await api.favorites.toggle(property.id);
-      setIsFavorite(!isFavorite);
+      queryClient.invalidateQueries({ queryKey: ['favorites'] });
     } catch {
-      // User not authenticated
+      setIsFavorite(!next); // rollback
     }
   };
 

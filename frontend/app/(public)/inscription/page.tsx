@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { AUTH_GRADIENT_BG } from '@/lib/ui/auth';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -102,7 +103,7 @@ export default function InscriptionPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-600 via-primary-500 to-primary-400 flex flex-col">
+    <div className={`min-h-screen ${AUTH_GRADIENT_BG} flex flex-col`}>
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0" style={{

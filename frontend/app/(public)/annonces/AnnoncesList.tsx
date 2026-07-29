@@ -56,7 +56,10 @@ export default function AnnoncesList() {
   const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') || '');
 
   // Fetch listings with React Query
-  const { data, isLoading, isError, error } = useListings({
+  // R7 — refetch ciblé (React Query) plutôt qu'un window.location.reload() qui
+  // détruit tout l'état client (filtres, pagination, scroll) et re-télécharge les
+  // assets. refetch relance uniquement la requête listings en échec.
+  const { data, isLoading, isError, error, refetch } = useListings({
     ...filters,
     page: currentPage,
     perPage: 20, // FR-019: 20 annonces par page
@@ -358,7 +361,7 @@ export default function AnnoncesList() {
                   {error instanceof Error ? error.message : 'Une erreur est survenue'}
                 </p>
                 <button
-                  onClick={() => window.location.reload()}
+                  onClick={() => refetch()}
                   className="px-6 py-2 bg-error-600 text-white rounded-lg font-medium hover:bg-error-700 transition-colors focus:outline-none focus:ring-2 focus:ring-error-500 focus:ring-offset-2"
                 >
                   Réessayer
