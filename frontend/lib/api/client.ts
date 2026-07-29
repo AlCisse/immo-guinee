@@ -46,17 +46,30 @@ function mapSearchParams(params: Record<string, any>): Record<string, any> {
   return p;
 }
 
-// --- JWT auth (Rust backend is stateless: Bearer token, no cookie session) ---
-const TOKEN_KEY = 'auth_token';
+// --- JWT auth ---
+// The access token is delivered by the backend as an `HttpOnly` cookie
+// (`access_token`), invisible to JavaScript so an XSS payload cannot steal the
+// session. We also keep an in-memory copy for the lifetime of the current tab so
+// the `Authorization: Bearer` header still works within a session — but nothing
+// is written to localStorage (which XSS *can* read). On reload the in-memory
+// token is gone and the HttpOnly cookie alone re-authenticates the requests.
+const LEGACY_TOKEN_KEY = 'auth_token';
+let accessToken: string | null = null;
+
+// One-time migration: purge any token persisted by an older build.
+if (typeof window !== 'undefined') {
+  try {
+    localStorage.removeItem(LEGACY_TOKEN_KEY);
+  } catch {
+    /* storage unavailable (private mode) — nothing to purge */
+  }
+}
 
 export function getAuthToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem(TOKEN_KEY);
+  return accessToken;
 }
 export function setAuthToken(token: string | null) {
-  if (typeof window === 'undefined') return;
-  if (token) localStorage.setItem(TOKEN_KEY, token);
-  else localStorage.removeItem(TOKEN_KEY);
+  accessToken = token && token.length > 0 ? token : null;
 }
 
 // Create axios instance with default config
@@ -67,8 +80,10 @@ const apiClient: AxiosInstance = axios.create({
     'Accept': 'application/json',
     'X-Requested-With': 'XMLHttpRequest',
   },
-  // JWT Bearer flow — no cross-site cookies needed.
-  withCredentials: false,
+  // Send the HttpOnly `access_token` cookie on every request (same-origin via
+  // the Next.js `/api` proxy). This is now the primary auth channel; the Bearer
+  // header (below) is a same-tab fallback.
+  withCredentials: true,
   timeout: 30000, // 30 seconds timeout
 });
 

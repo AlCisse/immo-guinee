@@ -10,6 +10,7 @@ use axum::http::request::Parts;
 use redis::AsyncCommands;
 use uuid::Uuid;
 
+use crate::auth::cookie::token_from_cookie_header;
 use crate::auth::jwt::{self, TokenType};
 use crate::auth::rbac::{Permission, Role};
 use crate::error::{AppError, AppResult};
@@ -64,13 +65,29 @@ impl AuthUser {
     }
 }
 
-/// Extract the `Bearer` token from the `Authorization` header, if present.
-fn bearer_token(parts: &Parts) -> Option<&str> {
-    let value = parts.headers.get(AUTHORIZATION)?.to_str().ok()?;
-    value
-        .strip_prefix("Bearer ")
-        .or_else(|| value.strip_prefix("bearer "))
-        .map(str::trim)
+/// Extract the JWT access token from the request: first the `Authorization:
+/// Bearer` header (non-browser clients), then the `HttpOnly` auth cookie
+/// (browsers — the token is never exposed to JS). Either source is accepted.
+fn extract_token(parts: &Parts) -> Option<&str> {
+    // 1. Authorization: Bearer <token>
+    if let Some(value) = parts.headers.get(AUTHORIZATION).and_then(|v| v.to_str().ok()) {
+        if let Some(tok) = value
+            .strip_prefix("Bearer ")
+            .or_else(|| value.strip_prefix("bearer "))
+            .map(str::trim)
+        {
+            if !tok.is_empty() {
+                return Some(tok);
+            }
+        }
+    }
+    // 2. HttpOnly access_token cookie
+    parts
+        .headers
+        .get(axum::http::header::COOKIE)
+        .and_then(|v| v.to_str().ok())
+        .and_then(token_from_cookie_header)
+        .filter(|t| !t.is_empty())
 }
 
 impl<S> FromRequestParts<S> for AuthUser
@@ -82,7 +99,7 @@ where
 
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
         let app = Arc::<AppState>::from_ref(state);
-        let token = bearer_token(parts).ok_or(AppError::Unauthorized)?;
+        let token = extract_token(parts).ok_or(AppError::Unauthorized)?;
         let claims = jwt::verify(&app.jwt_secret, token, TokenType::Access)?;
 
         // Reject tokens revoked via logout (Redis deny-list).

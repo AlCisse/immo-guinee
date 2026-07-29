@@ -191,7 +191,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
 
-        // Store user data for UX (the JWT is kept by the api client in localStorage).
+        // Cache only the (non-sensitive) user profile for fast UX. The JWT is
+        // NOT stored here — it lives in the HttpOnly cookie (+ in-memory copy in
+        // the api client), out of reach of XSS.
         localStorage.setItem('user', JSON.stringify(resolvedUser));
         if (redirect) {
           localStorage.setItem('redirect_data', JSON.stringify(redirect));

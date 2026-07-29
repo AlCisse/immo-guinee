@@ -14,6 +14,8 @@
 use std::sync::Arc;
 
 use axum::extract::State;
+use axum::http::HeaderValue;
+use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::Json;
 use axum::Router;
@@ -23,6 +25,7 @@ use serde_json::json;
 use uuid::Uuid;
 
 use crate::auth::jwt;
+use crate::config::Config;
 use crate::db::entities::sea_orm_active_enums::{StatutCompte, TypeCompte};
 use crate::db::entities::user;
 use crate::error::{AppError, AppResult};
@@ -63,11 +66,27 @@ async fn me(
 async fn logout(
     auth: AuthUser,
     State(state): State<Arc<AppState>>,
-) -> AppResult<Json<Envelope<serde_json::Value>>> {
+) -> AppResult<axum::response::Response> {
     let ttl = auth.exp.saturating_sub(jsonwebtoken::get_current_timestamp()).max(1);
     let mut conn = state.redis.clone();
     let _: () = conn.set_ex(revoked_key(auth.jti), 1, ttl).await?;
-    Ok(Json(Envelope { success: true, data: json!({ "message": "Déconnecté" }) }))
+    // Also clear the HttpOnly auth cookie so a cookie-based session ends here too.
+    let mut resp = Json(Envelope { success: true, data: json!({ "message": "Déconnecté" }) }).into_response();
+    if let Ok(v) = HeaderValue::from_str(&crate::auth::cookie::clear_auth_cookie(&state.cfg)) {
+        resp.headers_mut().insert(axum::http::header::SET_COOKIE, v);
+    }
+    Ok(resp)
+}
+
+/// Build a `200` response that carries the token payload in the JSON body AND
+/// sets the HttpOnly auth cookie. The body keeps the tokens for backward
+/// compatibility (non-browser clients / transition); browsers rely on the cookie.
+fn token_response<T: serde::Serialize>(cfg: &Config, data: T, access_token: &str) -> axum::response::Response {
+    let mut resp = Json(Envelope { success: true, data }).into_response();
+    if let Ok(v) = HeaderValue::from_str(&crate::auth::cookie::set_auth_cookie(cfg, access_token)) {
+        resp.headers_mut().insert(axum::http::header::SET_COOKIE, v);
+    }
+    resp
 }
 
 /// `PATCH /api/auth/me` — update the profile and notification preferences (FR-005).
@@ -185,7 +204,7 @@ async fn otp_send(
 async fn otp_verify(
     State(state): State<Arc<AppState>>,
     ValidatedJson(req): ValidatedJson<OtpRequest>,
-) -> AppResult<Json<Envelope<LoginSuccess>>> {
+) -> AppResult<axum::response::Response> {
     rate_limit::limit_login(&state.redis, &req.telephone).await?;
 
     crate::services::otp::verify(&state.redis, &req.telephone, &req.code).await?;
@@ -210,13 +229,13 @@ async fn otp_verify(
     }
 
     let tokens = jwt::issue_pair(&state.jwt_secret, user_id, &role)?;
-    Ok(Json(Envelope { success: true, data: LoginSuccess { tokens } }))
+    Ok(token_response(&state.cfg, LoginSuccess { tokens: tokens.clone() }, &tokens.access_token))
 }
 
 async fn login(
     State(state): State<Arc<AppState>>,
     ValidatedJson(req): ValidatedJson<LoginRequest>,
-) -> AppResult<Json<Envelope<LoginResponse>>> {
+) -> AppResult<axum::response::Response> {
     rate_limit::limit_login(&state.redis, &req.telephone).await?;
 
     let user = user::Entity::find()
@@ -248,7 +267,8 @@ async fn login(
                 action: "verify_otp".into(),
                 telephone: user.telephone.clone(),
             }),
-        }));
+        })
+        .into_response());
     }
 
     if user.two_factor_secret.is_some() {
@@ -258,20 +278,18 @@ async fn login(
                 requires_2fa: true,
                 telephone: user.telephone.clone(),
             }),
-        }));
+        })
+        .into_response());
     }
 
     let tokens = jwt::issue_pair(&state.jwt_secret, user.id, &effective_role(&user))?;
-    Ok(Json(Envelope {
-        success: true,
-        data: LoginResponse::Tokens(LoginSuccess { tokens }),
-    }))
+    Ok(token_response(&state.cfg, LoginResponse::Tokens(LoginSuccess { tokens: tokens.clone() }), &tokens.access_token))
 }
 
 async fn otp(
     State(state): State<Arc<AppState>>,
     ValidatedJson(req): ValidatedJson<OtpRequest>,
-) -> AppResult<Json<Envelope<LoginSuccess>>> {
+) -> AppResult<axum::response::Response> {
     rate_limit::limit_login(&state.redis, &req.telephone).await?;
 
     let user = user::Entity::find()
@@ -297,5 +315,5 @@ async fn otp(
     }
 
     let tokens = jwt::issue_pair(&state.jwt_secret, user.id, &effective_role(&user))?;
-    Ok(Json(Envelope { success: true, data: LoginSuccess { tokens } }))
+    Ok(token_response(&state.cfg, LoginSuccess { tokens: tokens.clone() }, &tokens.access_token))
 }

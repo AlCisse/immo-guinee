@@ -4,15 +4,72 @@ import type { NextRequest } from 'next/server';
 /**
  * Middleware for ImmoGuinée
  *
- * Note: Route protection is handled client-side via AuthContext
- * because we store tokens in localStorage (not accessible server-side).
- * This middleware focuses on security headers.
+ * Route protection is handled client-side via AuthContext. This middleware
+ * emits the security headers, including a per-request nonce-based CSP.
  */
+
+/** Generate a fresh, unpredictable base64 nonce (Edge-runtime Web Crypto). */
+function generateNonce(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  let bin = '';
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin);
+}
+
+/**
+ * Build the Content-Security-Policy.
+ *
+ * Production: `script-src` is locked to a per-request nonce + `strict-dynamic`
+ * — no `'unsafe-inline'`, no `'unsafe-eval'`. Next.js stamps the same nonce on
+ * every script tag it emits (it reads it from the request CSP header), and
+ * `strict-dynamic` lets those trusted scripts pull their own chunks, so an
+ * injected `<script>` without the nonce cannot execute. `object-src 'none'` +
+ * `base-uri 'self'` close the classic bypasses.
+ *
+ * `style-src` keeps `'unsafe-inline'` deliberately: Next's image placeholder,
+ * Tailwind arbitrary values and toast libraries all emit inline `style`
+ * attributes (which nonces can't cover), and style injection is a far lower
+ * risk than script injection — locking scripts is where the XSS win is.
+ *
+ * Development keeps `'unsafe-eval'`/`'unsafe-inline'` because Fast Refresh/HMR
+ * relies on eval'd modules and un-nonced inline bootstrap.
+ */
+function buildCsp(nonce: string, isProd: boolean): string {
+  const scriptSrc = isProd
+    ? `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`
+    : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
+  return [
+    "default-src 'self'",
+    scriptSrc,
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "img-src 'self' data: blob: https:",
+    "font-src 'self' data: https://fonts.gstatic.com",
+    "connect-src 'self' https: wss: ws:",
+    "media-src 'self' data: blob: https:",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "object-src 'none'",
+    'upgrade-insecure-requests',
+  ].join('; ');
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const isProd = process.env.NODE_ENV === 'production';
 
-  // Add security headers to all responses
-  const response = NextResponse.next();
+  // Per-request nonce. Next.js reads it from the request's CSP header and
+  // applies it to the scripts it renders, so it must be set on BOTH the
+  // forwarded request headers and the final response.
+  const nonce = generateNonce();
+  const csp = buildCsp(nonce, isProd);
+
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-nonce', nonce);
+  requestHeaders.set('Content-Security-Policy', csp);
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
 
   // Security headers.
   // Note: X-XSS-Protection is intentionally NOT set — the legacy header is
@@ -21,28 +78,7 @@ export function middleware(request: NextRequest) {
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-
-  // Content-Security-Policy
-  // Permissive enough to not break Next.js (which injects inline scripts/styles
-  // without a nonce setup) while still restricting exotic sources.
-  // Tighten script-src to nonce-based later for a stricter policy.
-  response.headers.set(
-    'Content-Security-Policy',
-    [
-      "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      "img-src 'self' data: blob: https:",
-      "font-src 'self' data: https://fonts.gstatic.com",
-      "connect-src 'self' https: wss: ws:",
-      "media-src 'self' data: blob: https:",
-      "frame-ancestors 'none'",
-      "base-uri 'self'",
-      "form-action 'self'",
-      "object-src 'none'",
-      'upgrade-insecure-requests',
-    ].join('; ')
-  );
+  response.headers.set('Content-Security-Policy', csp);
 
   // HSTS only in production (sent over HTTPS; ignored on HTTP anyway, but
   // avoids polluting localhost dev sessions with preload headers).

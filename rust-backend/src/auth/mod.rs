@@ -7,6 +7,7 @@
 //! - OAuth2 (`oauth2.rs`) : oxide-auth server for third-party token issuance.
 //! - Sessions (`sessions.rs`) : tower-sessions cookie auth for the stateful frontend.
 
+pub mod cookie;
 pub mod jwt;
 pub mod rbac;
 pub mod totp;
