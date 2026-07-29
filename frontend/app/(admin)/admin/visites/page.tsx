@@ -1,5 +1,3 @@
-'use client';
-
 import { Calendar, Construction } from 'lucide-react';
 
 export default function VisitesPage() {

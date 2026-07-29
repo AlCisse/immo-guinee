@@ -4,7 +4,7 @@ import Pusher from 'pusher-js';
 declare global {
   interface Window {
     Pusher: typeof Pusher;
-    Echo: Echo;
+    Echo: Echo<'pusher'>;
   }
 }
 
@@ -14,13 +14,17 @@ if (typeof window !== 'undefined') {
 }
 
 // Echo configuration for real-time events
+// Env var names aligned with .env.example (NEXT_PUBLIC_ECHO_*).
+// NOTE: previous versions read NEXT_PUBLIC_PUSHER_APP_KEY / NEXT_PUBLIC_WEBSOCKET_*
+// which were never defined in .env.example, causing `key` to fall back to '' and
+// breaking real-time. Keep these aligned.
 const echoConfig = {
   broadcaster: 'pusher' as const,
-  key: process.env.NEXT_PUBLIC_PUSHER_APP_KEY || '',
-  cluster: process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER || 'eu',
-  wsHost: process.env.NEXT_PUBLIC_WEBSOCKET_HOST || 'localhost',
-  wsPort: parseInt(process.env.NEXT_PUBLIC_WEBSOCKET_PORT || '6001', 10),
-  wssPort: parseInt(process.env.NEXT_PUBLIC_WEBSOCKET_PORT || '6001', 10),
+  key: process.env.NEXT_PUBLIC_ECHO_KEY || '',
+  cluster: process.env.NEXT_PUBLIC_ECHO_CLUSTER || 'eu',
+  wsHost: process.env.NEXT_PUBLIC_ECHO_HOST || 'localhost',
+  wsPort: parseInt(process.env.NEXT_PUBLIC_ECHO_PORT || '6001', 10),
+  wssPort: parseInt(process.env.NEXT_PUBLIC_ECHO_PORT || '6001', 10),
   forceTLS: process.env.NODE_ENV === 'production',
   encrypted: true,
   disableStats: true,
@@ -28,13 +32,103 @@ const echoConfig = {
   authEndpoint: `${process.env.NEXT_PUBLIC_API_URL}/broadcasting/auth`,
 };
 
-let echoInstance: Echo | null = null;
+let echoInstance: Echo<'pusher'> | null = null;
+
+// --- Connection state & resilience ------------------------------------------
+// Without reconnection, a single transient network drop (very common on 2G/3G in
+// Guinea) leaves the WebSocket dead until a full page reload — real-time
+// notifications/typing/read receipts silently stop. We mirror the mobile app's
+// strategy: bind to the lower-level pusher connection events and reconnect with
+// exponential backoff. Unlike mobile (which gives up after 5 attempts), the web
+// client stays open indefinitely with a capped delay — a user on a flaky link
+// shouldn't have to reload to get real-time back.
+type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'error';
+let connectionState: ConnectionState = 'disconnected';
+let reconnectAttempts = 0;
+let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+const BASE_RECONNECT_DELAY_MS = 2000;
+const MAX_RECONNECT_DELAY_MS = 30_000;
+
+let onlineHandler: (() => void) | null = null;
+let visibilityHandler: (() => void) | null = null;
+
+function scheduleReconnect(): void {
+  // Already on its way back — don't stack timers.
+  if (connectionState === 'connected' || connectionState === 'connecting') return;
+  if (reconnectTimer) return;
+
+  const delay = Math.min(BASE_RECONNECT_DELAY_MS * 2 ** reconnectAttempts, MAX_RECONNECT_DELAY_MS);
+  reconnectAttempts += 1;
+
+  reconnectTimer = setTimeout(() => {
+    reconnectTimer = null;
+    void reconnect();
+  }, delay);
+}
+
+async function reconnect(): Promise<void> {
+  if (connectionState === 'connecting' || connectionState === 'connected') return;
+  const pusher = (echoInstance as any)?.connector?.pusher;
+  if (!pusher) return;
+
+  connectionState = 'connecting';
+  // pusher.connect() reuses the existing socket/subscription state, so channels
+  // subscribed before the drop are re-subscribed automatically on reconnect.
+  pusher.connect();
+}
+
+function setupConnectionHandlers(): void {
+  const pusher = (echoInstance as any)?.connector?.pusher;
+  if (!pusher) return;
+
+  pusher.connection.bind('connected', () => {
+    connectionState = 'connected';
+    reconnectAttempts = 0;
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+    }
+  });
+
+  pusher.connection.bind('connecting', () => {
+    connectionState = 'connecting';
+  });
+
+  pusher.connection.bind('disconnected', () => {
+    connectionState = 'disconnected';
+    scheduleReconnect();
+  });
+
+  pusher.connection.bind('error', (error: any) => {
+    connectionState = 'error';
+    // 1006 is a normal abnormal closure (network drop) — don't log it as an error.
+    if (error?.data?.code !== 1006 && process.env.NODE_ENV !== 'production') {
+      console.warn('[Echo] Connection error:', error?.data?.message || error?.message || 'Unknown');
+    }
+    scheduleReconnect();
+  });
+
+  // Reconnect when the browser regains connectivity after being offline.
+  onlineHandler = () => {
+    if (connectionState !== 'connected') void reconnect();
+  };
+  window.addEventListener('online', onlineHandler);
+
+  // Reconnect when the tab becomes visible again (mobile-tab switch / return
+  // from another app): the socket is often dropped while hidden.
+  visibilityHandler = () => {
+    if (document.visibilityState === 'visible' && connectionState !== 'connected') {
+      void reconnect();
+    }
+  };
+  document.addEventListener('visibilitychange', visibilityHandler);
+}
 
 /**
  * Get or create the Echo instance
  * Uses singleton pattern to ensure single connection
  */
-export function getEcho(): Echo | null {
+export function getEcho(): Echo<'pusher'> | null {
   if (typeof window === 'undefined') {
     return null;
   }
@@ -42,9 +136,25 @@ export function getEcho(): Echo | null {
   if (!echoInstance) {
     echoInstance = new Echo(echoConfig);
     window.Echo = echoInstance;
+    connectionState = 'connecting';
+    setupConnectionHandlers();
   }
 
   return echoInstance;
+}
+
+/**
+ * Current connection state (for UI indicators / offline banners).
+ */
+export function getConnectionState(): ConnectionState {
+  return connectionState;
+}
+
+/**
+ * Whether the real-time socket is currently connected.
+ */
+export function isConnected(): boolean {
+  return connectionState === 'connected';
 }
 
 /**
@@ -91,11 +201,26 @@ export function leaveChannel(channelName: string) {
  * Disconnect from all channels
  */
 export function disconnect() {
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer);
+    reconnectTimer = null;
+  }
+  if (onlineHandler) {
+    window.removeEventListener('online', onlineHandler);
+    onlineHandler = null;
+  }
+  if (visibilityHandler) {
+    document.removeEventListener('visibilitychange', visibilityHandler);
+    visibilityHandler = null;
+  }
+
   const echo = getEcho();
   if (!echo) return;
 
   echo.disconnect();
   echoInstance = null;
+  connectionState = 'disconnected';
+  reconnectAttempts = 0;
 }
 
 // Channel name generators for consistency
