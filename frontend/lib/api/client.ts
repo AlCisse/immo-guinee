@@ -102,6 +102,40 @@ apiClient.interceptors.request.use(
   }
 );
 
+// --- Silent token refresh (F6) ---
+// On a 401 the access token has expired. Rather than logging the user out, we
+// POST /auth/refresh once (the HttpOnly refresh cookie is sent automatically);
+// on success the backend rotates + re-sets the cookies and the success
+// interceptor captures the new in-memory access token, then we replay the
+// original request. Concurrent 401s share a single in-flight refresh.
+let refreshPromise: Promise<boolean> | null = null;
+
+function refreshAccessToken(): Promise<boolean> {
+  if (!refreshPromise) {
+    // _skipAuthRefresh guards against recursion if the refresh itself 401s.
+    const cfg: AxiosRequestConfig & { _skipAuthRefresh?: boolean } = { _skipAuthRefresh: true };
+    refreshPromise = apiClient
+      .post('/auth/refresh', null, cfg)
+      .then(() => true)
+      .catch(() => false)
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+  return refreshPromise;
+}
+
+// Unauthenticated flows where a 401 is a credential failure, not an expired
+// session — never worth a refresh attempt (would just 401 again).
+function isUnauthenticatedAuthRoute(url: string): boolean {
+  return (
+    url.includes('/auth/login') ||
+    url.includes('/auth/register') ||
+    url.includes('/auth/otp') ||
+    url.includes('/auth/refresh')
+  );
+}
+
 // Response interceptor - Handle errors globally
 apiClient.interceptors.response.use(
   (response) => {
@@ -114,26 +148,41 @@ apiClient.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
-    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config as
+      | (AxiosRequestConfig & { _retry?: boolean; _skipAuthRefresh?: boolean })
+      | undefined;
     const responseData = error.response?.data as { requires_2fa?: boolean; requires_2fa_setup?: boolean; message?: string } | undefined;
 
     // Handle 401 Unauthorized only. A 404 means the endpoint is not implemented
     // yet (many Rust endpoints are still missing) — it must NOT clear the session
     // or the user would be logged out by any unimplemented feature call.
     const status = error.response?.status;
-    if (status === 401 && !originalRequest._retry) {
+    const url = originalRequest?.url || '';
+    if (
+      status === 401 &&
+      originalRequest &&
+      !originalRequest._retry &&
+      !originalRequest._skipAuthRefresh &&
+      !isUnauthenticatedAuthRoute(url)
+    ) {
       originalRequest._retry = true;
 
-      // The JWT is invalid/expired — clear local auth state.
+      // F6: try a silent refresh first (the access token likely just expired).
+      const refreshed = await refreshAccessToken();
+      if (refreshed) {
+        // New cookie + in-memory token are set — replay the original request.
+        return apiClient(originalRequest);
+      }
+
+      // Refresh failed → the session is really gone. Clear local auth state.
       if (typeof window !== 'undefined') {
         localStorage.removeItem('user');
         setAuthToken(null);
 
-        // Redirect to login unless this is an auth endpoint (avoid loops).
-        // /auth/me returns 401 for unauthenticated users - expected, no redirect.
-        const url = originalRequest.url || '';
-        const isAuthEndpoint = url.includes('/auth/');
-        if (!isAuthEndpoint) {
+        // Redirect to login unless this was an auth endpoint (e.g. /auth/me on
+        // initial load for an anonymous visitor — expected, handled by
+        // AuthContext, no redirect/loop).
+        if (!url.includes('/auth/')) {
           window.location.href = '/auth/login';
         }
       }

@@ -14,7 +14,7 @@
 use std::sync::Arc;
 
 use axum::extract::State;
-use axum::http::HeaderValue;
+use axum::http::{HeaderMap, HeaderValue};
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::Json;
@@ -29,7 +29,7 @@ use crate::config::Config;
 use crate::db::entities::sea_orm_active_enums::{StatutCompte, TypeCompte};
 use crate::db::entities::user;
 use crate::error::{AppError, AppResult};
-use crate::extractors::{revoked_key, AuthUser, ValidatedJson};
+use crate::extractors::{revoked_key, user_invalid_before_key, AuthUser, ValidatedJson};
 use crate::middleware::rate_limit;
 use crate::state::AppState;
 
@@ -45,6 +45,7 @@ pub fn routes() -> Router<Arc<AppState>> {
         .route("/auth/otp", post(otp))
         .route("/auth/otp/send", post(otp_send))
         .route("/auth/otp/verify", post(otp_verify))
+        .route("/auth/refresh", post(refresh))
         .route("/auth/me", get(me).patch(update_me))
         .route("/auth/logout", post(logout))
 }
@@ -70,23 +71,66 @@ async fn logout(
     let ttl = auth.exp.saturating_sub(jsonwebtoken::get_current_timestamp()).max(1);
     let mut conn = state.redis.clone();
     let _: () = conn.set_ex(revoked_key(auth.jti), 1, ttl).await?;
-    // Also clear the HttpOnly auth cookie so a cookie-based session ends here too.
+    // Also clear both HttpOnly cookies so a cookie-based session ends here too.
     let mut resp = Json(Envelope { success: true, data: json!({ "message": "Déconnecté" }) }).into_response();
-    if let Ok(v) = HeaderValue::from_str(&crate::auth::cookie::clear_auth_cookie(&state.cfg)) {
-        resp.headers_mut().insert(axum::http::header::SET_COOKIE, v);
-    }
+    append_cookie(&mut resp, &crate::auth::cookie::clear_auth_cookie(&state.cfg));
+    append_cookie(&mut resp, &crate::auth::cookie::clear_refresh_cookie(&state.cfg));
     Ok(resp)
 }
 
-/// Build a `200` response that carries the token payload in the JSON body AND
-/// sets the HttpOnly auth cookie. The body keeps the tokens for backward
-/// compatibility (non-browser clients / transition); browsers rely on the cookie.
-fn token_response<T: serde::Serialize>(cfg: &Config, data: T, access_token: &str) -> axum::response::Response {
-    let mut resp = Json(Envelope { success: true, data }).into_response();
-    if let Ok(v) = HeaderValue::from_str(&crate::auth::cookie::set_auth_cookie(cfg, access_token)) {
-        resp.headers_mut().insert(axum::http::header::SET_COOKIE, v);
+/// Append a `Set-Cookie` header (multiple allowed) to a response.
+fn append_cookie(resp: &mut axum::response::Response, cookie: &str) {
+    if let Ok(v) = HeaderValue::from_str(cookie) {
+        resp.headers_mut().append(axum::http::header::SET_COOKIE, v);
     }
+}
+
+/// Build a `200` response that carries the token payload in the JSON body AND
+/// sets the HttpOnly access + refresh cookies. The body keeps the tokens for
+/// backward compatibility (non-browser clients / transition); browsers rely on
+/// the cookies.
+fn token_response<T: serde::Serialize>(cfg: &Config, data: T, tokens: &jwt::TokenPair) -> axum::response::Response {
+    let mut resp = Json(Envelope { success: true, data }).into_response();
+    append_cookie(&mut resp, &crate::auth::cookie::set_auth_cookie(cfg, &tokens.access_token));
+    append_cookie(&mut resp, &crate::auth::cookie::set_refresh_cookie(cfg, &tokens.refresh_token));
     resp
+}
+
+/// `POST /api/auth/refresh` — exchange a valid refresh token (HttpOnly cookie,
+/// or `Authorization: Bearer` for non-browser clients) for a fresh token pair,
+/// re-setting both cookies. Rotates the refresh token on every call. Rejects
+/// tokens invalidated by an admin ban/role change (same deny-list the access
+/// extractor honours), so a banned user cannot keep refreshing for 7 days.
+async fn refresh(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+) -> AppResult<axum::response::Response> {
+    // Prefer the HttpOnly refresh cookie; fall back to a Bearer refresh token.
+    let cookie_token = headers
+        .get(axum::http::header::COOKIE)
+        .and_then(|v| v.to_str().ok())
+        .and_then(crate::auth::cookie::refresh_from_cookie_header);
+    let bearer_token = headers
+        .get(axum::http::header::AUTHORIZATION)
+        .and_then(|v| v.to_str().ok())
+        .and_then(|v| v.strip_prefix("Bearer ").or_else(|| v.strip_prefix("bearer ")))
+        .map(str::trim);
+    let token = cookie_token.or(bearer_token).filter(|t| !t.is_empty()).ok_or(AppError::Unauthorized)?;
+
+    let claims = jwt::verify(&state.jwt_secret, token, jwt::TokenType::Refresh)?;
+
+    // Honour the per-user deny-list: a token issued before an admin ban/role
+    // change is rejected (mirrors the AuthUser extractor).
+    let mut conn = state.redis.clone();
+    let invalid_before: Option<i64> = conn.get(user_invalid_before_key(claims.sub)).await?;
+    if let Some(ts) = invalid_before {
+        if (claims.iat as i64) < ts {
+            return Err(AppError::Unauthorized);
+        }
+    }
+
+    let tokens = jwt::issue_pair(&state.jwt_secret, claims.sub, &claims.role)?;
+    Ok(token_response(&state.cfg, LoginSuccess { tokens: tokens.clone() }, &tokens))
 }
 
 /// `PATCH /api/auth/me` — update the profile and notification preferences (FR-005).
@@ -229,7 +273,7 @@ async fn otp_verify(
     }
 
     let tokens = jwt::issue_pair(&state.jwt_secret, user_id, &role)?;
-    Ok(token_response(&state.cfg, LoginSuccess { tokens: tokens.clone() }, &tokens.access_token))
+    Ok(token_response(&state.cfg, LoginSuccess { tokens: tokens.clone() }, &tokens))
 }
 
 async fn login(
@@ -283,7 +327,7 @@ async fn login(
     }
 
     let tokens = jwt::issue_pair(&state.jwt_secret, user.id, &effective_role(&user))?;
-    Ok(token_response(&state.cfg, LoginResponse::Tokens(LoginSuccess { tokens: tokens.clone() }), &tokens.access_token))
+    Ok(token_response(&state.cfg, LoginResponse::Tokens(LoginSuccess { tokens: tokens.clone() }), &tokens))
 }
 
 async fn otp(
@@ -315,5 +359,5 @@ async fn otp(
     }
 
     let tokens = jwt::issue_pair(&state.jwt_secret, user.id, &effective_role(&user))?;
-    Ok(token_response(&state.cfg, LoginSuccess { tokens: tokens.clone() }, &tokens.access_token))
+    Ok(token_response(&state.cfg, LoginSuccess { tokens: tokens.clone() }, &tokens))
 }
