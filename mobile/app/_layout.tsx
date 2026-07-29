@@ -10,11 +10,15 @@ import 'react-native-reanimated';
 
 import { AuthProvider, useAuth } from '@/lib/auth/AuthContext';
 import { SecurityProvider } from '@/lib/security';
+import { AppErrorBoundary, ErrorFallback } from '@/components/ErrorBoundary';
 import '@/lib/i18n';
 
-export {
-  ErrorBoundary,
-} from 'expo-router';
+// R8 — ErrorBoundary de marque pour expo-router (erreurs de rendu de route).
+// expo-router appelle ce composant avec { error, retry } ; on réutilise la même
+// UI (ErrorFallback) que AppErrorBoundary ci-dessous pour une cohérence totale.
+export function ErrorBoundary({ error, retry }: { error: Error; retry: () => void }) {
+  return <ErrorFallback error={error} onRetry={retry} />;
+}
 
 export const unstable_settings = {
   initialRouteName: '(tabs)',
@@ -71,11 +75,16 @@ export default function RootLayout() {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <SecureAppWrapper />
-      </AuthProvider>
-    </QueryClientProvider>
+    // R8 — wrap l'arbre de providers dans AppErrorBoundary pour attraper toute
+    // erreur runtime non gérée (ex. crash d'un provider) et afficher la UI de
+    // marque plutôt qu'un écran rouge Expo.
+    <AppErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <SecureAppWrapper />
+        </AuthProvider>
+      </QueryClientProvider>
+    </AppErrorBoundary>
   );
 }
 

@@ -25,6 +25,7 @@ import { Listing } from '@/types';
 import Colors, { lightTheme } from '@/constants/Colors';
 import { formatPrice as formatPriceUtil } from '@/lib/utils/formatPrice';
 import { haptics } from '@/lib/haptics';
+import { useDeferredRender } from '@/lib/hooks/useDeferredRender';
 
 const AMENITY_ICONS: Record<string, string> = {
   wifi: 'wifi-outline',
@@ -73,7 +74,14 @@ export default function ListingDetailScreen() {
   const isTablet = width >= 768;
   const imageHeight = isTablet ? 400 : 300;
 
-  const { data: listing, isLoading } = useQuery({
+  // R9 — diffère le rendu du contenu lourd (galerie d'images, scroll) jusqu'à
+  // la fin de l'animation de navigation : la transition push reste fluide au
+  // lieu de bégayer sous le poids du premier rendu.
+  const isReady = useDeferredRender();
+
+  // R10 — on capture isError/error/refetch pour distinguer une 404 (le bien
+  // n'existe pas) d'une erreur réseau (connexion instable : réessayer).
+  const { data: listing, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['listing', id],
     queryFn: async () => {
       const response = await api.listings.get(id!);
@@ -221,7 +229,9 @@ export default function ListingDetailScreen() {
     router.back();
   };
 
-  if (isLoading) {
+  // R9 — on attend aussi que les interactions de navigation soient terminées
+  // avant de monter le contenu lourd (transition plus fluide).
+  if (isLoading || !isReady) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
@@ -232,16 +242,36 @@ export default function ListingDetailScreen() {
     );
   }
 
-  if (!listing) {
+  // R10 — distingue une vraie 404 (le bien n'existe pas) d'une erreur réseau
+  // (connexion instable : on propose un réessai via refetch). Avant, les deux
+  // cas tombaient dans « Annonce non trouvée », ce qui était faux pour une
+  // coupure réseau (l'utilisateur croyait le bien supprimé).
+  const errorStatus = isError
+    ? (error as { response?: { status?: number } })?.response?.status
+    : undefined;
+
+  if (isError || !listing) {
+    const isNotFound = errorStatus === 404 || (!isError && !listing);
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
           <View style={styles.errorIconContainer}>
-            <Ionicons name="alert-circle-outline" size={48} color="#EF4444" />
+            <Ionicons
+              name={isNotFound ? 'alert-circle-outline' : 'wifi-outline'}
+              size={48}
+              color={isNotFound ? '#EF4444' : Colors.neutral[500]}
+            />
           </View>
-          <Text style={styles.errorText}>{t('listing.notFound')}</Text>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backButtonText}>{t('common.back')}</Text>
+          <Text style={styles.errorText}>
+            {isNotFound ? t('listing.notFound') : t('errors.networkError')}
+          </Text>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={isNotFound ? () => router.back() : () => refetch()}
+          >
+            <Text style={styles.backButtonText}>
+              {isNotFound ? t('common.back') : t('common.retry')}
+            </Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
