@@ -13,6 +13,14 @@ concurrency:
 env:
   NODE_VERSION: '20'
 
+# C1 — moindre privilège : aucun job n'écrit dans le repo ni ne pousse d'image
+# (build-docker a push: false). On révoque donc le défaut `write-all` des tokens
+# GITHUB_TOKEN : `contents: read` suffit au checkout ; les jobs n'ont pas besoin
+# de plus. Un job qui aurait besoin d'écrire (ex. release) ré-ouverait sa propre
+# permission explicite — jamais le niveau racine.
+permissions:
+  contents: read
+
 jobs:
   # Backend Tests (Rust / Axum). No external toolchain action: ubuntu-latest ships
   # rustup + a recent stable, and the repo's Actions policy only allows actions/*,
@@ -52,7 +60,6 @@ jobs:
 
       - name: Clippy
         run: cargo clippy --all-targets
-        continue-on-error: true
 
       # Unit tests only (no DB). The e2e suite needs Postgres/Redis/MinIO via
       # testcontainers — run locally or in a dedicated nightly job.
@@ -65,7 +72,6 @@ jobs:
   frontend-tests:
     name: Frontend Tests (Next.js)
     runs-on: ubuntu-latest
-    continue-on-error: true
     defaults:
       run:
         working-directory: frontend
@@ -83,22 +89,60 @@ jobs:
       - name: Install dependencies
         run: npm ci || npm install
 
+      # ⚠️ ADVISORY (continue-on-error) — dette technique front.
+      # Le frontend accumule ~262 erreurs TypeScript pré-existantes (types
+      # auto-générés .next, tests e2e, lib/api, app/…). Tant que cette dette
+      # n'est pas résorbée (tâche dédiée), lint/type-check/build ne doivent pas
+      # bloquer le merge : on les garde advisory pour signaler la régression
+      # sans casser l'intégration. Les GATES SÉCURITÉ (job security-audit)
+      # restent, elles, strictement bloquantes — c'est le cœur du correctif S3.
+      # TODO(front-debt): remettre ces 3 étapes bloquantes une fois les erreurs
+      # TS corrigées (voir tâche de suivi « Apurer 262 erreurs TS frontend »).
       - name: Run ESLint
-        run: npm run lint || true
+        run: npm run lint
+        continue-on-error: true
 
       - name: Run TypeScript check
-        run: npm run type-check || true
+        run: npm run type-check
+        continue-on-error: true
 
       - name: Build application
         run: npm run build
+        continue-on-error: true
         env:
           NEXT_PUBLIC_API_URL: /api
+
+  # Mobile Tests (React Native / Expo + Jest). Le mobile ne se build pas en CI
+  # (Expo build nécessite un compte EAS) — on exécute juste les tests unitaires
+  # Jest (hooks, utils) qui valident la logique hors device. C3 : couverture CI du
+  # mobile, jusqu'ici absent du pipeline.
+  mobile-tests:
+    name: Mobile Tests (Jest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      - name: Run Jest unit tests
+        run: npm test -- --ci --passWithNoTests
 
   # Security Audit
   security-audit:
     name: Security Audit
     runs-on: ubuntu-latest
-    continue-on-error: true
     env:
       RUSTC_WRAPPER: '' # sccache (config.toml) is host-only; not installed on CI
     steps:
@@ -110,7 +154,6 @@ jobs:
         run: |
           cargo install cargo-audit --locked
           cargo audit
-        continue-on-error: true
 
       - name: Setup Node.js
         uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
@@ -120,7 +163,6 @@ jobs:
       - name: Audit NPM dependencies
         working-directory: frontend
         run: npm audit --audit-level=high
-        continue-on-error: true
 
   # Build Docker Images (only on main/develop)
   build-docker:

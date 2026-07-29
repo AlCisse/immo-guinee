@@ -29,7 +29,10 @@ RUN mkdir -p src/bin \
     && printf 'fn main(){}' > src/main.rs \
     && printf 'fn main(){}' > src/bin/migrate.rs \
     && printf '' > src/lib.rs
-RUN cargo build --bin immog-backend --bin immog-migrate
+# C5 — build en --release (image de prod). Avant : `cargo build` (debug), binaire
+# non optimisé et 3-4× plus lourd. Le cache de deps se fait aussi en release pour
+# que la 2e passe ne recompile pas tout.
+RUN cargo build --release --bin immog-backend --bin immog-migrate
 
 # --- real build: only the crate recompiles, deps are cached ---
 RUN rm -rf src
@@ -37,7 +40,7 @@ COPY src ./src
 # COPY preserves source mtimes, which can be older than the dummy-build artifacts —
 # cargo would then skip recompiling and ship the stub `fn main(){}` binaries. Touch
 # all sources so their mtime is newer, forcing a real rebuild (deps stay cached).
-RUN find src -type f -exec touch {} + && cargo build --bin immog-backend --bin immog-migrate
+RUN find src -type f -exec touch {} + && cargo build --release --bin immog-backend --bin immog-migrate
 
 # --- runtime: minimal image with just the two binaries ---
 FROM debian:bookworm-slim AS runtime
@@ -45,7 +48,16 @@ FROM debian:bookworm-slim AS runtime
 # renderer loads at runtime (contract generation, US2).
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*
-COPY --from=builder /app/target/debug/immog-backend  /usr/local/bin/immog-backend
-COPY --from=builder /app/target/debug/immog-migrate  /usr/local/bin/immog-migrate
+COPY --from=builder /app/target/release/immog-backend  /usr/local/bin/immog-backend
+COPY --from=builder /app/target/release/immog-migrate  /usr/local/bin/immog-migrate
+# C6 — runtime non-root. L'écoute se fait sur le port 8000 (>1024, pas besoin de
+# CAP_NET_BIND_SERVICE) donc un utilisateur non-privilégié suffit. On crée un
+# utilisateur système dédié (UID/GID 10001, sans home ni shell de login) et on
+# veille à ce que les binaires soient exécutables par lui. Réduit le blast radius
+# d'une RCE sur le backend (pas de root dans le conteneur).
+RUN groupadd --system --gid 10001 immog \
+    && useradd --system --uid 10001 --gid immog --no-create-home --shell /usr/sbin/nologin immog \
+    && chmod 0755 /usr/local/bin/immog-backend /usr/local/bin/immog-migrate
+USER immog:immog
 EXPOSE 8000
 ENTRYPOINT ["immog-backend"]

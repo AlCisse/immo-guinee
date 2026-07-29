@@ -1,0 +1,62 @@
+# ==============================================
+# ImmoGuinée Rust Backend - Docker Ignore
+# ==============================================
+# Le contexte de build Docker est `rust-backend/`. Sans ce fichier, le daemon
+# envoie TOUT le dossier au builder — y compris `target/` (plusieurs Go de build
+# artifacts) qui pollue le cache de couche et ralentit l'envoi du contexte.
+# On n'expose que ce que le Dockerfile COPY réellement : Cargo.toml, Cargo.lock,
+# src/, config.toml.
+
+# Build artifacts — JAMAIS dans l'image (serait de toute façon reconstruit).
+target/
+**/target/
+
+# Configuration cargo locale (sccache wrapper host-only — casserait le build).
+.cargo/
+.cargo/config.toml
+
+# Secrets & env (JAMAIS dans l'image ; injectés via Vault/secrets au runtime)
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Tests e2e (testcontainers) — non exécutés dans l'image de prod.
+tests/
+
+# Fichiers IDE / OS
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+*~
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docker (évite récursion)
+Dockerfile*
+.dockerignore
+docker-compose*.yml
+
+# Documentation
+*.md
+docs/
+specs/
+
+# CI
+.github/
+
+# Logs & caches
+*.log
+*.tmp
+*.temp
+.cache/

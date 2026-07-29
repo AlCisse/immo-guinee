@@ -1,5 +1,13 @@
 version: '3.8'
 
+# ============================================================================
+# ⚠️ DEPRECATED — NE PAS UTILISER EN PRODUCTION
+# ----------------------------------------------------------------------------
+# Version LEGACY de la stack monitoring. Secrets en dur neutralisés (placeholders ${VAR}).
+# Le chemin ACTIF est dans docker/ (voir docker/docker-compose.yml, services monitoring).
+# Ne pas exécuter tel quel — nécessite des variables d'env réelles.
+# ============================================================================
+
 # Stack de monitoring pour ImmoGuinée
 # Déployer avec: docker stack deploy -c docker-compose.monitoring.yml immog-monitoring
 
@@ -21,7 +29,8 @@ volumes:
 services:
   # Prometheus - Collecte des métriques
   prometheus:
-    image: prom/prometheus:latest
+    # C4 — épinglé (fichier legacy, voir avertissement en tête de fichier).
+    image: prom/prometheus:v3.13.1
     deploy:
       replicas: 1
       restart_policy:
@@ -51,7 +60,8 @@ services:
 
   # Grafana - Visualisation des métriques
   grafana:
-    image: grafana/grafana:latest
+    # C4 — épinglé (fichier legacy).
+    image: grafana/grafana:13.0.3
     deploy:
       replicas: 1
       restart_policy:
@@ -64,7 +74,7 @@ services:
         - "traefik.http.services.grafana.loadbalancer.server.port=3000"
     environment:
       - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=immog_grafana_secret
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:?set GRAFANA_PASSWORD in .env}
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_SERVER_ROOT_URL=https://grafana.immoguinee.com
       - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
@@ -78,7 +88,8 @@ services:
 
   # Node Exporter - Métriques du serveur
   node-exporter:
-    image: prom/node-exporter:latest
+    # C4 — épinglé (fichier legacy).
+    image: prom/node-exporter:v1.12.1
     deploy:
       mode: global
       restart_policy:
@@ -97,7 +108,8 @@ services:
 
   # cAdvisor - Métriques des conteneurs
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:latest
+    # C4 — épinglé. cAdvisor a migré gcr.io -> ghcr.io/google/cadvisor depuis v0.54.
+    image: ghcr.io/google/cadvisor:v0.60.5
     deploy:
       mode: global
       restart_policy:
@@ -113,7 +125,8 @@ services:
 
   # Alertmanager - Gestion des alertes
   alertmanager:
-    image: prom/alertmanager:latest
+    # C4 — épinglé (fichier legacy).
+    image: prom/alertmanager:v0.33.1
     deploy:
       replicas: 1
       restart_policy:
@@ -139,34 +152,39 @@ services:
 
   # Postgres Exporter - Métriques PostgreSQL
   postgres-exporter:
-    image: prometheuscommunity/postgres-exporter:latest
+    # C4 — épinglé (fichier legacy).
+    image: prometheuscommunity/postgres-exporter:v0.20.1
     deploy:
       replicas: 1
       restart_policy:
         condition: on-failure
     environment:
-      - DATA_SOURCE_NAME=postgresql://immog_user:REDACTED_DB_PASSWORD@postgres:5432/immog_db?sslmode=disable
+      - DATA_SOURCE_NAME=postgresql://immog_user:${DB_PASSWORD:?set DB_PASSWORD in .env}@postgres:5432/immog_db?sslmode=disable
     networks:
       - immog-network
       - monitoring
 
   # Redis Exporter - Métriques Redis
   redis-exporter:
-    image: oliver006/redis_exporter:latest
+    # C4 — épinglé (fichier legacy).
+    image: oliver006/redis_exporter:v1.88.0
     deploy:
       replicas: 1
       restart_policy:
         condition: on-failure
     environment:
       - REDIS_ADDR=redis:6379
-      - REDIS_PASSWORD=immog_redis_secret
+      - REDIS_PASSWORD=${REDIS_PASSWORD:?set REDIS_PASSWORD in .env}
     networks:
       - immog-network
       - monitoring
 
   # Elasticsearch Exporter - Métriques Elasticsearch
   elasticsearch-exporter:
-    image: prometheuscommunity/elasticsearch-exporter:latest
+    # C4 — épinglé (fichier legacy). ⚠️ Elasticsearch n'est plus utilisé par la
+    # stack Rust (PostgreSQL only) — cet exporter est probablement un reliquat
+    # de l'ancienne stack Laravel ; à retirer lors du nettoyage monitoring.
+    image: prometheuscommunity/elasticsearch-exporter:v1.11.0
     deploy:
       replicas: 1
       restart_policy:

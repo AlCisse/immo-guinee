@@ -1,0 +1,71 @@
+# C2 — Dependabot : mises à jour automatiques des dépendances.
+# Ouvre des PR ciblées (1 par écosystème / groupe) qu'il suffit de relire et merger.
+# Limite à 5 PR ouvertes par écosystème pour éviter le bruit, et groupe les
+# patch/minor de dev ensemble. Les MAJOR restent en PR séparées (risque de casse).
+# Schedule lundi 07h UTC (creux, évite le lundi 00h surchargé).
+
+version: 2
+updates:
+  # GitHub Actions utilisées par les workflows (SHA-pinnées en CI -> Dependabot
+  # bump le SHA + le commentaire de version).
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: UTC
+    open-pull-requests-limit: 5
+    groups:
+      actions-patch:
+        update-types: [patch, minor]
+
+  # Backend Rust (Cargo) — Cargo.lock + Cargo.toml.
+  - package-ecosystem: cargo
+    directory: /rust-backend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: UTC
+    open-pull-requests-limit: 5
+    groups:
+      cargo-patch:
+        update-types: [patch, minor]
+
+  # Frontend Next.js (npm).
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: UTC
+    open-pull-requests-limit: 5
+    groups:
+      npm-frontend-patch:
+        update-types: [patch, minor]
+
+  # Mobile React Native / Expo (npm).
+  - package-ecosystem: npm
+    directory: /mobile
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: UTC
+    open-pull-requests-limit: 5
+    groups:
+      npm-mobile-patch:
+        update-types: [patch, minor]
+
+  # Images Docker de base (rust, node, debian, postgres, redis, traefik, minio,
+  # vault, prometheus, grafana…). `directory: /` couvre tous les Dockerfile/compose.
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: UTC
+    open-pull-requests-limit: 10
