@@ -6,40 +6,41 @@ const nextConfig = {
   reactStrictMode: true,
   output: 'standalone', // Enable standalone mode for Docker
 
-  // TODO: Fix TypeScript errors progressively (currently ~50 errors)
-  // Main issues: params possibly null, missing type properties, type mismatches
-  // Run `npx tsc --noEmit` to see current errors
-  // Priority: Fix type definitions in lib/types/, then component props
+  // Type/lint errors BLOCK the build by default — including production, so a
+  // prod build can never silently ship broken types (~50 legacy errors remain:
+  // `npx tsc --noEmit` / `npm run lint`). If a deploy must be unblocked while
+  // those are being resolved, set the escape-hatch env explicitly and knowingly:
+  //   ALLOW_BUILD_ERRORS=true npm run build
   typescript: {
-    ignoreBuildErrors: process.env.NODE_ENV === 'production',
+    ignoreBuildErrors: process.env.ALLOW_BUILD_ERRORS === 'true',
   },
-
-  // TODO: Fix ESLint errors progressively
-  // Run `npm run lint` to see current issues
   eslint: {
-    ignoreDuringBuilds: process.env.NODE_ENV === 'production',
+    ignoreDuringBuilds: process.env.ALLOW_BUILD_ERRORS === 'true',
   },
 
-  // Image optimization
+  // Image optimization. remotePatterns is an allow-list — keep it exact (no
+  // wildcards) so the Next image optimizer can't be pointed at arbitrary hosts.
   images: {
     remotePatterns: [
-      { protocol: 'http', hostname: 'localhost' },
-      { protocol: 'http', hostname: 'minio' },
-      { protocol: 'https', hostname: 'minio' },
-      { protocol: 'https', hostname: 'via.placeholder.com' },
-      // Production domains (.com)
+      // Production CDN + owned domains (always allowed).
       { protocol: 'https', hostname: 'immoguinee.com' },
       { protocol: 'https', hostname: 'www.immoguinee.com' },
       { protocol: 'https', hostname: 'images.immoguinee.com' },
-      // Legacy domains (.gn)
       { protocol: 'https', hostname: 'immoguinee.gn' },
       { protocol: 'https', hostname: 'www.immoguinee.gn' },
       { protocol: 'https', hostname: 'storage.immoguinee.gn' },
-      // DigitalOcean Spaces CDN
+      // DigitalOcean Spaces — exact buckets only (no `*.digitaloceanspaces.com`).
       { protocol: 'https', hostname: 'immoguinee.fra1.digitaloceanspaces.com' },
       { protocol: 'https', hostname: 'immoguinee-images.fra1.digitaloceanspaces.com' },
-      { protocol: 'https', hostname: 'fra1.digitaloceanspaces.com' },
-      { protocol: 'https', hostname: '*.digitaloceanspaces.com' },
+      // Dev-only hosts (MinIO / localhost) — excluded from production builds.
+      ...(process.env.NODE_ENV !== 'production'
+        ? [
+            { protocol: 'http', hostname: 'localhost' },
+            { protocol: 'http', hostname: 'minio' },
+            { protocol: 'https', hostname: 'minio' },
+            { protocol: 'https', hostname: 'via.placeholder.com' },
+          ]
+        : []),
     ],
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
@@ -68,13 +69,12 @@ const nextConfig = {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
           },
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block',
-          },
+          // X-XSS-Protection intentionally omitted: the legacy header is
+          // deprecated and can itself introduce vulnerabilities on old browsers.
+          // The Content-Security-Policy (see middleware.ts) is the modern defense.
           {
             key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin',
+            value: 'strict-origin-when-cross-origin',
           },
         ],
       },

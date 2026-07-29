@@ -33,29 +33,20 @@ export function Providers({ children }: { children: React.ReactNode }) {
             position="top-center"
             toastOptions={{
               duration: 4000,
-              style: {
-                background: '#262B32',
-                color: '#fff',
-                borderRadius: '12px',
-                padding: '12px 16px',
-              },
+              // Charte « Argile de Conakry », dark-aware via Tailwind className
+              // (avoids hardcoded hex that ignored the theme). Base = neutral
+              // surface; success/error keep their semantic accent as a left border.
+              className:
+                '!bg-white dark:!bg-dark-card !text-neutral-900 dark:!text-white !rounded-xl !shadow-soft !border !border-neutral-200 dark:!border-dark-border !px-4 !py-3',
               success: {
-                style: {
-                  background: '#10b981',
-                },
-                iconTheme: {
-                  primary: '#fff',
-                  secondary: '#10b981',
-                },
+                className:
+                  '!bg-white dark:!bg-dark-card !text-neutral-900 dark:!text-white !rounded-xl !shadow-soft !border-l-4 !border-success-500 !px-4 !py-3',
+                iconTheme: { primary: '#10b981', secondary: '#fff' },
               },
               error: {
-                style: {
-                  background: '#ef4444',
-                },
-                iconTheme: {
-                  primary: '#fff',
-                  secondary: '#ef4444',
-                },
+                className:
+                  '!bg-white dark:!bg-dark-card !text-neutral-900 dark:!text-white !rounded-xl !shadow-soft !border-l-4 !border-error-500 !px-4 !py-3',
+                iconTheme: { primary: '#ef4444', secondary: '#fff' },
               },
             }}
           />
