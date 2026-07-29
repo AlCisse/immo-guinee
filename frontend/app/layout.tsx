@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, Poppins } from 'next/font/google';
 import './globals.css';
-import 'leaflet/dist/leaflet.css';
 import { Providers } from './providers';
 import { OrganizationStructuredData, WebSiteStructuredData, LocalBusinessStructuredData } from '@/components/seo/StructuredData';
 

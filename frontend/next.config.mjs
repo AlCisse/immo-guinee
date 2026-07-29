@@ -6,6 +6,15 @@ const nextConfig = {
   reactStrictMode: true,
   output: 'standalone', // Enable standalone mode for Docker
 
+  // P4 — optimizePackageImports : transforme les named imports barrel en imports
+  // par sous-chemin à la build-time. framer-motion (lourd, ~20 écrans) et
+  // lucide-react n'entrent plus en entier dans chaque chunk — seuls les symboles
+  // réellement utilisés sont bundlés. Gain first-load mesurable sans toucher au
+  // code applicatif.
+  experimental: {
+    optimizePackageImports: ['framer-motion', 'lucide-react'],
+  },
+
   // Type/lint errors BLOCK the build by default — including production, so a
   // prod build can never silently ship broken types (~50 legacy errors remain:
   // `npx tsc --noEmit` / `npm run lint`). If a deploy must be unblocked while

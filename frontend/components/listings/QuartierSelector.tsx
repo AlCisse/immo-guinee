@@ -1,5 +1,9 @@
 'use client';
 
+// P5 — leaflet.css est chargé ici (seul consommateur de leaflet) plutôt que dans
+// le layout racine, pour ne pas pénaliser le first-paint des pages sans carte.
+import 'leaflet/dist/leaflet.css';
+
 import { useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import type { LatLngExpression } from 'leaflet';
