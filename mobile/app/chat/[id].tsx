@@ -134,7 +134,10 @@ export default function ChatScreen() {
   } | null>(null);
 
   // Real-time WebSocket connection
-  const { isConnected: wsConnected } = useMessagingConnection();
+  // R17 — permanentlyFailed devient vrai après 5 échecs de reconnexion auto ;
+  // `retry` permet à l'utilisateur de relancer manuellement la WS.
+  const { isConnected: wsConnected, permanentlyFailed: wsPermanentlyFailed, retry: retryWs } =
+    useMessagingConnection();
 
   // Real-time conversation subscription
   const { sendTypingIndicator } = useConversationRealtime(conversationId);
@@ -951,6 +954,18 @@ export default function ChatScreen() {
         }}
       />
 
+      {/* R17 — bannière de reconnexion manuelle : après 5 échecs auto la WS
+          abandonne ; on offre un bouton plutôt que de laisser la messagerie
+          temps réel muette sans recours. */}
+      {wsPermanentlyFailed && (
+        <View style={styles.reconnectBanner}>
+          <Text style={styles.reconnectText}>{t('chat.connectionLost')}</Text>
+          <TouchableOpacity onPress={retryWs} style={styles.reconnectButton}>
+            <Text style={styles.reconnectButtonText}>{t('chat.reconnect')}</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -1512,6 +1527,35 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background.primary,
     borderTopWidth: 1,
     borderTopColor: Colors.border.light,
+  },
+  // R17 — bannière de reconnexion WS (après abandon des 5 tentatives auto)
+  reconnectBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: Colors.warning[50],
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.warning[200],
+  },
+  reconnectText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.warning[700],
+    flex: 1,
+  },
+  reconnectButton: {
+    backgroundColor: Colors.warning[500],
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    marginLeft: 12,
+  },
+  reconnectButtonText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '700',
   },
   typingDots: {
     flexDirection: 'row',

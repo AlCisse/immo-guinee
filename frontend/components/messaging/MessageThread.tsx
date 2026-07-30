@@ -42,7 +42,10 @@ export default function MessageThread({ conversationId }: MessageThreadProps) {
   const [typingUser, setTypingUser] = useState<string | null>(null);
 
   // Fetch messages
-  const { data: messages = [], isLoading } = useQuery<Message[]>({
+  // R13 — on récupère `error` + `refetch` pour afficher un état d'erreur
+  // actionnable (retry) au lieu d'un conteneur vide silencieux quand la
+  // requête échoue.
+  const { data: messages = [], isLoading, error, refetch } = useQuery<Message[]>({
     queryKey: ['messages', conversationId],
     queryFn: () => fetchMessages(conversationId),
     refetchInterval: 5000, // Poll for new messages
@@ -65,6 +68,37 @@ export default function MessageThread({ conversationId }: MessageThreadProps) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  // R13 — état d'erreur réseau/API : propose un retry plutôt que de laisser
+  // l'utilisateur devant un fil vide sans explication.
+  if (error) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-4 text-center gap-3">
+        <svg
+          className="w-10 h-10 text-neutral-300 dark:text-neutral-600"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z"
+          />
+        </svg>
+        <p className="text-neutral-600 dark:text-neutral-400 max-w-xs">
+          Impossible de charger les messages.
+        </p>
+        <button
+          onClick={() => refetch()}
+          className="px-4 py-2 bg-primary-500 text-white text-sm font-semibold rounded-lg hover:bg-primary-600 transition-colors"
+        >
+          Réessayer
+        </button>
       </div>
     );
   }

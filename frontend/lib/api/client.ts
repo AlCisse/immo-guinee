@@ -411,8 +411,16 @@ export const api = {
     // Normalize legacy params: limit -> per_page. Unknown params (sort_by/sort_order,
     // commune, type_transaction) are ignored by the backend's query extractor.
     // Response listings are normalized to the shape UI components expect.
-    list: async (params?: Record<string, any>) => {
-      const res = await apiClient.get('/listings/search', { params: mapSearchParams(params || {}) });
+    // R14 — `signal` propagé à axios : React Query abort ce signal quand la
+    // queryKey change (changement de filtre/page) ou que le composant se
+    // démonte, ce qui annule la requête HTTP en vol côté navigateur. Sans cela,
+    // chaque filtre lançait une requête qui allait au bout puis écrasait les
+    // résultats les plus récents (race condition + bande passante gaspillée).
+    list: async (params?: Record<string, any>, signal?: AbortSignal) => {
+      const res = await apiClient.get('/listings/search', {
+        params: mapSearchParams(params || {}),
+        signal,
+      });
       normalizeListingsResponse(res);
       return res;
     },

@@ -48,6 +48,16 @@ jest.mock('expo-haptics', () => ({
   },
 }));
 
+// Mock @react-native-community/netinfo (R15 — _layout câble onlineManager sur
+// NetInfo + OfflineBanner utilise useNetInfo). addEventListener renvoie une
+// fonction de désabonnement ; useNetInfo renvoie un état "en ligne" par défaut.
+jest.mock('@react-native-community/netinfo', () => ({
+  default: {
+    addEventListener: jest.fn(() => jest.fn(() => {})),
+  },
+  useNetInfo: () => ({ isConnected: true, isInternetReachable: true }),
+}));
+
 // Mock expo-secure-store
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(() => Promise.resolve(null)),

@@ -25,6 +25,7 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { Listing } from '@/types';
 import Colors, { lightTheme } from '@/constants/Colors';
 import { formatPrice as formatPriceUtil } from '@/lib/utils/formatPrice';
+import { ListingCardSkeleton } from '@/components/ui/Skeleton';
 
 interface EditFormData {
   titre: string;
@@ -273,10 +274,17 @@ export default function MyListingsScreen() {
 
       <View style={styles.container}>
         {isLoading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={lightTheme.colors.primary} />
-            <Text style={styles.loadingText}>{t('common.loading')}</Text>
-          </View>
+          // R16 — squelette métier (carte annonce) au lieu d'un spinner nu :
+          // annonce la forme de la liste à venir, meilleure perception de
+          // chargement sur les réseaux guinéens (2G/3G).
+          <FlatList
+            data={Array.from({ length: 5 })}
+            keyExtractor={(_, i) => `listing-skeleton-${i}`}
+            renderItem={() => <ListingCardSkeleton />}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            scrollEnabled={false}
+          />
         ) : (
           <FlatList
             data={listings}

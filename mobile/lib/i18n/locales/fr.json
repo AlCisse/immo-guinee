@@ -569,6 +569,8 @@
     "video": "Vidéo",
     "videoPlaybackUnavailable": "Lecture vidéo non disponible",
     "openWithExternalApp": "Ouvrir avec une app externe",
+    "connectionLost": "Connexion temps réel perdue",
+    "reconnect": "Reconnecter",
     "errors": {
       "startRecording": "Impossible de démarrer l'enregistrement",
       "sendVoice": "Impossible d'envoyer le message vocal",

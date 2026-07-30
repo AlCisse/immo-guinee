@@ -4,6 +4,7 @@ import './globals.css';
 import { Providers } from './providers';
 import { OrganizationStructuredData, WebSiteStructuredData, LocalBusinessStructuredData } from '@/components/seo/StructuredData';
 import { palette } from '@/lib/colors';
+import OfflineIndicator from '@/components/OfflineIndicator';
 
 // NOTE: pas de `export const dynamic = 'force-dynamic'` au niveau racine.
 // Imposé auparavant « pour éviter les soucis SSG avec les hooks client », ce
@@ -171,6 +172,8 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <Providers>{children}</Providers>
+        {/* R15 — bannière hors-ligne globale (rendu côté client, no-op quand online) */}
+        <OfflineIndicator />
       </body>
     </html>
   );

@@ -538,8 +538,11 @@ function SearchContent() {
   // Fetch listings from API
   const { data, isLoading, error } = useQuery({
     queryKey: ['listings', 'search', apiParams],
-    queryFn: async () => {
-      const response = await api.listings.list(apiParams);
+    // R14 — passe le signal RQ à axios : un changement de filtre/page abort la
+    // requête précédente en vol au lieu d'attendre qu'elle revienne et de
+    // provoquer une race sur les résultats.
+    queryFn: async ({ signal }) => {
+      const response = await api.listings.list(apiParams, signal);
       return response.data.data;
     },
     staleTime: 2 * 60 * 1000,
