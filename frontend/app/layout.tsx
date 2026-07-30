@@ -3,6 +3,7 @@ import { Inter, Poppins } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 import { OrganizationStructuredData, WebSiteStructuredData, LocalBusinessStructuredData } from '@/components/seo/StructuredData';
+import { palette } from '@/lib/colors';
 
 // NOTE: pas de `export const dynamic = 'force-dynamic'` au niveau racine.
 // Imposé auparavant « pour éviter les soucis SSG avec les hooks client », ce
@@ -36,8 +37,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#DB5327' },
-    { media: '(prefers-color-scheme: dark)', color: '#B84420' },
+    { media: '(prefers-color-scheme: light)', color: palette.primary[500] },
+    { media: '(prefers-color-scheme: dark)', color: palette.primary[600] },
   ],
 };
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
@@ -22,6 +22,7 @@ import {
   useFacebookStatistics,
   type FacebookPost,
 } from '@/lib/hooks/useFacebook';
+import { socialBrand } from '@/lib/colors';
 
 interface FacebookPostsListProps {
   showStats?: boolean;
@@ -116,13 +117,13 @@ export default function FacebookPostsList({ showStats = true }: FacebookPostsLis
   };
 
   return (
-    <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft">
+    <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft" style={{ '--fb': socialBrand.facebook } as CSSProperties}>
       {/* Header */}
       <div className="p-6 border-b border-neutral-200 dark:border-dark-border">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#1877F2]/10 rounded-xl flex items-center justify-center">
-              <Facebook className="w-5 h-5 text-[#1877F2]" />
+            <div className="w-10 h-10 bg-[var(--fb)]/10 rounded-xl flex items-center justify-center">
+              <Facebook className="w-5 h-5 text-[var(--fb)]" />
             </div>
             <div>
               <h2 className="font-semibold text-neutral-900 dark:text-white">
@@ -277,7 +278,7 @@ export default function FacebookPostsList({ showStats = true }: FacebookPostsLis
                         href={post.post_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-[#1877F2] bg-[#1877F2]/10 hover:bg-[#1877F2]/20 rounded-lg transition-colors"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-[var(--fb)] bg-[var(--fb)]/10 hover:bg-[var(--fb)]/20 rounded-lg transition-colors"
                       >
                         <ExternalLink className="w-3 h-3" />
                         {t('facebook.viewPost')}

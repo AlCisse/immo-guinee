@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, type CSSProperties } from 'react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useTranslations } from '@/lib/i18n';
+import { socialBrand } from '@/lib/colors';
 
 interface OtpVerificationProps {
   telephone: string;
@@ -155,7 +156,7 @@ export default function OtpVerification({ telephone, onSuccess, onCancel }: OtpV
     <div className="w-full max-w-md mx-auto">
       {/* Header with WhatsApp branding */}
       <div className="text-center mb-8">
-        <div className="w-16 h-16 bg-[#25D366] rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+        <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg" style={{ backgroundColor: socialBrand.whatsapp }}>
           <WhatsAppIcon className="w-9 h-9 text-white" />
         </div>
         <h2 className="text-2xl font-bold text-neutral-900 dark:text-white mb-2">
@@ -170,9 +171,12 @@ export default function OtpVerification({ telephone, onSuccess, onCancel }: OtpV
       </div>
 
       {/* WhatsApp hint */}
-      <div className="bg-[#DCF8C6] dark:bg-[#25D366]/10 border border-[#25D366]/20 rounded-lg p-3 mb-6">
+      <div
+        className="bg-[var(--wa-light)] dark:bg-[var(--wa)]/10 border border-[var(--wa)]/20 rounded-lg p-3 mb-6"
+        style={{ '--wa': socialBrand.whatsapp, '--wa-light': socialBrand.whatsappLight } as CSSProperties}
+      >
         <div className="flex items-center gap-2">
-          <WhatsAppIcon className="w-5 h-5 text-[#25D366] flex-shrink-0" />
+          <WhatsAppIcon className="w-5 h-5 text-[var(--wa)] flex-shrink-0" />
           <p className="text-xs text-neutral-700 dark:text-neutral-200">
             {t('auth.otp.whatsappHint')} <span className="font-semibold">ImmoGuinée</span>
           </p>

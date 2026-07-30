@@ -1,4 +1,5 @@
 import { clsx } from 'clsx';
+import { palette } from '@/lib/colors';
 
 interface BadgeDisplayProps {
   badge: string;
@@ -14,7 +15,7 @@ const BADGE_CONFIG = {
     label: 'Bronze',
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="h-full w-full">
-        <circle cx="12" cy="12" r="10" fill="#DB5327" />
+        <circle cx="12" cy="12" r="10" fill={palette.primary[500]} />
         <text x="12" y="16" textAnchor="middle" fontSize="8" fill="white" fontWeight="bold">B</text>
       </svg>
     ),
@@ -28,7 +29,7 @@ const BADGE_CONFIG = {
     label: 'Argent',
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="h-full w-full">
-        <circle cx="12" cy="12" r="10" fill="#A9B0BA" />
+        <circle cx="12" cy="12" r="10" fill={palette.neutral[400]} />
         <text x="12" y="16" textAnchor="middle" fontSize="8" fill="white" fontWeight="bold">A</text>
       </svg>
     ),
@@ -42,8 +43,8 @@ const BADGE_CONFIG = {
     label: 'Or',
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="h-full w-full">
-        <circle cx="12" cy="12" r="10" fill="#fbbf24" />
-        <text x="12" y="16" textAnchor="middle" fontSize="8" fill="#92400e" fontWeight="bold">O</text>
+        <circle cx="12" cy="12" r="10" fill={palette.warning[400]} />
+        <text x="12" y="16" textAnchor="middle" fontSize="8" fill={palette.warning[800]} fontWeight="bold">O</text>
       </svg>
     ),
     gradient: 'from-warning-400 to-warning-600',
@@ -56,8 +57,8 @@ const BADGE_CONFIG = {
     label: 'Diamant',
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="h-full w-full">
-        <polygon points="12,2 22,9 12,22 2,9" fill="#9DC7CF" stroke="#2C6E7D" strokeWidth="1" />
-        <polygon points="12,2 17,9 12,16 7,9" fill="#2C6E7D" opacity="0.7" />
+        <polygon points="12,2 22,9 12,22 2,9" fill={palette.teal[200]} stroke={palette.teal[500]} strokeWidth="1" />
+        <polygon points="12,2 17,9 12,16 7,9" fill={palette.teal[500]} opacity="0.7" />
       </svg>
     ),
     gradient: 'from-teal-400 to-teal-600',

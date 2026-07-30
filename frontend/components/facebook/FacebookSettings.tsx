@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { motion } from 'framer-motion';
 import {
   Facebook,
@@ -23,6 +23,7 @@ import {
   useFacebookToggleAutoPublish,
   useFacebookRefreshToken,
 } from '@/lib/hooks/useFacebook';
+import { socialBrand } from '@/lib/colors';
 
 export default function FacebookSettings() {
   const { t } = useTranslations();
@@ -115,10 +116,10 @@ export default function FacebookSettings() {
 
   if (statusLoading) {
     return (
-      <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft p-6">
+      <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft p-6" style={{ '--fb': socialBrand.facebook, '--fb-hover': socialBrand.facebookHover } as CSSProperties}>
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 bg-[#1877F2]/10 rounded-xl flex items-center justify-center">
-            <Facebook className="w-5 h-5 text-[#1877F2]" />
+          <div className="w-10 h-10 bg-[var(--fb)]/10 rounded-xl flex items-center justify-center">
+            <Facebook className="w-5 h-5 text-[var(--fb)]" />
           </div>
           <div>
             <h2 className="font-semibold text-neutral-900 dark:text-white">
@@ -137,11 +138,11 @@ export default function FacebookSettings() {
   const tokenStatus = getTokenStatus();
 
   return (
-    <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft p-6">
+    <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft p-6" style={{ '--fb': socialBrand.facebook, '--fb-hover': socialBrand.facebookHover } as CSSProperties}>
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 bg-[#1877F2]/10 rounded-xl flex items-center justify-center">
-          <Facebook className="w-5 h-5 text-[#1877F2]" />
+        <div className="w-10 h-10 bg-[var(--fb)]/10 rounded-xl flex items-center justify-center">
+          <Facebook className="w-5 h-5 text-[var(--fb)]" />
         </div>
         <div>
           <h2 className="font-semibold text-neutral-900 dark:text-white">
@@ -176,7 +177,7 @@ export default function FacebookSettings() {
             whileTap={{ scale: 0.98 }}
             onClick={handleConnect}
             disabled={connectMutation.isPending}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#1877F2] hover:bg-[#166FE5] text-white font-medium rounded-xl transition-colors disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[var(--fb)] hover:bg-[var(--fb-hover)] text-white font-medium rounded-xl transition-colors disabled:opacity-50"
           >
             {connectMutation.isPending ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -196,7 +197,7 @@ export default function FacebookSettings() {
           {/* Page Info */}
           <div className="flex items-center justify-between p-4 bg-neutral-50 dark:bg-dark-bg rounded-xl">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-[#1877F2] rounded-full flex items-center justify-center text-white font-bold">
+              <div className="w-10 h-10 bg-[var(--fb)] rounded-full flex items-center justify-center text-white font-bold">
                 {status.connection.page_name.charAt(0)}
               </div>
               <div>
