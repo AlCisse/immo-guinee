@@ -1,7 +1,6 @@
 'use client';
 
 import { api } from '@/lib/api/client';
-import { CONAKRY_COMMUNES } from '@/lib/data/communes';
 import { useTranslations } from '@/lib/i18n';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
@@ -57,23 +56,6 @@ export interface QuartierStat {
 async function fetchPremiumListings(): Promise<Listing[]> {
   const response = await api.listings.list({ premium: true, limit: 8 });
   return response.data.data.listings || [];
-}
-
-// Fetch quartier stats from API (client-side refetch / revalidation)
-async function fetchQuartierStats(): Promise<QuartierStat[]> {
-  const response = await api.listings.list({ group_by: 'quartier', limit: 100 });
-  const listings = response.data.data.listings || [];
-
-  const quartierCounts: Record<string, number> = {};
-  listings.forEach((listing: Listing) => {
-    const quartier = listing.quartier || 'Autre';
-    quartierCounts[quartier] = (quartierCounts[quartier] || 0) + 1;
-  });
-
-  return Object.entries(quartierCounts)
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
 }
 
 const formatPrice = (price: number | string | undefined | null) => {
@@ -275,13 +257,11 @@ export default function HomeClient({
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: quartiers = initialQuartiers } = useQuery({
-    queryKey: ['quartiers', 'stats'],
-    queryFn: fetchQuartierStats,
-    initialData: initialQuartiers,
-    staleTime: 10 * 60 * 1000,
-    placeholderData: CONAKRY_COMMUNES.slice(0, 5).map((name) => ({ name, count: 0 })),
-  });
+  // P9 — les stats par commune sont calculées côté serveur (ISR dans page.tsx,
+  // fetchQuartierStats) et passées via initialQuartiers. Plus de ré-agrégation
+  // client de 100 annonces : l'ancien useQuery refetchait + réduisait 100 listings
+  // côté client toutes les 10 min. On se fie au HTML ISR (revalidate 300 s).
+  const quartiers = initialQuartiers;
 
   const handleSearch = () => {
     const params = new URLSearchParams();

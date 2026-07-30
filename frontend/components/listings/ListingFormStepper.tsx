@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useState, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
@@ -45,10 +46,31 @@ import {
   FileText,
 } from 'lucide-react';
 import TypeBienSelector, { type TypeBien } from './TypeBienSelector';
-import LocationSelector from './LocationSelector';
 import PhotoUploader, { type PhotoFile } from './PhotoUploader';
 import { api, apiClient } from '@/lib/api/client';
 import { useTranslations } from '@/lib/i18n';
+
+// P12 — LocationSelector (et ses 777 lignes de data/guinea-locations.ts) n'est
+// nécessaire qu'à l'étape 3 (Localisation). Import dynamique ssr:false → le
+// chunk ne se charge qu'à l'arrivée à l'étape 3, hors du bundle initial de
+// /publier. Squelette pendant le chargement pour éviter le saut de layout.
+function LocationSelectorSkeleton() {
+  return (
+    <div className="space-y-4 animate-pulse">
+      <div className="h-10 w-48 bg-neutral-100 dark:bg-dark-hover rounded-xl" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="h-14 bg-neutral-100 dark:bg-dark-hover rounded-xl" />
+        <div className="h-14 bg-neutral-100 dark:bg-dark-hover rounded-xl" />
+        <div className="h-14 bg-neutral-100 dark:bg-dark-hover rounded-xl" />
+      </div>
+    </div>
+  );
+}
+
+const LocationSelector = dynamic(() => import('./LocationSelector'), {
+  ssr: false,
+  loading: () => <LocationSelectorSkeleton />,
+});
 
 // Commission type from API
 interface Commission {

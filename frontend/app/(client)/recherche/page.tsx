@@ -7,7 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useSearchParamsSafe } from '@/lib/hooks/useSearchParamsSafe';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { api } from '@/lib/api/client';
 import { CONAKRY_COMMUNES, CONAKRY_QUARTIERS } from '@/lib/data/communes';
 import { useTranslations } from '@/lib/i18n';
@@ -543,6 +543,10 @@ function SearchContent() {
       return response.data.data;
     },
     staleTime: 2 * 60 * 1000,
+    // P11 — garder les résultats précédents affichés pendant le refetch sur
+    // changement de filtres/page : évite le flash "loading" et l'effacement de
+    // la liste à chaque filtre (UX pagination/filtre fluide).
+    placeholderData: keepPreviousData,
   });
 
   const listings: Listing[] = data?.listings || [];
