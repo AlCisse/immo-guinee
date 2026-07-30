@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSearchParamsSafe } from '@/lib/hooks/useSearchParamsSafe';
 import Link from 'next/link';
 import { clsx } from 'clsx';
 import {
@@ -69,8 +70,16 @@ const CLAIM_TYPES: ClaimTypeOption[] = [
 type Step = 'select-insurance' | 'select-claim-type' | 'claim-form' | 'success';
 
 export default function InsuranceClaimsPage() {
+  return (
+    <Suspense fallback={null}>
+      <InsuranceClaimsPageContent />
+    </Suspense>
+  );
+}
+
+function InsuranceClaimsPageContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParamsSafe();
   const preselectedInsuranceId = searchParams.get('assurance');
 
   const [step, setStep] = useState<Step>('select-insurance');

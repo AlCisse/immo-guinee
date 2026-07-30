@@ -32,7 +32,7 @@ const items = [
 ];
 
 export default function DashboardSidebar() {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? '';
   const { t } = useTranslations();
 
   return (

@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSearchParamsSafe } from '@/lib/hooks/useSearchParamsSafe';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import {
@@ -21,9 +22,17 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { useTranslations } from '@/lib/i18n';
 
 export default function CompleteProfilePage() {
+  return (
+    <Suspense fallback={null}>
+      <CompleteProfilePageContent />
+    </Suspense>
+  );
+}
+
+function CompleteProfilePageContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const { user, updateProfile } = useAuth();
+  const searchParams = useSearchParamsSafe();
+  const { user } = useAuth();
   const { t } = useTranslations();
 
   const accountTypes = [
@@ -61,7 +70,7 @@ export default function CompleteProfilePage() {
 
   // Get provider info from URL
   const provider = searchParams.get('provider');
-  const userName = searchParams.get('name') || user?.name || '';
+  const userName = searchParams.get('name') || user?.nom_complet || '';
 
   const handleSubmit = async () => {
     if (!accountType) {
@@ -93,14 +102,6 @@ export default function CompleteProfilePage() {
 
       if (!response.ok) {
         throw new Error(t('auth.completeProfile.errors.generic'));
-      }
-
-      // Update local user state
-      if (updateProfile) {
-        await updateProfile({
-          accountType,
-          phone: `+224${phone}`,
-        });
       }
 
       // Redirect to dashboard or home

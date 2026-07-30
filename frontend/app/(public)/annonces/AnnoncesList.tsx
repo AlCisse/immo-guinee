@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
+import { useSearchParamsSafe } from '@/lib/hooks/useSearchParamsSafe';
 import { motion, AnimatePresence } from 'framer-motion';
 import SearchFilters, { SearchFiltersState } from '@/components/listings/SearchFilters';
 import ListingCard from '@/components/listings/ListingCard';
@@ -9,8 +10,8 @@ import { useListings, SortOption } from '@/lib/hooks/useListings';
 
 export default function AnnoncesList() {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const pathname = usePathname() ?? '';
+  const searchParams = useSearchParamsSafe();
 
   // Mobile filters state
   const [showMobileFilters, setShowMobileFilters] = useState(false);

@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import { useSearchParamsSafe } from '@/lib/hooks/useSearchParamsSafe';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api/client';
 import { CONAKRY_COMMUNES, CONAKRY_QUARTIERS } from '@/lib/data/communes';
@@ -431,7 +432,7 @@ function FilterChip({
 // Main search content component
 function SearchContent() {
   const { t } = useTranslations('search');
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParamsSafe();
   const router = useRouter();
 
   // Initialize state from URL params

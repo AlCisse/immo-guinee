@@ -25,7 +25,7 @@ interface Favorite {
   id: string;
   titre: string;
   type_bien: string;
-  type_transaction: 'LOCATION' | 'VENTE';
+  type_transaction: 'location' | 'location_courte' | 'vente' | 'LOCATION' | 'LOCATION_COURTE' | 'VENTE';
   prix: number;
   quartier: string;
   commune: string;

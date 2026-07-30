@@ -101,7 +101,7 @@ interface AdminSidebarProps {
 }
 
 export default function AdminSidebar({ onToggle }: AdminSidebarProps) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? '';
   const router = useRouter();
   const { logout, user } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);

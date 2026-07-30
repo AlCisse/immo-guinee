@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import { useSearchParamsSafe } from '@/lib/hooks/useSearchParamsSafe';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
@@ -32,7 +33,7 @@ async function fetchListingContacts(listingId: string) {
 
 export default function ContractGeneratorContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParamsSafe();
   const listingIdParam = searchParams.get('listing');
 
   const [selectedListingId, setSelectedListingId] = useState<string | null>(listingIdParam);

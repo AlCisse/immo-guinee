@@ -11,6 +11,9 @@ export interface User {
   telephone: string;
   nom_complet: string;
   email?: string;
+  // Le backend Rust expose l'URL du fichier (signée) ; absente tant que l'user
+  // n'a pas uploadé de photo. Utilisée par Navbar, profil, profil/edit.
+  photo_profil_url?: string;
   type_compte: 'PARTICULIER' | 'AGENCE' | 'DIASPORA';
   badge: 'BRONZE' | 'ARGENT' | 'OR' | 'DIAMANT';
   statut_verification: 'NON_VERIFIE' | 'EN_ATTENTE' | 'VERIFIE' | 'REJETE';
@@ -109,7 +112,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await api.auth.login({ telephone, mot_de_passe });
       const data: ApiResponse<{
-        token: string;
+        token?: string;
+        // access_token : alias renvoyé par certaines formes de réponse du backend.
+        access_token?: string;
         user: User;
         redirect: RedirectData;
         action?: string;
@@ -265,7 +270,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await api.auth.verifyOtp({ telephone, otp_code });
       const data: ApiResponse<{
-        token: string;
+        token?: string;
+        access_token?: string;
         user: User;
         redirect: RedirectData;
       }> = response.data;

@@ -210,12 +210,10 @@ apiClient.interceptors.response.use(
     }
 
     // Handle 419 CSRF token mismatch
-    if (error.response?.status === 419) {
+    if (error.response?.status === 419 && originalRequest && !originalRequest._retry) {
       // Retry the request once
-      if (!originalRequest._retry) {
-        originalRequest._retry = true;
-        return apiClient(originalRequest);
-      }
+      originalRequest._retry = true;
+      return apiClient(originalRequest);
     }
 
     return Promise.reject(error);

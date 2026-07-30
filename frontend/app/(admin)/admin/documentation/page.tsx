@@ -153,7 +153,7 @@ function ApiEndpoint({
         </p>
       </div>
       {auth && (
-        <Lock className="w-4 h-4 text-neutral-400 flex-shrink-0" title="Authentification requise" />
+        <Lock className="w-4 h-4 text-neutral-400 flex-shrink-0" aria-label="Authentification requise" />
       )}
     </div>
   );

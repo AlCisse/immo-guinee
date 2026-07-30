@@ -27,7 +27,7 @@ interface NavItem {
 export default function ModeratorLayout({ children }: { children: ReactNode }) {
   const { user, isLoading, logout } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname = usePathname() ?? '';
   const { data: dashboardData } = useModeratorDashboard();
 
   // Check authentication and role

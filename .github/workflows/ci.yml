@@ -89,26 +89,25 @@ jobs:
       - name: Install dependencies
         run: npm ci || npm install
 
-      # ⚠️ ADVISORY (continue-on-error) — dette technique front.
-      # Le frontend accumule ~262 erreurs TypeScript pré-existantes (types
-      # auto-générés .next, tests e2e, lib/api, app/…). Tant que cette dette
-      # n'est pas résorbée (tâche dédiée), lint/type-check/build ne doivent pas
-      # bloquer le merge : on les garde advisory pour signaler la régression
-      # sans casser l'intégration. Les GATES SÉCURITÉ (job security-audit)
-      # restent, elles, strictement bloquantes — c'est le cœur du correctif S3.
-      # TODO(front-debt): remettre ces 3 étapes bloquantes une fois les erreurs
-      # TS corrigées (voir tâche de suivi « Apurer 262 erreurs TS frontend »).
+      # ✅ BLOQUANT — la dette TypeScript front est résorbée (tâche #29 :
+      # `npx tsc --noEmit` passe à 0 erreur, `npm run lint` à 0 erreur ; les
+      # tests e2e Playwright sont hors-scope via un tsconfig dédié, et les
+      # wrappers orphelins sentry/logrocket supprimés). lint/type-check/build
+      # bloquent de nouveau le merge, au même titre que les GATES SÉCURITÉ
+      # (job security-audit). Ne pas réintroduire de continue-on-error ici
+      # sans une raison documentée. Note : 6 règles jsx-a11y (click-events,
+      # static-element-interactions, autofocus, img-redundant-alt,
+      # heading-has-content, media-has-caption) restent en « warn » (42
+      # occurrences pré-existantes) — leurs correctifs source sont planifiés
+      # dans le lot UI (#27/#28), pas dans le scope #29.
       - name: Run ESLint
         run: npm run lint
-        continue-on-error: true
 
       - name: Run TypeScript check
         run: npm run type-check
-        continue-on-error: true
 
       - name: Build application
         run: npm run build
-        continue-on-error: true
         env:
           NEXT_PUBLIC_API_URL: /api
 

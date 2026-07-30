@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useSearchParamsSafe } from '@/lib/hooks/useSearchParamsSafe';
+
+import { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api/client';
@@ -114,8 +115,16 @@ function formatPrice(price: number | string | null | undefined, priceNotDefined:
 }
 
 export default function MesAnnoncesPage() {
+  return (
+    <Suspense fallback={null}>
+      <MesAnnoncesPageContent />
+    </Suspense>
+  );
+}
+
+function MesAnnoncesPageContent() {
   const { t } = useTranslations();
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParamsSafe();
   const successParam = searchParams.get('success');
   const showSuccess = successParam === 'true' || successParam === 'created';
   const queryClient = useQueryClient();

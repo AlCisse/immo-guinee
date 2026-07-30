@@ -87,7 +87,7 @@ function SignSteps({ current }: { current: 'view' | 'otp' | 'success' }) {
 
 export default function PublicContractSigningPage() {
   const params = useParams();
-  const token = params.token as string;
+  const token = (params?.token ?? '') as string;
 
   const [step, setStep] = useState<'view' | 'otp' | 'success'>('view');
   const [otp, setOtp] = useState('');

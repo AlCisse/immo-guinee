@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import { useSearchParamsSafe } from '@/lib/hooks/useSearchParamsSafe';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { api, apiClient } from '@/lib/api/client';
@@ -529,9 +530,17 @@ async function confirmTermination(id: string): Promise<Contract> {
 }
 
 export default function MyContractsPage() {
+  return (
+    <Suspense fallback={null}>
+      <MyContractsPageContent />
+    </Suspense>
+  );
+}
+
+function MyContractsPageContent() {
   const { t } = useTranslations();
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParamsSafe();
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState('all');

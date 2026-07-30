@@ -195,13 +195,13 @@ export function useLocale(): UseLocaleReturn {
           const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
           if (diffHours === 0) {
             const diffMinutes = Math.floor(diffMs / (1000 * 60));
-            if (diffMinutes < 1) return locale === 'ar' ? 'الآن' : "À l'instant";
-            return locale === 'ar' ? `منذ ${diffMinutes} دقيقة` : `Il y a ${diffMinutes} min`;
+            if (diffMinutes < 1) return "À l'instant";
+            return `Il y a ${diffMinutes} min`;
           }
-          return locale === 'ar' ? `منذ ${diffHours} ساعة` : `Il y a ${diffHours}h`;
+          return `Il y a ${diffHours}h`;
         }
-        if (diffDays === 1) return locale === 'ar' ? 'أمس' : 'Hier';
-        if (diffDays < 7) return locale === 'ar' ? `منذ ${diffDays} أيام` : `Il y a ${diffDays} jours`;
+        if (diffDays === 1) return 'Hier';
+        if (diffDays < 7) return `Il y a ${diffDays} jours`;
       }
 
       const options: Intl.DateTimeFormatOptions =
@@ -209,7 +209,10 @@ export function useLocale(): UseLocaleReturn {
           ? { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
           : { year: 'numeric', month: '2-digit', day: '2-digit' };
 
-      return d.toLocaleDateString(locale === 'ar' ? 'ar-SA' : locale === 'en' ? 'en-GB' : 'fr-FR', {
+      // Locale supportée : fr | en uniquement (voir lib/i18n/config). L'arabe
+      // n'est pas une locale gérée — les branches 'ar' d'origine étaient du code
+      // mort (TS2367), retirées lors de l'assainissement TS.
+      return d.toLocaleDateString(locale === 'en' ? 'en-GB' : 'fr-FR', {
         ...options,
         timeZone: timezone,
       });
@@ -220,12 +223,12 @@ export function useLocale(): UseLocaleReturn {
   // Format money according to locale
   const formatMoney = useCallback(
     (amount: number): string => {
-      const formatted = new Intl.NumberFormat(locale === 'ar' ? 'ar-SA' : locale === 'en' ? 'en-GB' : 'fr-FR', {
+      const formatted = new Intl.NumberFormat(locale === 'en' ? 'en-GB' : 'fr-FR', {
         style: 'decimal',
         maximumFractionDigits: 0,
       }).format(amount);
 
-      return locale === 'ar' ? `${formatted} GNF` : `${formatted} GNF`;
+      return `${formatted} GNF`;
     },
     [locale]
   );

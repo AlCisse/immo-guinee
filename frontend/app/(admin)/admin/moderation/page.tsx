@@ -14,8 +14,9 @@ export default function ModerationPage() {
   const { data, isLoading, refetch } = useModerationQueue(filter);
   const moderateMutation = useModerate();
 
-  // Handle both paginated and non-paginated responses
-  const listings = Array.isArray(data?.data?.data) ? data.data.data : Array.isArray(data?.data) ? data.data : [];
+  // useModerationQueue renvoie { data: ModerationListing[]; meta: { total; last_page } }
+  // (backend Rust). On lit directement le tableau et la pagination via `meta`.
+  const listings = data?.data ?? [];
 
   const handleModerate = async (listingId: string, action: ModerationAction['action']) => {
     if ((action === 'reject' || action === 'suspend') && !moderationReason) {
@@ -211,10 +212,10 @@ export default function ModerationPage() {
         )}
 
       {/* Pagination */}
-      {data && (data?.meta?.last_page > 1 || data?.data?.last_page > 1) && (
+      {data && (data.meta?.last_page ?? 1) > 1 && (
         <div className="flex justify-center">
           <p className="text-sm text-neutral-500 dark:text-neutral-400">
-            Page 1 sur {data?.meta?.last_page || data?.data?.last_page} • {data?.meta?.total || data?.data?.total} résultats
+            Page 1 sur {data.meta?.last_page} • {data.meta?.total} résultats
           </p>
         </div>
       )}

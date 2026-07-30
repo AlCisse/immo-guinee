@@ -192,7 +192,7 @@ export default function OtpVerification({ telephone, onSuccess, onCancel }: OtpV
           {otp.map((digit, index) => (
             <input
               key={index}
-              ref={el => inputRefs.current[index] = el}
+              ref={(el) => { inputRefs.current[index] = el; }}
               type="text"
               inputMode="numeric"
               maxLength={1}

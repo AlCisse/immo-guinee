@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSearchParamsSafe } from '@/lib/hooks/useSearchParamsSafe';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import DisputeForm from '@/components/disputes/DisputeForm';
@@ -36,8 +37,16 @@ async function fetchUserContracts(): Promise<Contract[]> {
 }
 
 export default function CreateDisputePage() {
+  return (
+    <Suspense fallback={null}>
+      <CreateDisputePageContent />
+    </Suspense>
+  );
+}
+
+function CreateDisputePageContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParamsSafe();
   const preselectedContractId = searchParams.get('contract');
 
   const [selectedContractId, setSelectedContractId] = useState<string | null>(

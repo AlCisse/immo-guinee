@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSearchParamsSafe } from '@/lib/hooks/useSearchParamsSafe';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
@@ -47,8 +48,16 @@ async function fetchUserContracts(): Promise<Contract[]> {
 type Step = 'select-contract' | 'select-insurance' | 'confirm' | 'success';
 
 export default function InsuranceSubscriptionPage() {
+  return (
+    <Suspense fallback={null}>
+      <InsuranceSubscriptionPageContent />
+    </Suspense>
+  );
+}
+
+function InsuranceSubscriptionPageContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParamsSafe();
   const preselectedContractId = searchParams.get('contrat');
 
   const [step, setStep] = useState<Step>('select-contract');

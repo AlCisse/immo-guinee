@@ -78,7 +78,7 @@ export default function AdminEditListingPage() {
   const router = useRouter();
   const params = useParams();
   const queryClient = useQueryClient();
-  const listingId = params.id as string;
+  const listingId = (params?.id ?? '') as string;
   const [reason, setReason] = useState('');
 
   // Fetch listing data

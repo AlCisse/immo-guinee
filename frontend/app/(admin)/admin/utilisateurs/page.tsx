@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { clsx } from 'clsx';
 import apiClient from '@/lib/api/client';
-import { getStatusColor, formatDate } from '@/lib/colors';
+import { getStatusColor } from '@/lib/colors';
 import {
   Users,
   Shield,

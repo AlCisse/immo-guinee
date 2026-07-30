@@ -4,7 +4,8 @@ import { useState, useEffect, Suspense } from 'react';
 import { AUTH_GRADIENT_BG } from '@/lib/ui/auth';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import { useSearchParamsSafe } from '@/lib/hooks/useSearchParamsSafe';
 import { motion } from 'framer-motion';
 import { Lock, Eye, EyeOff, ArrowLeft, Loader2, CheckCircle, AlertCircle, KeyRound } from 'lucide-react';
 import { apiClient } from '@/lib/api/client';
@@ -13,7 +14,7 @@ import { useTranslations } from '@/lib/i18n';
 
 function ResetPasswordContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParamsSafe();
   const { t } = useTranslations();
   const phoneFromUrl = searchParams.get('phone') || '';
 

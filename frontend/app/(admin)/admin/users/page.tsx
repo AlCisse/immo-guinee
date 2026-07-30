@@ -52,6 +52,7 @@ interface AdminUser {
   is_mediator: boolean;
   badge: string;
   statut_verification: string;
+  statut_compte: string;
   is_active: boolean;
   is_suspended: boolean;
   listings_count: number;

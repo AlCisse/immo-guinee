@@ -1,6 +1,7 @@
 'use client';
 
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import { useSearchParamsSafe } from '@/lib/hooks/useSearchParamsSafe';
 import { Suspense } from 'react';
 import OtpVerification from '@/components/auth/OtpVerification';
 import AuthBrandPanel from '@/components/auth/AuthBrandPanel';
@@ -8,7 +9,7 @@ import AuthTopControls from '@/components/auth/AuthTopControls';
 import { useTranslations } from '@/lib/i18n';
 
 function VerifyOtpContent() {
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParamsSafe();
   const router = useRouter();
   const telephone = searchParams.get('telephone') || '';
 

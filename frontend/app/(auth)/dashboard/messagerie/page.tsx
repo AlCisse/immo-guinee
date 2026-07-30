@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useSearchParamsSafe } from '@/lib/hooks/useSearchParamsSafe';
+
+import { Suspense, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useSearchParams } from 'next/navigation';
 import { apiClient } from '@/lib/api/client';
 import { Spinner } from '@/components/ui/Spinner';
 import ConversationList from '@/components/messaging/ConversationList';
@@ -42,7 +43,15 @@ async function fetchConversations(): Promise<Conversation[]> {
 }
 
 export default function MessagingPage() {
-  const searchParams = useSearchParams();
+  return (
+    <Suspense fallback={null}>
+      <MessagingPageContent />
+    </Suspense>
+  );
+}
+
+function MessagingPageContent() {
+  const searchParams = useSearchParamsSafe();
   const conversationIdParam = searchParams.get('conversation');
 
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(

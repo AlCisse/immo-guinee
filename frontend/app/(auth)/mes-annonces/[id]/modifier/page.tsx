@@ -59,7 +59,7 @@ export default function ModifierAnnoncePage() {
   const router = useRouter();
   const params = useParams();
   const queryClient = useQueryClient();
-  const listingId = params.id as string;
+  const listingId = (params?.id ?? '') as string;
 
   const [formData, setFormData] = useState({
     titre: '',

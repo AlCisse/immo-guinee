@@ -52,11 +52,12 @@ interface Visit {
 }
 
 // Status configuration (labels will be pulled from translations)
-const statusConfig: Record<VisitStatus, { color: string; bgColor: string }> = {
-  PENDING: { color: 'text-warning-600', bgColor: 'bg-warning-100 dark:bg-warning-500/10' },
-  CONFIRMED: { color: 'text-primary-600', bgColor: 'bg-primary-100 dark:bg-primary-500/10' },
-  COMPLETED: { color: 'text-success-600', bgColor: 'bg-success-100 dark:bg-success-500/10' },
-  CANCELLED: { color: 'text-error-600', bgColor: 'bg-error-100 dark:bg-error-500/10' },
+// Labels FR alignés sur les clés de statut (cf. statusLabels dans lib/colors.ts).
+const statusConfig: Record<VisitStatus, { color: string; bgColor: string; label: string }> = {
+  PENDING: { color: 'text-warning-600', bgColor: 'bg-warning-100 dark:bg-warning-500/10', label: 'En attente' },
+  CONFIRMED: { color: 'text-primary-600', bgColor: 'bg-primary-100 dark:bg-primary-500/10', label: 'Confirmée' },
+  COMPLETED: { color: 'text-success-600', bgColor: 'bg-success-100 dark:bg-success-500/10', label: 'Terminée' },
+  CANCELLED: { color: 'text-error-600', bgColor: 'bg-error-100 dark:bg-error-500/10', label: 'Annulée' },
 };
 
 // Calendar helpers - keys for translations

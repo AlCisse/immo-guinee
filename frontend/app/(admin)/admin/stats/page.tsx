@@ -174,7 +174,7 @@ export default function StatsPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="text-center">
               <div className="flex items-center justify-center gap-1 text-3xl font-bold text-warning-500 mb-2">
-                {parseFloat(data?.quality?.average_rating || 0).toFixed(1)}
+                {(data?.quality?.average_rating ?? 0).toFixed(1)}
                 <Star className="w-8 h-8 fill-warning-500" />
               </div>
               <div className="text-sm text-neutral-500 dark:text-neutral-400">Note moyenne</div>

@@ -37,7 +37,7 @@ async function fetchContract(contractId: string): Promise<Contract> {
 export default function RatingPage() {
   const params = useParams();
   const router = useRouter();
-  const contractId = params.transactionId as string;
+  const contractId = (params?.transactionId ?? '') as string;
 
   const { data: contract, isLoading, error } = useQuery({
     queryKey: ['contract', contractId],

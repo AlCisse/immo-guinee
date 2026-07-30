@@ -235,7 +235,7 @@ interface NavbarProps {
 }
 
 export default function Navbar({ variant = 'full' }: NavbarProps) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? '';
   const { user, isAuthenticated, logout } = useAuth();
   const { t } = useLocale();
   const [isMenuOpen, setIsMenuOpen] = useState(false);

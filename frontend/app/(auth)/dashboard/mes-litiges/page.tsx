@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSearchParamsSafe } from '@/lib/hooks/useSearchParamsSafe';
 import Link from 'next/link';
 import { clsx } from 'clsx';
 import {
@@ -117,7 +118,15 @@ function DisputeCard({ dispute }: { dispute: Dispute }) {
 }
 
 export default function MesLitigesPage() {
-  const searchParams = useSearchParams();
+  return (
+    <Suspense fallback={null}>
+      <MesLitigesPageContent />
+    </Suspense>
+  );
+}
+
+function MesLitigesPageContent() {
+  const searchParams = useSearchParamsSafe();
   const createdId = searchParams.get('created');
 
   const [filter, setFilter] = useState<FilterStatus>('all');

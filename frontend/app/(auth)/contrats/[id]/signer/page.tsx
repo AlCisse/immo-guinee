@@ -94,7 +94,7 @@ export default function ContractSignaturePage() {
   const params = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const contractId = params.id as string;
+  const contractId = (params?.id ?? '') as string;
 
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [showClausesModal, setShowClausesModal] = useState(false);

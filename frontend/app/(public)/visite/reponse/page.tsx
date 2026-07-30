@@ -1,7 +1,7 @@
 'use client';
+import { useSearchParamsSafe } from '@/lib/hooks/useSearchParamsSafe';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
@@ -38,7 +38,7 @@ interface Visit {
 }
 
 function VisitResponseContent() {
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParamsSafe();
   const token = searchParams.get('token');
 
   const [visit, setVisit] = useState<Visit | null>(null);
