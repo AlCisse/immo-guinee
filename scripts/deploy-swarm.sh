@@ -5,7 +5,12 @@
 # Usage : ./scripts/deploy-swarm.sh [command]
 # ===============================================
 
-set -e
+# C9 — fail-fast strict : -e (sortie sur erreur) + -o pipefail (sortie si un
+# maillon d'un pipeline échoue). Sans pipefail, un `docker info | grep -q
+# "Swarm: active"` où docker info échoue laisserait grep renvoyer "no match" et
+# l'erreur amont serait silencieuse. On n'ajoute PAS -u : ce script de prod
+# référence des vars/env optionnelles qu'on ne peut pas valider à froid.
+set -e -o pipefail
 
 # Colors
 RED='\033[0;31m'
