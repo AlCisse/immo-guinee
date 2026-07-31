@@ -429,44 +429,6 @@
         "generic": "An error occurred. Please try again."
       }
     },
-    "completeProfile": {
-      "title": "Complete your profile",
-      "step": "Step {current} of {total}",
-      "welcome": "Welcome {name}!",
-      "connectedWith": "Successfully connected with {provider}",
-      "accountType": {
-        "title": "What type of account do you want?",
-        "subtitle": "This helps us personalize your experience",
-        "particulier": "Individual",
-        "particulierDesc": "I'm looking to rent or buy a property",
-        "proprietaire": "Owner",
-        "proprietaireDesc": "I want to list my properties for rent/sale",
-        "agent": "Real estate agent",
-        "agentDesc": "I manage properties for clients",
-        "agence": "Real estate agency",
-        "agenceDesc": "I represent a real estate agency"
-      },
-      "phone": {
-        "title": "Your phone number",
-        "subtitle": "Ideal if you have WhatsApp to receive notifications",
-        "label": "Phone number (WhatsApp)",
-        "placeholder": "620 12 34 56",
-        "whatsappHint": "Receive instant notifications via WhatsApp"
-      },
-      "accountTypeSummary": "Account type",
-      "modify": "Modify",
-      "continue": "Continue",
-      "finish": "Complete registration",
-      "saving": "Saving...",
-      "back": "Back",
-      "terms": "By continuing, you agree to our",
-      "termsLink": "terms of service",
-      "errors": {
-        "selectAccountType": "Please select an account type",
-        "invalidPhone": "Please enter a valid phone number",
-        "generic": "An error occurred. Please try again."
-      }
-    },
     "verify2fa": {
       "title": "2FA Verification",
       "subtitle": "Enhanced security for your admin account",

@@ -429,44 +429,6 @@
         "generic": "Une erreur est survenue. Veuillez reessayer."
       }
     },
-    "completeProfile": {
-      "title": "Completez votre profil",
-      "step": "Etape {current} sur {total}",
-      "welcome": "Bienvenue {name} !",
-      "connectedWith": "Connexion avec {provider} reussie",
-      "accountType": {
-        "title": "Quel type de compte souhaitez-vous ?",
-        "subtitle": "Cela nous aide a personnaliser votre experience",
-        "particulier": "Particulier",
-        "particulierDesc": "Je cherche a louer ou acheter un bien",
-        "proprietaire": "Proprietaire",
-        "proprietaireDesc": "Je souhaite mettre mes biens en location/vente",
-        "agent": "Agent immobilier",
-        "agentDesc": "Je gere des biens pour des clients",
-        "agence": "Agence immobiliere",
-        "agenceDesc": "Je represente une agence immobiliere"
-      },
-      "phone": {
-        "title": "Votre numero de telephone",
-        "subtitle": "Ideal si vous avez WhatsApp pour recevoir les notifications",
-        "label": "Numero de telephone (WhatsApp)",
-        "placeholder": "620 12 34 56",
-        "whatsappHint": "Recevez des notifications instantanees via WhatsApp"
-      },
-      "accountTypeSummary": "Type de compte",
-      "modify": "Modifier",
-      "continue": "Continuer",
-      "finish": "Terminer l'inscription",
-      "saving": "Enregistrement...",
-      "back": "Retour",
-      "terms": "En continuant, vous acceptez nos",
-      "termsLink": "conditions d'utilisation",
-      "errors": {
-        "selectAccountType": "Veuillez selectionner un type de compte",
-        "invalidPhone": "Veuillez entrer un numero de telephone valide",
-        "generic": "Une erreur est survenue. Veuillez reessayer."
-      }
-    },
     "verify2fa": {
       "title": "Verification 2FA",
       "subtitle": "Securite renforcee pour votre compte administrateur",
