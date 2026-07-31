@@ -107,7 +107,7 @@ const TYPE_BIEN_OPTIONS: TypeBienOption[] = [
     icon: Warehouse,
     category: 'commercial',
     emoji: '🏭',
-    color: 'from-stone-500 to-neutral-500',
+    color: 'from-neutral-500 to-neutral-600',
   },
   {
     value: 'TERRAIN',

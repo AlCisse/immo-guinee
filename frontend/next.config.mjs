@@ -12,7 +12,21 @@ const nextConfig = {
   // réellement utilisés sont bundlés. Gain first-load mesurable sans toucher au
   // code applicatif.
   experimental: {
-    optimizePackageImports: ['framer-motion', 'lucide-react'],
+    // P4 (#28) — barrel imports -> sous-chemins à la build-time. Étendu au-delà
+    // de framer-motion/lucide : les libs barrel-lourdes ci-dessous n'entrent plus
+    // en entier dans chaque chunk. transpilePackages n'est PAS activé : aucun de
+    // nos deps ne ship d'ESM non-transpilé (tous publiés compilés) ; l'ajouter
+    // ne ferait que re-transpiler du déjà-transpilé (build +lent, gain nul).
+    optimizePackageImports: [
+      'framer-motion',
+      'lucide-react',
+      'date-fns',
+      '@headlessui/react',
+      '@tanstack/react-query',
+      '@tanstack/react-query-devtools',
+      'react-hook-form',
+      'react-hot-toast',
+    ],
   },
 
   // Type/lint errors BLOCK the build by default — including production, so a

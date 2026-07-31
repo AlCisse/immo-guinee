@@ -87,7 +87,7 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
-        run: npm ci || npm install
+        run: npm ci
 
       # ✅ BLOQUANT — la dette TypeScript front est résorbée (tâche #29 :
       # `npx tsc --noEmit` passe à 0 erreur, `npm run lint` à 0 erreur ; les
@@ -133,7 +133,7 @@ jobs:
           cache-dependency-path: mobile/package-lock.json
 
       - name: Install dependencies
-        run: npm ci || npm install
+        run: npm ci
 
       - name: Run Jest unit tests
         run: npm test -- --ci --passWithNoTests
