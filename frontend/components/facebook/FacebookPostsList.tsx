@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import {
@@ -22,6 +22,7 @@ import {
   useFacebookStatistics,
   type FacebookPost,
 } from '@/lib/hooks/useFacebook';
+import { socialBrand } from '@/lib/colors';
 
 interface FacebookPostsListProps {
   showStats?: boolean;
@@ -55,11 +56,11 @@ export default function FacebookPostsList({ showStats = true }: FacebookPostsLis
   const getStatusIcon = (status: FacebookPost['status']) => {
     switch (status) {
       case 'published':
-        return <CheckCircle className="w-4 h-4 text-emerald-500" />;
+        return <CheckCircle className="w-4 h-4 text-accent-500" />;
       case 'pending':
-        return <Clock className="w-4 h-4 text-amber-500" />;
+        return <Clock className="w-4 h-4 text-warning-500" />;
       case 'failed':
-        return <XCircle className="w-4 h-4 text-red-500" />;
+        return <XCircle className="w-4 h-4 text-error-500" />;
       case 'deleted':
         return <Trash2 className="w-4 h-4 text-neutral-400" />;
       default:
@@ -85,11 +86,11 @@ export default function FacebookPostsList({ showStats = true }: FacebookPostsLis
   const getStatusColor = (status: FacebookPost['status']) => {
     switch (status) {
       case 'published':
-        return 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400';
+        return 'bg-accent-100 dark:bg-accent-500/20 text-accent-700 dark:text-accent-400';
       case 'pending':
-        return 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400';
+        return 'bg-warning-100 dark:bg-warning-500/20 text-warning-700 dark:text-warning-400';
       case 'failed':
-        return 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400';
+        return 'bg-error-100 dark:bg-error-500/20 text-error-700 dark:text-error-400';
       case 'deleted':
         return 'bg-neutral-100 dark:bg-neutral-500/20 text-neutral-600 dark:text-neutral-400';
       default:
@@ -116,13 +117,13 @@ export default function FacebookPostsList({ showStats = true }: FacebookPostsLis
   };
 
   return (
-    <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft">
+    <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft" style={{ '--fb': socialBrand.facebook } as CSSProperties}>
       {/* Header */}
       <div className="p-6 border-b border-neutral-200 dark:border-dark-border">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#1877F2]/10 rounded-xl flex items-center justify-center">
-              <Facebook className="w-5 h-5 text-[#1877F2]" />
+            <div className="w-10 h-10 bg-[var(--fb)]/10 rounded-xl flex items-center justify-center">
+              <Facebook className="w-5 h-5 text-[var(--fb)]" />
             </div>
             <div>
               <h2 className="font-semibold text-neutral-900 dark:text-white">
@@ -142,14 +143,14 @@ export default function FacebookPostsList({ showStats = true }: FacebookPostsLis
               </p>
               <p className="text-xs text-neutral-500">{t('facebook.statTotal')}</p>
             </div>
-            <div className="p-3 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl">
-              <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+            <div className="p-3 bg-accent-50 dark:bg-accent-500/10 rounded-xl">
+              <p className="text-xl font-bold text-accent-600 dark:text-accent-400">
                 {statistics.published_posts}
               </p>
               <p className="text-xs text-neutral-500">{t('facebook.statPublished')}</p>
             </div>
-            <div className="p-3 bg-red-50 dark:bg-red-500/10 rounded-xl">
-              <p className="text-xl font-bold text-red-600 dark:text-red-400">
+            <div className="p-3 bg-error-50 dark:bg-error-500/10 rounded-xl">
+              <p className="text-xl font-bold text-error-600 dark:text-error-400">
                 {statistics.failed_posts}
               </p>
               <p className="text-xs text-neutral-500">{t('facebook.statFailed')}</p>
@@ -179,7 +180,7 @@ export default function FacebookPostsList({ showStats = true }: FacebookPostsLis
             onClick={() => setStatusFilter('published')}
             className={`px-3 py-1.5 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
               statusFilter === 'published'
-                ? 'bg-emerald-500 text-white'
+                ? 'bg-accent-500 text-white'
                 : 'bg-neutral-100 dark:bg-dark-bg text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-dark-border'
             }`}
           >
@@ -189,7 +190,7 @@ export default function FacebookPostsList({ showStats = true }: FacebookPostsLis
             onClick={() => setStatusFilter('pending')}
             className={`px-3 py-1.5 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
               statusFilter === 'pending'
-                ? 'bg-amber-500 text-white'
+                ? 'bg-warning-500 text-white'
                 : 'bg-neutral-100 dark:bg-dark-bg text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-dark-border'
             }`}
           >
@@ -199,7 +200,7 @@ export default function FacebookPostsList({ showStats = true }: FacebookPostsLis
             onClick={() => setStatusFilter('failed')}
             className={`px-3 py-1.5 text-sm font-medium rounded-lg whitespace-nowrap transition-colors ${
               statusFilter === 'failed'
-                ? 'bg-red-500 text-white'
+                ? 'bg-error-500 text-white'
                 : 'bg-neutral-100 dark:bg-dark-bg text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-dark-border'
             }`}
           >
@@ -221,7 +222,7 @@ export default function FacebookPostsList({ showStats = true }: FacebookPostsLis
           </div>
         ) : (
           postsData.posts.map((post) => (
-            <div key={post.id} className="p-4 hover:bg-neutral-50 dark:hover:bg-dark-bg/50 transition-colors">
+            <div key={post.id} className="p-4 hover:bg-neutral-50 dark:hover:bg-dark-hover/50 transition-colors">
               <div className="flex items-start gap-4">
                 {/* Listing Image */}
                 <div className="w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-neutral-100 dark:bg-dark-bg">
@@ -263,7 +264,7 @@ export default function FacebookPostsList({ showStats = true }: FacebookPostsLis
                       <span>{t('facebook.publishedAt')}: {formatDate(post.published_at)}</span>
                     )}
                     {post.status === 'failed' && post.error_message && (
-                      <span className="flex items-center gap-1 text-red-500">
+                      <span className="flex items-center gap-1 text-error-500">
                         <AlertTriangle className="w-3 h-3" />
                         {post.error_message}
                       </span>
@@ -277,7 +278,7 @@ export default function FacebookPostsList({ showStats = true }: FacebookPostsLis
                         href={post.post_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-[#1877F2] bg-[#1877F2]/10 hover:bg-[#1877F2]/20 rounded-lg transition-colors"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-[var(--fb)] bg-[var(--fb)]/10 hover:bg-[var(--fb)]/20 rounded-lg transition-colors"
                       >
                         <ExternalLink className="w-3 h-3" />
                         {t('facebook.viewPost')}
@@ -289,7 +290,7 @@ export default function FacebookPostsList({ showStats = true }: FacebookPostsLis
                         whileTap={{ scale: 0.98 }}
                         onClick={() => handleDelete(post.listing_id)}
                         disabled={deletingId === post.listing_id}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 rounded-lg transition-colors disabled:opacity-50"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-error-600 bg-error-50 dark:bg-error-500/10 hover:bg-error-100 dark:hover:bg-error-500/20 rounded-lg transition-colors disabled:opacity-50"
                       >
                         {deletingId === post.listing_id ? (
                           <Loader2 className="w-3 h-3 animate-spin" />
@@ -321,7 +322,7 @@ export default function FacebookPostsList({ showStats = true }: FacebookPostsLis
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="p-2 rounded-lg border border-neutral-200 dark:border-dark-border hover:bg-neutral-100 dark:hover:bg-dark-bg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-2 rounded-lg border border-neutral-200 dark:border-dark-border hover:bg-neutral-100 dark:hover:bg-dark-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -331,7 +332,7 @@ export default function FacebookPostsList({ showStats = true }: FacebookPostsLis
             <button
               onClick={() => setPage((p) => Math.min(postsData.pagination.last_page, p + 1))}
               disabled={page >= postsData.pagination.last_page}
-              className="p-2 rounded-lg border border-neutral-200 dark:border-dark-border hover:bg-neutral-100 dark:hover:bg-dark-bg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-2 rounded-lg border border-neutral-200 dark:border-dark-border hover:bg-neutral-100 dark:hover:bg-dark-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronRight className="w-4 h-4" />
             </button>

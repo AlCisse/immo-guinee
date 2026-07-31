@@ -151,7 +151,7 @@ export default function PropertyCard({
               <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                 isAvailable
                   ? 'bg-success-100 text-success-700'
-                  : 'bg-neutral-100 text-neutral-600'
+                  : 'bg-neutral-100 dark:bg-dark-hover text-neutral-600 dark:text-neutral-400'
               }`}>
                 {isAvailable ? 'Disponible' : 'Indisponible'}
               </span>
@@ -162,7 +162,7 @@ export default function PropertyCard({
               onClick={handleFavorite}
               className="absolute bottom-3 right-3 p-2.5 bg-white/90 dark:bg-dark-card/90 backdrop-blur-sm rounded-full shadow-lg hover:scale-110 transition-transform"
             >
-              <Heart className={`w-5 h-5 ${favorite ? 'fill-error-500 text-error-500' : 'text-neutral-600'}`} />
+              <Heart className={`w-5 h-5 ${favorite ? 'fill-error-500 text-error-500' : 'text-neutral-600 dark:text-neutral-400'}`} />
             </button>
           </div>
 
@@ -314,7 +314,7 @@ export default function PropertyCard({
                   }}
                   className={`w-2 h-2 rounded-full transition-all ${
                     idx === currentImageIndex
-                      ? 'bg-white w-4'
+                      ? 'bg-white dark:bg-dark-card w-4'
                       : 'bg-white/50 hover:bg-white/80'
                   }`}
                 />

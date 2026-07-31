@@ -9,7 +9,12 @@
 #   ./cloudflare-firewall.sh status   - Show current rules
 # =============================================================================
 
-set -e
+# C9 — fail-fast strict : -e (sortie sur erreur) + -o pipefail (sortie si un
+# maillon d'un pipeline échoue). Les pipelines ufw sont gardés par `|| true` /
+# `|| echo 0`, donc pipefail ne change pas la sémantique best-effort mais rend
+# un échec amont (ufw down) audible au lieu d'être masqué par la dernière
+# commande. Pas de -u (vars/env optionnelles, non validables à froid).
+set -e -o pipefail
 
 # Colors for output
 RED='\033[0;31m'

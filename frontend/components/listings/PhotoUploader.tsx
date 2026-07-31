@@ -27,7 +27,7 @@ export default function PhotoUploader({
   error,
   required = true,
 }: PhotoUploaderProps) {
-  const { t } = useTranslations();
+  const { t } = useTranslations('publish');
   const [isDragging, setIsDragging] = useState(false);
   const [uploadErrors, setUploadErrors] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -153,9 +153,9 @@ export default function PhotoUploader({
 
   return (
     <div className="w-full">
-      <label className="block text-sm font-medium text-gray-700 mb-2">
-        Photos {required && <span className="text-red-500">*</span>}
-        <span className="ml-2 text-xs font-normal text-gray-500">
+      <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+        Photos {required && <span className="text-error-500">*</span>}
+        <span className="ml-2 text-xs font-normal text-neutral-500 dark:text-neutral-400">
           ({photos.length}/{MAX_PHOTOS})
         </span>
       </label>
@@ -172,8 +172,8 @@ export default function PhotoUploader({
             relative border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all duration-200
             ${
               isDragging
-                ? 'border-green-600 bg-green-50 scale-[1.02]'
-                : 'border-gray-300 bg-gray-50 hover:border-green-400 hover:bg-green-50/50'
+                ? 'border-success-600 bg-success-50 scale-[1.02]'
+                : 'border-neutral-300 dark:border-dark-border bg-neutral-50 dark:bg-dark-bg hover:border-success-400 hover:bg-success-50/50'
             }
           `}
         >
@@ -187,7 +187,7 @@ export default function PhotoUploader({
           />
 
           <svg
-            className={`mx-auto h-12 w-12 ${isDragging ? 'text-green-600' : 'text-gray-400'}`}
+            className={`mx-auto h-12 w-12 ${isDragging ? 'text-success-600' : 'text-neutral-400'}`}
             stroke="currentColor"
             fill="none"
             viewBox="0 0 48 48"
@@ -200,12 +200,12 @@ export default function PhotoUploader({
             />
           </svg>
 
-          <p className="mt-2 text-sm font-medium text-gray-700">
+          <p className="mt-2 text-sm font-medium text-neutral-700 dark:text-neutral-300">
             {isDragging
               ? t('photos.dropHere')
               : t('photos.dragDrop')}
           </p>
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
             {t('photos.formatInfo')} • Max {MAX_PHOTOS} photos
           </p>
         </div>
@@ -217,7 +217,7 @@ export default function PhotoUploader({
           {photos.map((photo, index) => (
             <div
               key={photo.id}
-              className="relative group aspect-square rounded-lg overflow-hidden border-2 border-gray-200 bg-gray-100"
+              className="relative group aspect-square rounded-lg overflow-hidden border-2 border-neutral-200 dark:border-dark-border bg-neutral-100 dark:bg-dark-hover"
             >
               {/* Photo Preview */}
               <img
@@ -228,7 +228,7 @@ export default function PhotoUploader({
 
               {/* Main Photo Badge */}
               {index === 0 && (
-                <div className="absolute top-2 left-2 bg-green-600 text-white text-xs font-medium px-2 py-1 rounded">
+                <div className="absolute top-2 left-2 bg-success-600 text-white text-xs font-medium px-2 py-1 rounded">
                   {t('photos.mainPhoto')}
                 </div>
               )}
@@ -245,10 +245,10 @@ export default function PhotoUploader({
                   <button
                     type="button"
                     onClick={() => movePhoto(photo.id, 'left')}
-                    className="p-2 bg-white rounded-full hover:bg-gray-100 transition-colors"
+                    className="p-2 bg-white dark:bg-dark-card rounded-full hover:bg-neutral-100 dark:hover:bg-dark-hover transition-colors"
                     title={t('photos.moveLeft')}
                   >
-                    <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-neutral-700 dark:text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                   </button>
@@ -258,7 +258,7 @@ export default function PhotoUploader({
                 <button
                   type="button"
                   onClick={() => removePhoto(photo.id)}
-                  className="p-2 bg-red-600 rounded-full hover:bg-red-700 transition-colors"
+                  className="p-2 bg-error-600 rounded-full hover:bg-error-700 transition-colors"
                   title={t('photos.delete')}
                 >
                   <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -271,10 +271,10 @@ export default function PhotoUploader({
                   <button
                     type="button"
                     onClick={() => movePhoto(photo.id, 'right')}
-                    className="p-2 bg-white rounded-full hover:bg-gray-100 transition-colors"
+                    className="p-2 bg-white dark:bg-dark-card rounded-full hover:bg-neutral-100 dark:hover:bg-dark-hover transition-colors"
                     title={t('photos.moveRight')}
                   >
-                    <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-neutral-700 dark:text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </button>
@@ -288,9 +288,9 @@ export default function PhotoUploader({
       {/* Error Messages */}
       {(error || uploadErrors.length > 0) && (
         <div className="mt-3 space-y-1">
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-error-600">{error}</p>}
           {uploadErrors.map((err, index) => (
-            <p key={index} className="text-sm text-red-600">
+            <p key={index} className="text-sm text-error-600">
               {err}
             </p>
           ))}
@@ -299,7 +299,7 @@ export default function PhotoUploader({
 
       {/* Helper Text */}
       {!error && uploadErrors.length === 0 && (
-        <p className="mt-2 text-xs text-gray-500">
+        <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
           La première photo sera utilisée comme photo principale. Vous pouvez réorganiser l'ordre en cliquant sur les flèches.
         </p>
       )}

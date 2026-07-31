@@ -1,14 +1,36 @@
 # ===============================================
 # TLS Certificate Configuration
-# Uses Cloudflare Origin Certificate
+# Cloudflare Origin Certificate + Authenticated Origin Pulls (mTLS CF -> origine)
+# Certificat/clé fournis via Docker secrets (montés sous /run/secrets/).
 # ===============================================
 
 tls:
   certificates:
-    - certFile: /certs/immoguinee.crt
-      keyFile: /certs/immoguinee.key
+    - certFile: /run/secrets/cf_origin_cert
+      keyFile: /run/secrets/cf_origin_key
   stores:
     default:
       defaultCertificate:
-        certFile: /certs/immoguinee.crt
-        keyFile: /certs/immoguinee.key
+        certFile: /run/secrets/cf_origin_cert
+        keyFile: /run/secrets/cf_origin_key
+  options:
+    default:
+      minVersion: VersionTLS12
+      sniStrict: true
+      # Authenticated Origin Pulls : n'accepte QUE le certificat client Cloudflare.
+      # Verrou anti-contournement de l'IP d'origine (complète cloudflare-only).
+      clientAuth:
+        caFiles:
+          - /run/secrets/cf_origin_pull_ca
+        clientAuthType: RequireAndVerifyClientCert
+
+# Transport Traefik -> services : keep-alive + timeouts (perf + anti-slowloris).
+# Référencé par label : traefik.http.services.<svc>.loadbalancer.serverstransport=keepalive@file
+http:
+  serversTransports:
+    keepalive:
+      maxIdleConnsPerHost: 200
+      forwardingTimeouts:
+        dialTimeout: 5s
+        responseHeaderTimeout: 15s
+        idleConnTimeout: 90s

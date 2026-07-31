@@ -188,7 +188,7 @@ export default function ContractClausesModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white shadow-xl transition-all">
+              <Dialog.Panel className="w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white dark:bg-dark-card shadow-soft-lg transition-all">
                 {/* Header */}
                 <div className="bg-primary-600 px-6 py-4">
                   <Dialog.Title className="text-xl font-bold text-white">
@@ -203,11 +203,11 @@ export default function ContractClausesModal({
                 <div className="max-h-[60vh] overflow-y-auto px-6 py-4">
                   <div className="space-y-6">
                     {clauses.articles.map((article, index) => (
-                      <div key={index} className="border-b border-gray-100 pb-4 last:border-0">
-                        <h3 className="font-semibold text-gray-900 mb-2">
+                      <div key={index} className="border-b border-neutral-100 dark:border-dark-border pb-4 last:border-0">
+                        <h3 className="font-semibold text-neutral-900 dark:text-white mb-2">
                           {article.title}
                         </h3>
-                        <p className="text-sm text-gray-600 leading-relaxed">
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
                           {article.content}
                         </p>
                       </div>
@@ -215,16 +215,16 @@ export default function ContractClausesModal({
                   </div>
 
                   {/* Legal notice */}
-                  <div className="mt-6 rounded-lg bg-yellow-50 border border-yellow-200 p-4">
+                  <div className="mt-6 rounded-lg bg-warning-50 border border-warning-200 p-4">
                     <div className="flex">
-                      <svg className="h-5 w-5 text-yellow-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="h-5 w-5 text-warning-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                       </svg>
                       <div className="ml-3">
-                        <h4 className="text-sm font-medium text-yellow-800">
+                        <h4 className="text-sm font-medium text-warning-800">
                           Conformité légale
                         </h4>
-                        <p className="mt-1 text-sm text-yellow-700">
+                        <p className="mt-1 text-sm text-warning-700">
                           Ce contrat est établi conformément à la Loi L/2016/037/AN du 28 juillet 2016
                           (Code Civil de Guinée) et l&apos;Acte Uniforme OHADA relatif au Droit Commercial Général.
                         </p>
@@ -234,8 +234,8 @@ export default function ContractClausesModal({
                 </div>
 
                 {/* Footer */}
-                <div className="bg-gray-50 px-6 py-4 flex justify-between items-center">
-                  <p className="text-sm text-gray-500">
+                <div className="bg-neutral-50 dark:bg-dark-bg px-6 py-4 flex justify-between items-center">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
                     {clauses.articles.length} articles
                   </p>
                   <Button

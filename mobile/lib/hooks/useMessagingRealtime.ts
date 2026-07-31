@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useMemo } from 'react';
+import { useEffect, useRef, useCallback, useMemo, useState } from 'react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useMessagingStore } from '@/lib/stores/messagingStore';
 
@@ -14,6 +14,8 @@ import {
   sendTypingIndicator as sendTyping,
   isConnected,
   getConnectionState,
+  isPermanentlyDisconnected,
+  retryConnection,
 } from '@/lib/socket/echo';
 import { api } from '@/lib/api/client';
 import { receiveEncryptedMedia } from '@/lib/services';
@@ -92,9 +94,31 @@ export function useMessagingConnection() {
   // Get connection state from store instead of calling functions directly
   const connected = useMessagingStore((state) => state.isConnected);
 
+  // R17 — suivi de l'abandon des tentatives auto (5 échecs dans echo.ts) pour
+  // proposer une reconnexion manuelle. isPermanentlyDisconnected() lit l'état
+  // du module echo (muté de façon asynchrone par scheduleReconnect) ; on poll
+  // légèrement (2 s) pour rafraîchir l'UI sans alourdir le realtime.
+  const [permanentlyFailed, setPermanentlyFailed] = useState(
+    isPermanentlyDisconnected()
+  );
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setPermanentlyFailed(isPermanentlyDisconnected());
+    }, 2000);
+    return () => clearInterval(id);
+  }, []);
+
+  const retry = useCallback(() => {
+    retryConnection();
+    setPermanentlyFailed(false);
+  }, []);
+
   return {
     isConnected: connected,
     connectionState: getConnectionState(),
+    permanentlyFailed,
+    retry,
   };
 }
 

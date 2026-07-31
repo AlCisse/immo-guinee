@@ -1,0 +1,33 @@
+# gitleaks config — ImmoGuinée.
+#
+# Étend le jeu de règles par défaut (useDefault = true) et ne supprime que des
+# faux positifs ciblés. Tolérance zéro du projet vis-à-vis des secrets committés
+# (CLAUDE.md ⚫) : on n'allowlist jamais un chemin large qui masquerait un vrai
+# secret ajouté ultérieurement — chaque entrée ci-dessous est une regex/valeur
+# précise avec sa justification.
+
+[extend]
+useDefault = true
+
+[allowlist]
+# 1) Chemin Vault du secret JWT (`secret/immoguinee/app`).
+#    C'est un *path* (référence de configuration), pas un credential : la valeur
+#    du secret JWT est récupérée depuis Vault au runtime (AppRole + Docker
+#    Secrets), jamais lue depuis le code. La chaîne apparaît dans :
+#      - rust-backend/config.toml (défaut dev)
+#      - rust-backend/src/config.rs (doc comment + literal par défaut)
+#      - rust-backend/.env.example (template)
+#      - docker/docker-compose.swarm.rust.yml (env var de config)
+#    Un vrai secret JWT (octets aléatoires) ne contiendrait jamais cette chaîne.
+regexes = [
+    '''secret/immoguinee/app''',
+]
+
+# 2) Template `.example` pour la prod : contient un placeholder
+#    `-----BEGIN RSA PRIVATE KEY-----\nYOUR_PRIVATE_KEY_HERE\n...` qui déclenche
+#    la règle `private-key`. Les vraies clés Passport proviennent de Vault, pas
+#    de ce fichier d'exemple. Allowlist par chemin précis (pas un glob) pour ne
+#    masquer que ce seul fichier template.
+paths = [
+    '''^docker/\.env\.production\.example$''',
+]

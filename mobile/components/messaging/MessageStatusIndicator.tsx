@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Colors from '@/constants/Colors';
 
 export type MessageStatus = 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
 
@@ -22,7 +23,7 @@ export function MessageStatusIndicator({
           <Ionicons
             name="time-outline"
             size={size}
-            color="#9CA3AF"
+            color={Colors.neutral[400]}
           />
         );
       case 'sent':
@@ -30,13 +31,13 @@ export function MessageStatusIndicator({
           <Ionicons
             name="checkmark"
             size={size}
-            color="#9CA3AF"
+            color={Colors.neutral[400]}
           />
         ) : (
           <Ionicons
             name="time-outline"
             size={size}
-            color="#9CA3AF"
+            color={Colors.neutral[400]}
           />
         );
       case 'delivered':
@@ -45,13 +46,13 @@ export function MessageStatusIndicator({
             <Ionicons
               name="checkmark"
               size={size}
-              color="#9CA3AF"
+              color={Colors.neutral[400]}
               style={styles.checkFirst}
             />
             <Ionicons
               name="checkmark"
               size={size}
-              color="#9CA3AF"
+              color={Colors.neutral[400]}
               style={styles.checkSecond}
             />
           </View>
@@ -62,13 +63,13 @@ export function MessageStatusIndicator({
             <Ionicons
               name="checkmark"
               size={size}
-              color="#3B82F6"
+              color={Colors.secondary[500]}
               style={styles.checkFirst}
             />
             <Ionicons
               name="checkmark"
               size={size}
-              color="#3B82F6"
+              color={Colors.secondary[500]}
               style={styles.checkSecond}
             />
           </View>
@@ -78,7 +79,7 @@ export function MessageStatusIndicator({
           <Ionicons
             name="alert-circle"
             size={size}
-            color="#EF4444"
+            color={Colors.error[500]}
           />
         );
       default:

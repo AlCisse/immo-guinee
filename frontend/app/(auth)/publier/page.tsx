@@ -68,8 +68,8 @@ export default function PublierPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-dark-bg">
         <div className="text-center max-w-md px-4">
-          <div className="w-16 h-16 mx-auto mb-6 bg-orange-100 dark:bg-orange-500/20 rounded-full flex items-center justify-center">
-            <AlertCircle className="w-8 h-8 text-orange-500" />
+          <div className="w-16 h-16 mx-auto mb-6 bg-primary-100 dark:bg-primary-500/20 rounded-full flex items-center justify-center">
+            <AlertCircle className="w-8 h-8 text-primary-500" />
           </div>
           <h2 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">
             {t('verification.title')}
@@ -91,7 +91,7 @@ export default function PublierPage() {
       {/* Hero Header with Glass Effect */}
       <div className="relative overflow-hidden">
         {/* Background Pattern */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-500 via-orange-500 to-primary-600">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-500 via-primary-500 to-primary-600">
           <div className="absolute inset-0 bg-[url('/patterns/grid.svg')] opacity-10" />
           <motion.div
             animate={{
@@ -107,7 +107,7 @@ export default function PublierPage() {
               rotate: [0, -90, 0]
             }}
             transition={{ duration: 25, repeat: Infinity }}
-            className="absolute -bottom-20 -left-20 w-80 h-80 bg-orange-400/20 rounded-full blur-3xl"
+            className="absolute -bottom-20 -left-20 w-80 h-80 bg-primary-400/20 rounded-full blur-3xl"
           />
         </div>
 
@@ -127,8 +127,8 @@ export default function PublierPage() {
             </Link>
 
             <div className="flex items-center gap-2">
-              <span className="px-3 py-1.5 bg-emerald-500/20 backdrop-blur-sm rounded-full text-xs font-medium text-white border border-emerald-400/30">
-                <span className="inline-block w-2 h-2 bg-emerald-400 rounded-full mr-1.5 animate-pulse" />
+              <span className="px-3 py-1.5 bg-accent-500/20 backdrop-blur-sm rounded-full text-xs font-medium text-white border border-accent-400/30">
+                <span className="inline-block w-2 h-2 bg-accent-400 rounded-full mr-1.5 animate-pulse" />
                 {t('hero.freePublication')}
               </span>
             </div>
@@ -164,7 +164,7 @@ export default function PublierPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white dark:bg-dark-card rounded-2xl shadow-xl p-4 md:p-6 border border-neutral-100 dark:border-dark-border"
+          className="bg-white dark:bg-dark-card rounded-2xl shadow-soft p-4 md:p-6 border border-neutral-100 dark:border-dark-border"
         >
           {/* Steps Navigation */}
           <div className="flex items-center justify-between mb-2">
@@ -186,9 +186,9 @@ export default function PublierPage() {
                   <div className={`
                     relative w-12 h-12 rounded-2xl flex items-center justify-center mb-2 transition-all
                     ${currentStep > step.id
-                      ? 'bg-gradient-to-br from-primary-500 to-orange-500 text-white shadow-lg shadow-primary-500/30'
+                      ? 'bg-gradient-to-br from-primary-500 to-primary-500 text-white shadow-lg shadow-primary-500/30'
                       : currentStep === step.id
-                        ? 'bg-gradient-to-br from-primary-500 to-orange-500 text-white shadow-lg shadow-primary-500/30 ring-4 ring-primary-100 dark:ring-primary-900/30'
+                        ? 'bg-gradient-to-br from-primary-500 to-primary-500 text-white shadow-lg shadow-primary-500/30 ring-4 ring-primary-100 dark:ring-primary-900/30'
                         : 'bg-neutral-100 dark:bg-dark-border text-neutral-400'
                     }
                   `}>
@@ -230,7 +230,7 @@ export default function PublierPage() {
                       initial={{ width: 0 }}
                       animate={{ width: currentStep > step.id ? '100%' : '0%' }}
                       transition={{ duration: 0.5 }}
-                      className="h-full bg-gradient-to-r from-primary-500 to-orange-500"
+                      className="h-full bg-gradient-to-r from-primary-500 to-primary-500"
                     />
                   </div>
                 )}

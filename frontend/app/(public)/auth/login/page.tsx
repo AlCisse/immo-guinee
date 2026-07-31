@@ -4,11 +4,13 @@ import { useState } from 'react';
 import { useAuth } from '@/lib/auth/AuthContext';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Eye, EyeOff, Lock, Loader2, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Lock, Loader2, ArrowRight, Shield, MessageCircle, Home } from 'lucide-react';
 import { ROUTES } from '@/lib/routes';
 import { inputStyles } from '@/lib/utils';
 import PhoneInput from '@/components/ui/PhoneInput';
+import AuthTopControls from '@/components/auth/AuthTopControls';
 import { useTranslations } from '@/lib/i18n';
+import { socialBrand } from '@/lib/colors';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -40,11 +42,16 @@ export default function LoginPage() {
       await login(loginId, formData.mot_de_passe);
     } catch (err: any) {
       console.error('Login error:', err);
-      setError(
-        err.response?.data?.message ||
-        err.message ||
-        t('auth.login.errors.invalidCredentials')
-      );
+      // Map the HTTP status to a localized message. Never surface the raw axios
+      // string ("Request failed with status code 401") to the user. No status
+      // (network/timeout) or 5xx falls through to serverError.
+      const status = err?.response?.status;
+      let errorKey = 'auth.login.errors.serverError';
+      if (status === 401) errorKey = 'auth.login.errors.invalidCredentials';
+      else if (status === 400 || status === 422) errorKey = 'auth.login.errors.invalidInput';
+      else if (status === 403) errorKey = 'auth.login.errors.accountLocked';
+      else if (status === 429) errorKey = 'auth.login.errors.tooManyAttempts';
+      setError(t(errorKey));
     } finally {
       setIsLoading(false);
     }
@@ -64,49 +71,76 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-[100dvh] lg:min-h-screen overflow-x-hidden">
-      {/* Left side - Image (hidden on mobile) */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-primary-500 to-primary-700">
-        <div className="absolute inset-0 bg-black/20" />
-        <div className="relative z-10 flex flex-col justify-center items-center p-12 text-white">
-          <Image
-            src="/images/iOS/Icon-60.png"
-            alt="ImmoGuinée"
-            width={80}
-            height={80}
-            className="rounded-2xl shadow-2xl mb-8"
-          />
-          <h1 className="text-4xl font-bold mb-4 text-center">ImmoGuinée</h1>
-          <p className="text-xl text-white/90 text-center max-w-md">
-            {t('auth.login.promo.platform')}
+      {/* Left side - Brand panel (hidden on mobile) — matches the design mockup */}
+      <div
+        className="hidden lg:flex lg:w-[52%] relative overflow-hidden text-white flex-col justify-between p-10 xl:p-14"
+        style={{ background: 'linear-gradient(155deg, #c0421c, #DB5327 55%, #e8703a)' }}
+      >
+        {/* soft radial highlights */}
+        <div
+          className="absolute inset-0 opacity-50 pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(50% 55% at 85% 10%, rgba(255,255,255,.22), transparent 60%), radial-gradient(45% 50% at 5% 95%, rgba(0,0,0,.18), transparent 60%)',
+          }}
+        />
+
+        {/* top: logo + wordmark — clickable → home */}
+        <Link href={ROUTES.HOME} className="relative flex items-center gap-2.5 font-bold text-lg tracking-tight text-white dark:text-white">
+          <span className="w-9 h-9 rounded-[10px] bg-white/15 backdrop-blur-sm grid place-items-center">
+            <Home className="w-5 h-5" />
+          </span>
+          ImmoGuinée
+        </Link>
+
+        {/* middle: headline + trust list */}
+        <div className="relative">
+          <h2 className="text-3xl xl:text-[2.5rem] font-bold leading-[1.12] max-w-[15ch]">
+            {t('auth.brand.headline')}
+          </h2>
+          <p className="mt-4 text-white/90 text-base max-w-[42ch]">
+            {t('auth.brand.subtitle')}
           </p>
-          <div className="mt-12 space-y-4 text-white/80">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                <span className="text-lg">🏠</span>
+          <div className="mt-8 space-y-4 max-w-md">
+            {[
+              { Icon: Shield, title: t('home.trust.verifiedTitle'), desc: t('home.trust.verifiedDesc') },
+              { Icon: Lock, title: t('home.trust.depositTitle'), desc: t('home.trust.depositDesc') },
+              { Icon: MessageCircle, title: t('home.trust.whatsappTitle'), desc: t('home.trust.whatsappDesc') },
+            ].map(({ Icon, title, desc }, i) => (
+              <div key={i} className="flex gap-3.5 items-start">
+                <div className="shrink-0 w-[30px] h-[30px] rounded-[9px] bg-white/[.18] grid place-items-center">
+                  <Icon className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="font-semibold text-[.98rem] leading-tight">{title}</div>
+                  <div className="text-[.86rem] text-white/80 mt-0.5">{desc}</div>
+                </div>
               </div>
-              <span>{t('auth.login.promo.listings')}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                <span className="text-lg">👥</span>
-              </div>
-              <span>{t('auth.login.promo.community')}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                <span className="text-lg">🔒</span>
-              </div>
-              <span>{t('auth.login.promo.secure')}</span>
-            </div>
+            ))}
+          </div>
+        </div>
+
+        {/* bottom: testimonial */}
+        <div className="relative flex items-center gap-3.5 bg-white/[.12] backdrop-blur-sm rounded-[13px] p-4">
+          <div className="shrink-0 w-[38px] h-[38px] rounded-full bg-white/90 text-primary-700 grid place-items-center font-bold">
+            MC
+          </div>
+          <div>
+            <div className="text-[.86rem]">« {t('auth.brand.testimonialQuote')} »</div>
+            <div className="text-[.78rem] text-white/80 mt-0.5">{t('auth.brand.testimonialAuthor')}</div>
           </div>
         </div>
       </div>
 
       {/* Right side - Form */}
-      <div className="flex-1 flex items-center justify-center px-4 py-6 sm:p-6 lg:p-12 w-full max-w-full overflow-x-hidden">
+      <div className="relative flex-1 flex items-center justify-center px-4 py-6 sm:p-6 lg:p-12 w-full max-w-full overflow-x-hidden">
+        {/* Top-right controls (language + theme) — the auth screens are full-bleed
+            so they carry their own controls, matching the mockup. */}
+        <AuthTopControls className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20" />
+
         <div className="w-full max-w-md mx-auto">
           {/* Mobile logo */}
-          <div className="lg:hidden text-center mb-6">
+          <Link href={ROUTES.HOME} className="lg:hidden text-center mb-6 block">
             <Image
               src="/images/iOS/Icon-60.png"
               alt="ImmoGuinée"
@@ -115,7 +149,7 @@ export default function LoginPage() {
               className="rounded-xl mx-auto mb-2"
             />
             <h1 className="text-xl font-bold text-primary-500">ImmoGuinée</h1>
-          </div>
+          </Link>
 
           <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft p-5 sm:p-8">
             <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 dark:text-white mb-1">
@@ -126,11 +160,11 @@ export default function LoginPage() {
             </p>
 
             {/* Social Login Buttons */}
-           {/*  <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
+            <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
               <button
                 onClick={() => handleSocialLogin('google')}
                 disabled={socialLoading !== null}
-                className="w-full flex items-center justify-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 bg-white border border-neutral-200 dark:border-dark-border rounded-xl hover:bg-neutral-50 dark:bg-dark-bg dark:hover:bg-dark-hover transition-colors disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-xl hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors disabled:opacity-50"
               >
                 {socialLoading === 'google' ? (
                   <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-neutral-500" />
@@ -143,27 +177,27 @@ export default function LoginPage() {
                   </svg>
                 )}
                 <span className="text-sm sm:text-base font-medium text-neutral-700 dark:text-neutral-300">
-                  Continuer avec Google
+                  {t('auth.login.continueWithGoogle')}
                 </span>
               </button>
 
               <button
                 onClick={() => handleSocialLogin('facebook')}
                 disabled={socialLoading !== null}
-                className="w-full flex items-center justify-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 bg-[#1877F2] rounded-xl hover:bg-[#166FE5] transition-colors disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-xl hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors disabled:opacity-50"
               >
                 {socialLoading === 'facebook' ? (
-                  <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-white" />
+                  <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-neutral-500" />
                 ) : (
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill={socialBrand.facebook} viewBox="0 0 24 24">
                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                   </svg>
                 )}
-                <span className="text-sm sm:text-base font-medium text-white">
-                  Continuer avec Facebook
+                <span className="text-sm sm:text-base font-medium text-neutral-700 dark:text-neutral-300">
+                  {t('auth.login.continueWithFacebook')}
                 </span>
               </button>
-            </div> */}
+            </div>
 
             {/* Divider */}
             <div className="relative my-4 sm:my-6">
@@ -205,20 +239,17 @@ export default function LoginPage() {
                   {t('auth.login.password')}
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-4">
-                    <Lock className="w-4 h-4 text-neutral-500" />
-                  </div>
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={formData.mot_de_passe}
                     onChange={(e) => setFormData({ ...formData, mot_de_passe: e.target.value })}
-                    className={`${inputStyles.base} ${inputStyles.withIconRight}`}
+                    className={`${inputStyles.base} pl-4 pr-11`}
                     placeholder={t('auth.login.passwordPlaceholder')}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-4 text-neutral-400 hover:text-neutral-600"
+                    className="absolute inset-y-0 right-0 flex items-center pr-4 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-400"
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -230,7 +261,7 @@ export default function LoginPage() {
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    className="w-4 h-4 rounded border-neutral-300 text-primary-500 focus:ring-primary-500"
+                    className="w-4 h-4 rounded border-neutral-300 dark:border-dark-border text-primary-500 focus:ring-primary-500"
                   />
                   <span className="text-sm text-neutral-600 dark:text-neutral-400">{t('auth.login.rememberMe')}</span>
                 </label>
@@ -265,28 +296,6 @@ export default function LoginPage() {
               <Link href={ROUTES.REGISTER} className="text-primary-500 hover:text-primary-600 font-semibold">
                 {t('auth.login.registerFree')}
               </Link>
-            </div>
-          </div>
-
-          {/* Features - hidden on mobile for cleaner display */}
-          <div className="hidden sm:grid mt-6 sm:mt-8 grid-cols-3 gap-2 sm:gap-4 text-center text-xs text-neutral-500">
-            <div>
-              <div className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-1 sm:mb-2 rounded-full bg-primary-100 dark:bg-primary-500/10 flex items-center justify-center">
-                <span className="text-primary-500 text-xs sm:text-sm">✓</span>
-              </div>
-              <span className="block text-[11px] sm:text-xs leading-tight">{t('auth.login.features.freeListings')}</span>
-            </div>
-            <div>
-              <div className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-1 sm:mb-2 rounded-full bg-primary-100 dark:bg-primary-500/10 flex items-center justify-center">
-                <span className="text-primary-500 text-xs sm:text-sm">✓</span>
-              </div>
-              <span className="block text-[11px] sm:text-xs leading-tight">{t('auth.login.features.advancedSearch')}</span>
-            </div>
-            <div>
-              <div className="w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-1 sm:mb-2 rounded-full bg-primary-100 dark:bg-primary-500/10 flex items-center justify-center">
-                <span className="text-primary-500 text-xs sm:text-sm">✓</span>
-              </div>
-              <span className="block text-[11px] sm:text-xs leading-tight">{t('auth.login.features.secureMessaging')}</span>
             </div>
           </div>
         </div>

@@ -1,5 +1,3 @@
-'use client';
-
 import { forwardRef, type ButtonHTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -29,15 +27,17 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const baseStyles =
       'inline-flex items-center justify-center font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none rounded-lg';
 
+    // Variants aligned on the « Argile de Conakry » charte: resting = *-500 (main accent),
+    // hover = *-600, active = *-700. Matches .btn-primary in globals.css and hand-rolled buttons.
     const variants = {
       primary:
-        'bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500 active:bg-primary-800',
+        'bg-primary-500 text-white hover:bg-primary-600 focus:ring-primary-500 active:bg-primary-700',
       secondary:
-        'bg-secondary-600 text-white hover:bg-secondary-700 focus:ring-secondary-500 active:bg-secondary-800',
+        'bg-secondary-500 text-white hover:bg-secondary-600 focus:ring-secondary-500 active:bg-secondary-700',
       outline:
-        'border-2 border-primary-600 text-primary-600 hover:bg-primary-50 focus:ring-primary-500',
-      ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-gray-500',
-      danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 active:bg-red-800',
+        'border-2 border-primary-500 text-primary-600 hover:bg-primary-50 focus:ring-primary-500 dark:text-primary-400 dark:hover:bg-dark-hover',
+      ghost: 'text-neutral-700 hover:bg-neutral-100 dark:hover:bg-dark-hover focus:ring-neutral-500 dark:text-neutral-300 dark:hover:bg-dark-hover',
+      danger: 'bg-error-500 text-white hover:bg-error-600 focus:ring-error-500 active:bg-error-700',
       link: 'text-primary-600 hover:text-primary-700 underline-offset-4 hover:underline focus:ring-primary-500',
     };
 

@@ -166,7 +166,7 @@ function PaymentDetailsModal({ payment, isOpen, onClose }: { payment: Payment | 
             className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"
           >
             <div
-              className="relative w-full max-w-2xl bg-white dark:bg-dark-card rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden"
+              className="relative w-full max-w-2xl bg-white dark:bg-dark-card rounded-2xl shadow-soft max-h-[90vh] overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
@@ -249,7 +249,7 @@ function PaymentDetailsModal({ payment, isOpen, onClose }: { payment: Payment | 
                     {payment.frais_plateforme && payment.frais_plateforme > 0 && (
                       <div className="bg-white dark:bg-dark-card rounded-lg p-3 shadow-sm">
                         <span className="text-xs text-neutral-500 block">Frais plateforme</span>
-                        <span className="text-lg font-bold text-neutral-600">{formatMoney(payment.frais_plateforme)}</span>
+                        <span className="text-lg font-bold text-neutral-600 dark:text-neutral-400">{formatMoney(payment.frais_plateforme)}</span>
                       </div>
                     )}
                   </div>
@@ -472,11 +472,11 @@ export default function PaiementsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-white flex items-center gap-3">
           <CreditCard className="w-7 h-7 text-primary-500" />
           Gestion des paiements
         </h1>
-        <p className="text-gray-600 dark:text-neutral-400 mt-1">
+        <p className="text-neutral-600 dark:text-neutral-400 mt-1">
           Suivez tous les paiements de la plateforme
         </p>
       </div>

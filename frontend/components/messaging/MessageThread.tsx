@@ -42,7 +42,10 @@ export default function MessageThread({ conversationId }: MessageThreadProps) {
   const [typingUser, setTypingUser] = useState<string | null>(null);
 
   // Fetch messages
-  const { data: messages = [], isLoading } = useQuery<Message[]>({
+  // R13 — on récupère `error` + `refetch` pour afficher un état d'erreur
+  // actionnable (retry) au lieu d'un conteneur vide silencieux quand la
+  // requête échoue.
+  const { data: messages = [], isLoading, error, refetch } = useQuery<Message[]>({
     queryKey: ['messages', conversationId],
     queryFn: () => fetchMessages(conversationId),
     refetchInterval: 5000, // Poll for new messages
@@ -69,13 +72,44 @@ export default function MessageThread({ conversationId }: MessageThreadProps) {
     );
   }
 
+  // R13 — état d'erreur réseau/API : propose un retry plutôt que de laisser
+  // l'utilisateur devant un fil vide sans explication.
+  if (error) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-4 text-center gap-3">
+        <svg
+          className="w-10 h-10 text-neutral-300 dark:text-neutral-600"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z"
+          />
+        </svg>
+        <p className="text-neutral-600 dark:text-neutral-400 max-w-xs">
+          Impossible de charger les messages.
+        </p>
+        <button
+          onClick={() => refetch()}
+          className="px-4 py-2 bg-primary-500 text-white text-sm font-semibold rounded-lg hover:bg-primary-600 transition-colors"
+        >
+          Réessayer
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div ref={containerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
       {messages.length === 0 ? (
         <div className="flex-1 flex items-center justify-center h-full">
           <div className="text-center">
             <svg
-              className="mx-auto h-12 w-12 text-gray-300"
+              className="mx-auto h-12 w-12 text-neutral-300"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -87,8 +121,8 @@ export default function MessageThread({ conversationId }: MessageThreadProps) {
                 d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
               />
             </svg>
-            <p className="mt-2 text-gray-500">Aucun message</p>
-            <p className="text-sm text-gray-400">
+            <p className="mt-2 text-neutral-500 dark:text-neutral-400">Aucun message</p>
+            <p className="text-sm text-neutral-400">
               Commencez la conversation !
             </p>
           </div>
@@ -99,7 +133,7 @@ export default function MessageThread({ conversationId }: MessageThreadProps) {
             <div key={date}>
               {/* Date separator */}
               <div className="flex items-center justify-center my-4">
-                <span className="px-3 py-1 text-xs text-gray-500 bg-gray-100 rounded-full">
+                <span className="px-3 py-1 text-xs text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-dark-hover rounded-full">
                   {date}
                 </span>
               </div>
@@ -127,15 +161,15 @@ export default function MessageThread({ conversationId }: MessageThreadProps) {
 
           {/* Typing indicator */}
           {typingUser && (
-            <div className="flex items-center gap-2 text-gray-500 text-sm">
+            <div className="flex items-center gap-2 text-neutral-500 dark:text-neutral-400 text-sm">
               <div className="flex gap-1">
-                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+                <span className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce" />
                 <span
-                  className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                  className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce"
                   style={{ animationDelay: '0.1s' }}
                 />
                 <span
-                  className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                  className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce"
                   style={{ animationDelay: '0.2s' }}
                 />
               </div>
@@ -171,8 +205,8 @@ function MessageBubble({
     >
       {/* Avatar */}
       {!isOwn && showAvatar && (
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-          <span className="text-gray-600 text-sm font-medium">
+        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-neutral-200 dark:bg-dark-hover flex items-center justify-center">
+          <span className="text-neutral-600 dark:text-neutral-400 text-sm font-medium">
             {message.sender.prenom.charAt(0).toUpperCase()}
           </span>
         </div>
@@ -185,7 +219,7 @@ function MessageBubble({
           'max-w-[70%] rounded-2xl px-4 py-2',
           isOwn
             ? 'bg-primary-500 text-white rounded-br-md'
-            : 'bg-gray-100 text-gray-900 rounded-bl-md'
+            : 'bg-neutral-100 dark:bg-dark-hover text-neutral-900 dark:text-white rounded-bl-md'
         )}
       >
         {/* Text message */}
@@ -202,7 +236,7 @@ function MessageBubble({
               </svg>
             </button>
             <div className="flex-1 h-1 bg-white/30 rounded-full">
-              <div className="h-full w-1/3 bg-white rounded-full" />
+              <div className="h-full w-1/3 bg-white dark:bg-dark-card rounded-full" />
             </div>
             <span className="text-xs opacity-70">0:15</span>
           </div>
@@ -242,7 +276,7 @@ function MessageBubble({
         <div
           className={clsx(
             'flex items-center gap-1 mt-1 text-xs',
-            isOwn ? 'text-white/70 justify-end' : 'text-gray-400'
+            isOwn ? 'text-white/70 justify-end' : 'text-neutral-400'
           )}
         >
           <span>
@@ -260,7 +294,7 @@ function getStatusIcon(status: string) {
   switch (status) {
     case 'LU':
       return (
-        <svg className="w-4 h-4 text-blue-300" fill="currentColor" viewBox="0 0 24 24">
+        <svg className="w-4 h-4 text-secondary-300" fill="currentColor" viewBox="0 0 24 24">
           <path d="M18 7l-1.41-1.41-6.34 6.34 1.41 1.41L18 7zm4.24-1.41L11.66 16.17 7.48 12l-1.41 1.41L11.66 19l12-12-1.42-1.41zM.41 13.41L6 19l1.41-1.41L1.83 12 .41 13.41z" />
         </svg>
       );

@@ -1,10 +1,16 @@
 #!/bin/bash
 # ===============================================
-# ImmoGuinée - Docker Swarm Deployment Script
-# Usage: ./scripts/deploy-swarm.sh [command]
+# ImmoGuinée — Docker Swarm Deployment (stack Rust)
+# Cible : docker/docker-compose.swarm.rust.yml
+# Usage : ./scripts/deploy-swarm.sh [command]
 # ===============================================
 
-set -e
+# C9 — fail-fast strict : -e (sortie sur erreur) + -o pipefail (sortie si un
+# maillon d'un pipeline échoue). Sans pipefail, un `docker info | grep -q
+# "Swarm: active"` où docker info échoue laisserait grep renvoyer "no match" et
+# l'erreur amont serait silencieuse. On n'ajoute PAS -u : ce script de prod
+# référence des vars/env optionnelles qu'on ne peut pas valider à froid.
+set -e -o pipefail
 
 # Colors
 RED='\033[0;31m'
@@ -16,653 +22,232 @@ NC='\033[0m'
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 DOCKER_DIR="$PROJECT_DIR/docker"
+COMPOSE_FILE="docker-compose.swarm.rust.yml"
 STACK_NAME="immog"
 
+# Image names must match the compose (${DOCKER_REGISTRY:-}immoguinee-{backend,frontend}:${VERSION}).
+DOCKER_REGISTRY="${DOCKER_REGISTRY:-}"
+VERSION="${VERSION:-latest}"
+BACKEND_IMAGE="${DOCKER_REGISTRY}immoguinee-backend:${VERSION}"
+FRONTEND_IMAGE="${DOCKER_REGISTRY}immoguinee-frontend:${VERSION}"
+
 echo -e "${BLUE}========================================${NC}"
-echo -e "${BLUE}  ImmoGuinée Docker Swarm Deployment${NC}"
+echo -e "${BLUE}  ImmoGuinée — Swarm (Rust) : ${COMPOSE_FILE}${NC}"
 echo -e "${BLUE}========================================${NC}"
 
-# Check if running as root or with sudo
 check_permissions() {
     if [[ $EUID -ne 0 ]] && ! docker info &>/dev/null; then
-        echo -e "${RED}Please run with sudo or as root${NC}"
+        echo -e "${RED}Lancez avec sudo/root ou avec un accès au daemon Docker${NC}"
         exit 1
     fi
 }
 
 # Initialize Docker Swarm
 init_swarm() {
-    echo -e "${YELLOW}Initializing Docker Swarm...${NC}"
-
+    echo -e "${YELLOW}Initialisation de Docker Swarm...${NC}"
     if docker info | grep -q "Swarm: active"; then
-        echo -e "${GREEN}Swarm already active${NC}"
+        echo -e "${GREEN}Swarm déjà actif${NC}"
     else
-        # Get the public IP
         PUBLIC_IP=$(curl -s ifconfig.me || hostname -I | awk '{print $1}')
         docker swarm init --advertise-addr "$PUBLIC_IP" || docker swarm init
-        echo -e "${GREEN}Swarm initialized${NC}"
+        echo -e "${GREEN}Swarm initialisé${NC}"
     fi
 }
 
-# Build images
+# Build images (backend Rust + frontend Next). Pour la prod, build en --release
+# (voir rust-backend/Dockerfile). --no-cache pour forcer un rebuild propre.
 build_images() {
-    echo -e "${YELLOW}Building Docker images...${NC}"
+    echo -e "${YELLOW}Build des images...${NC}"
     cd "$PROJECT_DIR"
 
-    # Build frontend (--no-cache to force rebuild)
-    echo -e "${YELLOW}Building frontend image...${NC}"
-    docker build --no-cache -t immoguinee/frontend:latest \
+    echo -e "${YELLOW}Backend (Rust/Axum) → ${BACKEND_IMAGE}${NC}"
+    docker build --no-cache -t "$BACKEND_IMAGE" -f rust-backend/Dockerfile rust-backend/
+
+    echo -e "${YELLOW}Frontend (Next.js) → ${FRONTEND_IMAGE}${NC}"
+    docker build --no-cache -t "$FRONTEND_IMAGE" \
         --build-arg NEXT_PUBLIC_API_URL=/api \
         -f frontend/Dockerfile frontend/
 
-    # Build PHP (--no-cache to force rebuild)
-    echo -e "${YELLOW}Building PHP image...${NC}"
-    docker build --no-cache -t immoguinee/php:latest \
-        -f docker/php/Dockerfile backend/
-
-    # Build FFmpeg API
-    echo -e "${YELLOW}Building FFmpeg API image...${NC}"
-    docker build --no-cache -t immoguinee/ffmpeg-api:latest \
-        -f docker/ffmpeg-api/Dockerfile docker/ffmpeg-api/
-
-    echo -e "${GREEN}Images built successfully${NC}"
+    echo -e "${GREEN}Images construites${NC}"
 }
 
-# Deploy stack
+# Deploy stack (compose Rust unique). Les variables d'env (VAULT_ROLE_ID,
+# DOCKER_REGISTRY, VERSION) sont lues depuis docker/.env si présent.
 deploy_stack() {
-    echo -e "${YELLOW}Deploying stack...${NC}"
+    echo -e "${YELLOW}Déploiement de la stack...${NC}"
     cd "$DOCKER_DIR"
 
-    # Load environment variables
     if [ -f .env ]; then
-        export $(cat .env | grep -v '^#' | xargs)
+        set -a; . ./.env; set +a
     fi
 
-    # Deploy with both compose files
+    DOCKER_REGISTRY="$DOCKER_REGISTRY" VERSION="$VERSION" \
     docker stack deploy \
-        -c docker-compose.yml \
-        -c docker-compose.prod.yml \
+        -c "$COMPOSE_FILE" \
         --with-registry-auth \
         "$STACK_NAME"
 
-    echo -e "${GREEN}Stack deployed${NC}"
+    echo -e "${GREEN}Stack déployée${NC}"
+    echo -e "${YELLOW}Rappel : Vault doit être init/unseal et l'AppRole configuré (voir docker/vault/vault.hcl).${NC}"
 }
 
-# Update a single service (rolling update)
+# Force a rolling update of one service
 update_service() {
     SERVICE=$1
     if [ -z "$SERVICE" ]; then
-        echo -e "${RED}Usage: $0 update <service_name>${NC}"
-        echo "Available services: frontend, php, nginx, queue-worker, scheduler"
+        echo -e "${RED}Usage: $0 update <service>${NC}"
+        echo "Services : backend, frontend, traefik, postgres, redis, minio, evolution, vault, grafana, pgadmin"
         exit 1
     fi
-
-    echo -e "${YELLOW}Updating service: ${STACK_NAME}_${SERVICE}...${NC}"
+    echo -e "${YELLOW}Mise à jour du service ${STACK_NAME}_${SERVICE}...${NC}"
     docker service update --force "${STACK_NAME}_${SERVICE}"
-    echo -e "${GREEN}Service updated${NC}"
+    echo -e "${GREEN}Service mis à jour${NC}"
 }
 
-# Cleanup old containers and images
 cleanup() {
-    echo -e "${YELLOW}Cleaning up old containers and images...${NC}"
-
-    # Remove stopped containers
+    echo -e "${YELLOW}Nettoyage conteneurs/images inutilisés...${NC}"
     docker container prune -f 2>/dev/null || true
-
-    # Remove unused images (dangling)
     docker image prune -f 2>/dev/null || true
-
-    # Remove old images not used by any container (keep last 2 versions)
-    echo -e "${YELLOW}Removing old unused images...${NC}"
-    docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep -E '^immoguinee/(frontend|php):' | tail -n +3 | awk '{print $2}' | xargs -r docker rmi 2>/dev/null || true
-
-    echo -e "${GREEN}Cleanup completed${NC}"
+    # Garde les 2 dernières versions des images applicatives.
+    docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' \
+        | grep -E '(^|/)immoguinee-(frontend|backend):' \
+        | tail -n +3 | awk '{print $2}' | xargs -r docker rmi 2>/dev/null || true
+    echo -e "${GREEN}Nettoyage terminé${NC}"
 }
 
-# Update frontend with new build
+# Update frontend : build + rolling update (zéro coupure, start-first)
 update_frontend() {
-    echo -e "${YELLOW}Updating frontend...${NC}"
-
-    # Pull latest code
+    echo -e "${YELLOW}Mise à jour frontend...${NC}"
     cd "$PROJECT_DIR"
-    git pull
-
-    # Step 1: Build new image FIRST
-    echo -e "${YELLOW}Step 1/3: Building new frontend image...${NC}"
-    docker build --no-cache -t immoguinee/frontend:latest \
+    docker build --no-cache -t "$FRONTEND_IMAGE" \
         --build-arg NEXT_PUBLIC_API_URL=/api \
         -f frontend/Dockerfile frontend/
-
-    # Step 2: Update service with new image (rolling update - zero downtime)
-    echo -e "${YELLOW}Step 2/3: Updating service with new image...${NC}"
     docker service update \
-        --image immoguinee/frontend:latest \
-        --force \
-        --update-parallelism 1 \
-        --update-delay 30s \
-        --update-failure-action rollback \
-        --update-order start-first \
+        --image "$FRONTEND_IMAGE" --force \
+        --update-parallelism 1 --update-delay 10s \
+        --update-failure-action rollback --update-order start-first \
         "${STACK_NAME}_frontend"
-
-    # Step 3: Cleanup old containers and images
-    echo -e "${YELLOW}Step 3/3: Cleaning up...${NC}"
     cleanup
-
-    echo -e "${GREEN}Frontend updated with zero downtime${NC}"
+    echo -e "${GREEN}Frontend mis à jour${NC}"
 }
 
-# Update backend (PHP)
-# Usage: update_backend [--quick] [--no-migrate]
+# Update backend : build + rolling update. Les migrations s'appliquent via `migrate`.
 update_backend() {
-    local QUICK_MODE=false
-    local RUN_MIGRATE=true
-    local REMOTE_HOST="${REMOTE_HOST:-immoguinee}"
-    local REMOTE_DIR="${REMOTE_DIR:-/home/ubuntu/immoguinee}"
-
-    # Parse arguments
-    for arg in "$@"; do
-        case $arg in
-            --quick) QUICK_MODE=true ;;
-            --no-migrate) RUN_MIGRATE=false ;;
-        esac
-    done
-
-    echo -e "${YELLOW}Updating backend...${NC}"
-
-    # Detect if running locally or on server
-    if [ -n "$SSH_CONNECTION" ] || [ "$(hostname)" = "immoguinee" ]; then
-        # Running on server
-        echo -e "${BLUE}Running on server${NC}"
-        cd "$PROJECT_DIR"
-
-        if [ "$QUICK_MODE" = false ]; then
-            git pull
-            # Build new image
-            docker build --no-cache -t immoguinee/php:latest \
-                -f docker/php/Dockerfile backend/
-
-            # Update all PHP services with new image
-            docker service update \
-                --image immoguinee/php:latest \
-                --force \
-                --update-parallelism 1 \
-                --update-delay 10s \
-                --update-failure-action rollback \
-                "${STACK_NAME}_php"
-
-            docker service update \
-                --image immoguinee/php:latest \
-                --force \
-                "${STACK_NAME}_queue-worker"
-
-            docker service update \
-                --image immoguinee/php:latest \
-                --force \
-                "${STACK_NAME}_scheduler"
-
-            # Cleanup after update
-            cleanup
-        fi
-    else
-        # Running locally - sync files to server
-        echo -e "${BLUE}Running locally - syncing to ${REMOTE_HOST}${NC}"
-
-        # Sync backend files to server
-        echo -e "${YELLOW}Syncing backend files...${NC}"
-        rsync -avz --delete \
-            --chmod=F644,D755 \
-            --exclude 'vendor' \
-            --exclude 'node_modules' \
-            --exclude '.env' \
-            --exclude 'storage/logs/*' \
-            --exclude 'storage/framework/cache/*' \
-            --exclude 'storage/framework/sessions/*' \
-            --exclude 'storage/framework/views/*' \
-            --exclude 'bootstrap/cache/*' \
-            "$PROJECT_DIR/backend/" \
-            "${REMOTE_HOST}:${REMOTE_DIR}/backend/"
-
-        if [ "$QUICK_MODE" = true ]; then
-            echo -e "${YELLOW}Quick mode: Copying files to containers...${NC}"
-
-            # Get container IDs
-            PHP_CONTAINERS=$(ssh "$REMOTE_HOST" "docker ps --format '{{.Names}}' | grep -E '${STACK_NAME}_php\.[0-9]' | tr '\n' ' '")
-
-            for CONTAINER in $PHP_CONTAINERS; do
-                echo -e "${YELLOW}Updating container: ${CONTAINER}${NC}"
-
-                # Copy updated files to container
-                ssh "$REMOTE_HOST" "
-                    docker cp ${REMOTE_DIR}/backend/app/. ${CONTAINER}:/var/www/backend/app/ && \
-                    docker cp ${REMOTE_DIR}/backend/config/. ${CONTAINER}:/var/www/backend/config/ && \
-                    docker cp ${REMOTE_DIR}/backend/routes/. ${CONTAINER}:/var/www/backend/routes/ && \
-                    docker cp ${REMOTE_DIR}/backend/database/migrations/. ${CONTAINER}:/var/www/backend/database/migrations/
-                "
-            done
-
-            # Clear caches
-            echo -e "${YELLOW}Clearing caches...${NC}"
-            FIRST_PHP=$(ssh "$REMOTE_HOST" "docker ps --format '{{.Names}}' | grep '${STACK_NAME}_php\.[0-9]' | head -1")
-            ssh "$REMOTE_HOST" "
-                docker exec ${FIRST_PHP} php artisan config:clear && \
-                docker exec ${FIRST_PHP} php artisan cache:clear && \
-                docker exec ${FIRST_PHP} php artisan route:clear
-            "
-        else
-            echo -e "${YELLOW}Full rebuild mode: Building new image on server...${NC}"
-            ssh "$REMOTE_HOST" "
-                cd ${REMOTE_DIR} && \
-                docker build --no-cache -t immoguinee/php:latest -f docker/php/Dockerfile backend/
-            "
-
-            # Update services with new image
-            echo -e "${YELLOW}Updating services...${NC}"
-            ssh "$REMOTE_HOST" "
-                docker service update --image immoguinee/php:latest --force \
-                    --update-parallelism 1 --update-delay 10s --update-failure-action rollback \
-                    ${STACK_NAME}_php && \
-                docker service update --image immoguinee/php:latest --force ${STACK_NAME}_queue-worker && \
-                docker service update --image immoguinee/php:latest --force ${STACK_NAME}_scheduler
-            "
-        fi
-
-        # Run migrations if requested
-        if [ "$RUN_MIGRATE" = true ]; then
-            echo -e "${YELLOW}Running migrations...${NC}"
-            FIRST_PHP=$(ssh "$REMOTE_HOST" "docker ps --format '{{.Names}}' | grep '${STACK_NAME}_php\.[0-9]' | head -1")
-            ssh "$REMOTE_HOST" "docker exec ${FIRST_PHP} php artisan migrate --force" || true
-        fi
-
-        # Clear and rebuild caches
-        echo -e "${YELLOW}Rebuilding caches...${NC}"
-        FIRST_PHP=$(ssh "$REMOTE_HOST" "docker ps --format '{{.Names}}' | grep '${STACK_NAME}_php\.[0-9]' | head -1")
-        ssh "$REMOTE_HOST" "
-            docker exec ${FIRST_PHP} php artisan config:clear && \
-            docker exec ${FIRST_PHP} php artisan cache:clear && \
-            docker exec ${FIRST_PHP} php artisan route:clear
-        " || true
-    fi
-
-    echo -e "${GREEN}Backend updated${NC}"
-}
-
-# Full update (frontend + backend)
-update_all() {
-    echo -e "${YELLOW}Full update...${NC}"
-
+    echo -e "${YELLOW}Mise à jour backend (Rust)...${NC}"
     cd "$PROJECT_DIR"
-    git pull
-
-    # Step 1: Build all images first
-    echo -e "${YELLOW}Step 1/3: Building all images...${NC}"
-    build_images
-
-    # Step 2: Update all application services with new images
-    echo -e "${YELLOW}Step 2/3: Updating all services...${NC}"
-    docker service update --image immoguinee/frontend:latest --force "${STACK_NAME}_frontend"
-    docker service update --image immoguinee/php:latest --force "${STACK_NAME}_php"
-    docker service update --image immoguinee/php:latest --force "${STACK_NAME}_queue-worker"
-    docker service update --image immoguinee/php:latest --force "${STACK_NAME}_scheduler"
-
-    # Step 3: Cleanup
-    echo -e "${YELLOW}Step 3/3: Cleaning up...${NC}"
+    docker build --no-cache -t "$BACKEND_IMAGE" -f rust-backend/Dockerfile rust-backend/
+    docker service update \
+        --image "$BACKEND_IMAGE" --force \
+        --update-parallelism 1 --update-delay 10s \
+        --update-failure-action rollback --update-order start-first \
+        "${STACK_NAME}_backend"
     cleanup
-
-    echo -e "${GREEN}All services updated${NC}"
+    echo -e "${GREEN}Backend mis à jour${NC}"
+    echo -e "${YELLOW}Si le schéma a changé : ./scripts/deploy-swarm.sh migrate${NC}"
 }
 
-# Show stack status
+update_all() {
+    echo -e "${YELLOW}Mise à jour complète...${NC}"
+    build_images
+    docker service update --image "$BACKEND_IMAGE" --force "${STACK_NAME}_backend"
+    docker service update --image "$FRONTEND_IMAGE" --force "${STACK_NAME}_frontend"
+    cleanup
+    echo -e "${GREEN}Tous les services mis à jour${NC}"
+}
+
+# Run SeaORM migrations : re-exécute le service one-shot `migrate` du compose.
+migrate() {
+    echo -e "${YELLOW}Application des migrations (immog-migrate up)...${NC}"
+    docker service update --force "${STACK_NAME}_migrate"
+    echo -e "${GREEN}Migrations relancées — suivez : $0 logs migrate${NC}"
+}
+
 show_status() {
-    echo -e "${BLUE}=== Stack Services ===${NC}"
+    echo -e "${BLUE}=== Services ===${NC}"
     docker stack services "$STACK_NAME"
-
     echo ""
-    echo -e "${BLUE}=== Service Tasks ===${NC}"
-    docker stack ps "$STACK_NAME" --no-trunc 2>/dev/null | head -30
+    echo -e "${BLUE}=== Tasks ===${NC}"
+    docker stack ps "$STACK_NAME" --no-trunc 2>/dev/null | head -40
 }
 
-# Show logs
 show_logs() {
     SERVICE=$1
-    if [ -z "$SERVICE" ]; then
-        echo "Usage: $0 logs <service_name>"
-        exit 1
-    fi
+    if [ -z "$SERVICE" ]; then echo "Usage: $0 logs <service>"; exit 1; fi
     docker service logs "${STACK_NAME}_${SERVICE}" --tail 100 -f
 }
 
-# Rollback service
 rollback_service() {
     SERVICE=$1
-    if [ -z "$SERVICE" ]; then
-        echo "Usage: $0 rollback <service_name>"
-        exit 1
-    fi
-
-    echo -e "${YELLOW}Rolling back service: ${STACK_NAME}_${SERVICE}...${NC}"
+    if [ -z "$SERVICE" ]; then echo "Usage: $0 rollback <service>"; exit 1; fi
+    echo -e "${YELLOW}Rollback ${STACK_NAME}_${SERVICE}...${NC}"
     docker service rollback "${STACK_NAME}_${SERVICE}"
-    echo -e "${GREEN}Service rolled back${NC}"
+    echo -e "${GREEN}Service rollback effectué${NC}"
 }
 
-# Scale service
+# Scale : uniquement les services applicatifs stateless (backend, frontend).
 scale_service() {
-    SERVICE=$1
-    REPLICAS=$2
+    SERVICE=$1; REPLICAS=$2
     if [ -z "$SERVICE" ] || [ -z "$REPLICAS" ]; then
-        echo "Usage: $0 scale <service_name> <replicas>"
+        echo "Usage: $0 scale <service> <replicas>  (backend|frontend)"
         exit 1
     fi
-
-    echo -e "${YELLOW}Scaling ${STACK_NAME}_${SERVICE} to ${REPLICAS} replicas...${NC}"
+    case "$SERVICE" in
+        backend|frontend) ;;
+        *) echo -e "${RED}Seuls backend/frontend sont scalables (les autres sont single-instance).${NC}"; exit 1 ;;
+    esac
+    echo -e "${YELLOW}Scale ${STACK_NAME}_${SERVICE} → ${REPLICAS}...${NC}"
     docker service scale "${STACK_NAME}_${SERVICE}=${REPLICAS}"
-    echo -e "${GREEN}Service scaled${NC}"
+    echo -e "${GREEN}Service scalé${NC}"
 }
 
-# Remove stack
 remove_stack() {
-    echo -e "${YELLOW}Removing stack...${NC}"
+    echo -e "${YELLOW}Suppression de la stack...${NC}"
     docker stack rm "$STACK_NAME"
-    echo -e "${GREEN}Stack removed${NC}"
+    echo -e "${GREEN}Stack supprimée${NC}"
 }
 
-# Run Laravel commands
-artisan() {
-    CONTAINER=$(docker ps -qf "name=${STACK_NAME}_php" | head -1)
-    if [ -z "$CONTAINER" ]; then
-        echo -e "${RED}PHP container not found${NC}"
-        exit 1
-    fi
-    docker exec -it "$CONTAINER" php artisan "$@"
-}
-
-# Post-deploy fixes (run after fresh deployment)
-post_deploy() {
-    echo -e "${YELLOW}Running post-deployment fixes...${NC}"
-    cd "$DOCKER_DIR"
-
-    # Wait for services to be ready
-    echo -e "${YELLOW}Waiting for services to start...${NC}"
-    sleep 30
-
-    # Get PHP container
-    CONTAINER=$(docker ps -qf "name=${STACK_NAME}_php" | head -1)
-    if [ -z "$CONTAINER" ]; then
-        echo -e "${RED}PHP container not found, waiting more...${NC}"
-        sleep 30
-        CONTAINER=$(docker ps -qf "name=${STACK_NAME}_php" | head -1)
-    fi
-
-    if [ -z "$CONTAINER" ]; then
-        echo -e "${RED}PHP container still not found. Please check services.${NC}"
-        exit 1
-    fi
-
-    # Load APP_KEY from .env if exists
-    if [ -f .env ]; then
-        APP_KEY=$(grep APP_KEY .env | cut -d= -f2)
-        if [ -n "$APP_KEY" ]; then
-            echo -e "${YELLOW}Updating services with APP_KEY...${NC}"
-            docker service update --env-add APP_KEY="$APP_KEY" --force "${STACK_NAME}_php"
-            docker service update --env-add APP_KEY="$APP_KEY" --force "${STACK_NAME}_queue-worker"
-            docker service update --env-add APP_KEY="$APP_KEY" --force "${STACK_NAME}_scheduler"
-            sleep 15
-            CONTAINER=$(docker ps -qf "name=${STACK_NAME}_php" | head -1)
-        fi
-    fi
-
-    # Run migrations
-    echo -e "${YELLOW}Running migrations...${NC}"
-    docker exec "$CONTAINER" php artisan migrate --force || true
-
-    # Seed database if fresh install
-    if [ "$1" = "--seed" ]; then
-        echo -e "${YELLOW}Seeding database...${NC}"
-        docker exec "$CONTAINER" php artisan db:seed --force || true
-    fi
-
-    # Generate Passport keys
-    echo -e "${YELLOW}Generating Passport keys...${NC}"
-    docker exec "$CONTAINER" php artisan passport:keys --force || true
-    docker exec "$CONTAINER" bash -c "chown www-data:www-data /var/www/backend/storage/oauth-*.key 2>/dev/null" || true
-    docker exec "$CONTAINER" bash -c "chmod 600 /var/www/backend/storage/oauth-private.key 2>/dev/null" || true
-
-    # Create Passport client if not exists
-    echo -e "${YELLOW}Creating Passport personal access client...${NC}"
-    docker exec "$CONTAINER" php artisan passport:client --personal --name="ImmoGuinée Personal Access Client" 2>/dev/null || echo "Client may already exist"
-
-    # Fix OAuth tables for UUID support
-    echo -e "${YELLOW}Fixing OAuth tables for UUID support...${NC}"
-    POSTGRES_CONTAINER=$(docker ps -qf "name=${STACK_NAME}_postgres" | head -1)
-    if [ -n "$POSTGRES_CONTAINER" ]; then
-        docker exec "$POSTGRES_CONTAINER" psql -U immog_user -d immog_db -c "
-            DO \$\$
-            BEGIN
-                -- Check and alter user_id columns to uuid if they are bigint
-                IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'oauth_access_tokens' AND column_name = 'user_id' AND data_type = 'bigint') THEN
-                    ALTER TABLE oauth_access_tokens ALTER COLUMN user_id TYPE uuid USING NULL;
-                END IF;
-                IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'oauth_auth_codes' AND column_name = 'user_id' AND data_type = 'bigint') THEN
-                    ALTER TABLE oauth_auth_codes ALTER COLUMN user_id TYPE uuid USING NULL;
-                END IF;
-                IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'oauth_clients' AND column_name = 'user_id' AND data_type = 'bigint') THEN
-                    ALTER TABLE oauth_clients ALTER COLUMN user_id TYPE uuid USING NULL;
-                END IF;
-            EXCEPTION WHEN OTHERS THEN
-                RAISE NOTICE 'OAuth tables already have correct types or error occurred';
-            END \$\$;
-        " 2>/dev/null || echo "OAuth table fix may have already been applied"
-    fi
-
-    # Clear and rebuild caches
-    echo -e "${YELLOW}Rebuilding caches...${NC}"
-    docker exec "$CONTAINER" php artisan config:cache || true
-    docker exec "$CONTAINER" php artisan route:cache || true
-
-    # Setup WAHA configuration
-    echo -e "${YELLOW}Configuring WAHA...${NC}"
-    setup_waha
-
-    echo -e "${GREEN}Post-deployment fixes completed!${NC}"
-}
-
-# Setup WAHA (WhatsApp API) configuration
-setup_waha() {
-    echo -e "${YELLOW}Setting up WAHA...${NC}"
-    cd "$DOCKER_DIR"
-
-    # Load WAHA_API_KEY from .env if exists
-    if [ -f .env ]; then
-        WAHA_API_KEY=$(grep WAHA_API_KEY .env | cut -d= -f2)
-    fi
-
-    # Require WAHA_API_KEY from environment - DO NOT use hardcoded defaults for security
-    if [ -z "$WAHA_API_KEY" ]; then
-        echo -e "${RED}ERROR: WAHA_API_KEY not found in .env file or environment${NC}"
-        echo -e "${YELLOW}Please set WAHA_API_KEY in your .env file${NC}"
-        return 1
-    fi
-
-    # Update WAHA service with correct environment variables
-    echo -e "${YELLOW}Updating WAHA service...${NC}"
-    docker service update \
-        --env-add WAHA_API_KEY="$WAHA_API_KEY" \
-        --env-add WHATSAPP_API_KEY="$WAHA_API_KEY" \
-        --env-add WHATSAPP_HOOK_URL="http://${STACK_NAME}_nginx/api/webhooks/waha" \
-        --env-add WHATSAPP_HOOK_EVENTS="message,message.any,message.ack,session.status" \
-        --force "${STACK_NAME}_waha" 2>/dev/null || echo "WAHA service update may have failed"
-
-    # Update PHP services with WAHA configuration
-    echo -e "${YELLOW}Updating PHP services with WAHA config...${NC}"
-    docker service update \
-        --env-add WAHA_URL="http://${STACK_NAME}_waha:3000" \
-        --env-add WAHA_API_KEY="$WAHA_API_KEY" \
-        --env-add WAHA_SESSION_NAME="default" \
-        --force "${STACK_NAME}_php" 2>/dev/null || true
-
-    docker service update \
-        --env-add WAHA_URL="http://${STACK_NAME}_waha:3000" \
-        --env-add WAHA_API_KEY="$WAHA_API_KEY" \
-        --env-add WAHA_SESSION_NAME="default" \
-        --force "${STACK_NAME}_queue-worker" 2>/dev/null || true
-
-    # Wait for WAHA to be ready
-    echo -e "${YELLOW}Waiting for WAHA to be ready...${NC}"
-    sleep 20
-
-    # Create default session
-    WAHA_CONTAINER=$(docker ps -qf "name=${STACK_NAME}_waha" | head -1)
-    if [ -n "$WAHA_CONTAINER" ]; then
-        echo -e "${YELLOW}Creating WAHA default session...${NC}"
-        docker exec "$WAHA_CONTAINER" curl -s -X POST \
-            -H "X-Api-Key: $WAHA_API_KEY" \
-            -H "Content-Type: application/json" \
-            http://localhost:3000/api/sessions/start \
-            -d "{\"name\": \"default\", \"config\": {\"webhooks\": [{\"url\": \"http://${STACK_NAME}_nginx/api/webhooks/waha\", \"events\": [\"message\", \"message.ack\", \"session.status\"]}]}}" 2>/dev/null || echo "Session may already exist"
-    fi
-
-    echo -e "${GREEN}WAHA configuration completed${NC}"
-}
-
-# Fix database credentials mismatch
-# SECURITY: Credentials are read from Docker Secrets, not hardcoded
-fix_db_credentials() {
-    echo -e "${YELLOW}Fixing database credentials...${NC}"
-
-    # Read credentials from .env or environment - DO NOT hardcode
-    if [ -f .env ]; then
-        DB_USERNAME=$(grep DB_USERNAME .env | cut -d= -f2)
-        DB_DATABASE=$(grep DB_DATABASE .env | cut -d= -f2)
-    fi
-
-    DB_USERNAME="${DB_USERNAME:-immog_user}"
-    DB_DATABASE="${DB_DATABASE:-immog_db}"
-
-    echo -e "${YELLOW}Note: DB_PASSWORD should be managed via Docker Secrets${NC}"
-    echo -e "${YELLOW}Services will use /run/secrets/db_password${NC}"
-
-    # Only update username and database - password comes from secrets
-    docker service update \
-        --env-add DB_USERNAME="$DB_USERNAME" \
-        --env-add DB_DATABASE="$DB_DATABASE" \
-        --env-add DB_PASSWORD_FILE="/run/secrets/db_password" \
-        --force "${STACK_NAME}_php"
-
-    docker service update \
-        --env-add DB_USERNAME="$DB_USERNAME" \
-        --env-add DB_DATABASE="$DB_DATABASE" \
-        --env-add DB_PASSWORD_FILE="/run/secrets/db_password" \
-        --force "${STACK_NAME}_queue-worker"
-
-    docker service update \
-        --env-add DB_USERNAME="$DB_USERNAME" \
-        --env-add DB_DATABASE="$DB_DATABASE" \
-        --env-add DB_PASSWORD_FILE="/run/secrets/db_password" \
-        --force "${STACK_NAME}_scheduler"
-
-    echo -e "${GREEN}Database credentials fixed (using Docker Secrets)${NC}"
-}
-
-# Main menu
 case "$1" in
-    "init")
-        check_permissions
-        init_swarm
-        ;;
-    "build")
-        build_images
-        ;;
-    "deploy")
-        check_permissions
-        deploy_stack
-        ;;
-    "full")
-        check_permissions
-        init_swarm
-        build_images
-        deploy_stack
-        show_status
-        ;;
-    "update")
-        update_service "$2"
-        ;;
-    "update-frontend")
-        update_frontend
-        ;;
-    "update-backend")
-        update_backend
-        ;;
-    "update-all")
-        update_all
-        ;;
-    "status")
-        show_status
-        ;;
-    "logs")
-        show_logs "$2"
-        ;;
-    "rollback")
-        rollback_service "$2"
-        ;;
-    "scale")
-        scale_service "$2" "$3"
-        ;;
-    "remove")
-        remove_stack
-        ;;
-    "artisan")
-        shift
-        artisan "$@"
-        ;;
-    "post-deploy")
-        post_deploy "$2"
-        ;;
-    "fix-db")
-        fix_db_credentials
-        ;;
-    "setup-waha")
-        setup_waha
-        ;;
-    "cleanup")
-        cleanup
-        ;;
+    "init")            check_permissions; init_swarm ;;
+    "build")           build_images ;;
+    "deploy")          check_permissions; deploy_stack ;;
+    "full")            check_permissions; init_swarm; build_images; deploy_stack; show_status ;;
+    "update")          update_service "$2" ;;
+    "update-frontend") update_frontend ;;
+    "update-backend")  update_backend ;;
+    "update-all")      update_all ;;
+    "migrate")         migrate ;;
+    "status")          show_status ;;
+    "logs")            show_logs "$2" ;;
+    "rollback")        rollback_service "$2" ;;
+    "scale")           scale_service "$2" "$3" ;;
+    "remove")          remove_stack ;;
+    "cleanup")         cleanup ;;
     *)
         echo "Usage: $0 {command}"
         echo ""
-        echo "Commands:"
-        echo "  init            - Initialize Docker Swarm"
-        echo "  build           - Build Docker images"
-        echo "  deploy          - Deploy stack to Swarm"
-        echo "  full            - Full deployment (init + build + deploy)"
+        echo "  init             - Initialise Docker Swarm"
+        echo "  build            - Build images backend (Rust) + frontend"
+        echo "  deploy           - Déploie la stack (${COMPOSE_FILE})"
+        echo "  full             - init + build + deploy + status"
         echo ""
-        echo "  update-frontend - Update frontend (zero downtime)"
-        echo "  update-backend  - Update PHP services"
-        echo "  update-all      - Update all services"
-        echo "  update SERVICE  - Force update a specific service"
+        echo "  update-backend   - Rebuild + rolling update backend (zéro coupure)"
+        echo "  update-frontend  - Rebuild + rolling update frontend (zéro coupure)"
+        echo "  update-all       - Met à jour backend + frontend"
+        echo "  update SERVICE   - Force update d'un service"
+        echo "  migrate          - Rejoue les migrations SeaORM (service one-shot)"
         echo ""
-        echo "  status          - Show stack status"
-        echo "  logs SERVICE    - Show service logs"
-        echo "  rollback SERVICE - Rollback service to previous version"
-        echo "  scale SERVICE N - Scale service to N replicas"
-        echo "  remove          - Remove stack"
+        echo "  status           - État de la stack"
+        echo "  logs SERVICE     - Logs d'un service (-f)"
+        echo "  rollback SERVICE - Rollback d'un service"
+        echo "  scale SERVICE N  - Scale backend|frontend à N réplicas"
+        echo "  remove           - Supprime la stack"
+        echo "  cleanup          - Purge conteneurs/images inutilisés"
         echo ""
-        echo "  artisan CMD     - Run Laravel artisan command"
-        echo "  post-deploy     - Run post-deployment fixes (migrations, passport, etc.)"
-        echo "  post-deploy --seed - Run post-deployment fixes with database seeding"
-        echo "  fix-db          - Fix database credentials if connection fails"
-        echo "  setup-waha      - Configure WAHA (WhatsApp API) service"
-        echo "  cleanup         - Remove stopped containers and unused images"
-        echo ""
-        echo "Examples:"
-        echo "  $0 full                    # First time deployment"
-        echo "  $0 post-deploy --seed      # Run after fresh deployment"
-        echo "  $0 update-frontend         # Update frontend after git pull"
-        echo "  $0 scale frontend 3        # Scale frontend to 3 replicas"
-        echo "  $0 logs frontend           # View frontend logs"
-        echo "  $0 artisan migrate         # Run migrations"
-        echo "  $0 setup-waha              # Configure WhatsApp notifications"
+        echo "Prérequis prod : Vault init/unseal + AppRole, secrets ./docker/secrets/*,"
+        echo "certs d'origine Cloudflare (cf_origin_*), configs postgres_ssl_*."
         exit 1
         ;;
 esac
 
 echo ""
-echo -e "${GREEN}Done!${NC}"
+echo -e "${GREEN}Terminé !${NC}"

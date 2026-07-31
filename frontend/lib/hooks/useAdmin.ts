@@ -292,31 +292,42 @@ export function formatMoney(amount: number): string {
   }).format(amount) + ' GNF';
 }
 
+// Charte « Argile de Conakry » status/badge classes (dark-aware). Kept in sync with
+// lib/colors.ts. green→success, yellow/orange→warning, red→error, gray→neutral,
+// blue/purple→teal ; badge tiers bronze→primary, argent→neutral, or→warning,
+// platine/ambassadeur→teal.
+const SUCCESS = 'bg-success-100 dark:bg-success-500/15 text-success-700 dark:text-success-300';
+const WARNING = 'bg-warning-100 dark:bg-warning-500/15 text-warning-700 dark:text-warning-300';
+const ERROR = 'bg-error-100 dark:bg-error-500/15 text-error-700 dark:text-error-400';
+const NEUTRAL = 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300';
+const TEAL = 'bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300';
+const CLAY = 'bg-primary-100 dark:bg-primary-500/15 text-primary-700 dark:text-primary-300';
+
 export function getStatusColor(status: string): string {
   const colors: Record<string, string> = {
-    PUBLIE: 'bg-green-100 text-green-700',
-    DISPONIBLE: 'bg-green-100 text-green-700',
-    EN_ATTENTE: 'bg-yellow-100 text-yellow-700',
-    SIGNALE: 'bg-red-100 text-red-700',
-    SUSPENDU: 'bg-orange-100 text-orange-700',
-    REJETE: 'bg-red-100 text-red-700',
-    SUPPRIME: 'bg-gray-100 text-gray-700',
-    ACTIF: 'bg-green-100 text-green-700',
-    BANNI: 'bg-red-100 text-red-700',
-    VERIFIE: 'bg-green-100 text-green-700',
-    NON_VERIFIE: 'bg-gray-100 text-gray-700',
+    PUBLIE: SUCCESS,
+    DISPONIBLE: SUCCESS,
+    EN_ATTENTE: WARNING,
+    SIGNALE: ERROR,
+    SUSPENDU: WARNING,
+    REJETE: ERROR,
+    SUPPRIME: NEUTRAL,
+    ACTIF: SUCCESS,
+    BANNI: ERROR,
+    VERIFIE: SUCCESS,
+    NON_VERIFIE: NEUTRAL,
   };
-  return colors[status] || 'bg-gray-100 text-gray-700';
+  return colors[status] || NEUTRAL;
 }
 
 export function getBadgeColor(badge: string): string {
   const colors: Record<string, string> = {
-    DEBUTANT: 'bg-gray-100 text-gray-700',
-    BRONZE: 'bg-amber-100 text-amber-700',
-    ARGENT: 'bg-slate-100 text-slate-700',
-    OR: 'bg-yellow-100 text-yellow-700',
-    PLATINE: 'bg-purple-100 text-purple-700',
-    AMBASSADEUR: 'bg-blue-100 text-blue-700',
+    DEBUTANT: NEUTRAL,
+    BRONZE: CLAY,
+    ARGENT: NEUTRAL,
+    OR: WARNING,
+    PLATINE: TEAL,
+    AMBASSADEUR: TEAL,
   };
-  return colors[badge] || 'bg-gray-100 text-gray-700';
+  return colors[badge] || NEUTRAL;
 }

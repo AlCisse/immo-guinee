@@ -109,19 +109,19 @@ const communes = [
 
 export default function LocationCourteDureePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50 to-white dark:from-dark-bg dark:to-dark-card">
+    <div className="min-h-screen bg-gradient-to-b from-teal-50 to-white dark:from-dark-bg dark:to-dark-card">
       {/* Hero Section */}
       <section className="relative py-20 px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 to-pink-600/10 dark:from-purple-900/20 dark:to-pink-900/20" />
+        <div className="absolute inset-0 bg-gradient-to-br from-teal-600/10 to-accent-600/10 dark:from-teal-900/20 dark:to-accent-900/20" />
         <div className="max-w-6xl mx-auto relative">
           <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 rounded-full text-sm font-medium mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-teal-100 dark:bg-teal-500/20 text-teal-700 dark:text-teal-300 rounded-full text-sm font-medium mb-6">
               <Sparkles className="w-4 h-4" />
               Location meublée flexible
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-neutral-900 dark:text-white mb-6">
               Location{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-accent-600">
                 Courte Durée
               </span>
               <br />à Conakry
@@ -133,14 +133,14 @@ export default function LocationCourteDureePage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href="/recherche?type_transaction=LOCATION_COURTE"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg shadow-purple-500/30"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-teal-600 to-accent-600 text-white font-semibold rounded-xl hover:from-teal-700 hover:to-accent-700 transition-all shadow-lg shadow-teal-500/30"
               >
                 Voir les annonces
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <Link
                 href="/publier"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white dark:bg-dark-card text-neutral-900 dark:text-white font-semibold rounded-xl border-2 border-neutral-200 dark:border-dark-border hover:border-purple-300 transition-all"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white dark:bg-dark-card text-neutral-900 dark:text-white font-semibold rounded-xl border-2 border-neutral-200 dark:border-dark-border hover:border-teal-300 transition-all"
               >
                 Publier une annonce
               </Link>
@@ -161,8 +161,8 @@ export default function LocationCourteDureePage() {
                 key={feature.title}
                 className="bg-white dark:bg-dark-card p-6 rounded-2xl shadow-soft border border-neutral-100 dark:border-dark-border"
               >
-                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-500/20 rounded-xl flex items-center justify-center mb-4">
-                  <feature.icon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                <div className="w-12 h-12 bg-teal-100 dark:bg-teal-500/20 rounded-xl flex items-center justify-center mb-4">
+                  <feature.icon className="w-6 h-6 text-teal-600 dark:text-teal-400" />
                 </div>
                 <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-2">
                   {feature.title}
@@ -188,7 +188,7 @@ export default function LocationCourteDureePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {targetAudiences.map((audience) => (
               <div key={audience.title} className="text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-purple-500/30">
+                <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-accent-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-teal-500/30">
                   <audience.icon className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="text-xl font-semibold text-neutral-900 dark:text-white mb-2">
@@ -217,20 +217,20 @@ export default function LocationCourteDureePage() {
               <Link
                 key={commune.name}
                 href={`/recherche?type_transaction=LOCATION_COURTE&commune=${commune.name}`}
-                className="group flex items-start gap-4 p-5 bg-white dark:bg-dark-card rounded-xl border border-neutral-200 dark:border-dark-border hover:border-purple-300 dark:hover:border-purple-500 hover:shadow-lg transition-all"
+                className="group flex items-start gap-4 p-5 bg-white dark:bg-dark-card rounded-xl border border-neutral-200 dark:border-dark-border hover:border-teal-300 dark:hover:border-teal-500 hover:shadow-soft-lg transition-all"
               >
-                <div className="p-2 bg-purple-100 dark:bg-purple-500/20 rounded-lg group-hover:bg-purple-200 dark:group-hover:bg-purple-500/30 transition-colors">
-                  <MapPin className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                <div className="p-2 bg-teal-100 dark:bg-teal-500/20 rounded-lg group-hover:bg-teal-200 dark:group-hover:bg-teal-500/30 transition-colors">
+                  <MapPin className="w-5 h-5 text-teal-600 dark:text-teal-400" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-neutral-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                  <h3 className="font-semibold text-neutral-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
                     {commune.name}
                   </h3>
                   <p className="text-sm text-neutral-500 dark:text-neutral-400">
                     {commune.description}
                   </p>
                 </div>
-                <ArrowRight className="w-5 h-5 text-neutral-400 group-hover:text-purple-500 group-hover:translate-x-1 transition-all" />
+                <ArrowRight className="w-5 h-5 text-neutral-400 group-hover:text-teal-500 group-hover:translate-x-1 transition-all" />
               </Link>
             ))}
           </div>
@@ -240,17 +240,17 @@ export default function LocationCourteDureePage() {
       {/* CTA Section */}
       <section className="py-16 px-4">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-3xl p-8 md:p-12 text-center text-white shadow-2xl shadow-purple-500/30">
+          <div className="bg-gradient-to-br from-teal-600 to-accent-600 rounded-3xl p-8 md:p-12 text-center text-white shadow-2xl shadow-teal-500/30">
             <Calendar className="w-16 h-16 mx-auto mb-6 opacity-90" />
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
               Prêt à réserver ?
             </h2>
-            <p className="text-lg text-purple-100 mb-8 max-w-xl mx-auto">
+            <p className="text-lg text-teal-100 mb-8 max-w-xl mx-auto">
               Parcourez nos annonces de location courte durée et trouvez le logement idéal pour votre séjour à Conakry.
             </p>
             <Link
               href="/recherche?type_transaction=LOCATION_COURTE"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-purple-600 font-semibold rounded-xl hover:bg-purple-50 transition-all"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-white dark:bg-dark-card text-teal-600 font-semibold rounded-xl hover:bg-teal-50 transition-all"
             >
               Explorer les annonces
               <ArrowRight className="w-5 h-5" />

@@ -1,16 +1,17 @@
-# API Contracts Directory - Laravel 11
+# API Contracts Directory — Rust / Axum
 
-This directory contains the complete REST API specification for ImmoGuinée platform using **Laravel 11** backend.
+This directory contains the REST API specification for the ImmoGuinée platform. The
+backend is **Rust (Axum + Tokio, SeaORM)**. All routes are mounted under `/api`.
 
 ## Contracts Overview
 
 | Contract | Domain | Key User Stories | Status |
 |----------|--------|------------------|--------|
-| [auth.md](./auth.md) | Authentication & User Management | Registration, Login, OTP | ✅ Complete (Laravel + Sanctum) |
-| [listings.md](./listings.md) | Listings CRUD & Search | US1: Publish Listing | ✅ Complete (Laravel + Meilisearch) |
-| [payments.md](./payments.md) | Payments, Escrow, Commissions | **US4: Commission on Caution Day** | ✅ Complete (Laravel + Queue) |
-| [contracts.md](./contracts.md) | Contract Generation & Signatures | US2: Contract Gen, US3: E-Signatures | ✅ Complete (Laravel + PDF + Blade) |
-| messaging.md | Real-Time Messaging | US6: Secure Messaging | 📝 See Below |
+| [auth.md](./auth.md) | Authentication & User Management | Registration, Login, OTP/2FA | ✅ Implemented (JWT) |
+| [listings.md](./listings.md) | Listings CRUD & Search | US1: Publish Listing | ✅ Implemented (SeaORM + Postgres search) |
+| [payments.md](./payments.md) | Payments, Escrow, Commissions | **US4: Commission on Caution Day** | ⏳ Planned (apalis jobs) |
+| [contracts.md](./contracts.md) | Contract Generation & Signatures | US2: Contract Gen, US3: E-Signatures | ⏳ Planned (headless-chrome PDF) |
+| messaging.md | Real-Time Messaging | US6: Secure Messaging | 📝 See Below (Axum WS) |
 | certifications.md | Certification Documents | US5: Certification Program | 📝 See Below |
 | admin.md | Admin Panel Operations | Moderation, Analytics, Disputes | 📝 See Below |
 
@@ -18,376 +19,266 @@ This directory contains the complete REST API specification for ImmoGuinée plat
 
 ## Quick Reference: Additional Endpoints
 
-### Messaging (Real-Time via Laravel Echo + Socket.IO)
+### Messaging (Real-Time via Axum WebSocket, pusher-compat)
 
-**Laravel Broadcasting Events** (`app/Events/*`):
-```php
-// Broadcast new message
-broadcast(new NewMessageEvent($message))->toOthers();
+The backend broadcasts events over an Axum WebSocket endpoint (Pusher-compatible),
+backed by Redis pub/sub so events fan out across replicas. The Next.js frontend
+keeps its existing `laravel-echo` / `socket.io` client — it now points at the Axum
+WS endpoint.
 
-// Broadcast typing indicator
-broadcast(new TypingIndicatorEvent($conversationId, $userId));
-
-// Broadcast message read status
-broadcast(new MessageReadEvent($messageId));
+**Backend (domain events → WS)**:
+```rust
+// domain::messaging::events
+broadcast(NewMessage { conversation_id, message });
+broadcast(TypingIndicator { conversation_id, user_id });
+broadcast(MessageRead { message_id });
 ```
 
-**Laravel Echo Client** (Next.js frontend):
+**Frontend client** (unchanged, targets Axum WS):
 ```typescript
 import Echo from 'laravel-echo';
-import Pusher from 'pusher-js';
-
-window.Pusher = Pusher;
-
 window.Echo = new Echo({
     broadcaster: 'pusher',
-    key: process.env.NEXT_PUBLIC_PUSHER_APP_KEY,
-    cluster: process.env.NEXT_PUBLIC_PUSHER_APP_CLUSTER,
+    key: process.env.NEXT_PUBLIC_WS_APP_KEY,
+    wsHost: process.env.NEXT_PUBLIC_WS_HOST, // Axum WS (pusher-compat)
+    wsPort: 8000,
     forceTLS: false,
-    wsHost: process.env.NEXT_PUBLIC_ECHO_HOST,
-    wsPort: 6001,
-    auth: {
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
-    }
+    auth: { headers: { Authorization: `Bearer ${accessToken}` } },
 });
-
-// Listen to private channel
 window.Echo.private(`conversation.${conversationId}`)
-    .listen('NewMessageEvent', (e) => {
-        console.log('New message:', e.message);
-    });
+    .listen('NewMessage', (e) => console.log('New message:', e.message));
 ```
 
-**REST Endpoints**:
-- `GET /api/messaging/conversations` - List conversations
-- `GET /api/messaging/:id/messages` - Get messages (pagination)
-- `POST /api/messaging/:id/messages` - Send message (fallback if Socket.IO fails)
-- `POST /api/messaging/:id/report` - Report inappropriate message (FR-064)
+**REST endpoints**:
+- `GET /api/messaging/conversations` — list conversations
+- `GET /api/messaging/{id}/messages` — get messages (pagination)
+- `POST /api/messaging/{id}/messages` — send message (also the fallback if WS fails)
+- `POST /api/messaging/{id}/report` — report inappropriate message (FR-064)
 
-**Laravel Routes**:
-```php
-Route::middleware('auth:sanctum')->prefix('messaging')->group(function () {
-    Route::get('/conversations', [MessagingController::class, 'conversations']);
-    Route::get('/{id}/messages', [MessagingController::class, 'messages']);
-    Route::post('/{id}/messages', [MessagingController::class, 'sendMessage']);
-    Route::post('/{id}/report', [MessagingController::class, 'reportMessage']);
-});
+**Axum router** (`domain::messaging`):
+```rust
+Router::new()
+    .route("/messaging/conversations", get(conversations))
+    .route("/messaging/{id}/messages", get(messages).post(send_message))
+    .route("/messaging/{id}/report", post(report_message))
+// mounted under /api; handlers take the `AuthUser` extractor
 ```
 
-**Key Requirements**: FR-059 (text/vocal/photo messages), FR-060 (phone masking), FR-061 (4-channel notifications), FR-063 (message history), FR-064 (reporting), FR-065 (fraud detection), FR-066 (anti-spam)
+**Key requirements**: FR-059 (text/vocal/photo), FR-060 (phone masking), FR-061 (4-channel notifications: Push/SMS/Email/WhatsApp), FR-063 (history), FR-064 (reporting), FR-065 (fraud detection), FR-066 (anti-spam).
+
+---
+
+### Evolution API Webhook (WhatsApp inbound) — ✅ Implemented (W3)
+
+Receives Evolution API events (delivery/read receipts via `messages.update`, incoming
+messages via `messages.upsert`, connection changes). The endpoint authenticates the
+request, classifies the event, records it (tracing), and acks fast so Evolution does not
+retry. Incoming-message routing into `domain::messaging` and delivery-status persistence
+are wired in with those phases.
+
+**Endpoint**:
+- `POST /api/webhooks/evolution` — receive one Evolution event (no `AuthUser`; guarded by
+  a shared token).
+
+**Auth**: a shared token (`IMMOG_EVOLUTION_WEBHOOK_TOKEN`) compared in constant time
+against the `apikey` / `x-webhook-token` header. An empty configured token accepts all
+(dev only, with a warning). Unauthenticated requests get `401`; every authenticated
+request (including unhandled event types) gets `200 { "success": true }`.
+
+**Axum router** (`domain::webhooks::evolution`):
+```rust
+Router::new().route("/webhooks/evolution", post(receive))
+// mounted under /api; no AuthUser — token-guarded
+```
+
+**Key requirements**: FR-061 (WhatsApp channel — delivery status), FR-059/FR-063
+(inbound messages feed the messaging history once US6 lands).
 
 ---
 
 ### Certifications
 
 **Endpoints**:
-- `POST /api/certifications/upload` - Upload CNI or titre foncier (FR-054)
-- `GET /api/certifications/me` - Get my certification status and progress (FR-057)
-- `POST /api/certifications/:id/verify` - Admin verifies document (FR-054)
+- `POST /api/certifications/upload` — upload CNI or titre foncier (FR-054)
+- `GET /api/certifications/me` — my certification status and progress (FR-057)
+- `POST /api/certifications/{id}/verify` — admin verifies a document (FR-054)
 
-**Laravel Routes**:
-```php
-Route::middleware('auth:sanctum')->prefix('certifications')->group(function () {
-    Route::post('/upload', [CertificationController::class, 'upload']);
-    Route::get('/me', [CertificationController::class, 'my']);
-    Route::post('/{id}/verify', [CertificationController::class, 'verify'])->middleware('admin');
-});
+**Axum router** (`domain::certifications`, `AuthUser` + RBAC guard for admin):
+```rust
+Router::new()
+    .route("/certifications/upload", post(upload))
+    .route("/certifications/me", get(my))
+    .route("/certifications/{id}/verify", post(verify)) // require_permission(ManageCertifications)
 ```
 
-**Badge Progression** (FR-053):
-- **Bronze** 🥉: Default (registration complete)
-- **Argent** 🥈: 1 transaction + CNI verified
-- **Or** 🥇: 5+ transactions + titre foncier verified + avg rating ≥ 4 stars
-- **Diamant** 💎: 20+ transactions + avg rating ≥ 4.5 stars + zero disputes
+**Badge progression** (FR-053): Bronze 🥉 (default) → Argent 🥈 (1 transaction + CNI verified) → Or 🥇 (5+ transactions + titre foncier + avg ≥ 4) → Diamant 💎 (20+ transactions + avg ≥ 4.5 + zero disputes).
 
-**Advantages** (FR-056):
-- **Argent**: Priority messaging (⭐ badge on messages)
-- **Or**: -10% commission (50% → 40%) + "Trusted Seller" badge
-- **Diamant**: -20% commission (50% → 30%) + Priority WhatsApp support + Homepage featured rotation
+**Advantages** (FR-056): Argent = priority messaging; Or = −10% commission + "Trusted Seller"; Diamant = −20% commission + priority WhatsApp support + homepage rotation.
 
 ---
 
 ### Admin Panel
 
 **Endpoints**:
-- `GET /api/admin/analytics` - Dashboard KPIs (15 metrics - FR-084)
-- `GET /api/admin/moderation/listings` - Moderation queue (FR-081)
-- `PATCH /api/admin/moderation/listings/:id` - Suspend/approve listing (FR-082)
-- `GET /api/admin/users` - User management (FR-083)
-- `PATCH /api/admin/users/:id` - Suspend/ban/downgrade user (FR-083)
-- `GET /api/admin/disputes` - Dispute mediation queue (FR-073)
-- `PATCH /api/admin/disputes/:id/assign` - Assign mediator (FR-073)
-- `PATCH /api/admin/disputes/:id/resolve` - Record mediation result (FR-074)
-- `GET /api/admin/logs` - Audit logs (FR-085)
+- `GET /api/admin/analytics` — dashboard KPIs (15 metrics, FR-084)
+- `GET /api/admin/moderation/listings` — moderation queue (FR-081)
+- `PATCH /api/admin/moderation/listings/{id}` — suspend/approve listing (FR-082)
+- `GET /api/admin/users` — user management (FR-083)
+- `PATCH /api/admin/users/{id}` — suspend/ban/downgrade user (FR-083)
+- `GET /api/admin/disputes` — dispute mediation queue (FR-073)
+- `PATCH /api/admin/disputes/{id}/assign` — assign mediator (FR-073)
+- `PATCH /api/admin/disputes/{id}/resolve` — record mediation result (FR-074)
+- `GET /api/admin/logs` — audit logs (FR-085)
 
-**Laravel Routes**:
-```php
-Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
-    Route::get('/analytics', [AdminController::class, 'analytics']);
-    Route::get('/moderation/listings', [AdminController::class, 'moderationQueue']);
-    Route::patch('/moderation/listings/{id}', [AdminController::class, 'moderateListing']);
-    Route::get('/users', [AdminController::class, 'users']);
-    Route::patch('/users/{id}', [AdminController::class, 'manageUser']);
-    Route::get('/disputes', [AdminController::class, 'disputes']);
-    Route::patch('/disputes/{id}/assign', [AdminController::class, 'assignMediator']);
-    Route::patch('/disputes/{id}/resolve', [AdminController::class, 'resolveDis pute']);
-    Route::get('/logs', [AdminController::class, 'auditLogs']);
-});
+**Axum router** (`domain::admin`, all guarded by the native RBAC extractor):
+```rust
+Router::new()
+    .route("/admin/analytics", get(analytics))              // require_permission(ViewAnalytics)
+    .route("/admin/moderation/listings", get(moderation_queue))
+    .route("/admin/moderation/listings/{id}", patch(moderate_listing))
+    .route("/admin/users", get(users))
+    .route("/admin/users/{id}", patch(manage_user))         // require_permission(ManageUsers)
+    .route("/admin/disputes", get(disputes))
+    .route("/admin/disputes/{id}/assign", patch(assign_mediator))
+    .route("/admin/disputes/{id}/resolve", patch(resolve_dispute))
+    .route("/admin/logs", get(audit_logs))                  // require_permission(ViewAnalytics)
 ```
 
-**Analytics KPIs** (FR-084):
-1. Total listings (active + expired)
-2. Total users (all + active last 30 days)
-3. Transactions completed (total + this month)
-4. Commission revenue (total + this month + annual projection)
-5. Conversion rate (visits → rentals)
-6. Avg time to rental (days from publication to contract signature)
-7. User satisfaction (avg rating of all reviews)
-8. Dispute rate (disputes / transactions × 100)
-9. Mediation success rate (resolved amicably / total disputes × 100)
-10. Geographic distribution (listings by quartier - pie chart)
-11. Property type distribution (bar chart)
-12. Monthly listing trend (line chart)
-13. Monthly user growth (line chart)
-14. Monthly revenue trend (line chart)
-15. Top 10 landlords (by transaction count)
+**Analytics KPIs** (FR-084): (1) total listings, (2) total/active users, (3) transactions completed, (4) commission revenue, (5) conversion rate, (6) avg time to rental, (7) user satisfaction, (8) dispute rate, (9) mediation success rate, (10) geographic distribution, (11) property-type distribution, (12–14) monthly trends (listings/users/revenue), (15) top 10 landlords.
 
 ---
 
-## Authentication Pattern (Laravel Sanctum)
+## Authentication Pattern (JWT)
 
-All authenticated endpoints require Sanctum token in header:
+All authenticated endpoints require a JWT **access token** in the header:
 ```
-Authorization: Bearer {sanctum_token}
-```
-
-**Laravel Middleware**:
-```php
-Route::middleware('auth:sanctum')->group(function () {
-    // Protected routes
-});
+Authorization: Bearer {access_token}
 ```
 
-**Getting Authenticated User**:
-```php
-public function index(Request $request)
-{
-    $user = $request->user(); // Authenticated User model
+Handlers request the caller via the `AuthUser` extractor (verifies the JWT signature,
+expiry, and a Redis deny-list for revoked/logged-out tokens):
+```rust
+async fn handler(auth: AuthUser, State(state): State<Arc<AppState>>) -> AppResult<Json<...>> {
+    let user_id = auth.id;                 // Uuid
+    auth.require_permission(Permission::ManageListings)?; // RBAC (staff only)
     // ...
 }
 ```
+
+Tokens: access (24h) + refresh (7d), HS256 over a secret loaded from Vault (env in dev).
+`POST /api/auth/logout` revokes the current token via a Redis deny-list.
 
 ---
 
 ## Error Response Format
 
-All endpoints use consistent Laravel error format:
+All endpoints use a consistent envelope produced by `AppError` (`src/error.rs`):
 
 ```json
 {
   "success": false,
   "error": {
-    "code": "ERROR_CODE",
-    "message": "Human-readable error message in French",
-    "details": {
-      "field": "validation_error"
-    }
+    "code": "VALIDATION",
+    "message": "Message lisible en français",
+    "details": { "field": "erreur" }
   }
 }
 ```
 
-**Laravel Exception Handler** (`app/Exceptions/Handler.php`):
-```php
-public function render($request, Throwable $exception)
-{
-    if ($request->expectsJson()) {
-        if ($exception instanceof ValidationException) {
-            return response()->json([
-                'success' => false,
-                'error' => [
-                    'code' => 'VALIDATION_ERROR',
-                    'message' => 'Données invalides',
-                    'details' => $exception->errors(),
-                ],
-            ], 422);
-        }
+Success responses use `{ "success": true, "data": ... }`.
 
-        if ($exception instanceof AuthenticationException) {
-            return response()->json([
-                'success' => false,
-                'error' => [
-                    'code' => 'UNAUTHORIZED',
-                    'message' => 'Non authentifié',
-                    'details' => null,
-                ],
-            ], 401);
-        }
+| `AppError` variant | HTTP | `code` |
+|---|---|---|
+| `Validation(msg)` | 400 | `VALIDATION` |
+| `Unauthorized` | 401 | `UNAUTHORIZED` |
+| `Forbidden(msg)` | 403 | `FORBIDDEN` |
+| `NotFound` | 404 | `NOT_FOUND` |
+| `Conflict(msg)` | 409 | `CONFLICT` |
+| `RateLimited { retry_after_secs }` | 429 | `RATE_LIMITED` (+ `Retry-After` header) |
+| `Database` / `Cache` / `Internal` | 500 | `DB_ERROR` / `CACHE_ERROR` / `INTERNAL` |
+| `External` (reqwest) | 502 | `EXTERNAL` |
 
-        if ($exception instanceof AuthorizationException) {
-            return response()->json([
-                'success' => false,
-                'error' => [
-                    'code' => 'FORBIDDEN',
-                    'message' => 'Accès refusé',
-                    'details' => null,
-                ],
-            ], 403);
-        }
-    }
+---
 
-    return parent::render($request, $exception);
-}
+## Rate Limiting (native Redis, fixed window)
+
+Implemented in `middleware::rate_limit` (no external crate). Handlers call the preset
+that fits the endpoint; exceeding a limit yields `429` with a `Retry-After` header.
+
+| Endpoint type | Limit | Window | Identifier | Preset |
+|---|---|---|---|---|
+| Public (search, listing detail) | 100 req/min | 1 min | IP | `limit_public_ip` |
+| Authenticated (CRUD) | 60 req/min | 1 min | user id | `limit_user` |
+| Payment | 10 req/hour | 1 hour | user id | `limit_payment` |
+| Login / OTP (brute-force) | 5 req/min | 1 min | phone/IP | `limit_login` |
+
+```rust
+rate_limit::limit_public_ip(&state.redis, ip).await?;
+rate_limit::limit_user(&state.redis, auth.id).await?;
 ```
 
 ---
 
-## Rate Limiting (Laravel Throttle Middleware)
+## Real-Time Configuration (Axum WebSocket)
 
-| Endpoint Type | Limit | Window | Identifier |
-|---------------|-------|--------|------------|
-| Public (search, listing detail) | 100 req/min | 1 minute | IP address |
-| Authenticated (CRUD) | 60 req/min | 1 minute | User ID |
-| Payment | 10 req/hour | 1 hour | User ID |
-| Admin | 120 req/min | 1 minute | Admin ID |
-
-**Configuration** (`app/Providers/RouteServiceProvider.php`):
-```php
-protected function configureRateLimiting()
-{
-    RateLimiter::for('api', function (Request $request) {
-        return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
-    });
-
-    RateLimiter::for('public', function (Request $request) {
-        return Limit::perMinute(100)->by($request->ip());
-    });
-
-    RateLimiter::for('payments', function (Request $request) {
-        return Limit::perHour(10)->by($request->user()->id);
-    });
-}
-```
-
-**Apply to Routes**:
-```php
-Route::middleware('throttle:public')->group(function () {
-    Route::get('/listings/search', [ListingController::class, 'search']);
-});
-
-Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
-    // Authenticated routes
-});
-```
-
----
-
-## Laravel Broadcasting Configuration
-
-**Socket.IO Server Setup** (`config/broadcasting.php`):
-```php
-'connections' => [
-    'pusher' => [
-        'driver' => 'pusher',
-        'key' => env('PUSHER_APP_KEY'),
-        'secret' => env('PUSHER_APP_SECRET'),
-        'app_id' => env('PUSHER_APP_ID'),
-        'options' => [
-            'cluster' => env('PUSHER_APP_CLUSTER'),
-            'useTLS' => false,
-            'host' => '127.0.0.1',
-            'port' => 6001,
-            'scheme' => 'http',
-        ],
-    ],
-],
-```
-
-**Laravel Echo Server** (separate Node.js process):
-```bash
-laravel-echo-server init
-laravel-echo-server start
-```
+Broadcasting is served by the backend itself (no separate Echo server): an Axum WS
+route (`/api/ws`, pusher-compatible) backed by Redis pub/sub. The frontend connects
+with its existing pusher-protocol client. No Node.js broadcasting process to run.
 
 ---
 
 ## Development Workflow
 
-1. **Start Laravel API server** (with Sail):
+1. **Start dependencies** (Postgres + Redis + MinIO) via Docker Compose.
+2. **Apply migrations** (schema source of truth):
    ```bash
-   ./vendor/bin/sail up -d
-   ./vendor/bin/sail artisan serve
+   cargo run --bin immog-migrate -- up
    ```
-
-2. **Start Queue Worker**:
+3. **Run the API server**:
    ```bash
-   ./vendor/bin/sail artisan queue:work
+   cargo run          # immog-backend on 0.0.0.0:8000
    ```
-
-3. **Start Laravel Echo Server**:
-   ```bash
-   npx laravel-echo-server start
-   ```
-
-4. **Test endpoint**:
+4. **Test an endpoint**:
    ```bash
    curl -X POST http://localhost:8000/api/auth/register \
      -H "Content-Type: application/json" \
      -d '{"telephone":"+224622123456","nom_complet":"Test User","mot_de_passe":"Test123!","type_compte":"PARTICULIER"}'
    ```
-
-5. **Run PHPUnit tests**:
+5. **Run tests**:
    ```bash
-   ./vendor/bin/sail artisan test
-   ```
-
-6. **Run feature tests**:
-   ```bash
-   ./vendor/bin/sail artisan test --filter=ListingTest
+   cargo test                     # unit + integration (testcontainers)
+   cargo test --test listings_e2e # a specific integration suite
    ```
 
 ---
 
 ## API Versioning Strategy
 
-**Phase 1** (MVP): No versioning, rapid iteration
+**Phase 1** (MVP): no versioning, rapid iteration (routes under `/api`).
 
-**Phase 2** (Stable): Version via URL prefix:
-- `/api/v1/listings`
-- `/api/v2/listings` (breaking changes)
-
-**Laravel Implementation**:
-```php
-// routes/api_v1.php
-Route::prefix('v1')->group(function () {
-    require __DIR__.'/api.php';
-});
-
-// routes/api_v2.php
-Route::prefix('v2')->group(function () {
-    // New version endpoints
-});
+**Phase 2** (stable): version via URL prefix using Axum nesting:
+```rust
+Router::new()
+    .nest("/api/v1", v1_router)
+    .nest("/api/v2", v2_router)
 ```
 
-**Deprecation Policy**:
-- v1 supported for 6 months after v2 release
-- Warnings sent to API consumers 3 months before deprecation
-- Response header: `X-API-Version: 1`, `X-API-Deprecated: true`, `X-API-Sunset: 2025-12-31`
+**Deprecation policy**: v1 supported 6 months after v2; consumers warned 3 months
+prior; response headers `X-API-Version`, `X-API-Deprecated`, `X-API-Sunset`.
 
 ---
 
-**Status**: Phase 1 API contracts complete ✅
+**Status**: US1 (auth + listings) implemented; other domains planned.
 
 **Coverage**:
-- ✅ Authentication (10 endpoints) - Laravel Sanctum
-- ✅ Listings (9 endpoints) - Laravel + Meilisearch + Scout
-- ✅ Payments (10 endpoints + webhooks) - Laravel Queue
-- ✅ Contracts (7 endpoints) - Laravel PDF + Blade
-- ✅ Messaging (WebSocket + 4 REST endpoints) - Laravel Echo + Socket.IO
-- ✅ Certifications (3 endpoints) - Laravel Storage
-- ✅ Admin (9 endpoints) - Laravel Middleware
+- ✅ Authentication (JWT: register / login / otp / me / logout / PATCH me)
+- ✅ Listings (search + detail + create + photos→S3 + edit + soft-delete)
+- ⏳ Payments (escrow, Orange/MTN MoMo, commission) — apalis jobs
+- ⏳ Contracts (generation + e-signature) — headless-chrome PDF
+- ⏳ Messaging (Axum WebSocket + REST fallback)
+- ⏳ Certifications (upload + verify + badge progression)
+- ⏳ Admin (analytics + moderation + disputes)
 
-**Total Endpoints**: ~52 REST endpoints + Laravel Echo real-time events
+**Total endpoints**: ~52 REST endpoints + Axum WebSocket real-time events.
 
-**Next Step**: Update `quickstart.md` for Laravel Sail developer onboarding.
+**Next step**: keep `quickstart.md` and `research.md` aligned with the Rust stack.

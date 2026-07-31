@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import Colors from '@/constants/Colors';
 
 interface DeleteMessageModalProps {
   visible: boolean;
@@ -74,7 +75,7 @@ export function DeleteMessageModal({
       >
         <View style={styles.container}>
           <View style={styles.header}>
-            <Ionicons name="trash-outline" size={24} color="#EF4444" />
+            <Ionicons name="trash-outline" size={24} color={Colors.error[500]} />
             <Text style={styles.title}>{t('chat.deleteMessage.title')}</Text>
           </View>
 
@@ -93,7 +94,7 @@ export function DeleteMessageModal({
               disabled={isDeleting}
             >
               <View style={styles.optionContent}>
-                <Ionicons name="person-outline" size={20} color="#374151" />
+                <Ionicons name="person-outline" size={20} color={Colors.neutral[700]} />
                 <View style={styles.optionText}>
                   <Text style={styles.optionTitle}>{t('chat.deleteMessage.deleteForMe')}</Text>
                   <Text style={styles.optionDescription}>
@@ -102,7 +103,7 @@ export function DeleteMessageModal({
                 </View>
               </View>
               {isDeleting && deleteType === 'me' && (
-                <ActivityIndicator size="small" color="#10B981" />
+                <ActivityIndicator size="small" color={Colors.accent[500]} />
               )}
             </TouchableOpacity>
 
@@ -113,7 +114,7 @@ export function DeleteMessageModal({
                 disabled={isDeleting}
               >
                 <View style={styles.optionContent}>
-                  <Ionicons name="people-outline" size={20} color="#374151" />
+                  <Ionicons name="people-outline" size={20} color={Colors.neutral[700]} />
                   <View style={styles.optionText}>
                     <Text style={styles.optionTitle}>{t('chat.deleteMessage.deleteForEveryone')}</Text>
                     <Text style={styles.optionDescription}>
@@ -122,14 +123,14 @@ export function DeleteMessageModal({
                   </View>
                 </View>
                 {isDeleting && deleteType === 'everyone' && (
-                  <ActivityIndicator size="small" color="#10B981" />
+                  <ActivityIndicator size="small" color={Colors.accent[500]} />
                 )}
               </TouchableOpacity>
             )}
 
             {!canDeleteForEveryone && (
               <View style={styles.infoBox}>
-                <Ionicons name="information-circle-outline" size={16} color="#6B7280" />
+                <Ionicons name="information-circle-outline" size={16} color={Colors.neutral[500]} />
                 <Text style={styles.infoText}>
                   {t('chat.deleteMessage.timeLimit')}
                 </Text>
@@ -158,7 +159,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   container: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.background.primary,
     borderRadius: 16,
     padding: 20,
     width: '85%',
@@ -173,17 +174,17 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1F2937',
+    color: Colors.text.primary,
   },
   previewContainer: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: Colors.neutral[100],
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
   },
   previewText: {
     fontSize: 14,
-    color: '#6B7280',
+    color: Colors.neutral[500],
     fontStyle: 'italic',
   },
   options: {
@@ -197,7 +198,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 8,
     marginBottom: 8,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: Colors.neutral[50],
   },
   optionContent: {
     flexDirection: 'row',
@@ -211,17 +212,17 @@ const styles = StyleSheet.create({
   optionTitle: {
     fontSize: 15,
     fontWeight: '500',
-    color: '#374151',
+    color: Colors.neutral[700],
     marginBottom: 2,
   },
   optionDescription: {
     fontSize: 12,
-    color: '#6B7280',
+    color: Colors.neutral[500],
   },
   infoBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#F3F4F6',
+    backgroundColor: Colors.neutral[100],
     borderRadius: 8,
     padding: 12,
     gap: 8,
@@ -229,7 +230,7 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     fontSize: 12,
-    color: '#6B7280',
+    color: Colors.neutral[500],
   },
   cancelButton: {
     paddingVertical: 12,
@@ -237,7 +238,7 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     fontSize: 16,
-    color: '#6B7280',
+    color: Colors.neutral[500],
     fontWeight: '500',
   },
 });

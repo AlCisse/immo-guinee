@@ -240,7 +240,7 @@ function VoiceMessage({ duration, isMine }: { duration: number; isMine: boolean 
       <div className="flex-1">
         <div className={`h-1 rounded-full overflow-hidden ${isMine ? 'bg-white/30' : 'bg-neutral-200 dark:bg-neutral-600'}`}>
           <motion.div
-            className={`h-full ${isMine ? 'bg-white' : 'bg-primary-500'}`}
+            className={`h-full ${isMine ? 'bg-white dark:bg-dark-card' : 'bg-primary-500'}`}
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
           />
@@ -263,7 +263,7 @@ function MessageStatus({ status }: { status: Message['status'] }) {
     case 'delivered':
       return <CheckCheck className="w-3.5 h-3.5 text-white/70" />;
     case 'read':
-      return <CheckCheck className="w-3.5 h-3.5 text-blue-300" />;
+      return <CheckCheck className="w-3.5 h-3.5 text-secondary-300" />;
   }
 }
 
@@ -475,7 +475,7 @@ export default function MessagingPage() {
             <div className="px-4 py-3 bg-white dark:bg-dark-card border-b border-neutral-200 dark:border-dark-border flex items-center gap-4">
               <button
                 onClick={() => setShowMobileChat(false)}
-                className="md:hidden p-2 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-lg"
+                className="md:hidden p-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg"
               >
                 <ArrowLeft className="w-5 h-5 text-neutral-600 dark:text-neutral-300" />
               </button>
@@ -501,13 +501,13 @@ export default function MessagingPage() {
               </div>
 
               <div className="flex items-center gap-2">
-                <button className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-lg transition-colors">
+                <button className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg transition-colors">
                   <Phone className="w-5 h-5 text-neutral-600 dark:text-neutral-300" />
                 </button>
-                <button className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-lg transition-colors">
+                <button className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg transition-colors">
                   <Video className="w-5 h-5 text-neutral-600 dark:text-neutral-300" />
                 </button>
-                <button className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-lg transition-colors">
+                <button className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg transition-colors">
                   <Info className="w-5 h-5 text-neutral-600 dark:text-neutral-300" />
                 </button>
               </div>
@@ -641,13 +641,13 @@ export default function MessagingPage() {
                     exit={{ opacity: 0, scale: 0.95 }}
                     className="flex items-center gap-3"
                   >
-                    <button className="p-2.5 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-full transition-colors">
+                    <button className="p-2.5 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-full transition-colors">
                       <Smile className="w-5 h-5 text-neutral-500 dark:text-neutral-400" />
                     </button>
-                    <button className="p-2.5 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-full transition-colors">
+                    <button className="p-2.5 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-full transition-colors">
                       <Paperclip className="w-5 h-5 text-neutral-500 dark:text-neutral-400" />
                     </button>
-                    <button className="p-2.5 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-full transition-colors">
+                    <button className="p-2.5 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-full transition-colors">
                       <ImageIcon className="w-5 h-5 text-neutral-500 dark:text-neutral-400" />
                     </button>
 

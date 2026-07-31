@@ -47,16 +47,16 @@ const colorStyles = {
     icon: 'text-error-500',
   },
   purple: {
-    bg: 'bg-gradient-to-br from-purple-500 to-purple-600',
-    light: 'bg-purple-50 dark:bg-purple-500/10',
-    text: 'text-purple-600 dark:text-purple-400',
-    icon: 'text-purple-500',
+    bg: 'bg-gradient-to-br from-teal-500 to-teal-600',
+    light: 'bg-teal-50 dark:bg-teal-500/10',
+    text: 'text-teal-600 dark:text-teal-400',
+    icon: 'text-teal-500',
   },
   pink: {
-    bg: 'bg-gradient-to-br from-pink-500 to-pink-600',
-    light: 'bg-pink-50 dark:bg-pink-500/10',
-    text: 'text-pink-600 dark:text-pink-400',
-    icon: 'text-pink-500',
+    bg: 'bg-gradient-to-br from-accent-500 to-accent-600',
+    light: 'bg-accent-50 dark:bg-accent-500/10',
+    text: 'text-accent-600 dark:text-accent-400',
+    icon: 'text-accent-500',
   },
 };
 

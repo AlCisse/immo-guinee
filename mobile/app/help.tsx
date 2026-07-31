@@ -71,8 +71,8 @@ export default function HelpScreen() {
               <Ionicons name="chevron-forward" size={20} color={Colors.neutral[300]} />
             </TouchableOpacity>
             <TouchableOpacity style={styles.contactItem} onPress={handleWhatsApp}>
-              <View style={[styles.contactIcon, { backgroundColor: '#DCFCE7' }]}>
-                <Ionicons name="logo-whatsapp" size={24} color="#22C55E" />
+              <View style={[styles.contactIcon, { backgroundColor: Colors.success[100] }]}>
+                <Ionicons name="logo-whatsapp" size={24} color={Colors.success[500]} />
               </View>
               <View style={styles.contactContent}>
                 <Text style={styles.contactLabel}>{t('help.whatsapp')}</Text>
@@ -91,8 +91,8 @@ export default function HelpScreen() {
               <Ionicons name="chevron-forward" size={20} color={Colors.neutral[300]} />
             </TouchableOpacity>
             <TouchableOpacity style={[styles.contactItem, styles.contactItemLast]} onPress={handleLegal}>
-              <View style={[styles.contactIcon, { backgroundColor: '#E0F2FE' }]}>
-                <Ionicons name="shield-checkmark-outline" size={24} color="#0284C7" />
+              <View style={[styles.contactIcon, { backgroundColor: Colors.secondary[100] }]}>
+                <Ionicons name="shield-checkmark-outline" size={24} color={Colors.secondary[600]} />
               </View>
               <View style={styles.contactContent}>
                 <Text style={styles.contactLabel}>{t('help.legalInfo')}</Text>

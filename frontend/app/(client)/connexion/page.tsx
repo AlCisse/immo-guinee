@@ -1,11 +1,20 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSearchParamsSafe } from '@/lib/hooks/useSearchParamsSafe';
 
 export default function ConnexionRedirect() {
+  return (
+    <Suspense fallback={null}>
+      <ConnexionRedirectContent />
+    </Suspense>
+  );
+}
+
+function ConnexionRedirectContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParamsSafe();
 
   useEffect(() => {
     const redirect = searchParams.get('redirect');

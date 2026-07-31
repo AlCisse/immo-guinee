@@ -52,11 +52,12 @@ interface Visit {
 }
 
 // Status configuration (labels will be pulled from translations)
-const statusConfig: Record<VisitStatus, { color: string; bgColor: string }> = {
-  PENDING: { color: 'text-warning-600', bgColor: 'bg-warning-100 dark:bg-warning-500/10' },
-  CONFIRMED: { color: 'text-primary-600', bgColor: 'bg-primary-100 dark:bg-primary-500/10' },
-  COMPLETED: { color: 'text-success-600', bgColor: 'bg-success-100 dark:bg-success-500/10' },
-  CANCELLED: { color: 'text-error-600', bgColor: 'bg-error-100 dark:bg-error-500/10' },
+// Labels FR alignés sur les clés de statut (cf. statusLabels dans lib/colors.ts).
+const statusConfig: Record<VisitStatus, { color: string; bgColor: string; label: string }> = {
+  PENDING: { color: 'text-warning-600', bgColor: 'bg-warning-100 dark:bg-warning-500/10', label: 'En attente' },
+  CONFIRMED: { color: 'text-primary-600', bgColor: 'bg-primary-100 dark:bg-primary-500/10', label: 'Confirmée' },
+  COMPLETED: { color: 'text-success-600', bgColor: 'bg-success-100 dark:bg-success-500/10', label: 'Terminée' },
+  CANCELLED: { color: 'text-error-600', bgColor: 'bg-error-100 dark:bg-error-500/10', label: 'Annulée' },
 };
 
 // Calendar helpers - keys for translations
@@ -132,7 +133,7 @@ function VisitCard({
         <div className="relative">
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="p-1.5 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-lg transition-colors"
+            className="p-1.5 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg transition-colors"
             disabled={isLoading}
           >
             {isLoading ? (
@@ -147,12 +148,12 @@ function VisitCard({
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="absolute right-0 top-8 w-44 bg-white dark:bg-dark-card rounded-xl shadow-lg py-2 z-10"
+                className="absolute right-0 top-8 w-44 bg-white dark:bg-dark-card rounded-xl shadow-soft py-2 z-10"
               >
                 {visit.statut === 'PENDING' && onConfirm && (
                   <button
                     onClick={() => { onConfirm(); setShowMenu(false); }}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50 dark:hover:bg-dark-bg flex items-center gap-2 text-success-600"
+                    className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50 dark:hover:bg-dark-hover flex items-center gap-2 text-success-600"
                   >
                     <Check className="w-4 h-4" />
                     {t('visits.actions.confirm')}
@@ -161,13 +162,13 @@ function VisitCard({
                 {visit.statut === 'CONFIRMED' && onComplete && (
                   <button
                     onClick={() => { onComplete(); setShowMenu(false); }}
-                    className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50 dark:hover:bg-dark-bg flex items-center gap-2 text-success-600"
+                    className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50 dark:hover:bg-dark-hover flex items-center gap-2 text-success-600"
                   >
                     <Check className="w-4 h-4" />
                     {t('visits.actions.markComplete')}
                   </button>
                 )}
-                <button className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50 dark:hover:bg-dark-bg flex items-center gap-2">
+                <button className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50 dark:hover:bg-dark-hover flex items-center gap-2">
                   <MessageSquare className="w-4 h-4" />
                   {t('visits.actions.message')}
                 </button>
@@ -382,7 +383,7 @@ function NewVisitModal({
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="bg-white dark:bg-dark-card rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        className="bg-white dark:bg-dark-card rounded-2xl shadow-soft w-full max-w-lg max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-6 border-b border-neutral-200 dark:border-dark-border">
@@ -391,7 +392,7 @@ function NewVisitModal({
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-lg transition-colors"
+            className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg transition-colors"
           >
             <X className="w-5 h-5 text-neutral-500" />
           </button>
@@ -458,7 +459,7 @@ function NewVisitModal({
                       key={contact.id}
                       type="button"
                       onClick={() => handleSelectContact(contact)}
-                      className="w-full px-4 py-3 flex items-center gap-3 hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors border-b border-neutral-100 dark:border-dark-border last:border-b-0"
+                      className="w-full px-4 py-3 flex items-center gap-3 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors border-b border-neutral-100 dark:border-dark-border last:border-b-0"
                     >
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-medium overflow-hidden">
                         {contact.photo_profil_url ? (
@@ -591,7 +592,7 @@ function NewVisitModal({
               id="send_notification"
               checked={formData.send_notification}
               onChange={(e) => setFormData({ ...formData, send_notification: e.target.checked })}
-              className="w-4 h-4 text-primary-500 rounded border-neutral-300 focus:ring-primary-500"
+              className="w-4 h-4 text-primary-500 rounded border-neutral-300 dark:border-dark-border focus:ring-primary-500"
             />
             <label htmlFor="send_notification" className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
               <Bell className="w-4 h-4 text-primary-500" />
@@ -606,7 +607,7 @@ function NewVisitModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-6 py-3 border border-neutral-200 dark:border-dark-border text-neutral-700 dark:text-neutral-300 rounded-xl hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors font-medium"
+              className="flex-1 px-6 py-3 border border-neutral-200 dark:border-dark-border text-neutral-700 dark:text-neutral-300 rounded-xl hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors font-medium"
             >
               {t('visits.modal.cancel')}
             </button>
@@ -795,7 +796,7 @@ export default function VisitsContent() {
                 className={`p-2 rounded-lg transition-colors ${
                   viewMode === 'calendar'
                     ? 'bg-primary-500 text-white'
-                    : 'text-neutral-500 hover:text-neutral-700'
+                    : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'
                 }`}
               >
                 <Calendar className="w-5 h-5" />
@@ -805,7 +806,7 @@ export default function VisitsContent() {
                 className={`p-2 rounded-lg transition-colors ${
                   viewMode === 'list'
                     ? 'bg-primary-500 text-white'
-                    : 'text-neutral-500 hover:text-neutral-700'
+                    : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'
                 }`}
               >
                 <List className="w-5 h-5" />
@@ -858,13 +859,13 @@ export default function VisitsContent() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={prevMonth}
-                    className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-lg transition-colors"
+                    className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg transition-colors"
                   >
                     <ChevronLeft className="w-5 h-5 text-neutral-600 dark:text-neutral-300" />
                   </button>
                   <button
                     onClick={nextMonth}
-                    className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-lg transition-colors"
+                    className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg transition-colors"
                   >
                     <ChevronRight className="w-5 h-5 text-neutral-600 dark:text-neutral-300" />
                   </button>
@@ -906,7 +907,7 @@ export default function VisitsContent() {
                           ? 'bg-primary-500 text-white'
                           : isToday
                           ? 'bg-primary-100 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400'
-                          : 'hover:bg-neutral-100 dark:hover:bg-dark-bg text-neutral-700 dark:text-neutral-300'
+                          : 'hover:bg-neutral-100 dark:hover:bg-dark-hover text-neutral-700 dark:text-neutral-300'
                       }`}
                     >
                       <span className="text-sm font-medium">{date.getDate()}</span>
@@ -919,7 +920,7 @@ export default function VisitsContent() {
                               key={i}
                               className={`w-1.5 h-1.5 rounded-full ${
                                 isSelected
-                                  ? 'bg-white'
+                                  ? 'bg-white dark:bg-dark-card'
                                   : visit.statut === 'CONFIRMED'
                                   ? 'bg-primary-500'
                                   : visit.statut === 'PENDING'
@@ -1022,7 +1023,7 @@ export default function VisitsContent() {
                       key={visit.id}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="p-4 hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors"
+                      className="p-4 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors"
                     >
                       <div className="flex items-start gap-4">
                         {/* Date Column */}
@@ -1067,11 +1068,11 @@ export default function VisitsContent() {
                         <div className="flex items-center gap-2">
                           <a
                             href={`tel:${visit.client_telephone}`}
-                            className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-lg transition-colors"
+                            className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg transition-colors"
                           >
                             <Phone className="w-4 h-4 text-neutral-400" />
                           </a>
-                          <button className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-lg transition-colors">
+                          <button className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg transition-colors">
                             <MessageSquare className="w-4 h-4 text-neutral-400" />
                           </button>
                         </div>

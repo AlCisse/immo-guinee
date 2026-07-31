@@ -439,7 +439,7 @@ export default function Verify2FAPage() {
 
                   {/* QR Code */}
                   <div className="flex justify-center mb-6">
-                    <div className="p-4 bg-white rounded-xl border-2 border-neutral-200">
+                    <div className="p-4 bg-white dark:bg-dark-card rounded-xl border-2 border-neutral-200 dark:border-dark-border">
                       <img
                         src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(setupData.qr_code_url)}`}
                         alt="QR Code 2FA"
@@ -459,7 +459,7 @@ export default function Verify2FAPage() {
                         onClick={handleCopySecret}
                         className="p-2 hover:bg-neutral-200 dark:hover:bg-dark-border rounded-lg transition-colors"
                       >
-                        {copiedSecret ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-neutral-500" />}
+                        {copiedSecret ? <Check className="w-4 h-4 text-success-500" /> : <Copy className="w-4 h-4 text-neutral-500" />}
                       </button>
                     </div>
                   </div>
@@ -479,7 +479,7 @@ export default function Verify2FAPage() {
                   <button
                     type="button"
                     onClick={() => setSetupStep('show_qr')}
-                    className="flex items-center text-sm text-neutral-500 hover:text-neutral-700 mb-4"
+                    className="flex items-center text-sm text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 mb-4"
                   >
                     <ArrowLeft className="w-4 h-4 mr-1" />
                     Retour au QR code
@@ -538,8 +538,8 @@ export default function Verify2FAPage() {
               {showRecoveryCodes && setupData && (
                 <>
                   <div className="text-center mb-6">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 dark:bg-green-500/10 flex items-center justify-center">
-                      <Check className="w-8 h-8 text-green-500" />
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-success-100 dark:bg-success-500/10 flex items-center justify-center">
+                      <Check className="w-8 h-8 text-success-500" />
                     </div>
                     <h2 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">
                       2FA Active!
@@ -703,7 +703,7 @@ export default function Verify2FAPage() {
                     setError('');
                     setRecoveryCode('');
                   }}
-                  className="flex items-center text-sm text-neutral-500 hover:text-neutral-700 mb-4"
+                  className="flex items-center text-sm text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 mb-4"
                 >
                   <ArrowLeft className="w-4 h-4 mr-1" />
                   {t('auth.verify2fa.back')}

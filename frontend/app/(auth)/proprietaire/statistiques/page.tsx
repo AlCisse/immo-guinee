@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { palette } from '@/lib/colors';
 import { motion } from 'framer-motion';
 import {
   Home,
@@ -42,7 +43,7 @@ function StatCard({
     success: 'bg-success-50 dark:bg-success-500/10 text-success-500',
     warning: 'bg-warning-50 dark:bg-warning-500/10 text-warning-500',
     error: 'bg-error-50 dark:bg-error-500/10 text-error-500',
-    purple: 'bg-purple-50 dark:bg-purple-500/10 text-purple-500',
+    purple: 'bg-teal-50 dark:bg-teal-500/10 text-teal-500',
   };
 
   return (
@@ -106,7 +107,7 @@ function PropertyPerformance({
     <motion.div
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
-      className="flex items-center gap-4 p-4 hover:bg-neutral-50 dark:hover:bg-dark-bg rounded-xl transition-colors"
+      className="flex items-center gap-4 p-4 hover:bg-neutral-50 dark:hover:bg-dark-hover rounded-xl transition-colors"
     >
       <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-500/20 dark:to-primary-600/20 flex items-center justify-center flex-shrink-0">
         <Building2 className="w-8 h-8 text-primary-500" />
@@ -141,7 +142,7 @@ function PropertyPerformance({
         </div>
       </div>
 
-      <button className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-border rounded-lg transition-colors">
+      <button className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg transition-colors">
         <MoreHorizontal className="w-5 h-5 text-neutral-400" />
       </button>
     </motion.div>
@@ -234,9 +235,9 @@ export default function OwnerStatisticsPage() {
   // Mock data
   const viewsData = [120, 150, 180, 140, 200, 230, 190, 210, 250, 220, 280, 260];
   const propertyDistribution = [
-    { label: 'Appartements', value: 5, color: '#f97316' },
-    { label: 'Villas', value: 2, color: '#22c55e' },
-    { label: 'Bureaux', value: 3, color: '#3b82f6' },
+    { label: 'Appartements', value: 5, color: palette.teal[500] },
+    { label: 'Villas', value: 2, color: palette.warning[500] },
+    { label: 'Bureaux', value: 3, color: palette.neutral[500] },
   ];
 
   const recentInquiries = [
@@ -442,7 +443,7 @@ export default function OwnerStatisticsPage() {
                   </motion.div>
                 ))}
               </div>
-              <button className="w-full mt-4 py-2.5 border border-neutral-200 dark:border-dark-border rounded-xl text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors">
+              <button className="w-full mt-4 py-2.5 border border-neutral-200 dark:border-dark-border rounded-xl text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors">
                 Voir toutes les demandes
               </button>
             </div>

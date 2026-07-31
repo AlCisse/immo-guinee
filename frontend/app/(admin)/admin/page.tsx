@@ -71,24 +71,24 @@ function StatCard({
 }) {
   const colorClasses = {
     primary: 'from-primary-400 to-primary-600',
-    success: 'from-green-400 to-green-600',
-    warning: 'from-amber-400 to-amber-600',
-    info: 'from-blue-400 to-blue-600',
-    error: 'from-red-400 to-red-600',
+    success: 'from-success-400 to-success-600',
+    warning: 'from-warning-400 to-warning-600',
+    info: 'from-secondary-400 to-secondary-600',
+    error: 'from-error-400 to-error-600',
   };
 
   return (
     <Link href={href}>
       <motion.div
         whileHover={{ y: -4 }}
-        className="bg-white dark:bg-dark-card rounded-2xl p-5 shadow-soft hover:shadow-lg transition-all cursor-pointer"
+        className="bg-white dark:bg-dark-card rounded-2xl p-5 shadow-soft hover:shadow-soft-lg transition-all cursor-pointer"
       >
         <div className="flex items-start justify-between mb-3">
           <div className={`p-3 rounded-xl bg-gradient-to-br ${colorClasses[color]}`}>
             <Icon className="w-5 h-5 text-white" />
           </div>
           {trend !== undefined && (
-            <span className={`text-sm font-medium ${trend >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+            <span className={`text-sm font-medium ${trend >= 0 ? 'text-success-500' : 'text-error-500'}`}>
               {trend >= 0 ? '+' : ''}{trend}%
             </span>
           )}
@@ -127,20 +127,20 @@ function QuickAction({
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         className={`flex items-center gap-3 p-4 bg-white dark:bg-dark-card rounded-xl shadow-soft hover:shadow-md transition-all ${
-          urgent ? 'border-l-4 border-red-500' : ''
+          urgent ? 'border-l-4 border-error-500' : ''
         }`}
       >
         <div className={`p-2.5 rounded-lg ${
           urgent
-            ? 'bg-red-50 dark:bg-red-500/10'
+            ? 'bg-error-50 dark:bg-error-500/10'
             : 'bg-primary-50 dark:bg-primary-500/10'
         }`}>
-          <Icon className={`w-5 h-5 ${urgent ? 'text-red-500' : 'text-primary-500'}`} />
+          <Icon className={`w-5 h-5 ${urgent ? 'text-error-500' : 'text-primary-500'}`} />
         </div>
         <div className="flex-1">
           <span className="font-medium text-neutral-900 dark:text-white">{label}</span>
           {count !== undefined && count > 0 && (
-            <p className={`text-xs ${urgent ? 'text-red-500' : 'text-neutral-500'}`}>
+            <p className={`text-xs ${urgent ? 'text-error-500' : 'text-neutral-500'}`}>
               {count} en attente
             </p>
           )}
@@ -228,7 +228,7 @@ export default function AdminDashboardPage() {
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg pb-8">
       {/* Header */}
-      <div className="bg-gradient-to-br from-primary-500 to-orange-500 pt-6 pb-12 md:pt-8 md:pb-16 px-4 md:px-8">
+      <div className="bg-gradient-to-br from-primary-500 to-primary-500 pt-6 pb-12 md:pt-8 md:pb-16 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -255,7 +255,7 @@ export default function AdminDashboardPage() {
                 onClick={() => setPeriod(days)}
                 className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
                   period === days
-                    ? 'bg-white text-primary-600'
+                    ? 'bg-white dark:bg-dark-card text-primary-600'
                     : 'bg-white/20 text-white hover:bg-white/30'
                 }`}
               >
@@ -373,19 +373,19 @@ export default function AdminDashboardPage() {
                 Revenus plateforme
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="text-center p-4 bg-green-50 dark:bg-green-500/10 rounded-xl">
+                <div className="text-center p-4 bg-success-50 dark:bg-success-500/10 rounded-xl">
                   <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">
                     Commissions collectees
                   </p>
-                  <p className="text-2xl font-bold text-green-600">
+                  <p className="text-2xl font-bold text-success-600">
                     {formatMoney(analytics?.transactions?.commission_earned_gnf || 0)}
                   </p>
                 </div>
-                <div className="text-center p-4 bg-blue-50 dark:bg-blue-500/10 rounded-xl">
+                <div className="text-center p-4 bg-secondary-50 dark:bg-secondary-500/10 rounded-xl">
                   <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">
                     Volume total
                   </p>
-                  <p className="text-2xl font-bold text-blue-600">
+                  <p className="text-2xl font-bold text-secondary-600">
                     {formatMoney(analytics?.transactions?.total_volume_gnf || 0)}
                   </p>
                 </div>
@@ -442,7 +442,7 @@ export default function AdminDashboardPage() {
                       label={type}
                       value={count as number}
                       total={analytics?.listings?.active_listings || 1}
-                      color="bg-gradient-to-r from-green-400 to-green-600"
+                      color="bg-gradient-to-r from-success-400 to-success-600"
                     />
                   ))}
                 </div>
@@ -471,13 +471,13 @@ export default function AdminDashboardPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-neutral-500 dark:text-neutral-400">En attente</span>
-                  <span className="font-semibold text-amber-500">
+                  <span className="font-semibold text-warning-500">
                     {counts.listings_pending || 0}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-neutral-500 dark:text-neutral-400">Messages non lus</span>
-                  <span className="font-semibold text-blue-500">
+                  <span className="font-semibold text-secondary-500">
                     {counts.messages_unread || 0}
                   </span>
                 </div>
@@ -549,7 +549,7 @@ export default function AdminDashboardPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl shadow-soft p-6 text-white"
+              className="bg-gradient-to-br from-success-500 to-accent-600 rounded-2xl shadow-soft p-6 text-white"
             >
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 bg-white/20 rounded-lg">

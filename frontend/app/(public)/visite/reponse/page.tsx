@@ -1,7 +1,7 @@
 'use client';
+import { useSearchParamsSafe } from '@/lib/hooks/useSearchParamsSafe';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
@@ -38,7 +38,7 @@ interface Visit {
 }
 
 function VisitResponseContent() {
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParamsSafe();
   const token = searchParams.get('token');
 
   const [visit, setVisit] = useState<Visit | null>(null);
@@ -142,8 +142,8 @@ function VisitResponseContent() {
   if (error && !visit) {
     return (
       <div className="text-center py-12">
-        <div className="w-16 h-16 bg-red-100 dark:bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-          <AlertCircle className="w-8 h-8 text-red-500" />
+        <div className="w-16 h-16 bg-error-100 dark:bg-error-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+          <AlertCircle className="w-8 h-8 text-error-500" />
         </div>
         <h2 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">
           Erreur
@@ -166,8 +166,8 @@ function VisitResponseContent() {
         animate={{ opacity: 1, scale: 1 }}
         className="text-center py-8"
       >
-        <div className="w-20 h-20 bg-green-100 dark:bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-          <CheckCircle className="w-10 h-10 text-green-500" />
+        <div className="w-20 h-20 bg-success-100 dark:bg-success-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+          <CheckCircle className="w-10 h-10 text-success-500" />
         </div>
         <h2 className="text-2xl font-bold text-neutral-900 dark:text-white mb-3">
           {success || 'Reponse deja enregistree'}
@@ -199,7 +199,7 @@ function VisitResponseContent() {
   return (
     <div className="space-y-6">
       {/* Visit Details Card */}
-      <div className="bg-white dark:bg-dark-card rounded-2xl shadow-lg overflow-hidden">
+      <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft overflow-hidden">
         {/* Property Image */}
         <div className="relative h-48 bg-neutral-200">
           <Image
@@ -252,10 +252,10 @@ function VisitResponseContent() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl flex items-start gap-3"
+          className="p-4 bg-error-50 dark:bg-error-500/10 border border-error-200 dark:border-error-500/20 rounded-xl flex items-start gap-3"
         >
-          <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+          <AlertCircle className="w-5 h-5 text-error-500 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-error-600 dark:text-error-400">{error}</p>
         </motion.div>
       )}
 
@@ -269,7 +269,7 @@ function VisitResponseContent() {
           <button
             onClick={() => handleResponse('CONFIRMED')}
             disabled={isSubmitting}
-            className="w-full py-4 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-3 disabled:opacity-50"
+            className="w-full py-4 bg-success-500 hover:bg-success-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-3 disabled:opacity-50"
           >
             {isSubmitting ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -284,7 +284,7 @@ function VisitResponseContent() {
           <button
             onClick={() => handleResponse('UNAVAILABLE')}
             disabled={isSubmitting}
-            className="w-full py-4 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-3 disabled:opacity-50"
+            className="w-full py-4 bg-error-500 hover:bg-error-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-3 disabled:opacity-50"
           >
             {isSubmitting ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -299,7 +299,7 @@ function VisitResponseContent() {
           <button
             onClick={() => handleResponse('RESCHEDULE')}
             disabled={isSubmitting}
-            className="w-full py-4 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-3 disabled:opacity-50"
+            className="w-full py-4 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-3 disabled:opacity-50"
           >
             <CalendarClock className="w-6 h-6" />
             Proposer une autre date
@@ -310,7 +310,7 @@ function VisitResponseContent() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-dark-card rounded-2xl shadow-lg p-6"
+          className="bg-white dark:bg-dark-card rounded-2xl shadow-soft p-6"
         >
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
             Proposer une autre date
@@ -358,14 +358,14 @@ function VisitResponseContent() {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowRescheduleForm(false)}
-                className="flex-1 py-3 border-2 border-neutral-200 dark:border-dark-border text-neutral-700 dark:text-neutral-300 font-semibold rounded-xl hover:bg-neutral-50 dark:hover:bg-dark-border transition-colors"
+                className="flex-1 py-3 border-2 border-neutral-200 dark:border-dark-border text-neutral-700 dark:text-neutral-300 font-semibold rounded-xl hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors"
               >
                 Annuler
               </button>
               <button
                 onClick={() => handleResponse('RESCHEDULE')}
                 disabled={isSubmitting || !proposedDate || !proposedTime}
-                className="flex-1 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isSubmitting ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -383,7 +383,7 @@ function VisitResponseContent() {
 
 export default function VisitResponsePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-500 via-orange-500 to-primary-600 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-primary-500 via-primary-500 to-primary-600 flex flex-col">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0" style={{
@@ -413,7 +413,7 @@ export default function VisitResponsePage() {
           className="w-full max-w-md"
         >
           <Suspense fallback={
-            <div className="bg-white dark:bg-dark-card rounded-3xl shadow-2xl p-8 flex items-center justify-center">
+            <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft p-8 flex items-center justify-center">
               <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
             </div>
           }>

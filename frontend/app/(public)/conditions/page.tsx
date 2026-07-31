@@ -9,7 +9,7 @@ export default function ConditionsPage() {
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg">
       {/* Header */}
-      <div className="bg-gradient-to-br from-primary-500 to-orange-500 pt-6 pb-12">
+      <div className="bg-gradient-to-br from-primary-500 to-primary-500 pt-6 pb-12">
         <div className="max-w-4xl mx-auto px-4">
           <div className="flex items-center gap-4 mb-8">
             <Link
@@ -97,8 +97,8 @@ export default function ConditionsPage() {
 
             <section id="utilisation" className="mb-8">
               <h2 className="flex items-center gap-3 text-xl font-semibold text-neutral-900 dark:text-white mb-4">
-                <div className="p-2 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg">
-                  <Shield className="w-5 h-5 text-emerald-500" />
+                <div className="p-2 bg-accent-50 dark:bg-accent-500/10 rounded-lg">
+                  <Shield className="w-5 h-5 text-accent-500" />
                 </div>
                 2. Utilisation du service
               </h2>
@@ -116,8 +116,8 @@ export default function ConditionsPage() {
 
             <section id="responsabilites" className="mb-8">
               <h2 className="flex items-center gap-3 text-xl font-semibold text-neutral-900 dark:text-white mb-4">
-                <div className="p-2 bg-blue-50 dark:bg-blue-500/10 rounded-lg">
-                  <Scale className="w-5 h-5 text-blue-500" />
+                <div className="p-2 bg-secondary-50 dark:bg-secondary-500/10 rounded-lg">
+                  <Scale className="w-5 h-5 text-secondary-500" />
                 </div>
                 3. Responsabilités
               </h2>
@@ -143,8 +143,8 @@ export default function ConditionsPage() {
 
             <section id="restrictions" className="mb-8">
               <h2 className="flex items-center gap-3 text-xl font-semibold text-neutral-900 dark:text-white mb-4">
-                <div className="p-2 bg-red-50 dark:bg-red-500/10 rounded-lg">
-                  <AlertTriangle className="w-5 h-5 text-red-500" />
+                <div className="p-2 bg-error-50 dark:bg-error-500/10 rounded-lg">
+                  <AlertTriangle className="w-5 h-5 text-error-500" />
                 </div>
                 4. Restrictions
               </h2>
@@ -207,8 +207,8 @@ export default function ConditionsPage() {
             href="/confidentialite"
             className="bg-white dark:bg-dark-card rounded-xl p-5 shadow-soft hover:shadow-md transition-shadow flex items-center gap-4"
           >
-            <div className="p-3 bg-purple-50 dark:bg-purple-500/10 rounded-xl">
-              <Shield className="w-6 h-6 text-purple-500" />
+            <div className="p-3 bg-teal-50 dark:bg-teal-500/10 rounded-xl">
+              <Shield className="w-6 h-6 text-teal-500" />
             </div>
             <div>
               <h3 className="font-semibold text-neutral-900 dark:text-white">

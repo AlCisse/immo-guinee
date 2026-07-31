@@ -170,18 +170,18 @@ export default function CertificationsPage() {
   const certifications = Array.isArray(data?.data?.data) ? data.data.data : [];
   const total = data?.data?.total || certifications.length;
   const pendingCount = certifications.filter((c: Certification) => c.statut_verification === 'EN_ATTENTE').length;
-  const verifiedCount = certifications.filter((c: Certification) => c.statut_verification === 'VERIFIE').length;
+  const verifiedCount = certifications.filter((c: Certification) => c.statut_verification === 'APPROUVE').length;
   const rejectedCount = certifications.filter((c: Certification) => c.statut_verification === 'REJETE').length;
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-white flex items-center gap-3">
           <FileCheck className="w-7 h-7 text-primary-500" />
           Gestion des certifications
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
+        <p className="text-neutral-600 dark:text-neutral-400 mt-1">
           Vérifiez les documents d&apos;identité des utilisateurs
         </p>
       </div>
@@ -236,7 +236,7 @@ export default function CertificationsPage() {
               >
                 <option value="">Tous les statuts</option>
                 <option value="EN_ATTENTE">En attente</option>
-                <option value="VERIFIE">Vérifié</option>
+                <option value="APPROUVE">Vérifié</option>
                 <option value="REJETE">Rejeté</option>
               </select>
 
@@ -336,7 +336,7 @@ export default function CertificationsPage() {
                               </button>
                               <button
                                 onClick={() => handleDownload(cert)}
-                                className="p-2 bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-500/20 transition-colors"
+                                className="p-2 bg-teal-50 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-lg hover:bg-teal-100 dark:hover:bg-teal-500/20 transition-colors"
                                 title="Télécharger"
                               >
                                 <Download className="w-4 h-4" />
@@ -425,7 +425,7 @@ export default function CertificationsPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white dark:bg-dark-card rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              className="bg-white dark:bg-dark-card rounded-2xl shadow-soft max-w-2xl w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
@@ -456,10 +456,10 @@ export default function CertificationsPage() {
 
                 {/* User Info */}
                 {selectedCert.user && (
-                  <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-4">
+                  <div className="bg-secondary-50 dark:bg-secondary-500/10 rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-3">
-                      <User className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                      <span className="font-semibold text-blue-900 dark:text-blue-300">Utilisateur</span>
+                      <User className="w-5 h-5 text-secondary-600 dark:text-secondary-400" />
+                      <span className="font-semibold text-secondary-900 dark:text-secondary-300">Utilisateur</span>
                     </div>
                     <div className="space-y-2 text-sm">
                       <p><span className="text-neutral-500">Nom:</span> <span className="font-medium text-neutral-900 dark:text-white">{selectedCert.user.nom_complet}</span></p>
@@ -519,19 +519,19 @@ export default function CertificationsPage() {
                 {(selectedCert.verified_at || selectedCert.raison_rejet || selectedCert.verification_notes) && (
                   <div className={clsx(
                     'rounded-xl p-4',
-                    selectedCert.statut_verification === 'VERIFIE' ? 'bg-success-50 dark:bg-success-500/10' : 'bg-error-50 dark:bg-error-500/10'
+                    selectedCert.statut_verification === 'APPROUVE' ? 'bg-success-50 dark:bg-success-500/10' : 'bg-error-50 dark:bg-error-500/10'
                   )}>
                     <div className="flex items-center gap-2 mb-3">
-                      {selectedCert.statut_verification === 'VERIFIE' ? (
+                      {selectedCert.statut_verification === 'APPROUVE' ? (
                         <CheckCircle className="w-5 h-5 text-success-600 dark:text-success-400" />
                       ) : (
                         <XCircle className="w-5 h-5 text-error-600 dark:text-error-400" />
                       )}
                       <span className={clsx(
                         'font-semibold',
-                        selectedCert.statut_verification === 'VERIFIE' ? 'text-success-900 dark:text-success-300' : 'text-error-900 dark:text-error-300'
+                        selectedCert.statut_verification === 'APPROUVE' ? 'text-success-900 dark:text-success-300' : 'text-error-900 dark:text-error-300'
                       )}>
-                        {selectedCert.statut_verification === 'VERIFIE' ? 'Vérification' : 'Rejet'}
+                        {selectedCert.statut_verification === 'APPROUVE' ? 'Vérification' : 'Rejet'}
                       </span>
                     </div>
                     <div className="space-y-2 text-sm">
@@ -554,7 +554,7 @@ export default function CertificationsPage() {
                 {/* View Document Button */}
                 <button
                   onClick={() => handleDownload(selectedCert)}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl hover:bg-purple-100 dark:hover:bg-purple-500/20 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-teal-50 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-xl hover:bg-teal-100 dark:hover:bg-teal-500/20 transition-colors"
                 >
                   <ExternalLink className="w-5 h-5" />
                   Voir le document
@@ -616,7 +616,7 @@ export default function CertificationsPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white dark:bg-dark-card rounded-2xl shadow-xl max-w-md w-full"
+              className="bg-white dark:bg-dark-card rounded-2xl shadow-soft max-w-md w-full"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}

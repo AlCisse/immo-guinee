@@ -36,7 +36,10 @@ export function useNotifications(enabled: boolean = true) {
       return response.data;
     },
     enabled,
-    staleTime: 30000, // 30 seconds
+    // P10 — staleTime aligné sur refetchInterval (60 s) : refetchOnWindowFocus ne
+    // déclenche pas de refetch redondant dans un cycle de polling (la data est
+    // encore fraîche). Le poll 60 s reste pour le rafraîchissement live de la cloche.
+    staleTime: 60000, // 60 seconds
     refetchInterval: 60000, // Refetch every minute
     refetchOnWindowFocus: true,
   });
@@ -86,7 +89,9 @@ export function useUserCounts(isAuthenticated: boolean) {
       }
     },
     enabled: isAuthenticated,
-    staleTime: 30000,
+    // P10 — staleTime aligné sur refetchInterval (cf. useNotifications) pour
+    // éviter le double refetch poll + focus dans un même cycle.
+    staleTime: 60000,
     refetchInterval: 60000,
     refetchOnWindowFocus: true,
   });

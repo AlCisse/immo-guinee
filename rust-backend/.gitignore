@@ -1,0 +1,21 @@
+# Rust build artifacts
+/target
+**/*.rs.bk
+
+# Cargo lock for libraries is optional; for a binary app we DO commit Cargo.lock.
+# /Cargo.lock
+
+# Local env (never commit real secrets)
+.env
+.env.local
+.env.production
+config.toml.local
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# SeaORM generated entity cache (regenerated from schema)
+# src/db/entities is generated and committed for reproducibility; uncomment to ignore:
+# /src/db/entities/

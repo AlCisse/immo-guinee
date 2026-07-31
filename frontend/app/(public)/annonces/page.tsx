@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { Suspense } from 'react';
 import AnnoncesList from './AnnoncesList';
 
 export const metadata: Metadata = {
@@ -48,5 +49,15 @@ export const metadata: Metadata = {
 };
 
 export default function AnnoncesPage() {
-  return <AnnoncesList />;
+  return (
+    <Suspense
+      fallback={
+        <div className="container mx-auto px-4 py-8">
+          <div className="h-96 animate-pulse rounded-2xl bg-neutral-100 dark:bg-dark-hover" />
+        </div>
+      }
+    >
+      <AnnoncesList />
+    </Suspense>
+  );
 }

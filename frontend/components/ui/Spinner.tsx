@@ -1,5 +1,3 @@
-'use client';
-
 import { cn } from '@/lib/utils';
 
 export interface SpinnerProps {
@@ -25,7 +23,7 @@ const Spinner = ({
   const colors = {
     primary: 'text-primary-600',
     white: 'text-white',
-    gray: 'text-gray-400',
+    gray: 'text-neutral-400',
   };
 
   return (

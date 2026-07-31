@@ -151,13 +151,13 @@ export default function MessageInput({ conversationId }: MessageInputProps) {
   const commonEmojis = ['😀', '😂', '😊', '❤️', '👍', '🙏', '🏠', '✨', '🎉', '👋'];
 
   return (
-    <div className="border-t border-gray-200 bg-white px-4 py-3">
+    <div className="border-t border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card px-4 py-3">
       {/* Voice recording UI */}
       {isRecording ? (
         <div className="flex items-center gap-4">
           <button
             onClick={stopRecording}
-            className="p-2 rounded-full bg-red-500 text-white hover:bg-red-600"
+            className="p-2 rounded-full bg-error-500 text-white hover:bg-error-600"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <rect x="6" y="6" width="12" height="12" strokeWidth="2" />
@@ -165,9 +165,9 @@ export default function MessageInput({ conversationId }: MessageInputProps) {
           </button>
 
           <div className="flex-1 flex items-center gap-3">
-            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-            <span className="text-gray-600">Enregistrement...</span>
-            <span className="text-gray-400">{formatDuration(recordingDuration)}</span>
+            <div className="w-3 h-3 bg-error-500 rounded-full animate-pulse" />
+            <span className="text-neutral-600 dark:text-neutral-400">Enregistrement...</span>
+            <span className="text-neutral-400">{formatDuration(recordingDuration)}</span>
           </div>
 
           <button
@@ -190,7 +190,7 @@ export default function MessageInput({ conversationId }: MessageInputProps) {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="p-2 text-gray-400 hover:text-gray-600"
+            className="p-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-400"
             aria-label="Joindre une image"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -219,7 +219,7 @@ export default function MessageInput({ conversationId }: MessageInputProps) {
               onKeyPress={handleKeyPress}
               placeholder="Écrivez un message..."
               rows={1}
-              className="w-full resize-none rounded-2xl border border-gray-200 px-4 py-2 pr-10 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+              className="w-full resize-none rounded-2xl border border-neutral-200 dark:border-dark-border px-4 py-2 pr-10 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
               style={{ minHeight: '40px', maxHeight: '120px' }}
             />
 
@@ -228,7 +228,7 @@ export default function MessageInput({ conversationId }: MessageInputProps) {
               <button
                 type="button"
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className="p-1 text-gray-400 hover:text-gray-600"
+                className="p-1 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-400"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -242,7 +242,7 @@ export default function MessageInput({ conversationId }: MessageInputProps) {
 
               {/* Simple emoji picker */}
               {showEmojiPicker && (
-                <div className="absolute bottom-10 right-0 bg-white border border-gray-200 rounded-lg shadow-lg p-2 flex gap-1">
+                <div className="absolute bottom-10 right-0 bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-lg shadow-lg p-2 flex gap-1">
                   {commonEmojis.map((emoji) => (
                     <button
                       key={emoji}
@@ -252,7 +252,7 @@ export default function MessageInput({ conversationId }: MessageInputProps) {
                         setShowEmojiPicker(false);
                         textareaRef.current?.focus();
                       }}
-                      className="p-1 hover:bg-gray-100 rounded"
+                      className="p-1 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded"
                     >
                       {emoji}
                     </button>
@@ -270,7 +270,7 @@ export default function MessageInput({ conversationId }: MessageInputProps) {
               className={clsx(
                 'p-2 rounded-full text-white',
                 sendMutation.isPending
-                  ? 'bg-gray-400 cursor-not-allowed'
+                  ? 'bg-neutral-400 cursor-not-allowed'
                   : 'bg-primary-500 hover:bg-primary-600'
               )}
             >
@@ -287,7 +287,7 @@ export default function MessageInput({ conversationId }: MessageInputProps) {
             <button
               type="button"
               onClick={startRecording}
-              className="p-2 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+              className="p-2 rounded-full text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-dark-hover"
               aria-label="Enregistrer un message vocal"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -305,7 +305,7 @@ export default function MessageInput({ conversationId }: MessageInputProps) {
 
       {/* Character limit warning */}
       {message.length > 1800 && (
-        <p className="mt-1 text-xs text-yellow-600">
+        <p className="mt-1 text-xs text-warning-600">
           {2000 - message.length} caractères restants
         </p>
       )}

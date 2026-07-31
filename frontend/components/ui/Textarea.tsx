@@ -1,5 +1,3 @@
-'use client';
-
 import { forwardRef, type TextareaHTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -24,10 +22,10 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     return (
       <div className="w-full">
         {label && (
-          <label htmlFor={textareaId} className="mb-1.5 block text-sm font-medium text-gray-700">
+          <label htmlFor={textareaId} className="mb-1.5 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
             {label}
             {props.required && (
-              <span className="ml-1 text-red-500" aria-hidden="true">
+              <span className="ml-1 text-error-500" aria-hidden="true">
                 *
               </span>
             )}
@@ -40,11 +38,11 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
             value={value}
             maxLength={maxLength}
             className={cn(
-              'block w-full resize-y rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-gray-900 placeholder-gray-400',
+              'block w-full resize-y rounded-xl border border-neutral-300 bg-white px-3 py-2.5 text-neutral-900 placeholder-neutral-400 dark:border-dark-border dark:bg-dark-card dark:text-white dark:placeholder-neutral-500',
               'transition-colors duration-200',
               'focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20',
-              'disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500',
-              error && 'border-red-500 focus:border-red-500 focus:ring-red-500/20',
+              'disabled:cursor-not-allowed disabled:bg-neutral-100 dark:disabled:bg-dark-hover disabled:text-neutral-500 dark:disabled:bg-dark-hover',
+              error && 'border-error-500 focus:border-error-500 focus:ring-error-500/20',
               className
             )}
             aria-invalid={error ? 'true' : 'false'}
@@ -55,12 +53,12 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         <div className="mt-1.5 flex justify-between">
           <div>
             {error && (
-              <p id={errorId} className="text-sm text-red-600" role="alert">
+              <p id={errorId} className="text-sm text-error-600" role="alert">
                 {error}
               </p>
             )}
             {hint && !error && (
-              <p id={hintId} className="text-sm text-gray-500">
+              <p id={hintId} className="text-sm text-neutral-500 dark:text-neutral-400">
                 {hint}
               </p>
             )}
@@ -69,7 +67,7 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
             <p
               className={cn(
                 'text-sm',
-                charCount >= maxLength ? 'text-red-600' : 'text-gray-400'
+                charCount >= maxLength ? 'text-error-600' : 'text-neutral-400 dark:text-neutral-500'
               )}
               aria-live="polite"
             >

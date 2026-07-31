@@ -4,11 +4,14 @@ import { useState, useMemo, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useSearchParamsSafe } from '@/lib/hooks/useSearchParamsSafe';
+import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { api } from '@/lib/api/client';
 import { CONAKRY_COMMUNES, CONAKRY_QUARTIERS } from '@/lib/data/communes';
 import { useTranslations } from '@/lib/i18n';
+import { Badge } from '@/components/ui/Badge';
 import {
   Search,
   SlidersHorizontal,
@@ -127,14 +130,19 @@ const formatPrice = (price: number | string | undefined | null) => {
 function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'grid' | 'list' }) {
   const { t } = useTranslations('search');
   const [isFavorite, setIsFavorite] = useState(false);
+  const queryClient = useQueryClient();
 
   const handleToggleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault();
+    // R6 — mutation optimiste : l'UI bascule immédiatement (cœur rempli/vidé),
+    // puis l'API est appelée. En cas d'échec, on annule l'état local (rollback).
+    const next = !isFavorite;
+    setIsFavorite(next);
     try {
       await api.favorites.toggle(property.id);
-      setIsFavorite(!isFavorite);
+      queryClient.invalidateQueries({ queryKey: ['favorites'] });
     } catch {
-      // User not authenticated
+      setIsFavorite(!next); // rollback
     }
   };
 
@@ -180,7 +188,16 @@ function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'gr
           {/* Image */}
           <div className="relative w-full sm:w-64 h-48 sm:h-auto flex-shrink-0">
             {photoUrl ? (
-              <img src={photoUrl} alt={property.titre} className="absolute inset-0 w-full h-full object-cover" />
+              // P6 — next/image (fill) au lieu d'un <img> brut : sert des formats
+              // AVIF/WebP adaptés à la taille de l'écran (deviceSizes) et évite le
+              // reflow. Le parent est `position: relative`, requis pour fill.
+              <Image
+                src={photoUrl}
+                alt={property.titre}
+                fill
+                sizes="(max-width: 640px) 100vw, 256px"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
             ) : (
               <div className="absolute inset-0 bg-gradient-to-br from-primary-200 to-primary-300 dark:from-primary-900 dark:to-primary-800" />
             )}
@@ -188,10 +205,10 @@ function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'gr
             {/* Badges */}
             <div className="absolute top-3 left-3 flex gap-2">
               {property.is_premium && (
-                <span className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-semibold rounded-full">
+                <Badge variant="premium" size="sm" className="gap-1 py-1 font-semibold">
                   <Sparkles className="w-3 h-3" />
                   {t('badges.premium')}
-                </span>
+                </Badge>
               )}
               {isNew && (
                 <span className="px-2 py-1 bg-primary-500 text-white text-xs font-semibold rounded-full">
@@ -203,9 +220,9 @@ function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'gr
             {/* Favorite */}
             <button
               onClick={handleToggleFavorite}
-              className="absolute top-3 right-3 p-2 bg-white/90 rounded-full shadow-lg"
+              className="absolute top-3 right-3 p-2 bg-white/90 dark:bg-dark-card/90 backdrop-blur-sm rounded-full shadow-lg"
             >
-              <Heart className={`w-5 h-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-neutral-600'}`} />
+              <Heart className={`w-5 h-5 ${isFavorite ? 'fill-error-500 text-error-500' : 'text-neutral-600 dark:text-neutral-300'}`} />
             </button>
           </div>
 
@@ -219,10 +236,10 @@ function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'gr
                   </span>
                   <span className={`px-2 py-0.5 text-xs font-medium rounded-md ${
                     isLocation
-                      ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400'
+                      ? 'bg-neutral-100 text-neutral-700 dark:bg-dark-hover dark:text-neutral-300'
                       : isLocationCourte
-                      ? 'bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400'
-                      : 'bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400'
+                      ? 'bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400'
+                      : 'bg-teal-50 text-teal-600 dark:bg-teal-500/10 dark:text-teal-400'
                   }`}>
                     {isLocation ? t('badges.forRent') : isLocationCourte ? t('badges.shortTerm') : t('badges.forSale')}
                   </span>
@@ -244,7 +261,7 @@ function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'gr
                   <span className="text-sm text-neutral-500">{t('perMonth')}</span>
                 )}
                 {isLocationCourte && (
-                  <span className="text-sm text-purple-500">{t('perDay')}</span>
+                  <span className="text-sm text-teal-600 dark:text-teal-400">{t('perDay')}</span>
                 )}
               </div>
             </div>
@@ -300,10 +317,10 @@ function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'gr
           {/* Badges */}
           <div className="absolute top-3 left-3 flex gap-2">
             {property.is_premium && (
-              <span className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-semibold rounded-full">
+              <Badge variant="premium" size="sm" className="gap-1 py-1 font-semibold">
                 <Sparkles className="w-3 h-3" />
                 {t('badges.premium')}
-              </span>
+              </Badge>
             )}
             {isNew && (
               <span className="px-2 py-1 bg-primary-500 text-white text-xs font-semibold rounded-full">
@@ -314,12 +331,12 @@ function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'gr
 
           {/* Transaction Type Badge */}
           <div className="absolute top-3 right-12">
-            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+            <span className={`px-2 py-1 text-xs font-semibold rounded-full backdrop-blur-sm ${
               isLocation
-                ? 'bg-blue-500 text-white'
+                ? 'bg-white/90 text-neutral-800 dark:bg-dark-card/90 dark:text-white'
                 : isLocationCourte
-                ? 'bg-purple-500 text-white'
-                : 'bg-green-500 text-white'
+                ? 'bg-primary-500 text-white'
+                : 'bg-teal-600 text-white'
             }`}>
               {isLocation ? t('badges.forRent') : isLocationCourte ? t('badges.shortTerm') : t('badges.forSale')}
             </span>
@@ -331,7 +348,7 @@ function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'gr
             onClick={handleToggleFavorite}
             className="absolute top-3 right-3 p-2 bg-white/90 dark:bg-dark-card/90 rounded-full shadow-lg z-10"
           >
-            <Heart className={`w-5 h-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-neutral-600'}`} />
+            <Heart className={`w-5 h-5 ${isFavorite ? 'fill-error-500 text-error-500' : 'text-neutral-600 dark:text-neutral-300'}`} />
           </motion.button>
 
           {/* Price */}
@@ -342,7 +359,7 @@ function PropertyCard({ property, viewMode }: { property: Listing; viewMode: 'gr
                 <span className="text-sm font-normal text-neutral-500">{t('perMonth')}</span>
               )}
               {isLocationCourte && (
-                <span className="text-sm font-normal text-purple-500">{t('perDay')}</span>
+                <span className="text-sm font-normal text-teal-600 dark:text-teal-400">{t('perDay')}</span>
               )}
             </span>
           </div>
@@ -415,7 +432,7 @@ function FilterChip({
 // Main search content component
 function SearchContent() {
   const { t } = useTranslations('search');
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParamsSafe();
   const router = useRouter();
 
   // Initialize state from URL params
@@ -521,11 +538,18 @@ function SearchContent() {
   // Fetch listings from API
   const { data, isLoading, error } = useQuery({
     queryKey: ['listings', 'search', apiParams],
-    queryFn: async () => {
-      const response = await api.listings.list(apiParams);
+    // R14 — passe le signal RQ à axios : un changement de filtre/page abort la
+    // requête précédente en vol au lieu d'attendre qu'elle revienne et de
+    // provoquer une race sur les résultats.
+    queryFn: async ({ signal }) => {
+      const response = await api.listings.list(apiParams, signal);
       return response.data.data;
     },
     staleTime: 2 * 60 * 1000,
+    // P11 — garder les résultats précédents affichés pendant le refetch sur
+    // changement de filtres/page : évite le flash "loading" et l'effacement de
+    // la liste à chaque filtre (UX pagination/filtre fluide).
+    placeholderData: keepPreviousData,
   });
 
   const listings: Listing[] = data?.listings || [];
@@ -637,7 +661,7 @@ function SearchContent() {
                     setQuartierSearchInput('');
                     setShowQuartierDropdown(false);
                   }}>
-                    <X className="w-4 h-4 text-neutral-400 hover:text-neutral-600" />
+                    <X className="w-4 h-4 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-400" />
                   </button>
                 )}
               </div>
@@ -652,7 +676,7 @@ function SearchContent() {
               >
                 <SlidersHorizontal className="w-5 h-5" />
                 {activeFiltersCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                     {activeFiltersCount}
                   </span>
                 )}
@@ -666,7 +690,7 @@ function SearchContent() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-xl shadow-lg z-50 overflow-hidden"
+                  className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-xl shadow-soft z-50 overflow-hidden"
                 >
                   {filteredQuartiers.map((quartier) => (
                     <button
@@ -678,7 +702,7 @@ function SearchContent() {
                         setShowQuartierDropdown(false);
                         updateURL({ quartier: quartier.name, commune: quartier.commune });
                       }}
-                      className="w-full px-4 py-3 text-left hover:bg-neutral-50 dark:hover:bg-dark-border transition-colors flex items-center gap-3"
+                      className="w-full px-4 py-3 text-left hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors flex items-center gap-3"
                     >
                       <MapPin className="w-4 h-4 text-neutral-400" />
                       <div>
@@ -700,101 +724,17 @@ function SearchContent() {
             )}
           </div>
 
-          {/* Transaction Type Toggle */}
-          <div className="flex gap-2 mb-4 overflow-x-auto scrollbar-hide">
-            {[
-              { value: 'all', color: 'primary' },
-              { value: 'LOCATION', color: 'blue' },
-              { value: 'LOCATION_COURTE', color: 'purple' },
-              { value: 'VENTE', color: 'green' },
-            ].map((option) => (
-              <button
-                key={option.value}
-                onClick={() => {
-                  setTransactionType(option.value as typeof transactionType);
-                  updateURL({ type_transaction: option.value === 'all' ? null : option.value });
-                }}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
-                  transactionType === option.value
-                    ? option.color === 'purple'
-                      ? 'bg-purple-500 text-white'
-                      : option.color === 'blue'
-                      ? 'bg-blue-500 text-white'
-                      : option.color === 'green'
-                      ? 'bg-green-500 text-white'
-                      : 'bg-primary-500 text-white'
-                    : 'bg-neutral-100 dark:bg-dark-bg text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-dark-border'
-                }`}
-              >
-                {t(`transactionTypes.${option.value}`)}
-              </button>
-            ))}
-          </div>
-
-          {/* Quick Filters - Property Types */}
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {propertyTypes.map((type) => (
-              <FilterChip
-                key={type}
-                label={type === 'Tous' ? t('propertyTypes.all') : t(`propertyTypes.${type}`) || type}
-                isActive={selectedType === type}
-                onClick={() => {
-                  setSelectedType(type);
-                  updateURL({ type_bien: type === 'Tous' ? null : type });
-                }}
-              />
-            ))}
-          </div>
         </div>
+      </div>
 
-        {/* Extended Filters */}
-        <AnimatePresence>
-          {showFilters && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="border-t border-neutral-200 dark:border-dark-border overflow-hidden"
-            >
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-4">
-                {/* Commune */}
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                    {t('commune')}
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {quartiersWithTous.map((commune) => (
-                      <FilterChip
-                        key={commune}
-                        label={commune}
-                        isActive={selectedCommune === commune}
-                        onClick={() => {
-                          setSelectedCommune(commune);
-                          updateURL({ commune: commune === 'Tous' ? null : commune });
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Price Range */}
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                    {t('budget')}
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {priceRangeKeys.map((key, index) => (
-                      <FilterChip
-                        key={key}
-                        label={t(`priceRanges.${key}`)}
-                        isActive={selectedPriceRange === index}
-                        onClick={() => setSelectedPriceRange(index)}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Reset Filters */}
+      {/* Shell: sidebar filters + results */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="grid lg:grid-cols-[280px_1fr] gap-6 items-start">
+          {/* SIDEBAR FILTERS */}
+          <aside className={`${showFilters ? 'block' : 'hidden'} lg:block lg:sticky lg:top-32`}>
+            <div className="bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-2xl overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3.5 border-b border-neutral-200 dark:border-dark-border">
+                <h2 className="font-semibold text-neutral-900 dark:text-white">{t('filters')}</h2>
                 {activeFiltersCount > 0 && (
                   <button
                     onClick={() => {
@@ -806,67 +746,139 @@ function SearchContent() {
                       setSearchQuery('');
                       router.push('/recherche');
                     }}
-                    className="text-primary-500 text-sm font-medium"
+                    className="text-sm font-semibold text-primary-600 dark:text-primary-400"
                   >
                     {t('resetFilters')}
                   </button>
                 )}
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
 
-      {/* Results */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Results Header */}
-        <div className="flex items-center justify-between mb-6">
-          <p className="text-neutral-600 dark:text-neutral-400">
-            <span className="font-semibold text-neutral-900 dark:text-white">{pagination.total}</span> {t('resultsFound')}
-          </p>
+              {/* Transaction */}
+              <div className="px-4 py-4 border-b border-neutral-200 dark:border-dark-border">
+                <div className="text-[11px] font-semibold tracking-wider uppercase text-neutral-400 mb-2.5">{t('transaction')}</div>
+                <div className="flex flex-wrap gap-2">
+                  {['all', 'LOCATION', 'LOCATION_COURTE', 'VENTE'].map((value) => (
+                    <button
+                      key={value}
+                      onClick={() => {
+                        setTransactionType(value as typeof transactionType);
+                        updateURL({ type_transaction: value === 'all' ? null : value });
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                        transactionType === value
+                          ? 'bg-primary-500 text-white'
+                          : 'bg-neutral-100 dark:bg-dark-hover text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-dark-border'
+                      }`}
+                    >
+                      {t(`transactionTypes.${value}`)}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-          <div className="flex items-center gap-3">
-            {/* Sort */}
-            <div className="relative">
-              <select
-                value={selectedSort}
-                onChange={(e) => setSelectedSort(e.target.value)}
-                className="appearance-none pl-3 pr-8 py-2 bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-xl text-sm focus:ring-2 focus:ring-primary-500 dark:text-white"
-              >
-                {sortOptionKeys.map((key, index) => (
-                  <option key={sortOptionValues[index]} value={sortOptionValues[index]}>
-                    {t(`sortOptions.${key}`)}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
+              {/* Property type */}
+              <div className="px-4 py-4 border-b border-neutral-200 dark:border-dark-border">
+                <div className="text-[11px] font-semibold tracking-wider uppercase text-neutral-400 mb-2.5">{t('propertyType')}</div>
+                <div className="flex flex-wrap gap-2">
+                  {propertyTypes.map((type) => (
+                    <FilterChip
+                      key={type}
+                      label={type === 'Tous' ? t('propertyTypes.all') : t(`propertyTypes.${type}`) || type}
+                      isActive={selectedType === type}
+                      onClick={() => {
+                        setSelectedType(type);
+                        updateURL({ type_bien: type === 'Tous' ? null : type });
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Commune */}
+              <div className="px-4 py-4 border-b border-neutral-200 dark:border-dark-border">
+                <div className="text-[11px] font-semibold tracking-wider uppercase text-neutral-400 mb-2.5">{t('commune')}</div>
+                <div className="flex flex-wrap gap-2">
+                  {quartiersWithTous.map((commune) => (
+                    <FilterChip
+                      key={commune}
+                      label={commune}
+                      isActive={selectedCommune === commune}
+                      onClick={() => {
+                        setSelectedCommune(commune);
+                        updateURL({ commune: commune === 'Tous' ? null : commune });
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Budget */}
+              <div className="px-4 py-4">
+                <div className="text-[11px] font-semibold tracking-wider uppercase text-neutral-400 mb-2.5">{t('budget')}</div>
+                <div className="flex flex-wrap gap-2">
+                  {priceRangeKeys.map((key, index) => (
+                    <FilterChip
+                      key={key}
+                      label={t(`priceRanges.${key}`)}
+                      isActive={selectedPriceRange === index}
+                      onClick={() => setSelectedPriceRange(index)}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
+          </aside>
 
-            {/* View Toggle */}
-            <div className="hidden sm:flex items-center bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-lg p-1">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-md transition-colors ${
-                  viewMode === 'grid'
-                    ? 'bg-primary-500 text-white'
-                    : 'text-neutral-500 hover:text-neutral-700'
-                }`}
-              >
-                <Grid3X3 className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded-md transition-colors ${
-                  viewMode === 'list'
-                    ? 'bg-primary-500 text-white'
-                    : 'text-neutral-500 hover:text-neutral-700'
-                }`}
-              >
-                <List className="w-4 h-4" />
-              </button>
+          {/* RESULTS COLUMN */}
+          <div>
+            {/* Toolbar */}
+            <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
+              <p className="text-neutral-600 dark:text-neutral-400">
+                <span className="font-semibold text-neutral-900 dark:text-white tabular-nums">{pagination.total}</span> {t('resultsFound')}
+              </p>
+
+              <div className="flex items-center gap-3">
+                {/* Sort */}
+                <div className="relative">
+                  <select
+                    value={selectedSort}
+                    onChange={(e) => setSelectedSort(e.target.value)}
+                    className="appearance-none pl-3 pr-8 py-2 bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-xl text-sm focus:ring-2 focus:ring-primary-500 dark:text-white"
+                  >
+                    {sortOptionKeys.map((key, index) => (
+                      <option key={sortOptionValues[index]} value={sortOptionValues[index]}>
+                        {t(`sortOptions.${key}`)}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
+                </div>
+
+                {/* View Toggle */}
+                <div className="hidden sm:flex items-center bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-lg p-1">
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    className={`p-2 rounded-md transition-colors ${
+                      viewMode === 'grid'
+                        ? 'bg-primary-500 text-white'
+                        : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'
+                    }`}
+                  >
+                    <Grid3X3 className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`p-2 rounded-md transition-colors ${
+                      viewMode === 'list'
+                        ? 'bg-primary-500 text-white'
+                        : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'
+                    }`}
+                  >
+                    <List className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
         {/* Loading state */}
         {isLoading && (
@@ -878,7 +890,7 @@ function SearchContent() {
         {/* Error state */}
         {error && (
           <div className="text-center py-16">
-            <p className="text-red-500">{t('loadingError')}</p>
+            <p className="text-error-500">{t('loadingError')}</p>
           </div>
         )}
 
@@ -926,7 +938,7 @@ function SearchContent() {
                         <div>
                           <div className="border-t border-neutral-200 dark:border-dark-border my-6" />
                           <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4 flex items-center gap-2">
-                            <Sparkles className="w-5 h-5 text-amber-500" />
+                            <Sparkles className="w-5 h-5 text-warning-500" />
                             {t('nearbyQuartiers')}
                             <span className="text-sm font-normal text-neutral-500">({nearbyListings.length})</span>
                           </h2>
@@ -946,8 +958,8 @@ function SearchContent() {
 
                       {/* No exact matches but has nearby */}
                       {exactListings.length === 0 && nearbyListings.length > 0 && (
-                        <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl">
-                          <p className="text-amber-800 dark:text-amber-200 text-sm">
+                        <div className="mb-4 p-4 bg-warning-50 dark:bg-warning-500/10 border border-warning-200 dark:border-warning-500/20 rounded-xl">
+                          <p className="text-warning-800 dark:text-warning-200 text-sm">
                             {t('noExactMatch').replace('{quartier}', selectedQuartier)}
                           </p>
                         </div>
@@ -1024,6 +1036,8 @@ function SearchContent() {
             </button>
           </div>
         )}
+          </div>
+        </div>
       </div>
     </div>
   );

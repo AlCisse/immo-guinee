@@ -94,7 +94,7 @@ export default function ContractSignaturePage() {
   const params = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const contractId = params.id as string;
+  const contractId = (params?.id ?? '') as string;
 
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [showClausesModal, setShowClausesModal] = useState(false);
@@ -185,13 +185,13 @@ export default function ContractSignaturePage() {
   if (error || !contract) {
     return (
       <div className="mx-auto max-w-2xl py-12 text-center">
-        <div className="mb-6 flex h-16 w-16 mx-auto items-center justify-center rounded-full bg-red-100">
-          <svg className="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="mb-6 flex h-16 w-16 mx-auto items-center justify-center rounded-full bg-error-100">
+          <svg className="h-8 w-8 text-error-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">Contrat introuvable</h1>
-        <p className="mt-2 text-gray-600">
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">Contrat introuvable</h1>
+        <p className="mt-2 text-neutral-600 dark:text-neutral-400">
           Le contrat demandé n&apos;existe pas ou vous n&apos;avez pas accès.
         </p>
         <div className="mt-8">
@@ -209,15 +209,15 @@ export default function ContractSignaturePage() {
       <div className="mb-8">
         <Link
           href="/dashboard/mes-contrats"
-          className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
+          className="inline-flex items-center text-sm text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300"
         >
           <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Retour à mes contrats
         </Link>
-        <h1 className="mt-4 text-2xl font-bold text-gray-900">Signer le contrat</h1>
-        <p className="mt-2 text-gray-600">
+        <h1 className="mt-4 text-2xl font-bold text-neutral-900 dark:text-white">Signer le contrat</h1>
+        <p className="mt-2 text-neutral-600 dark:text-neutral-400">
           Référence: <span className="font-medium">{contract.reference}</span>
         </p>
       </div>
@@ -226,39 +226,39 @@ export default function ContractSignaturePage() {
         {/* Main content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Contract summary */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className="rounded-lg border border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
               Détails du contrat
             </h2>
 
             <dl className="space-y-3">
               <div className="flex justify-between">
-                <dt className="text-gray-600">Type de contrat</dt>
-                <dd className="font-medium text-gray-900">
+                <dt className="text-neutral-600 dark:text-neutral-400">Type de contrat</dt>
+                <dd className="font-medium text-neutral-900 dark:text-white">
                   {getContractTypeLabel(contract.type_contrat)}
                 </dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-600">Bien concerné</dt>
-                <dd className="font-medium text-gray-900">
+                <dt className="text-neutral-600 dark:text-neutral-400">Bien concerné</dt>
+                <dd className="font-medium text-neutral-900 dark:text-white">
                   {contract.listing?.titre || 'N/A'}
                 </dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-600">Quartier</dt>
-                <dd className="font-medium text-gray-900">
+                <dt className="text-neutral-600 dark:text-neutral-400">Quartier</dt>
+                <dd className="font-medium text-neutral-900 dark:text-white">
                   {contract.listing?.quartier || 'N/A'}
                 </dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-600">Loyer mensuel</dt>
+                <dt className="text-neutral-600 dark:text-neutral-400">Loyer mensuel</dt>
                 <dd className="font-medium text-primary-600">
                   {contract.loyer_mensuel?.toLocaleString('fr-GN')} GNF
                 </dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-600">Période</dt>
-                <dd className="font-medium text-gray-900">
+                <dt className="text-neutral-600 dark:text-neutral-400">Période</dt>
+                <dd className="font-medium text-neutral-900 dark:text-white">
                   {new Date(contract.date_debut).toLocaleDateString('fr-FR')} -{' '}
                   {new Date(contract.date_fin).toLocaleDateString('fr-FR')}
                 </dd>
@@ -278,8 +278,8 @@ export default function ContractSignaturePage() {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Signature status */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className="rounded-lg border border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card p-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
               Statut des signatures
             </h3>
 
@@ -288,25 +288,25 @@ export default function ContractSignaturePage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   {contract.bailleur_signed_at ? (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100">
-                      <svg className="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-success-100">
+                      <svg className="h-5 w-5 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
                   ) : (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
-                      <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-100 dark:bg-dark-hover">
+                      <svg className="h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
                   )}
                   <div className="ml-3">
-                    <p className="font-medium text-gray-900">Propriétaire</p>
-                    <p className="text-sm text-gray-500">{contract.proprietaire.nom_complet}</p>
+                    <p className="font-medium text-neutral-900 dark:text-white">Propriétaire</p>
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400">{contract.proprietaire.nom_complet}</p>
                   </div>
                 </div>
                 {contract.bailleur_signed_at && (
-                  <span className="text-sm text-green-600">Signé</span>
+                  <span className="text-sm text-success-600">Signé</span>
                 )}
               </div>
 
@@ -314,25 +314,25 @@ export default function ContractSignaturePage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   {contract.locataire_signed_at ? (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100">
-                      <svg className="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-success-100">
+                      <svg className="h-5 w-5 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
                   ) : (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
-                      <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-100 dark:bg-dark-hover">
+                      <svg className="h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
                   )}
                   <div className="ml-3">
-                    <p className="font-medium text-gray-900">Locataire</p>
-                    <p className="text-sm text-gray-500">{contract.locataire.nom_complet}</p>
+                    <p className="font-medium text-neutral-900 dark:text-white">Locataire</p>
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400">{contract.locataire.nom_complet}</p>
                   </div>
                 </div>
                 {contract.locataire_signed_at && (
-                  <span className="text-sm text-green-600">Signé</span>
+                  <span className="text-sm text-success-600">Signé</span>
                 )}
               </div>
             </div>
@@ -349,10 +349,10 @@ export default function ContractSignaturePage() {
           {/* Sign button */}
           {!hasUserSigned && userRole && (
             <div className="rounded-lg border border-primary-200 bg-primary-50 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-2">
                 Prêt à signer ?
               </h3>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
                 En signant ce contrat, vous acceptez les conditions décrites dans le document.
                 Un code OTP sera envoyé à votre téléphone pour valider votre signature.
               </p>
@@ -382,16 +382,16 @@ export default function ContractSignaturePage() {
 
           {/* Already signed message */}
           {hasUserSigned && (
-            <div className="rounded-lg border border-green-200 bg-green-50 p-6">
+            <div className="rounded-lg border border-success-200 bg-success-50 p-6">
               <div className="flex items-center">
-                <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-6 w-6 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <h3 className="ml-2 text-lg font-semibold text-green-800">
+                <h3 className="ml-2 text-lg font-semibold text-success-800">
                   Vous avez signé
                 </h3>
               </div>
-              <p className="mt-2 text-sm text-green-700">
+              <p className="mt-2 text-sm text-success-700">
                 Votre signature a été enregistrée. {!isBothSigned && "En attente de l'autre partie."}
               </p>
             </div>
@@ -419,8 +419,8 @@ export default function ContractSignaturePage() {
           )}
 
           {/* Legal notice */}
-          <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-            <p className="text-sm text-yellow-800">
+          <div className="rounded-lg border border-warning-200 bg-warning-50 p-4">
+            <p className="text-sm text-warning-800">
               <strong>Important:</strong> La signature électronique est conforme à la Loi L/2016/037/AN.
               Une fois signé par les deux parties, le contrat est archivé de manière sécurisée pendant 10 ans.
             </p>

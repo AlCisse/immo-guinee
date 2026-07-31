@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import type { SearchFiltersState } from '@/components/listings/SearchFilters';
 import type { Listing } from '@/components/listings/ListingCard';
 
@@ -36,10 +36,52 @@ export interface SearchParams extends SearchFiltersState {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
+// Request timeout (ms). On 2G/3G a stalled request would otherwise hang the UI
+// indefinitely (fetch has no built-in timeout). 20s is long enough for a slow
+// search response but short enough that the user gets feedback (retry) instead
+// of an infinite spinner.
+const SEARCH_TIMEOUT_MS = 20_000;
+const MUTATION_TIMEOUT_MS = 30_000;
+
+/**
+ * Fetch with a request timeout + React Query abort propagation.
+ *
+ * Combines the upstream `AbortSignal` (provided by React Query's `queryFn` so it
+ * can cancel in-flight requests when the user changes filters / unmounts) with a
+ * bounded timeout. The fetch aborts when EITHER fires:
+ *   - the upstream signal aborts (RQ cancellation) → throws an AbortError that RQ
+ *     treats as a cancellation (no retry);
+ *   - the timeout elapses (stalled connection) → throws an AbortError that RQ
+ *     retries (network-style failure), so a flaky 2G request gets a second chance.
+ *
+ * The timeout timer is always cleared when the fetch settles (no lingering timer).
+ */
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+  upstream: AbortSignal | undefined,
+  timeoutMs: number,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  if (upstream) {
+    if (upstream.aborted) {
+      clearTimeout(timer);
+      throw new DOMException('Aborted', 'AbortError');
+    }
+    upstream.addEventListener('abort', () => controller.abort(), { once: true });
+  }
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 /**
  * Fetch listings with search filters and pagination
  */
-async function fetchListings(params: SearchParams): Promise<ListingsSearchResponse> {
+async function fetchListings(params: SearchParams, signal?: AbortSignal): Promise<ListingsSearchResponse> {
   const queryParams = new URLSearchParams();
 
   // Pagination
@@ -75,14 +117,19 @@ async function fetchListings(params: SearchParams): Promise<ListingsSearchRespon
 
   const url = `${API_BASE_URL}/listings/search?${queryParams.toString()}`;
 
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
+  const response = await fetchWithTimeout(
+    url,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      credentials: 'include',
     },
-    credentials: 'include',
-  });
+    signal,
+    SEARCH_TIMEOUT_MS,
+  );
 
   if (!response.ok) {
     throw new Error(`Failed to fetch listings: ${response.statusText}`);
@@ -113,17 +160,22 @@ async function fetchListings(params: SearchParams): Promise<ListingsSearchRespon
 /**
  * Fetch a single listing by ID
  */
-async function fetchListingById(id: string): Promise<Listing> {
+async function fetchListingById(id: string, signal?: AbortSignal): Promise<Listing> {
   const url = `${API_BASE_URL}/listings/${id}`;
 
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
+  const response = await fetchWithTimeout(
+    url,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      credentials: 'include',
     },
-    credentials: 'include',
-  });
+    signal,
+    SEARCH_TIMEOUT_MS,
+  );
 
   if (!response.ok) {
     throw new Error(`Failed to fetch listing: ${response.statusText}`);
@@ -146,10 +198,13 @@ export function useListings(params: SearchParams = {}) {
 
   return useQuery({
     queryKey: ['listings', defaultParams],
-    queryFn: () => fetchListings(defaultParams),
+    queryFn: ({ signal }) => fetchListings(defaultParams, signal),
     staleTime: 1000 * 60 * 2, // 2 minutes - FR-094 performance
     gcTime: 1000 * 60 * 10, // 10 minutes (formerly cacheTime)
     refetchOnWindowFocus: false,
+    // Stale-while-revalidate across pages: keep the previous page visible while
+    // the next one loads (no blank spinner on pagination, smooth on slow networks).
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -159,7 +214,7 @@ export function useListings(params: SearchParams = {}) {
 export function useListing(id: string) {
   return useQuery({
     queryKey: ['listing', id],
-    queryFn: () => fetchListingById(id),
+    queryFn: ({ signal }) => fetchListingById(id, signal),
     enabled: !!id,
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 15, // 15 minutes
@@ -172,11 +227,14 @@ export function useListing(id: string) {
 export function useLatestListings(limit: number = 20) {
   return useQuery({
     queryKey: ['listings', 'latest', limit],
-    queryFn: () =>
-      fetchListings({
-        perPage: limit,
-        sort: 'date_desc',
-      }),
+    queryFn: ({ signal }) =>
+      fetchListings(
+        {
+          perPage: limit,
+          sort: 'date_desc',
+        },
+        signal,
+      ),
     staleTime: 1000 * 60 * 1, // 1 minute for homepage freshness
     gcTime: 1000 * 60 * 5,
   });
@@ -184,23 +242,30 @@ export function useLatestListings(limit: number = 20) {
 
 /**
  * Hook for creating a new listing (authenticated)
+ *
+ * Auth is carried by the HttpOnly `access_token` cookie (`credentials: 'include'`);
+ * no Bearer token is read from localStorage — that legacy key is always empty
+ * since the cookie migration, so the previous `Authorization: Bearer null` header
+ * was dead and confusing.
  */
 export function useCreateListing() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (formData: FormData) => {
-      const token = localStorage.getItem('auth_token');
-
-      const response = await fetch(`${API_BASE_URL}/listings`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/json',
+      const response = await fetchWithTimeout(
+        `${API_BASE_URL}/listings`,
+        {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+          },
+          body: formData, // Send as FormData for file uploads
+          credentials: 'include',
         },
-        body: formData, // Send as FormData for file uploads
-        credentials: 'include',
-      });
+        undefined,
+        MUTATION_TIMEOUT_MS,
+      );
 
       if (!response.ok) {
         const error = await response.json();
@@ -222,14 +287,19 @@ export function useCreateListing() {
 export function useIncrementListingView() {
   return useMutation({
     mutationFn: async (listingId: string) => {
-      const response = await fetch(`${API_BASE_URL}/listings/${listingId}/view`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
+      const response = await fetchWithTimeout(
+        `${API_BASE_URL}/listings/${listingId}/view`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          credentials: 'include',
         },
-        credentials: 'include',
-      });
+        undefined,
+        SEARCH_TIMEOUT_MS,
+      );
 
       if (!response.ok) {
         throw new Error('Failed to increment view count');

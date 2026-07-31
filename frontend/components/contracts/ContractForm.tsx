@@ -175,7 +175,7 @@ export default function ContractForm({
                     'flex h-10 w-10 items-center justify-center rounded-full font-semibold',
                     currentStep >= step.id
                       ? 'bg-primary-600 text-white'
-                      : 'bg-gray-200 text-gray-600'
+                      : 'bg-neutral-200 text-neutral-600 dark:text-neutral-400'
                   )}
                 >
                   {currentStep > step.id ? (
@@ -187,14 +187,14 @@ export default function ContractForm({
                   )}
                 </span>
                 <div className="ml-3 hidden sm:block">
-                  <p className={cn('text-sm font-medium', currentStep >= step.id ? 'text-primary-600' : 'text-gray-500')}>
+                  <p className={cn('text-sm font-medium', currentStep >= step.id ? 'text-primary-600' : 'text-neutral-500')}>
                     {step.title}
                   </p>
-                  <p className="text-xs text-gray-400">{step.description}</p>
+                  <p className="text-xs text-neutral-400">{step.description}</p>
                 </div>
               </div>
               {index < steps.length - 1 && (
-                <div className={cn('mx-4 h-0.5 w-12 sm:w-24', currentStep > step.id ? 'bg-primary-600' : 'bg-gray-200')} />
+                <div className={cn('mx-4 h-0.5 w-12 sm:w-24', currentStep > step.id ? 'bg-primary-600' : 'bg-neutral-200')} />
               )}
             </li>
           ))}
@@ -213,7 +213,7 @@ export default function ContractForm({
               listingType={listingType}
             />
             {errors.type_contrat && (
-              <p className="mt-2 text-sm text-red-600">{errors.type_contrat.message}</p>
+              <p className="mt-2 text-sm text-error-600">{errors.type_contrat.message}</p>
             )}
           </div>
         )}
@@ -221,7 +221,7 @@ export default function ContractForm({
         {/* Step 2: Conditions */}
         {currentStep === 2 && (
           <div className="animate-fade-in space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900">Conditions du contrat</h3>
+            <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">Conditions du contrat</h3>
 
             <Input
               label="Date de début"
@@ -232,34 +232,34 @@ export default function ContractForm({
 
             {/* Mode de durée */}
             <div className="space-y-4">
-              <label className="block text-sm font-medium text-gray-700">Durée du contrat</label>
+              <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">Durée du contrat</label>
               <div className="flex flex-wrap gap-4">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
                     value="duree_mois"
                     {...register('mode_duree')}
-                    className="h-4 w-4 border-gray-300 text-primary-600 focus:ring-primary-500"
+                    className="h-4 w-4 border-neutral-300 dark:border-dark-border text-primary-600 focus:ring-primary-500"
                   />
-                  <span className="text-sm text-gray-700">Durée en mois</span>
+                  <span className="text-sm text-neutral-700 dark:text-neutral-300">Durée en mois</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
                     value="date_fin"
                     {...register('mode_duree')}
-                    className="h-4 w-4 border-gray-300 text-primary-600 focus:ring-primary-500"
+                    className="h-4 w-4 border-neutral-300 dark:border-dark-border text-primary-600 focus:ring-primary-500"
                   />
-                  <span className="text-sm text-gray-700">Date de fin</span>
+                  <span className="text-sm text-neutral-700 dark:text-neutral-300">Date de fin</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
                     value="indeterminee"
                     {...register('mode_duree')}
-                    className="h-4 w-4 border-gray-300 text-primary-600 focus:ring-primary-500"
+                    className="h-4 w-4 border-neutral-300 dark:border-dark-border text-primary-600 focus:ring-primary-500"
                   />
-                  <span className="text-sm text-gray-700">Durée indéterminée</span>
+                  <span className="text-sm text-neutral-700 dark:text-neutral-300">Durée indéterminée</span>
                 </label>
               </div>
 
@@ -287,7 +287,7 @@ export default function ContractForm({
               )}
 
               {watchedValues.mode_duree === 'indeterminee' && (
-                <p className="text-sm text-gray-500 italic">
+                <p className="text-sm text-neutral-500 italic">
                   Le contrat sera à durée indéterminée avec un préavis de résiliation selon la loi.
                 </p>
               )}
@@ -330,19 +330,19 @@ export default function ContractForm({
         {/* Step 3: Summary */}
         {currentStep === 3 && (
           <div className="animate-fade-in space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900">Récapitulatif</h3>
+            <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">Récapitulatif</h3>
 
-            <div className="rounded-lg border border-gray-200 bg-gray-50 p-6">
+            <div className="rounded-lg border border-neutral-200 dark:border-dark-border bg-neutral-50 dark:bg-dark-bg p-6">
               <dl className="space-y-4">
                 <div className="flex justify-between">
-                  <dt className="text-gray-600">Type de contrat</dt>
-                  <dd className="font-medium text-gray-900">
+                  <dt className="text-neutral-600 dark:text-neutral-400">Type de contrat</dt>
+                  <dd className="font-medium text-neutral-900 dark:text-white">
                     {selectedType === 'location' ? 'Contrat de Location' : 'Contrat de Vente'}
                   </dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-gray-600">Période</dt>
-                  <dd className="font-medium text-gray-900">
+                  <dt className="text-neutral-600 dark:text-neutral-400">Période</dt>
+                  <dd className="font-medium text-neutral-900 dark:text-white">
                     {watchedValues.mode_duree === 'indeterminee'
                       ? `À partir du ${watchedValues.date_debut} (Durée indéterminée)`
                       : watchedValues.mode_duree === 'date_fin'
@@ -351,34 +351,34 @@ export default function ContractForm({
                   </dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-gray-600">Loyer mensuel</dt>
-                  <dd className="font-medium text-gray-900">
+                  <dt className="text-neutral-600 dark:text-neutral-400">Loyer mensuel</dt>
+                  <dd className="font-medium text-neutral-900 dark:text-white">
                     {loyer.toLocaleString('fr-GN')} GNF
                   </dd>
                 </div>
-                <div className="border-t border-gray-200 pt-4">
+                <div className="border-t border-neutral-200 dark:border-dark-border pt-4">
                   <div className="flex justify-between">
-                    <dt className="text-gray-600">Caution ({watchedValues.caution_mois} mois)</dt>
-                    <dd className="text-gray-900">{caution.toLocaleString('fr-GN')} GNF</dd>
+                    <dt className="text-neutral-600 dark:text-neutral-400">Caution ({watchedValues.caution_mois} mois)</dt>
+                    <dd className="text-neutral-900 dark:text-white">{caution.toLocaleString('fr-GN')} GNF</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-gray-600">Avance ({watchedValues.avance_mois} mois)</dt>
-                    <dd className="text-gray-900">{avance.toLocaleString('fr-GN')} GNF</dd>
+                    <dt className="text-neutral-600 dark:text-neutral-400">Avance ({watchedValues.avance_mois} mois)</dt>
+                    <dd className="text-neutral-900 dark:text-white">{avance.toLocaleString('fr-GN')} GNF</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-gray-600">Commission ImmoGuinée (50%)</dt>
-                    <dd className="text-gray-900">{commission.toLocaleString('fr-GN')} GNF</dd>
+                    <dt className="text-neutral-600 dark:text-neutral-400">Commission ImmoGuinée (50%)</dt>
+                    <dd className="text-neutral-900 dark:text-white">{commission.toLocaleString('fr-GN')} GNF</dd>
                   </div>
                 </div>
-                <div className="flex justify-between border-t border-gray-200 pt-4 text-lg font-bold">
-                  <dt className="text-gray-900">Total à payer</dt>
+                <div className="flex justify-between border-t border-neutral-200 dark:border-dark-border pt-4 text-lg font-bold">
+                  <dt className="text-neutral-900 dark:text-white">Total à payer</dt>
                   <dd className="text-primary-600">{total.toLocaleString('fr-GN')} GNF</dd>
                 </div>
               </dl>
             </div>
 
-            <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-              <p className="text-sm text-yellow-800">
+            <div className="rounded-lg border border-warning-200 bg-warning-50 p-4">
+              <p className="text-sm text-warning-800">
                 <strong>Important:</strong> En cliquant sur &quot;Générer le contrat&quot;, vous acceptez
                 les conditions générales d&apos;utilisation d&apos;ImmoGuinée. Le contrat sera envoyé
                 aux deux parties pour signature électronique.
@@ -387,9 +387,9 @@ export default function ContractForm({
 
             {/* Display validation errors */}
             {Object.keys(errors).length > 0 && (
-              <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4">
-                <p className="text-sm font-medium text-red-800 mb-2">Erreurs de validation:</p>
-                <ul className="text-sm text-red-600 list-disc list-inside">
+              <div className="mt-4 rounded-lg border border-error-200 bg-error-50 p-4">
+                <p className="text-sm font-medium text-error-800 mb-2">Erreurs de validation:</p>
+                <ul className="text-sm text-error-600 list-disc list-inside">
                   {Object.entries(errors).map(([field, error]) => (
                     <li key={field}><strong>{field}:</strong> {error?.message as string}</li>
                   ))}

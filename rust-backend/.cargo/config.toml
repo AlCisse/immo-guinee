@@ -1,0 +1,15 @@
+# Local cargo build configuration (committed; safe for CI too).
+# See rust-backend README "Accélérer la compile".
+
+[build]
+# sccache caches rustc invocations (by hashing compiler + inputs + flags). First
+# compile populates the cache; later cold compiles (cargo clean, branch switches,
+# CI) hit the cache instead of recompiling deps. Install: `brew install sccache`.
+# Disable temporarily with `RUSTC_WRAPPER=` if you suspect a cache bug.
+rustc-wrapper = "sccache"
+# Overlap dependency compilation with the current crate (modest speedup).
+pipelining = true
+# Cap parallel rustc jobs. Default = CPU core count (fastest, but high peak memory).
+# 4 keeps the spike low on RAM-constrained machines. Raise (or comment out) on a
+# machine with plenty of RAM to compile faster. Override anytime with `--jobs N`.
+jobs = 4

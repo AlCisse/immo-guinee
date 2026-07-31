@@ -264,7 +264,7 @@ export default function AnnoncesPage() {
                           key={idx}
                           className={clsx(
                             'w-2 h-2 rounded-full transition-colors',
-                            idx === currentPhotoIndex ? 'bg-white' : 'bg-white/50'
+                            idx === currentPhotoIndex ? 'bg-white dark:bg-dark-card' : 'bg-white/50'
                           )}
                         />
                       ))}

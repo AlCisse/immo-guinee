@@ -1,6 +1,5 @@
-'use client';
-
 import { clsx } from 'clsx';
+import { palette } from '@/lib/colors';
 
 interface BadgeDisplayProps {
   badge: string;
@@ -16,56 +15,56 @@ const BADGE_CONFIG = {
     label: 'Bronze',
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="h-full w-full">
-        <circle cx="12" cy="12" r="10" fill="#CD7F32" />
+        <circle cx="12" cy="12" r="10" fill={palette.primary[500]} />
         <text x="12" y="16" textAnchor="middle" fontSize="8" fill="white" fontWeight="bold">B</text>
       </svg>
     ),
-    gradient: 'from-amber-600 to-amber-800',
-    textColor: 'text-amber-700',
-    bgColor: 'bg-amber-100',
-    borderColor: 'border-amber-300',
+    gradient: 'from-primary-500 to-primary-700',
+    textColor: 'text-primary-700',
+    bgColor: 'bg-primary-100',
+    borderColor: 'border-primary-300',
     discount: 0,
   },
   ARGENT: {
     label: 'Argent',
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="h-full w-full">
-        <circle cx="12" cy="12" r="10" fill="#C0C0C0" />
+        <circle cx="12" cy="12" r="10" fill={palette.neutral[400]} />
         <text x="12" y="16" textAnchor="middle" fontSize="8" fill="white" fontWeight="bold">A</text>
       </svg>
     ),
-    gradient: 'from-gray-400 to-gray-600',
-    textColor: 'text-gray-600',
-    bgColor: 'bg-gray-100',
-    borderColor: 'border-gray-300',
+    gradient: 'from-neutral-400 to-neutral-600',
+    textColor: 'text-neutral-600 dark:text-neutral-400',
+    bgColor: 'bg-neutral-100 dark:bg-dark-hover',
+    borderColor: 'border-neutral-300 dark:border-dark-border',
     discount: 5,
   },
   OR: {
     label: 'Or',
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="h-full w-full">
-        <circle cx="12" cy="12" r="10" fill="#FFD700" />
-        <text x="12" y="16" textAnchor="middle" fontSize="8" fill="#8B6914" fontWeight="bold">O</text>
+        <circle cx="12" cy="12" r="10" fill={palette.warning[400]} />
+        <text x="12" y="16" textAnchor="middle" fontSize="8" fill={palette.warning[800]} fontWeight="bold">O</text>
       </svg>
     ),
-    gradient: 'from-yellow-400 to-yellow-600',
-    textColor: 'text-yellow-700',
-    bgColor: 'bg-yellow-100',
-    borderColor: 'border-yellow-300',
+    gradient: 'from-warning-400 to-warning-600',
+    textColor: 'text-warning-700',
+    bgColor: 'bg-warning-100',
+    borderColor: 'border-warning-300',
     discount: 10,
   },
   DIAMANT: {
     label: 'Diamant',
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="h-full w-full">
-        <polygon points="12,2 22,9 12,22 2,9" fill="#B9F2FF" stroke="#00BFFF" strokeWidth="1" />
-        <polygon points="12,2 17,9 12,16 7,9" fill="#00BFFF" opacity="0.7" />
+        <polygon points="12,2 22,9 12,22 2,9" fill={palette.teal[200]} stroke={palette.teal[500]} strokeWidth="1" />
+        <polygon points="12,2 17,9 12,16 7,9" fill={palette.teal[500]} opacity="0.7" />
       </svg>
     ),
-    gradient: 'from-blue-400 to-cyan-500',
-    textColor: 'text-blue-600',
-    bgColor: 'bg-blue-100',
-    borderColor: 'border-blue-300',
+    gradient: 'from-teal-400 to-teal-600',
+    textColor: 'text-teal-700',
+    bgColor: 'bg-teal-100',
+    borderColor: 'border-teal-300',
     discount: 15,
   },
 };
@@ -125,7 +124,7 @@ export default function BadgeDisplay({
             </span>
           )}
           {showDiscount && badgeConfig.discount > 0 && (
-            <span className={clsx('text-green-600 font-medium', sizeConfig.discount)}>
+            <span className={clsx('text-success-600 font-medium', sizeConfig.discount)}>
               -{badgeConfig.discount}% commission
             </span>
           )}

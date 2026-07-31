@@ -6,7 +6,10 @@
 # Example: ./restore-minio.sh listings
 # ===============================================
 
-set -e
+# C9 — fail-fast strict (POSIX sh : pas de pipefail). -u sûr car BUCKET a une
+# valeur par défaut (${1:-"all"}) et tous les secrets sont lus via
+# `$(cat … || echo "")` puis validés par -z.
+set -eu
 
 LOG_PREFIX="[$(date '+%Y-%m-%d %H:%M:%S')] [RESTORE-MINIO]"
 

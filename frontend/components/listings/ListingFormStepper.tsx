@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useState, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
@@ -45,10 +46,31 @@ import {
   FileText,
 } from 'lucide-react';
 import TypeBienSelector, { type TypeBien } from './TypeBienSelector';
-import LocationSelector from './LocationSelector';
 import PhotoUploader, { type PhotoFile } from './PhotoUploader';
 import { api, apiClient } from '@/lib/api/client';
 import { useTranslations } from '@/lib/i18n';
+
+// P12 — LocationSelector (et ses 777 lignes de data/guinea-locations.ts) n'est
+// nécessaire qu'à l'étape 3 (Localisation). Import dynamique ssr:false → le
+// chunk ne se charge qu'à l'arrivée à l'étape 3, hors du bundle initial de
+// /publier. Squelette pendant le chargement pour éviter le saut de layout.
+function LocationSelectorSkeleton() {
+  return (
+    <div className="space-y-4 animate-pulse">
+      <div className="h-10 w-48 bg-neutral-100 dark:bg-dark-hover rounded-xl" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="h-14 bg-neutral-100 dark:bg-dark-hover rounded-xl" />
+        <div className="h-14 bg-neutral-100 dark:bg-dark-hover rounded-xl" />
+        <div className="h-14 bg-neutral-100 dark:bg-dark-hover rounded-xl" />
+      </div>
+    </div>
+  );
+}
+
+const LocationSelector = dynamic(() => import('./LocationSelector'), {
+  ssr: false,
+  loading: () => <LocationSelectorSkeleton />,
+});
 
 // Commission type from API
 interface Commission {
@@ -629,9 +651,9 @@ export default function ListingFormStepper({
             className="space-y-6"
           >
             {/* Operation Type */}
-            <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-lg border border-neutral-100 dark:border-dark-border">
+            <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-soft border border-neutral-100 dark:border-dark-border">
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-gradient-to-br from-primary-500 to-orange-500 rounded-xl shadow-lg shadow-primary-500/30">
+                <div className="p-3 bg-gradient-to-br from-primary-500 to-primary-500 rounded-xl shadow-lg shadow-primary-500/30">
                   <Key className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -651,21 +673,21 @@ export default function ListingFormStepper({
                     icon: Home,
                     title: t('operationType.rent'),
                     subtitle: t('operationType.rentDesc'),
-                    color: 'from-blue-500 to-cyan-500',
+                    color: 'from-secondary-500 to-teal-500',
                   },
                   {
                     type: 'LOCATION_COURTE' as OperationType,
                     icon: Calendar,
                     title: t('operationType.shortRent'),
                     subtitle: t('operationType.shortRentDesc'),
-                    color: 'from-purple-500 to-pink-500',
+                    color: 'from-teal-500 to-accent-500',
                   },
                   {
                     type: 'VENTE' as OperationType,
                     icon: DollarSign,
                     title: t('operationType.sell'),
                     subtitle: t('operationType.sellDesc'),
-                    color: 'from-emerald-500 to-teal-500',
+                    color: 'from-accent-500 to-teal-500',
                   },
                 ].map((option) => (
                   <motion.button
@@ -720,7 +742,7 @@ export default function ListingFormStepper({
                           animate={{ scale: 1 }}
                           className="absolute top-4 right-4"
                         >
-                          <div className="w-6 h-6 bg-gradient-to-br from-primary-500 to-orange-500 rounded-full flex items-center justify-center">
+                          <div className="w-6 h-6 bg-gradient-to-br from-primary-500 to-primary-500 rounded-full flex items-center justify-center">
                             <CheckCircle className="w-4 h-4 text-white" />
                           </div>
                         </motion.div>
@@ -731,7 +753,7 @@ export default function ListingFormStepper({
               </div>
 
               {errors.operationType && (
-                <div className="mt-4 flex items-center gap-2 text-red-500 text-sm bg-red-50 dark:bg-red-500/10 p-3 rounded-xl">
+                <div className="mt-4 flex items-center gap-2 text-error-500 text-sm bg-error-50 dark:bg-error-500/10 p-3 rounded-xl">
                   <AlertCircle className="w-4 h-4" />
                   {errors.operationType}
                 </div>
@@ -739,9 +761,9 @@ export default function ListingFormStepper({
             </div>
 
             {/* Property Type */}
-            <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-lg border border-neutral-100 dark:border-dark-border">
+            <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-soft border border-neutral-100 dark:border-dark-border">
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl shadow-lg shadow-purple-500/30">
+                <div className="p-3 bg-gradient-to-br from-teal-500 to-accent-500 rounded-xl shadow-lg shadow-teal-500/30">
                   <Building2 className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -779,10 +801,10 @@ export default function ListingFormStepper({
             className="space-y-6"
           >
             {/* Title & Description */}
-            <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-lg border border-neutral-100 dark:border-dark-border">
+            <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-soft border border-neutral-100 dark:border-dark-border">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl shadow-lg shadow-blue-500/30">
+                  <div className="p-3 bg-gradient-to-br from-secondary-500 to-teal-500 rounded-xl shadow-lg shadow-secondary-500/30">
                     <Sparkles className="w-5 h-5 text-white" />
                   </div>
                   <div>
@@ -802,7 +824,7 @@ export default function ListingFormStepper({
                   whileTap={{ scale: 0.98 }}
                   onClick={handleOptimize}
                   disabled={isOptimizing || (!formData.titre.trim() && !formData.description.trim())}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-violet-500 to-purple-500 text-white rounded-xl hover:from-violet-600 hover:to-purple-600 transition-all font-medium shadow-lg shadow-violet-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-teal-500 to-teal-500 text-white rounded-xl hover:from-teal-600 hover:to-teal-600 transition-all font-medium shadow-lg shadow-teal-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isOptimizing ? (
                     <>
@@ -821,7 +843,7 @@ export default function ListingFormStepper({
 
               {/* AI Optimization Error */}
               {optimizeError && (
-                <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-500/10 rounded-xl border border-amber-200 dark:border-amber-500/20 flex items-center gap-2 text-amber-700 dark:text-amber-300 text-sm">
+                <div className="mb-4 p-3 bg-warning-50 dark:bg-warning-500/10 rounded-xl border border-warning-200 dark:border-warning-500/20 flex items-center gap-2 text-warning-700 dark:text-warning-300 text-sm">
                   <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   {optimizeError}
                 </div>
@@ -832,25 +854,25 @@ export default function ListingFormStepper({
                 <motion.button
                   type="button"
                   onClick={() => setShowSeoGuide(!showSeoGuide)}
-                  className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-500/10 dark:to-teal-500/10 rounded-xl border border-emerald-200 dark:border-emerald-500/20 hover:from-emerald-100 hover:to-teal-100 dark:hover:from-emerald-500/20 dark:hover:to-teal-500/20 transition-all"
+                  className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-accent-50 to-teal-50 dark:from-accent-500/10 dark:to-teal-500/10 rounded-xl border border-accent-200 dark:border-accent-500/20 hover:from-accent-100 hover:to-teal-100 dark:hover:from-accent-500/20 dark:hover:to-teal-500/20 transition-all"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-emerald-500 rounded-lg">
+                    <div className="p-2 bg-accent-500 rounded-lg">
                       <Lightbulb className="w-4 h-4 text-white" />
                     </div>
                     <div className="text-left">
-                      <p className="font-semibold text-emerald-800 dark:text-emerald-200">
+                      <p className="font-semibold text-accent-800 dark:text-accent-200">
                         {t('seoGuide.title')}
                       </p>
-                      <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                      <p className="text-xs text-accent-600 dark:text-accent-400">
                         {t('seoGuide.subtitle')}
                       </p>
                     </div>
                   </div>
                   {showSeoGuide ? (
-                    <ChevronUp className="w-5 h-5 text-emerald-600" />
+                    <ChevronUp className="w-5 h-5 text-accent-600" />
                   ) : (
-                    <ChevronDown className="w-5 h-5 text-emerald-600" />
+                    <ChevronDown className="w-5 h-5 text-accent-600" />
                   )}
                 </motion.button>
 
@@ -877,16 +899,16 @@ export default function ListingFormStepper({
                           </p>
                           <div className="space-y-2">
                             <div className="flex items-start gap-2 text-sm">
-                              <XCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
-                              <span className="text-red-600 dark:text-red-400">Belle maison à louer</span>
+                              <XCircle className="w-4 h-4 text-error-500 mt-0.5 flex-shrink-0" />
+                              <span className="text-error-600 dark:text-error-400">Belle maison à louer</span>
                             </div>
                             <div className="flex items-start gap-2 text-sm">
-                              <CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
-                              <span className="text-emerald-600 dark:text-emerald-400">Villa 4 chambres avec piscine à louer à Kipé</span>
+                              <CheckCircle className="w-4 h-4 text-accent-500 mt-0.5 flex-shrink-0" />
+                              <span className="text-accent-600 dark:text-accent-400">Villa 4 chambres avec piscine à louer à Kipé</span>
                             </div>
                             <div className="flex items-start gap-2 text-sm">
-                              <CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
-                              <span className="text-emerald-600 dark:text-emerald-400">Appartement meublé 2 chambres à Kaloum centre</span>
+                              <CheckCircle className="w-4 h-4 text-accent-500 mt-0.5 flex-shrink-0" />
+                              <span className="text-accent-600 dark:text-accent-400">Appartement meublé 2 chambres à Kaloum centre</span>
                             </div>
                           </div>
                         </div>
@@ -940,11 +962,11 @@ export default function ListingFormStepper({
                         </div>
 
                         {/* What to Avoid */}
-                        <div className="p-3 bg-red-50 dark:bg-red-500/10 rounded-lg border border-red-200 dark:border-red-500/20">
-                          <p className="font-semibold text-red-700 dark:text-red-300 text-sm mb-2">
+                        <div className="p-3 bg-error-50 dark:bg-error-500/10 rounded-lg border border-error-200 dark:border-error-500/20">
+                          <p className="font-semibold text-error-700 dark:text-error-300 text-sm mb-2">
                             {t('seoGuide.avoid.title')}
                           </p>
-                          <ul className="text-xs text-red-600 dark:text-red-400 space-y-1">
+                          <ul className="text-xs text-error-600 dark:text-error-400 space-y-1">
                             <li>• {t('seoGuide.avoid.uppercase')}</li>
                             <li>• {t('seoGuide.avoid.urgent')}</li>
                             <li>• {t('seoGuide.avoid.tooShort')}</li>
@@ -975,7 +997,7 @@ export default function ListingFormStepper({
                     className={`
                       w-full px-4 py-3.5 rounded-xl border-2 transition-all text-lg
                       ${errors.titre
-                        ? 'border-red-500 bg-red-50 dark:bg-red-500/10'
+                        ? 'border-error-500 bg-error-50 dark:bg-error-500/10'
                         : 'border-neutral-200 dark:border-dark-border focus:border-primary-500 bg-neutral-50 dark:bg-dark-bg focus:bg-white dark:focus:bg-dark-card'
                       }
                       focus:outline-none focus:ring-4 focus:ring-primary-500/10
@@ -984,7 +1006,7 @@ export default function ListingFormStepper({
                     placeholder={t('details.titlePlaceholder')}
                   />
                   {errors.titre && (
-                    <p className="mt-2 text-sm text-red-500 flex items-center gap-1">
+                    <p className="mt-2 text-sm text-error-500 flex items-center gap-1">
                       <AlertCircle className="w-4 h-4" />
                       {errors.titre}
                     </p>
@@ -1008,7 +1030,7 @@ export default function ListingFormStepper({
                     className={`
                       w-full px-4 py-3.5 rounded-xl border-2 transition-all resize-none
                       ${errors.description
-                        ? 'border-red-500 bg-red-50 dark:bg-red-500/10'
+                        ? 'border-error-500 bg-error-50 dark:bg-error-500/10'
                         : 'border-neutral-200 dark:border-dark-border focus:border-primary-500 bg-neutral-50 dark:bg-dark-bg focus:bg-white dark:focus:bg-dark-card'
                       }
                       focus:outline-none focus:ring-4 focus:ring-primary-500/10
@@ -1017,7 +1039,7 @@ export default function ListingFormStepper({
                     placeholder={t('details.descriptionPlaceholder')}
                   />
                   {errors.description && (
-                    <p className="mt-2 text-sm text-red-500 flex items-center gap-1">
+                    <p className="mt-2 text-sm text-error-500 flex items-center gap-1">
                       <AlertCircle className="w-4 h-4" />
                       {errors.description}
                     </p>
@@ -1027,9 +1049,9 @@ export default function ListingFormStepper({
             </div>
 
             {/* Prix et Caractéristiques */}
-            <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-lg border border-neutral-100 dark:border-dark-border">
+            <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-soft border border-neutral-100 dark:border-dark-border">
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl shadow-lg shadow-emerald-500/30">
+                <div className="p-3 bg-gradient-to-br from-accent-500 to-teal-500 rounded-xl shadow-lg shadow-accent-500/30">
                   <DollarSign className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -1057,7 +1079,7 @@ export default function ListingFormStepper({
                       className={`
                         w-full px-4 py-3.5 pr-16 rounded-xl border-2 transition-all text-lg font-semibold
                         ${errors.prix
-                          ? 'border-red-500 bg-red-50 dark:bg-red-500/10'
+                          ? 'border-error-500 bg-error-50 dark:bg-error-500/10'
                           : 'border-neutral-200 dark:border-dark-border focus:border-primary-500 bg-neutral-50 dark:bg-dark-bg focus:bg-white dark:focus:bg-dark-card'
                         }
                         focus:outline-none focus:ring-4 focus:ring-primary-500/10
@@ -1070,12 +1092,12 @@ export default function ListingFormStepper({
                     </div>
                   </div>
                   {errors.prix && (
-                    <p className="mt-2 text-sm text-red-500">{errors.prix}</p>
+                    <p className="mt-2 text-sm text-error-500">{errors.prix}</p>
                   )}
                   {/* Commission info for VENTE */}
                   {formData.operationType === 'VENTE' && currentCommission && currentCommission.taux_pourcentage > 0 && (
-                    <div className="mt-3 p-3 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl border border-emerald-200 dark:border-emerald-500/20">
-                      <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300 text-sm">
+                    <div className="mt-3 p-3 bg-accent-50 dark:bg-accent-500/10 rounded-xl border border-accent-200 dark:border-accent-500/20">
+                      <div className="flex items-center gap-2 text-accent-700 dark:text-accent-300 text-sm">
                         <Percent className="w-4 h-4" />
                         <span>Commission ImmoGuinee: <strong>{currentCommission.taux_pourcentage}%</strong> du prix de vente</span>
                       </div>
@@ -1166,12 +1188,12 @@ export default function ListingFormStepper({
                 {/* Durée minimum (only for LOCATION_COURTE) */}
                 {formData.operationType === 'LOCATION_COURTE' && (
                   <div className="space-y-4">
-                    <div className="p-4 bg-purple-50 dark:bg-purple-500/10 rounded-xl border border-purple-200 dark:border-purple-500/20">
-                      <div className="flex items-center gap-2 text-purple-700 dark:text-purple-300 mb-2">
+                    <div className="p-4 bg-teal-50 dark:bg-teal-500/10 rounded-xl border border-teal-200 dark:border-teal-500/20">
+                      <div className="flex items-center gap-2 text-teal-700 dark:text-teal-300 mb-2">
                         <Calendar className="w-5 h-5" />
                         <span className="font-semibold">{t('shortRental.title')}</span>
                       </div>
-                      <p className="text-sm text-purple-600 dark:text-purple-400">
+                      <p className="text-sm text-teal-600 dark:text-teal-400">
                         {t('shortRental.priceInfo')}
                       </p>
                       {currentCommission && currentCommission.taux_pourcentage > 0 && (
@@ -1220,7 +1242,7 @@ export default function ListingFormStepper({
                     <label className="flex items-center gap-2 text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-2">
                       <field.icon className="w-4 h-4 text-primary-500" />
                       {field.label}
-                      {field.required && <span className="text-red-500">*</span>}
+                      {field.required && <span className="text-error-500">*</span>}
                     </label>
                     <div className="relative">
                       <input
@@ -1232,7 +1254,7 @@ export default function ListingFormStepper({
                         className={`
                           w-full px-4 py-3 rounded-xl border-2 transition-all
                           ${errors[field.id as keyof FormErrors]
-                            ? 'border-red-500 bg-red-50 dark:bg-red-500/10'
+                            ? 'border-error-500 bg-error-50 dark:bg-error-500/10'
                             : 'border-neutral-200 dark:border-dark-border focus:border-primary-500 bg-neutral-50 dark:bg-dark-bg'
                           }
                           focus:outline-none focus:ring-4 focus:ring-primary-500/10
@@ -1252,8 +1274,8 @@ export default function ListingFormStepper({
 
               {/* Info for terrain/commercial types */}
               {!needsRooms(formData.typeBien) && (
-                <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-500/10 rounded-xl border border-blue-200 dark:border-blue-500/20">
-                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                <div className="mt-4 p-4 bg-secondary-50 dark:bg-secondary-500/10 rounded-xl border border-secondary-200 dark:border-secondary-500/20">
+                  <p className="text-sm text-secondary-700 dark:text-secondary-300">
                     {formData.typeBien === 'TERRAIN'
                       ? t('characteristics.terrainNote')
                       : t('characteristics.commercialNote')}
@@ -1264,9 +1286,9 @@ export default function ListingFormStepper({
 
             {/* Équipements - Only show for property types that need it */}
             {needsAmenities(formData.typeBien) && (
-              <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-lg border border-neutral-100 dark:border-dark-border">
+              <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-soft border border-neutral-100 dark:border-dark-border">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="p-3 bg-gradient-to-br from-orange-500 to-amber-500 rounded-xl shadow-lg shadow-orange-500/30">
+                  <div className="p-3 bg-gradient-to-br from-primary-500 to-warning-500 rounded-xl shadow-lg shadow-primary-500/30">
                     <Wifi className="w-5 h-5 text-white" />
                   </div>
                   <div>
@@ -1321,9 +1343,9 @@ export default function ListingFormStepper({
             exit="exit"
             transition={{ duration: 0.3, ease: 'easeInOut' }}
           >
-            <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-lg border border-neutral-100 dark:border-dark-border">
+            <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-soft border border-neutral-100 dark:border-dark-border">
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-gradient-to-br from-rose-500 to-pink-500 rounded-xl shadow-lg shadow-rose-500/30">
+                <div className="p-3 bg-gradient-to-br from-error-500 to-accent-500 rounded-xl shadow-lg shadow-error-500/30">
                   <MapPin className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -1397,14 +1419,14 @@ export default function ListingFormStepper({
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="mt-4 p-4 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl border border-emerald-200 dark:border-emerald-500/20 flex items-center gap-3"
+                    className="mt-4 p-4 bg-accent-50 dark:bg-accent-500/10 rounded-xl border border-accent-200 dark:border-accent-500/20 flex items-center gap-3"
                   >
-                    <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+                    <CheckCircle className="w-5 h-5 text-accent-500 flex-shrink-0" />
                     <div>
-                      <p className="font-medium text-emerald-800 dark:text-emerald-200">
+                      <p className="font-medium text-accent-800 dark:text-accent-200">
                         {t('location.geolocation.descriptionAdded')}
                       </p>
-                      <p className="text-sm text-emerald-600 dark:text-emerald-400">
+                      <p className="text-sm text-accent-600 dark:text-accent-400">
                         {t('location.geolocation.descriptionAddedHint')}
                       </p>
                     </div>
@@ -1426,9 +1448,9 @@ export default function ListingFormStepper({
             exit="exit"
             transition={{ duration: 0.3, ease: 'easeInOut' }}
           >
-            <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-lg border border-neutral-100 dark:border-dark-border">
+            <div className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-soft border border-neutral-100 dark:border-dark-border">
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-gradient-to-br from-violet-500 to-purple-500 rounded-xl shadow-lg shadow-violet-500/30">
+                <div className="p-3 bg-gradient-to-br from-teal-500 to-teal-500 rounded-xl shadow-lg shadow-teal-500/30">
                   <Camera className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -1451,11 +1473,11 @@ export default function ListingFormStepper({
               />
 
               {/* Photo Tips */}
-              <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-500/10 rounded-xl border border-amber-200 dark:border-amber-500/20">
-                <p className="text-sm text-amber-800 dark:text-amber-200 font-medium mb-2">
+              <div className="mt-6 p-4 bg-warning-50 dark:bg-warning-500/10 rounded-xl border border-warning-200 dark:border-warning-500/20">
+                <p className="text-sm text-warning-800 dark:text-warning-200 font-medium mb-2">
                   {t('photos.tips.title')}
                 </p>
-                <ul className="text-sm text-amber-700 dark:text-amber-300 space-y-1">
+                <ul className="text-sm text-warning-700 dark:text-warning-300 space-y-1">
                   <li>• {t('photos.tips.daylight')}</li>
                   <li>• {t('photos.tips.allRooms')}</li>
                   <li>• {t('photos.tips.clean')}</li>
@@ -1472,12 +1494,12 @@ export default function ListingFormStepper({
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-6 p-4 bg-red-50 dark:bg-red-500/10 rounded-xl border border-red-200 dark:border-red-500/20 flex items-start gap-3"
+          className="mt-6 p-4 bg-error-50 dark:bg-error-500/10 rounded-xl border border-error-200 dark:border-error-500/20 flex items-start gap-3"
         >
-          <XCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+          <XCircle className="w-5 h-5 text-error-500 mt-0.5 flex-shrink-0" />
           <div>
-            <p className="font-medium text-red-800 dark:text-red-200">{tCommon('error')}</p>
-            <p className="text-sm text-red-700 dark:text-red-300">{submitError}</p>
+            <p className="font-medium text-error-800 dark:text-error-200">{tCommon('error')}</p>
+            <p className="text-sm text-error-700 dark:text-error-300">{submitError}</p>
           </div>
         </motion.div>
       )}
@@ -1487,20 +1509,20 @@ export default function ListingFormStepper({
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="mt-6 p-6 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl border border-emerald-200 dark:border-emerald-500/20 text-center"
+          className="mt-6 p-6 bg-accent-50 dark:bg-accent-500/10 rounded-2xl border border-accent-200 dark:border-accent-500/20 text-center"
         >
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', delay: 0.2 }}
-            className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-4"
+            className="w-16 h-16 bg-gradient-to-br from-accent-500 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-4"
           >
             <CheckCircle className="w-8 h-8 text-white" />
           </motion.div>
-          <h3 className="text-xl font-bold text-emerald-800 dark:text-emerald-200 mb-2">
+          <h3 className="text-xl font-bold text-accent-800 dark:text-accent-200 mb-2">
             {t('success.title')}
           </h3>
-          <p className="text-emerald-700 dark:text-emerald-300">
+          <p className="text-accent-700 dark:text-accent-300">
             {t('success.subtitle')}
           </p>
         </motion.div>
@@ -1526,7 +1548,7 @@ export default function ListingFormStepper({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleNext}
-            className="flex items-center gap-2 px-8 py-3.5 text-white bg-gradient-to-r from-primary-500 to-orange-500 rounded-xl hover:from-primary-600 hover:to-orange-600 transition-all font-semibold shadow-lg shadow-primary-500/30"
+            className="flex items-center gap-2 px-8 py-3.5 text-white bg-gradient-to-r from-primary-500 to-primary-500 rounded-xl hover:from-primary-600 hover:to-primary-600 transition-all font-semibold shadow-lg shadow-primary-500/30"
           >
             {t('buttons.continue')}
             <ArrowRight className="w-5 h-5" />
@@ -1538,7 +1560,7 @@ export default function ListingFormStepper({
             whileTap={{ scale: 0.98 }}
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="flex items-center gap-2 px-8 py-3.5 text-white bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl hover:from-emerald-600 hover:to-teal-600 transition-all font-semibold shadow-lg shadow-emerald-500/30 disabled:opacity-50"
+            className="flex items-center gap-2 px-8 py-3.5 text-white bg-gradient-to-r from-accent-500 to-teal-500 rounded-xl hover:from-accent-600 hover:to-teal-600 transition-all font-semibold shadow-lg shadow-accent-500/30 disabled:opacity-50"
           >
             {isSubmitting ? (
               <>

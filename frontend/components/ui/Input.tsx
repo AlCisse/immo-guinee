@@ -1,5 +1,3 @@
-'use client';
-
 import { forwardRef, type InputHTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -20,10 +18,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label htmlFor={inputId} className="mb-1.5 block text-sm font-medium text-gray-700">
+          <label htmlFor={inputId} className="mb-1.5 block text-sm font-medium text-neutral-700 dark:text-neutral-300">
             {label}
             {props.required && (
-              <span className="ml-1 text-red-500" aria-hidden="true">
+              <span className="ml-1 text-error-500" aria-hidden="true">
                 *
               </span>
             )}
@@ -31,7 +29,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         )}
         <div className="relative">
           {leftIcon && (
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-400">
               {leftIcon}
             </div>
           )}
@@ -40,11 +38,11 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             id={inputId}
             type={type}
             className={cn(
-              'block w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-gray-900 placeholder-gray-400',
+              'block w-full rounded-xl border border-neutral-300 bg-white px-3 py-2.5 text-neutral-900 placeholder-neutral-400 dark:border-dark-border dark:bg-dark-card dark:text-white dark:placeholder-neutral-500',
               'transition-colors duration-200',
               'focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20',
-              'disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500',
-              error && 'border-red-500 focus:border-red-500 focus:ring-red-500/20',
+              'disabled:cursor-not-allowed disabled:bg-neutral-100 dark:disabled:bg-dark-hover disabled:text-neutral-500 dark:disabled:bg-dark-hover',
+              error && 'border-error-500 focus:border-error-500 focus:ring-error-500/20',
               leftIcon && 'pl-10',
               rightIcon && 'pr-10',
               className
@@ -56,18 +54,18 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
           {rightIcon && (
-            <div className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 text-neutral-400">
               {rightIcon}
             </div>
           )}
         </div>
         {error && (
-          <p id={errorId} className="mt-1.5 text-sm text-red-600" role="alert">
+          <p id={errorId} className="mt-1.5 text-sm text-error-600" role="alert">
             {error}
           </p>
         )}
         {hint && !error && (
-          <p id={hintId} className="mt-1.5 text-sm text-gray-500">
+          <p id={hintId} className="mt-1.5 text-sm text-neutral-500 dark:text-neutral-400">
             {hint}
           </p>
         )}

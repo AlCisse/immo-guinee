@@ -1,13 +1,25 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, Poppins } from 'next/font/google';
 import './globals.css';
-import 'leaflet/dist/leaflet.css';
 import { Providers } from './providers';
 import { OrganizationStructuredData, WebSiteStructuredData, LocalBusinessStructuredData } from '@/components/seo/StructuredData';
+import { palette } from '@/lib/colors';
+import OfflineIndicator from '@/components/OfflineIndicator';
 
-// Force dynamic rendering for all pages to avoid SSG issues with client hooks
-export const dynamic = 'force-dynamic';
-
+// NOTE: pas de `export const dynamic = 'force-dynamic'` au niveau racine.
+// Imposé auparavant « pour éviter les soucis SSG avec les hooks client », ce
+// flag désactivait en réalité ISR/SSG sur TOUTE l'app : chaque page était
+// rendue en SSR per-request (impossible à mettre en cache CDN, first paint
+// lent, coût serveur élevé). Aucune page ne lit cookies()/headers() côté
+// serveur, et les pages 'use client' sont déjà SSR-safe (elles sont rendues
+// sur le serveur sous force-dynamic) → elles se pré-rendent statiquement sans
+// changement de comportement (même shell initial, puis hydratation). Les
+// pages publiques (home, fiche bien) peuvent ainsi opter pour ISR via
+// `export const revalidate` + `generateStaticParams` (voir P2/P3). Les pages
+// auth/admin sont des shells user-agnostiques : un pré-rendu statique est
+// strictement équivalent. Les pages utilisant useSearchParams() sans
+// <Suspense> font un bail-out CSR (Next 15) — acceptable pour des pages
+// d'auth qui redirigent côté client.
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
@@ -26,8 +38,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#F97316' },
-    { media: '(prefers-color-scheme: dark)', color: '#EA580C' },
+    { media: '(prefers-color-scheme: light)', color: palette.primary[500] },
+    { media: '(prefers-color-scheme: dark)', color: palette.primary[600] },
   ],
 };
 
@@ -160,6 +172,8 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <Providers>{children}</Providers>
+        {/* R15 — bannière hors-ligne globale (rendu côté client, no-op quand online) */}
+        <OfflineIndicator />
       </body>
     </html>
   );

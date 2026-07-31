@@ -108,7 +108,7 @@ function NotificationDropdown({
   return (
     <div
       ref={dropdownRef}
-      className="absolute right-0 top-12 w-80 bg-white dark:bg-dark-card rounded-xl shadow-2xl z-50 overflow-hidden border border-neutral-200 dark:border-dark-border"
+      className="absolute right-0 top-12 w-80 bg-white dark:bg-dark-card rounded-xl shadow-soft-lg z-50 overflow-hidden border border-neutral-200 dark:border-dark-border"
     >
       {/* Header */}
       <div className="px-4 py-3 border-b border-neutral-100 dark:border-dark-border flex items-center justify-between">
@@ -214,7 +214,7 @@ function NavItem({
         <div className="relative">
           <Icon className="w-6 h-6" />
           {badge !== undefined && badge > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-error-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
               {badge > 9 ? '9+' : badge}
             </span>
           )}
@@ -235,7 +235,7 @@ interface NavbarProps {
 }
 
 export default function Navbar({ variant = 'full' }: NavbarProps) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? '';
   const { user, isAuthenticated, logout } = useAuth();
   const { t } = useLocale();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -343,7 +343,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
               </div>
               <span className="text-lg font-bold">
                 <span className="text-neutral-900 dark:text-white">Immo</span>
-                <span className="text-orange-500">Guinée</span>
+                <span className="text-primary-500">Guinée</span>
               </span>
             </Link>
 
@@ -353,12 +353,12 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
 
               <button
                 onClick={toggleDarkMode}
-                className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-full transition-colors"
+                className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-full transition-colors"
               >
                 {isDarkMode ? (
                   <Sun className="w-5 h-5 text-neutral-700 dark:text-white" />
                 ) : (
-                  <Moon className="w-5 h-5 text-neutral-700" />
+                  <Moon className="w-5 h-5 text-neutral-700 dark:text-neutral-300" />
                 )}
               </button>
             </div>
@@ -387,7 +387,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
               </div>
               <span className="text-xl font-bold">
                 <span className="text-neutral-900 dark:text-white">Immo</span>
-                <span className="text-orange-500">Guinée</span>
+                <span className="text-primary-500">Guinée</span>
               </span>
             </Link>
 
@@ -416,13 +416,13 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
               {/* Dark Mode Toggle */}
               <button
                 onClick={toggleDarkMode}
-                className="p-2 rounded-full transition-colors hover:bg-neutral-100 dark:hover:bg-dark-bg"
+                className="p-2 rounded-full transition-colors hover:bg-neutral-100 dark:hover:bg-dark-hover"
                 aria-label={isDarkMode ? 'Activer le mode clair' : 'Activer le mode sombre'}
               >
                 {isDarkMode ? (
                   <Sun className="w-5 h-5 text-neutral-700 dark:text-white" />
                 ) : (
-                  <Moon className="w-5 h-5 text-neutral-700" />
+                  <Moon className="w-5 h-5 text-neutral-700 dark:text-neutral-300" />
                 )}
               </button>
 
@@ -434,12 +434,12 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
                       setShowNotifications(!showNotifications);
                       setShowUserMenu(false);
                     }}
-                    className="p-2 rounded-full relative transition-colors hover:bg-neutral-100 dark:hover:bg-dark-bg"
+                    className="p-2 rounded-full relative transition-colors hover:bg-neutral-100 dark:hover:bg-dark-hover"
                     aria-label="Notifications"
                   >
                     <Bell className="w-5 h-5 text-neutral-700 dark:text-white" />
                     {unreadNotifications > 0 && (
-                      <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                      <span className="absolute top-1 right-1 w-2 h-2 bg-error-500 rounded-full" />
                     )}
                   </button>
 
@@ -468,7 +468,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
                       setShowUserMenu(!showUserMenu);
                       setShowNotifications(false);
                     }}
-                    className="flex items-center gap-2 p-2 rounded-xl transition-colors hover:bg-neutral-100 dark:hover:bg-dark-bg"
+                    className="flex items-center gap-2 p-2 rounded-xl transition-colors hover:bg-neutral-100 dark:hover:bg-dark-hover"
                   >
                     <ChevronDown className={`w-4 h-4 text-neutral-700 dark:text-white transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
                     {user.photo_profil_url ? (
@@ -490,7 +490,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
 
                   {showUserMenu && (
                     <div
-                      className="absolute right-0 top-12 w-56 bg-white dark:bg-dark-card rounded-xl shadow-2xl py-2 z-50 border border-neutral-200 dark:border-dark-border"
+                      className="absolute right-0 top-12 w-56 bg-white dark:bg-dark-card rounded-xl shadow-soft-lg py-2 z-50 border border-neutral-200 dark:border-dark-border"
                     >
                       <div className="px-4 py-3 border-b border-neutral-100 dark:border-dark-border">
                         <p className="font-semibold text-neutral-900 dark:text-white">{user.nom_complet || 'Utilisateur'}</p>
@@ -511,7 +511,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
                           key={item.labelKey}
                           href={item.href}
                           onClick={() => setShowUserMenu(false)}
-                          className={`flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-50 dark:hover:bg-dark-bg text-neutral-700 dark:text-neutral-300 ${
+                          className={`flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-50 dark:hover:bg-dark-hover text-neutral-700 dark:text-neutral-300 ${
                             isActiveRoute(pathname, item.href) ? 'text-primary-500' : ''
                           }`}
                         >
@@ -529,7 +529,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
                         <button
                           onClick={handleLogout}
                           disabled={isLoggingOut}
-                          className="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 dark:hover:bg-red-500/10 text-red-600 w-full disabled:opacity-50"
+                          className="flex items-center gap-3 px-4 py-2.5 hover:bg-error-50 dark:hover:bg-error-500/10 text-error-600 w-full disabled:opacity-50"
                         >
                           {isLoggingOut ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
@@ -566,7 +566,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
             </div>
             <span className="text-lg font-bold">
               <span className="text-neutral-900 dark:text-white">Immo</span>
-              <span className="text-orange-500">Guinée</span>
+              <span className="text-primary-500">Guinée</span>
             </span>
           </Link>
 
@@ -579,11 +579,11 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
               <div className="relative">
                 <button
                   onClick={() => setShowNotifications(!showNotifications)}
-                  className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-full relative"
+                  className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-full relative"
                 >
                   <Bell className="w-5 h-5 text-neutral-700 dark:text-white" />
                   {unreadNotifications > 0 && (
-                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                    <span className="absolute top-1 right-1 w-2 h-2 bg-error-500 rounded-full" />
                   )}
                 </button>
 
@@ -595,7 +595,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
             )}
             <button
               onClick={() => setIsMenuOpen(true)}
-              className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-full"
+              className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-full"
             >
               <Menu className="w-5 h-5 text-neutral-700 dark:text-white" />
             </button>
@@ -649,7 +649,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
                 )}
                 <button
                   onClick={() => setIsMenuOpen(false)}
-                  className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-full"
+                  className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-full"
                 >
                   <X className="w-5 h-5 text-neutral-500" />
                 </button>
@@ -680,7 +680,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
                       key={item.labelKey}
                       href={item.href}
                       onClick={() => setIsMenuOpen(false)}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors ${
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors ${
                         isActiveRoute(pathname, item.href)
                           ? 'text-primary-500 bg-primary-50 dark:bg-primary-500/10'
                           : 'text-neutral-700 dark:text-neutral-300'
@@ -700,12 +700,12 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
                 <div className="mt-6 pt-6 border-t border-neutral-100 dark:border-dark-border">
                   <button
                     onClick={toggleDarkMode}
-                    className="flex items-center justify-between w-full px-4 py-3 rounded-xl hover:bg-neutral-50 dark:hover:bg-dark-bg"
+                    className="flex items-center justify-between w-full px-4 py-3 rounded-xl hover:bg-neutral-50 dark:hover:bg-dark-hover"
                   >
                     <span className="text-neutral-700 dark:text-neutral-300">{t('nav.darkMode')}</span>
                     <div className={`w-12 h-7 rounded-full p-1 transition-colors ${isDarkMode ? 'bg-primary-500' : 'bg-neutral-200'}`}>
                       <div
-                        className={`w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${isDarkMode ? 'translate-x-5' : 'translate-x-0'}`}
+                        className={`w-5 h-5 bg-white dark:bg-dark-card rounded-full shadow transition-transform duration-200 ${isDarkMode ? 'translate-x-5' : 'translate-x-0'}`}
                       />
                     </div>
                   </button>
@@ -716,7 +716,7 @@ export default function Navbar({ variant = 'full' }: NavbarProps) {
                     <button
                       onClick={handleLogout}
                       disabled={isLoggingOut}
-                      className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 text-red-600 w-full disabled:opacity-50"
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-error-50 dark:hover:bg-error-500/10 text-error-600 w-full disabled:opacity-50"
                     >
                       {isLoggingOut ? (
                         <Loader2 className="w-5 h-5 animate-spin" />

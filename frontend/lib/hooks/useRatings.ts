@@ -64,10 +64,36 @@ export interface ReplyToRatingData {
   reponse: string;
 }
 
+// --- Rust API bridge -------------------------------------------------------
+// The Rust backend uses the DB-native field names (note_globale, critere_N_note,
+// transaction_id). Map them to the frontend Rating shape here so components stay
+// unchanged. Reply/helpful are not backed by the current schema → safe defaults.
+function mapRustRating(r: any): Rating {
+  return {
+    id: r.id,
+    contract_id: r.transaction_id ?? r.contract_id ?? '',
+    evaluateur_id: r.evaluateur_id,
+    evalue_id: r.evalue_id,
+    note: r.note ?? r.note_globale ?? 0,
+    note_communication: r.note_communication ?? r.critere_1_note ?? null,
+    note_ponctualite: r.note_ponctualite ?? r.critere_2_note ?? null,
+    note_proprete: r.note_proprete ?? r.critere_3_note ?? null,
+    note_respect_contrat: r.note_respect_contrat ?? null,
+    commentaire: r.commentaire ?? '',
+    reponse: r.reponse ?? null,
+    reponse_at: r.reponse_at ?? null,
+    is_published: r.is_published ?? true,
+    helpful_count: r.helpful_count ?? 0,
+    created_at: r.created_at ?? r.date_creation,
+    evaluateur: r.evaluateur ?? { id: r.evaluateur_id, nom_complet: '', badge: '' },
+    evalue: r.evalue,
+  };
+}
+
 // API functions
 async function fetchUserRatings(userId: string): Promise<Rating[]> {
   const response = await apiClient.get(`/users/${userId}/ratings`);
-  return response.data.data || [];
+  return (response.data.data || []).map(mapRustRating);
 }
 
 async function fetchUserRatingStats(userId: string): Promise<RatingStats> {
@@ -85,7 +111,16 @@ async function fetchContractRating(contractId: string): Promise<Rating | null> {
 }
 
 async function createRating(data: CreateRatingData): Promise<Rating> {
-  const response = await apiClient.post('/ratings', data);
+  // Frontend has 4 criteria; the Rust schema stores 3 (+ global note). Map the
+  // three primary criteria; respect_contrat is folded into the global note.
+  const response = await apiClient.post('/ratings', {
+    transaction_id: data.contract_id,
+    note_globale: data.note,
+    critere_1_note: data.note_communication,
+    critere_2_note: data.note_ponctualite,
+    critere_3_note: data.note_proprete,
+    commentaire: data.commentaire,
+  });
   return response.data.data;
 }
 
@@ -225,33 +260,39 @@ export function calculateOverallRating(criteria: {
 /**
  * Get rating label
  */
-export function getRatingLabel(rating: number): string {
-  if (rating >= 4.5) return 'Excellent';
-  if (rating >= 4.0) return 'Très bien';
-  if (rating >= 3.5) return 'Bien';
-  if (rating >= 3.0) return 'Correct';
-  if (rating >= 2.0) return 'Moyen';
-  return 'À améliorer';
+/**
+ * Return the i18n key suffix for a rating's qualitative label. The caller resolves
+ * it via `t('ratings.display.labels.<key>')` so the label follows the active locale.
+ */
+export function getRatingLabelKey(rating: number): string {
+  if (rating >= 4.5) return 'excellent';
+  if (rating >= 4.0) return 'veryGood';
+  if (rating >= 3.5) return 'good';
+  if (rating >= 3.0) return 'fair';
+  if (rating >= 2.0) return 'average';
+  return 'poor';
 }
 
 /**
  * Get rating color
  */
 export function getRatingColor(rating: number): string {
-  if (rating >= 4.5) return 'text-green-600';
-  if (rating >= 4.0) return 'text-green-500';
-  if (rating >= 3.5) return 'text-yellow-500';
-  if (rating >= 3.0) return 'text-yellow-600';
-  if (rating >= 2.0) return 'text-orange-500';
-  return 'text-red-500';
+  // Charte « Argile de Conakry » quality scale (dark-aware): success → warning → error.
+  if (rating >= 4.5) return 'text-success-600 dark:text-success-400';
+  if (rating >= 4.0) return 'text-success-500 dark:text-success-400';
+  if (rating >= 3.5) return 'text-warning-500 dark:text-warning-400';
+  if (rating >= 3.0) return 'text-warning-600 dark:text-warning-400';
+  if (rating >= 2.0) return 'text-warning-700 dark:text-warning-500';
+  return 'text-error-500 dark:text-error-400';
 }
 
 /**
- * Format rating date
+ * Format a rating date in the active locale (defaults to French for GN).
  */
-export function formatRatingDate(dateString: string): string {
+export function formatRatingDate(dateString: string, locale: string = 'fr'): string {
   const date = new Date(dateString);
-  return new Intl.DateTimeFormat('fr-GN', {
+  const intlLocale = locale === 'en' ? 'en-GB' : 'fr-GN';
+  return new Intl.DateTimeFormat(intlLocale, {
     year: 'numeric',
     month: 'long',
     day: 'numeric',

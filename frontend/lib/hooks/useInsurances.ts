@@ -296,13 +296,18 @@ export function getStatusLabel(status: InsuranceStatus): string {
  * Get status color
  */
 export function getStatusColor(status: InsuranceStatus): string {
+  // Charte « Argile de Conakry » (dark-aware): success/error/neutral/warning.
+  const SUCCESS = 'bg-success-100 dark:bg-success-500/15 text-success-700 dark:text-success-300';
+  const ERROR = 'bg-error-100 dark:bg-error-500/15 text-error-700 dark:text-error-400';
+  const NEUTRAL = 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300';
+  const WARNING = 'bg-warning-100 dark:bg-warning-500/15 text-warning-700 dark:text-warning-300';
   const colors: Record<InsuranceStatus, string> = {
-    ACTIVE: 'bg-green-100 text-green-700',
-    EXPIREE: 'bg-red-100 text-red-700',
-    RESILIEE: 'bg-gray-100 text-gray-700',
-    EN_ATTENTE: 'bg-yellow-100 text-yellow-700',
+    ACTIVE: SUCCESS,
+    EXPIREE: ERROR,
+    RESILIEE: NEUTRAL,
+    EN_ATTENTE: WARNING,
   };
-  return colors[status] || 'bg-gray-100 text-gray-700';
+  return colors[status] || NEUTRAL;
 }
 
 /**

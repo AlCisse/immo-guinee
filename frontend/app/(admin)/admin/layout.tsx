@@ -1,5 +1,3 @@
-'use client';
-
 import { AdminRoute } from '@/lib/auth/AuthContext';
 import AdminSidebar from '@/components/layout/AdminSidebar';
 

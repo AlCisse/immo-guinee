@@ -233,6 +233,27 @@ export function isConnected(): boolean {
 }
 
 /**
+ * R17 — vrai quand la WebSocket a abandonné (5 tentatives automatiques
+ * épuisées via scheduleReconnect) et n'est pas connectée. Sert à l'UI pour
+ * afficher un bouton « Reconnecter » au lieu de laisser l'utilisateur sans
+ * messagerie temps réel et sans recours.
+ */
+export function isPermanentlyDisconnected(): boolean {
+  return reconnectAttempts >= MAX_RECONNECT_ATTEMPTS && connectionState !== 'connected';
+}
+
+/**
+ * R17 — reconnexion manuelle déclenchée par l'utilisateur après l'abandon des
+ * tentatives automatiques. Remet le compteur de backoff à zéro et relance une
+ * tentative immédiate. No-op si déjà connecté.
+ */
+export function retryConnection(): void {
+  if (connectionState === 'connected') return;
+  reconnectAttempts = 0;
+  void reconnect();
+}
+
+/**
  * Disconnect and cleanup
  */
 export function disconnectEcho(): void {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { AUTH_GRADIENT_BG } from '@/lib/ui/auth';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -102,7 +103,7 @@ export default function InscriptionPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-500 via-orange-500 to-primary-600 flex flex-col">
+    <div className={`min-h-screen ${AUTH_GRADIENT_BG} flex flex-col`}>
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0" style={{
@@ -131,7 +132,7 @@ export default function InscriptionPage() {
           animate={{ opacity: 1, y: 0 }}
           className="w-full max-w-md"
         >
-          <div className="bg-white dark:bg-dark-card rounded-3xl shadow-2xl p-8">
+          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft p-8">
             <div className="text-center mb-8">
               <h1 className="text-2xl font-bold text-neutral-900 dark:text-white mb-2">
                 Créer un compte
@@ -187,10 +188,10 @@ export default function InscriptionPage() {
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl flex items-start gap-3"
+                  className="p-4 bg-error-50 dark:bg-error-500/10 border border-error-200 dark:border-error-500/20 rounded-xl flex items-start gap-3"
                 >
-                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                  <AlertCircle className="w-5 h-5 text-error-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-error-600 dark:text-error-400">{error}</p>
                 </motion.div>
               )}
 
@@ -250,13 +251,13 @@ export default function InscriptionPage() {
                     placeholder="Email (optionnel)"
                     className={`w-full pl-12 pr-4 py-3 rounded-xl border-2 ${
                       fieldErrors.email
-                        ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
+                        ? 'border-error-500 focus:border-error-500 focus:ring-error-500/20'
                         : 'border-neutral-200 dark:border-dark-border focus:border-primary-500 focus:ring-primary-500/20'
                     } focus:outline-none focus:ring-2 bg-white dark:bg-dark-card text-neutral-900 dark:text-white`}
                   />
                 </div>
                 {fieldErrors.email && (
-                  <p className="mt-1 text-sm text-red-500 flex items-center gap-1">
+                  <p className="mt-1 text-sm text-error-500 flex items-center gap-1">
                     <AlertCircle className="w-4 h-4" />
                     {fieldErrors.email}
                   </p>
@@ -270,10 +271,10 @@ export default function InscriptionPage() {
                   onChange={(fullNumber) => setFormData(prev => ({ ...prev, telephone: fullNumber }))}
                   placeholder="621 00 00 00"
                   required
-                  className={fieldErrors.telephone ? 'border-red-500' : ''}
+                  className={fieldErrors.telephone ? 'border-error-500' : ''}
                 />
                 {fieldErrors.telephone && (
-                  <p className="mt-1 text-sm text-red-500 flex items-center gap-1">
+                  <p className="mt-1 text-sm text-error-500 flex items-center gap-1">
                     <AlertCircle className="w-4 h-4" />
                     {fieldErrors.telephone}
                   </p>
@@ -296,7 +297,7 @@ export default function InscriptionPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-400"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -310,7 +311,7 @@ export default function InscriptionPage() {
                   checked={formData.acceptTerms}
                   onChange={handleChange}
                   required
-                  className="mt-1 w-5 h-5 rounded border-neutral-300 text-primary-500 focus:ring-primary-500"
+                  className="mt-1 w-5 h-5 rounded border-neutral-300 dark:border-dark-border text-primary-500 focus:ring-primary-500"
                 />
                 <span className="text-sm text-neutral-600 dark:text-neutral-400">
                   J'accepte les{' '}
@@ -328,7 +329,7 @@ export default function InscriptionPage() {
               <button
                 type="submit"
                 disabled={isLoading || !formData.acceptTerms}
-                className="w-full py-3.5 bg-gradient-to-r from-primary-500 to-orange-500 text-white font-semibold rounded-xl hover:from-primary-600 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-primary-500/25"
+                className="w-full py-3.5 bg-gradient-to-r from-primary-500 to-primary-600 text-white font-semibold rounded-xl hover:from-primary-600 hover:to-primary-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-primary-500/25"
               >
                 {isLoading ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

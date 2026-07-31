@@ -1,49 +1,71 @@
-# Research & Technology Decisions: ImmoGuinée Platform (Laravel + Next.js)
+# Research & Technology Decisions: ImmoGuinée Platform (Rust + Next.js)
 
 **Feature**: ImmoGuinée - Plateforme Immobilière pour la Guinée
 **Branch**: `001-immog-platform`
-**Date**: 2025-01-28 (Updated with Laravel stack)
+**Date**: 2025-01-28 (Updated with the Rust stack)
 **Phase**: 0 (Research)
 
 ---
 
 ## Executive Summary
 
-This document resolves all technology decisions for the ImmoGuinée platform with a **decoupled API-first architecture**: Laravel 11 backend + Next.js 14 frontend.
+This document resolves all technology decisions for the ImmoGuinée platform with a
+**decoupled API-first architecture**: **Rust (Axum + Tokio) backend** + Next.js 14
+frontend. The site is greenfield (not yet in production), so this is a **full-Rust
+build** — no Laravel cohabitation, no strangler-fig migration.
 
-**Key Architectural Decision**: Separate backend (Laravel REST API) and frontend (Next.js PWA) for:
-- **Scalability**: Independent scaling of API and UI
-- **Team Specialization**: PHP backend team + TypeScript frontend team
-- **Mobile Apps**: Future React Native apps can consume same Laravel API
-- **Performance**: Laravel Octane for high-throughput API requests
+**Key Architectural Decision**: Separate backend (Rust REST/WS API) and frontend
+(Next.js PWA) for:
+- **Scalability**: independent horizontal scaling of API and UI.
+- **Performance & cost**: Rust's async runtime (Tokio) sustains high throughput at a
+  fraction of the memory of a PHP-FPM/Octane fleet — decisive for a low-bandwidth,
+  cost-sensitive Guinean market.
+- **Safety**: the type system + ownership model eliminate whole classes of bugs
+  (null, data races, injection when using a typed query builder) at compile time.
+- **Mobile Apps**: future React Native / Flutter apps consume the same API.
 
-**Key Decisions**:
-- **Backend**: Laravel 11 (PHP 8.2+), Eloquent ORM, Laravel Sanctum (auth)
-- **Frontend**: Next.js 14 App Router, React 18, TypeScript, TailwindCSS
-- **Database**: PostgreSQL 15+ with Eloquent ORM
-- **Search**: Meilisearch (typo-tolerance, instant search)
-- **Cache/Queue**: Redis 7+ (cache, queue, sessions, broadcasting)
-- **Real-Time**: Laravel Echo (broadcasting) + Socket.IO (client)
-- **Automation**: n8n (workflows) + Laravel Queue (async jobs)
-- **Messaging**: WAHA (WhatsApp), Twilio (SMS), Telegram Bot API
-- **Payments**: Orange Money API + MTN Mobile Money API
-- **PDF**: Laravel PDF (DomPDF or Snappy/wkhtmltopdf)
-- **AI/ML**: Ollama (LLM for recommendations), TensorFlow.js (fraud detection), Hugging Face (content moderation)
-- **Monitoring**: Laravel Telescope, Grafana, Prometheus, Sentry, Logrocket, OSSEC (HIDS)
-- **DevOps**: Docker, Docker Compose, Traefik (reverse proxy), Nginx, Certbot (Let's Encrypt)
+**Key Decisions** (Rust stack):
+- **Backend**: Rust **edition 2024** (rust-version **1.85+**), **Axum 0.8** (Tokio, Tower).
+- **Frontend**: Next.js 14 App Router, React 18, TypeScript, TailwindCSS (unchanged).
+- **Database**: PostgreSQL 16 with **SeaORM 1.1** (on SQLx), native PG enums.
+- **Search**: **PostgreSQL** (SeaORM filters + ILIKE + GIN `tsvector`). Elasticsearch is
+  a *planned* relevance/perf upgrade (T092) — **not** Meilisearch.
+- **Cache/Queue/PubSub**: **Redis 7** (`redis` crate) — cache, rate-limiting, OTP TTL,
+  JWT deny-list, WS pub/sub, and the apalis job backend.
+- **Real-Time**: **Axum WebSocket** (Pusher-compatible) backed by Redis pub/sub — no
+  separate Node/Echo server.
+- **Auth**: **JWT** (`jsonwebtoken`, HS256), `bcrypt`, **TOTP** (`totp-rs`) for 2FA,
+  **native RBAC** (custom Role/Permission table — no casbin).
+- **Background Jobs**: **apalis** (Redis backend) for technical async work.
+- **Automation**: **n8n** for *business* workflows (métier) — kept; apalis for
+  *technical* jobs. (Constitution Principle IX, v3.1.0.)
+- **Messaging**: **Evolution API** (WhatsApp, single service), Twilio (SMS).
+- **Payments**: Orange Money API + MTN Mobile Money API (via `reqwest`).
+- **PDF**: **headless-chrome** (Chromium) rendering an HTML/Askama template.
+- **Object Storage**: **MinIO / S3** via `rust-s3`; `image` crate for WebP optimization.
+- **Secrets**: **HashiCorp Vault** (AppRole + Transit) in prod; `IMMOG_*` env in dev.
+- **Config**: `figment` (defaults → `config.toml` → `IMMOG_*` env).
+- **Monitoring**: `tracing` + OpenTelemetry, Sentry (`sentry` crate), Prometheus
+  (`metrics` + `metrics-exporter-prometheus`) + Grafana, OSSEC (HIDS).
+- **Testing**: `cargo test` (unit) + **`axum-test`** + **`testcontainers`**
+  (Postgres/Redis/MinIO).
+- **DevOps**: Docker (multi-stage Rust build), Docker Compose / Swarm, Traefik, Nginx.
 
 ---
 
 ## 1. Architecture Overview: Decoupled API-First
 
-### Decision: Laravel 11 (Backend API) + Next.js 14 (Frontend PWA)
+### Decision: Rust/Axum (Backend API) + Next.js 14 (Frontend PWA)
 
 **Rationale**:
-- **Best of Both Worlds**: Laravel's mature ecosystem (auth, queue, events, ORM) + Next.js's modern frontend (SSR, PWA, React)
-- **API-First**: Mobile apps (React Native/Flutter) can consume same API later
-- **Scalability**: Backend can scale independently (Laravel Octane + Swoole)
-- **Developer Experience**: Laravel's conventions + artisan CLI + Eloquent vs raw SQL
-- **Ecosystem**: Laravel has packages for everything (payments, PDF, queue, broadcasting)
+- **Modern async core**: Axum on Tokio gives first-class async I/O, structured
+  concurrency, and a Tower middleware ecosystem (timeouts, rate-limiting, tracing).
+- **API-First**: mobile apps can consume the same REST/WS API later.
+- **Independent scaling**: the stateless Rust API scales horizontally behind Traefik.
+- **Developer experience**: `cargo` (build/test/fmt/clippy), a single static binary to
+  deploy, and compile-time guarantees instead of runtime surprises.
+- **Ecosystem**: crates.io covers everything needed (JWT, S3, image, Redis, Postgres,
+  PDF, HTTP clients) with mature, audited crates.
 
 **Architecture Diagram**:
 ```
@@ -60,87 +82,111 @@ This document resolves all technology decisions for the ImmoGuinée platform wit
                 ↓                         ↓
     ┌───────────────────┐     ┌───────────────────┐
     │   NGINX (HTTPS)   │     │   NGINX (HTTPS)   │
-    │  Next.js Frontend │     │  Laravel Backend  │
+    │  Next.js Frontend │     │   Rust API + WS   │
     │   (Port 3000)     │     │    (Port 8000)    │
     └─────────┬─────────┘     └─────────┬─────────┘
               ↓                         ↓
     ┌─────────────────────┐   ┌─────────────────────┐
-    │   Next.js 16 Server │   │  Laravel 12 API     │
-    │  - SSR Pages        │   │  - REST Endpoints   │
-    │  - PWA Service      │   │  - Sanctum Auth     │
-    │  - Socket.IO Client │   │  - Eloquent ORM     │
-    │  - React 18         │   │  - Queue Workers    │
+    │   Next.js 14 Server │   │  Rust / Axum API    │
+    │  - SSR Pages        │   │  - REST endpoints   │
+    │  - PWA Service      │   │  - JWT auth + RBAC  │
+    │  - pusher-js client │   │  - SeaORM (Postgres)│
+    │  - React 18         │   │  - Axum WebSocket   │
     └─────────┬─────────┘     └─────────┬───────────┘
               │                         │
-              │        ┌────────────────┴────────┬──────────┬───────────┐
-              │        ↓                         ↓          ↓           ↓
-              │  ┌──────────┐  ┌──────────┐  ┌──────┐  ┌──────────┐  ┌────────┐
-              │  │PostgreSQL│  │  Redis   │  │ n8n  │  │Meilisearch│ │ MinIO │
-              │  │  (Main)  │  │ (Cache/  │  │(Auto)│  │ (Search) │  │  (S3)  │
-              │  │          │  │  Queue)  │  │      │  │          │  │        │
-              └──┴──────────┴──┴──────────┴──┴──────┴──┴──────────┴──┴────────┘
+              │        ┌────────────────┼──────────┬──────────┬──────────┐
+              │        ↓                ↓          ↓          ↓          ↓
+              │  ┌──────────┐  ┌──────────┐  ┌──────┐  ┌────────┐  ┌────────┐
+              │  │PostgreSQL│  │  Redis   │  │ n8n  │  │ apalis │  │ MinIO  │
+              │  │  (Main)  │  │(cache/WS/│  │(métier│ │(workers│ │  (S3)  │
+              │  │ +search  │  │ jobs/OTP)│  │ auto)│  │ techn.)│  │        │
+              └──┴──────────┴──┴──────────┴──┴──────┴──┴────────┴──┴────────┘
 ```
 
 **Communication Flow**:
-1. User browser → Traefik → Nginx → Next.js SSR
-2. Next.js → API call → Traefik → Nginx → Laravel API
-3. Laravel → PostgreSQL (via Eloquent)
-4. Laravel → Redis (cache, queue, sessions)
-5. Laravel → Meilisearch (search indexing)
-6. Laravel → MinIO/S3 (file uploads)
-7. Laravel Queue → Process async jobs (PDF generation, emails, etc.)
-8. n8n → Trigger Laravel webhooks (automation workflows)
+1. User browser → Traefik → Nginx → Next.js SSR.
+2. Next.js → API call → Traefik → Nginx → Rust API.
+3. Rust API → PostgreSQL (via SeaORM).
+4. Rust API → Redis (cache, rate-limit, OTP TTL, JWT deny-list, WS pub/sub).
+5. Rust API → PostgreSQL search (ILIKE / `tsvector`).
+6. Rust API → MinIO/S3 (photo/document uploads).
+7. Rust API → enqueues **apalis** jobs (PDF generation, notifications, auto-expiry).
+8. Rust API → triggers **n8n** webhooks for business automation workflows.
 
 ---
 
-## 2. Backend: Laravel 11 (PHP 8.2+)
+## 2. Backend: Rust (Axum + Tokio)
 
-### Decision: Laravel 11 with Laravel Octane
+### Decision: Axum 0.8 on Tokio, Rust edition 2024 (rust-version 1.85+)
 
 **Rationale**:
-- **Mature Framework**: 10+ years of development, battle-tested
-- **Eloquent ORM**: Best-in-class ORM (better than Prisma for complex queries)
-- **Built-in Features**:
-  - **Laravel Sanctum**: SPA + API token authentication (replaces JWT manual setup)
-  - **Laravel Queue**: Background jobs (Redis driver)
-  - **Laravel Echo**: Real-time broadcasting (WebSocket server)
-  - **Laravel Notifications**: Multi-channel (SMS, Email, WhatsApp, Telegram)
-  - **Laravel PDF**: PDF generation (DomPDF or Snappy)
-  - **Laravel Socialite**: OAuth (future Google/Facebook login)
-  - **Laravel Telescope**: Debug/monitoring dashboard
-- **Performance**: Laravel Octane (Swoole/RoadRunner) for 2000+ req/s
-- **Ecosystem**: 18,000+ packages on Packagist
+- **Performance & footprint**: a compiled async binary handles high concurrency with
+  low, predictable memory — ideal for constrained/cheap infrastructure.
+- **Correctness**: ownership + `Result`-based error handling remove null-deref and
+  most runtime panics; enums model domain states exhaustively.
+- **Composable middleware**: Tower layers for timeout, body-limit, CORS, tracing; our
+  own Redis rate-limiter as a small explicit middleware.
+- **Single artifact deploy**: one static binary (plus a migration binary) — no
+  interpreter, no `vendor/`, trivial containers.
 
-**Laravel 11 New Features** (Released March 2024):
-- Slimmer application skeleton
-- Streamlined directory structure
-- Per-second rate limiting
-- Health check endpoint built-in
-- Model casts improvements
+**Crate layout** (`rust-backend/`, crate `immog-backend`):
+- **lib + two binaries**: `immog-backend` (API server) and `immog-migrate`
+  (`up`/`down`/`status`/`fresh`), sharing `src/lib.rs`.
+- `src/domain/<name>/` — `dto.rs`, `handlers.rs`, `routes` per bounded context
+  (replaces Laravel Controllers + FormRequests + Resources).
+- `src/services/` — explicit service structs holding deps (replaces Laravel
+  container/facades).
+- `src/db/{migration,entities}/` — SeaORM migrations (schema source of truth) + entities.
+- `src/{auth,extractors,middleware}/` — JWT/RBAC/TOTP, `AuthUser`/`ValidatedJson`,
+  rate-limiting.
+- `src/{config,state,error,routes}.rs` — figment config, `AppState`, `AppError`, router.
 
-**Installation**:
-```bash
-composer create-project laravel/laravel immog-backend "11.*"
-cd immog-backend
-php artisan serve  # http://localhost:8000
+**Key crates**:
+```toml
+# Cargo.toml (excerpt) — edition = "2024", rust-version = "1.85"
+axum = { version = "0.8", features = ["macros", "ws", "multipart"] }
+tokio = { version = "1", features = ["full"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "trace", "timeout", "limit"] }
+sea-orm = { version = "1.1", features = ["sqlx-postgres", "runtime-tokio-rustls", "macros", "with-uuid", "with-chrono", "with-json"] }
+sea-orm-migration = "1.1"
+jsonwebtoken = "9"
+bcrypt = "0.15"
+totp-rs = { version = "5", features = ["gen_secret", "otpauth"] }
+redis = { version = "0.27", features = ["tokio-comp", "connection-manager"] }
+s3 = { package = "rust-s3", version = "0.35", default-features = false, features = ["tokio-rustls-tls"] }
+image = "0.25"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "multipart"] }
+figment = { version = "0.10", features = ["toml", "env"] }
+serde = { version = "1", features = ["derive"] }
+validator = { version = "0.18", features = ["derive"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+anyhow = "1"
+thiserror = "1"
+
+[dev-dependencies]
+axum-test = "17"          # 17 targets axum 0.8 (16 targets 0.7)
+testcontainers = "0.24"
+testcontainers-modules = { version = "0.12", features = ["postgres", "redis", "minio"] }
 ```
 
 ---
 
-## 3. Frontend: Next.js 16 + React 19
+## 3. Frontend: Next.js 14 + React 18
 
-### Decision: Next.js 16 App Router with TypeScript
+### Decision: Next.js 14 App Router with TypeScript (unchanged)
 
-**Rationale** (unchanged from previous plan):
-- **SSR + SSG**: Pre-render pages for SEO (public listings)
-- **PWA Support**: next-pwa plugin for offline capability
-- **Image Optimization**: Next.js `<Image>` component
-- **Code Splitting**: Automatic route-based code splitting
-- **TypeScript**: Type safety across frontend
+**Rationale**:
+- **SSR + SSG**: pre-render public listing pages for SEO.
+- **PWA**: `next-pwa` for offline capability on flaky mobile networks.
+- **Image Optimization**: the `<Image>` component (backend already serves 3 WebP sizes).
+- **TypeScript**: end-to-end type safety.
 
 **API Communication**:
-- **React Query** (TanStack Query v5): Data fetching, caching, synchronization
-- **Axios**: HTTP client with interceptors (auto-add Sanctum token)
+- **TanStack Query v5**: data fetching, caching, synchronization.
+- **Axios / fetch**: HTTP client with an interceptor that attaches the **JWT Bearer**
+  token (no Sanctum cookies / CSRF dance — the Rust API is stateless).
 
 **Example API Call**:
 ```typescript
@@ -148,13 +194,13 @@ php artisan serve  # http://localhost:8000
 import axios from 'axios'
 
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,  // http://localhost:8000/api
-  withCredentials: true  // Laravel Sanctum cookies
+  baseURL: process.env.NEXT_PUBLIC_API_URL, // http://localhost:8000/api
 })
 
-// Auto-add CSRF token
-apiClient.interceptors.request.use(async (config) => {
-  await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/sanctum/csrf-cookie`)
+// Attach the JWT access token (Bearer)
+apiClient.interceptors.request.use((config) => {
+  const token = getAccessToken()
+  if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
 
@@ -173,1115 +219,597 @@ export function useListings(filters: SearchFilters) {
       const { data } = await apiClient.get('/listings/search', { params: filters })
       return data.data
     },
-    staleTime: 5 * 60 * 1000  // 5 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes
   })
 }
 ```
 
 ---
 
-## 4. Database: PostgreSQL 15+ with Eloquent ORM
+## 4. Database: PostgreSQL 16 with SeaORM
 
-### Decision: Eloquent ORM (Laravel's Default)
+### Decision: SeaORM 1.1 (async, on SQLx)
 
 **Rationale**:
-- **Eloquent > Prisma**: Better for complex queries, eager loading, relationship management
-- **Active Record Pattern**: Intuitive model-centric approach
-- **Laravel Integration**: Seamless with migrations, seeders, factories
-- **Query Builder**: Fluent interface for complex queries
-- **Events & Observers**: Model lifecycle hooks (e.g., auto-send notification on payment)
+- **Async-native**: integrates cleanly with Tokio/Axum; connection pooling via SQLx.
+- **Type-safe**: entities are structs with `DeriveEntityModel`; native PG enums map to
+  Rust enums via `DeriveActiveEnum` — invalid states don't compile.
+- **Migrations as code**: `sea-orm-migration` is the schema source of truth; the
+  `immog-migrate` binary applies/rolls back.
+- **Query builder**: composable, injection-safe filters (replaces Eloquent scopes).
 
-**Migration Example**:
-```php
-// database/migrations/2025_01_28_create_listings_table.php
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
+**Migration Example** (`src/db/migration/m20250128_000003_create_listings.rs`):
+```rust
+use sea_orm_migration::prelude::*;
 
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('listings', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->foreignUuid('createur_id')->constrained('users')->onDelete('cascade');
-            $table->enum('type_operation', ['LOCATION', 'VENTE']);
-            $table->enum('type_bien', ['VILLA', 'APPARTEMENT', 'STUDIO', 'TERRAIN', 'COMMERCE', 'BUREAU', 'ENTREPOT']);
-            $table->string('titre', 100);
-            $table->text('description');
-            $table->unsignedBigInteger('prix_gnf');
-            $table->enum('quartier', ['KALOUM', 'DIXINN', 'RATOMA', 'MATAM', 'MATOTO', 'DUBREKA_CENTRE', 'DUBREKA_PERIPHERIE', 'COYAH_CENTRE', 'COYAH_PERIPHERIE']);
-            $table->string('adresse_complete', 500)->nullable();
-            $table->integer('superficie_m2')->nullable();
-            $table->integer('nombre_chambres')->nullable();
-            $table->integer('nombre_salons')->nullable();
-            $table->integer('caution_mois')->nullable();
-            $table->json('equipements')->nullable();
-            $table->json('photos');
-            $table->enum('statut', ['DISPONIBLE', 'EN_NEGOCIATION', 'LOUE_VENDU', 'EXPIRE', 'ARCHIVE', 'SUSPENDU'])->default('DISPONIBLE');
-            $table->integer('nombre_vues')->default(0);
-            $table->json('options_premium')->default('{"badge_urgent":false,"remontee_48h":false,"photos_pro":false}');
-            $table->timestampTz('date_publication')->useCurrent();
-            $table->timestampTz('date_derniere_maj')->nullable();
-            $table->timestampTz('date_expiration');  // publication + 90 days
-            $table->timestamps();
+#[derive(DeriveMigrationName)]
+pub struct Migration;
 
-            // Indexes for performance (FR-094: <500ms)
-            $table->index(['quartier', 'statut']);
-            $table->index(['type_bien', 'statut']);
-            $table->index(['prix_gnf', 'statut']);
-            $table->index(['date_publication']);
-            $table->index(['nombre_vues']);
-        });
-
-        // Full-text search index (PostgreSQL)
-        DB::statement('CREATE INDEX listings_fulltext_idx ON listings USING GIN(to_tsvector(\'french\', titre || \' \' || description))');
+#[async_trait::async_trait]
+impl MigrationTrait for Migration {
+    async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        // Native PG enums (type_operation, type_bien, quartier, statut_annonce) are
+        // created in the enums migration. Tables use raw SQL for enum columns + GIN.
+        manager.get_connection().execute_unprepared(r#"
+            CREATE TABLE listings (
+                id                 UUID PRIMARY KEY,
+                createur_id        UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                type_operation     type_operation NOT NULL,
+                type_bien          type_bien NOT NULL,
+                titre              VARCHAR(100) NOT NULL,
+                description        TEXT NOT NULL,
+                prix_gnf           BIGINT NOT NULL,
+                quartier           quartier NOT NULL,
+                adresse_complete   VARCHAR(500),
+                superficie_m2      INTEGER,
+                nombre_chambres    INTEGER,
+                nombre_salons      INTEGER,
+                caution_mois       INTEGER,
+                equipements        JSONB,
+                photos             JSONB NOT NULL DEFAULT '[]',
+                statut             statut_annonce NOT NULL DEFAULT 'DISPONIBLE',
+                nombre_vues        INTEGER NOT NULL DEFAULT 0,
+                options_premium    JSONB NOT NULL DEFAULT '{"badge_urgent":false,"remontee_48h":false,"photos_pro":false}',
+                date_publication   TIMESTAMPTZ NOT NULL DEFAULT now(),
+                date_derniere_maj  TIMESTAMPTZ,
+                date_expiration    TIMESTAMPTZ NOT NULL
+            );
+            CREATE INDEX listings_quartier_statut_idx ON listings (quartier, statut);
+            CREATE INDEX listings_type_statut_idx     ON listings (type_bien, statut);
+            CREATE INDEX listings_prix_statut_idx      ON listings (prix_gnf, statut);
+            CREATE INDEX listings_date_pub_idx         ON listings (date_publication);
+            CREATE INDEX listings_fulltext_idx ON listings
+                USING GIN (to_tsvector('french', titre || ' ' || description));
+        "#).await?;
+        Ok(())
     }
 
-    public function down(): void
-    {
-        Schema::dropIfExists('listings');
-    }
-};
-```
-
-**Model Example**:
-```php
-// app/Models/Listing.php
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
-
-class Listing extends Model
-{
-    use HasUuids;
-
-    protected $fillable = [
-        'createur_id', 'type_operation', 'type_bien', 'titre', 'description',
-        'prix_gnf', 'quartier', 'adresse_complete', 'superficie_m2',
-        'nombre_chambres', 'nombre_salons', 'caution_mois', 'equipements',
-        'photos', 'statut', 'options_premium', 'date_expiration'
-    ];
-
-    protected $casts = [
-        'equipements' => 'array',
-        'photos' => 'array',
-        'options_premium' => 'array',
-        'date_publication' => 'datetime',
-        'date_expiration' => 'datetime',
-    ];
-
-    // Relationships
-    public function createur(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'createur_id');
-    }
-
-    public function contracts()
-    {
-        return $this->hasMany(Contract::class, 'annonce_id');
-    }
-
-    // Auto-set expiration date
-    protected static function booted(): void
-    {
-        static::creating(function (Listing $listing) {
-            $listing->date_expiration = now()->addDays(90);
-        });
-    }
-
-    // Scope for active listings
-    public function scopeActive($query)
-    {
-        return $query->where('statut', 'DISPONIBLE');
-    }
-
-    // Full-text search
-    public function scopeSearch($query, string $term)
-    {
-        return $query->whereRaw(
-            "to_tsvector('french', titre || ' ' || description) @@ plainto_tsquery('french', ?)",
-            [$term]
-        );
+    async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        manager.get_connection()
+            .execute_unprepared("DROP TABLE IF EXISTS listings;").await?;
+        Ok(())
     }
 }
 ```
 
-**Query Examples**:
-```php
-// Simple query
-$listings = Listing::where('quartier', 'KALOUM')
-    ->where('statut', 'DISPONIBLE')
-    ->orderBy('date_publication', 'desc')
-    ->paginate(20);
+**Entity Example** (`src/db/entities/listing.rs`):
+```rust
+use sea_orm::entity::prelude::*;
+use super::sea_orm_active_enums::{Quartier, StatutAnnonce, TypeBien, TypeOperation};
 
-// Complex query with relationships (eager loading)
-$listings = Listing::with('createur:id,nom_complet,badge_certification,note_moyenne')
-    ->where('quartier', 'KALOUM')
-    ->where('prix_gnf', '>=', 2000000)
-    ->where('prix_gnf', '<=', 3000000)
-    ->active()
-    ->orderBy('nombre_vues', 'desc')
-    ->paginate(20);
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, serde::Serialize, serde::Deserialize)]
+#[sea_orm(table_name = "listings")]
+pub struct Model {
+    #[sea_orm(primary_key, auto_increment = false)]
+    pub id: Uuid,
+    pub createur_id: Uuid,
+    pub type_operation: TypeOperation,
+    pub type_bien: TypeBien,
+    pub titre: String,
+    pub description: String,
+    pub prix_gnf: i64,
+    pub quartier: Quartier,
+    pub statut: StatutAnnonce,
+    pub nombre_vues: i32,
+    pub photos: Json,
+    pub date_publication: DateTimeWithTimeZone,
+    pub date_expiration: DateTimeWithTimeZone,
+    // ... remaining columns
+}
 
-// Full-text search
-$results = Listing::search('vue mer')
-    ->where('quartier', 'KALOUM')
-    ->paginate(20);
+#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
+pub enum Relation {
+    #[sea_orm(belongs_to = "super::user::Entity",
+        from = "Column::CreateurId", to = "super::user::Column::Id")]
+    Createur,
+}
+impl Related<super::user::Entity> for Entity {
+    fn to() -> RelationDef { Relation::Createur.def() }
+}
+impl ActiveModelBehavior for ActiveModel {}
+```
+
+> **Enum serde**: `DeriveActiveEnum` columns carry
+> `#[serde(rename_all = "SCREAMING_SNAKE_CASE")]` so JSON matches the DB values
+> (`KALOUM`, not `Kaloum`) — a real bug caught by an integration test during
+> implementation.
+
+**Query Examples** (the search endpoint, `src/domain/listings/query.rs`):
+```rust
+use sea_orm::{ColumnTrait, Condition, EntityTrait, QueryFilter, QueryOrder, PaginatorTrait};
+
+let mut cond = Condition::all().add(listing::Column::Statut.eq(StatutAnnonce::Disponible));
+if let Some(q) = &params.quartier   { cond = cond.add(listing::Column::Quartier.eq(q.clone())); }
+if let Some(min) = params.prix_min  { cond = cond.add(listing::Column::PrixGnf.gte(min)); }
+if let Some(max) = params.prix_max  { cond = cond.add(listing::Column::PrixGnf.lte(max)); }
+if let Some(text) = &params.q {
+    let like = format!("%{text}%");
+    cond = cond.add(
+        Condition::any()
+            .add(listing::Column::Titre.like(&like))
+            .add(listing::Column::Description.like(&like)),
+    );
+}
+
+let paginator = listing::Entity::find()
+    .filter(cond)
+    .order_by_desc(listing::Column::DatePublication)
+    .paginate(&db, per_page);
+let total = paginator.num_items().await?;
+let rows  = paginator.fetch_page(page - 1).await?;
 ```
 
 ---
 
-## 5. Advanced Search: Meilisearch
+## 5. Search: PostgreSQL (Elasticsearch planned)
 
-### Decision: Meilisearch (Open Source Search Engine)
+### Decision: PostgreSQL search now; Elasticsearch as a future upgrade (T092)
 
 **Rationale**:
-- **Typo-Tolerance**: "appartemen" finds "appartement"
-- **Instant Search**: <50ms search response time
-- **Faceted Search**: Aggregate filters (e.g., count by quartier)
-- **Ranking**: Relevance-based ranking algorithm
-- **Highlights**: Search term highlighting in results
-- **Multi-Language**: French + Arabic support
-- **Open Source**: MIT license, self-hosted
+- **One less moving part**: Postgres already stores the data. ILIKE on titre/description
+  plus a **GIN `to_tsvector('french', …)`** index covers MVP relevance with no extra
+  service to run, secure, and back up (**no Meilisearch**).
+- **Filters + pagination**: quartier/type/prix/chambres filters and `LIMIT/OFFSET`
+  pagination are expressed directly in SeaORM.
+- **Good enough at MVP scale**: for the initial listing volume, Postgres meets the
+  <500 ms search target (FR-094).
 
-**Laravel Integration** (Laravel Scout):
-```bash
-composer require laravel/scout
-composer require meilisearch/meilisearch-php
-php artisan vendor:publish --provider="Laravel\Scout\ScoutServiceProvider"
-```
+**When to add Elasticsearch (T092)** — a *planned* upgrade, not MVP:
+- Typo-tolerance ("appartemen" → "appartement"), faceted counts, and relevance ranking
+  beyond what `tsvector` offers, once volume/latency demands it.
+- Integration would index changes via an apalis job (or Postgres logical replication →
+  indexer), keeping Postgres the source of truth.
 
-**Configure** (`config/scout.php`):
-```php
-'driver' => env('SCOUT_DRIVER', 'meilisearch'),
-
-'meilisearch' => [
-    'host' => env('MEILISEARCH_HOST', 'http://localhost:7700'),
-    'key' => env('MEILISEARCH_KEY'),
-],
-```
-
-**Make Model Searchable**:
-```php
-// app/Models/Listing.php
-use Laravel\Scout\Searchable;
-
-class Listing extends Model
-{
-    use Searchable;
-
-    public function toSearchableArray(): array
-    {
-        return [
-            'id' => $this->id,
-            'titre' => $this->titre,
-            'description' => $this->description,
-            'quartier' => $this->quartier,
-            'type_bien' => $this->type_bien,
-            'prix_gnf' => $this->prix_gnf,
-            'statut' => $this->statut,
-        ];
-    }
-
-    public function searchableAs(): string
-    {
-        return 'listings_index';
-    }
-}
-```
-
-**Search Usage**:
-```php
-// Controller: app/Http/Controllers/Api/ListingController.php
-public function search(Request $request)
-{
-    $results = Listing::search($request->q)
-        ->where('statut', 'DISPONIBLE')
-        ->where('quartier', $request->quartier)  // Facet filter
-        ->paginate(20);
-
-    return response()->json([
-        'success' => true,
-        'data' => ListingResource::collection($results),
-        'meta' => [
-            'total' => $results->total(),
-            'per_page' => $results->perPage(),
-            'current_page' => $results->currentPage(),
-        ]
-    ]);
-}
-```
-
-**Index Settings** (Facets, Sortable):
-```bash
-curl -X PATCH 'http://localhost:7700/indexes/listings_index/settings' \
-  -H 'Content-Type: application/json' \
-  --data-binary '{
-    "filterableAttributes": ["quartier", "type_bien", "statut", "prix_gnf"],
-    "sortableAttributes": ["prix_gnf", "date_publication", "nombre_vues"],
-    "rankingRules": [
-      "words",
-      "typo",
-      "proximity",
-      "attribute",
-      "sort",
-      "exactness"
-    ]
-  }'
+**Full-text query** (already available via the GIN index):
+```rust
+// Optional relevance mode using the GIN tsvector index (raw SQL through SeaORM):
+let sql = r#"
+    SELECT * FROM listings
+    WHERE statut = 'DISPONIBLE'
+      AND to_tsvector('french', titre || ' ' || description)
+          @@ plainto_tsquery('french', $1)
+    ORDER BY date_publication DESC
+    LIMIT $2 OFFSET $3
+"#;
+let rows = listing::Entity::find()
+    .from_raw_sql(Statement::from_sql_and_values(
+        DbBackend::Postgres, sql, [term.into(), per_page.into(), offset.into()],
+    ))
+    .all(&db).await?;
 ```
 
 ---
 
-## 6. Authentication: Laravel Sanctum
+## 6. Authentication: JWT + native RBAC + TOTP
 
-### Decision: Laravel Sanctum (SPA + API Tokens)
+### Decision: `jsonwebtoken` (HS256) + `bcrypt` + `totp-rs`, RBAC hand-rolled
 
 **Rationale**:
-- **Built for SPAs**: Cookie-based auth for same-domain Next.js
-- **API Tokens**: For mobile apps (future React Native)
-- **CSRF Protection**: Built-in CSRF token handling
-- **Simple Setup**: No JWT library needed
-- **Laravel Native**: Fully integrated with Laravel auth
+- **Stateless & mobile-friendly**: JWT Bearer tokens work identically for the SPA and
+  future mobile apps — no server-side session/cookie/CSRF machinery (replaces Sanctum).
+- **Revocation without statefulness**: each token carries a `jti`; logout writes the
+  `jti` to a **Redis deny-list** with a TTL == remaining token lifetime.
+- **2FA**: `totp-rs` (feature `gen_secret` + `otpauth`) for optional TOTP, provisioning
+  URIs for authenticator apps.
+- **RBAC native, not casbin**: a small static `Role → Permission` table is simpler,
+  faster, and fully type-checked; casbin's policy engine is overkill for 6 roles / 11
+  permissions.
 
-**Setup**:
-```bash
-composer require laravel/sanctum
-php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"
-php artisan migrate
-```
+**Token model** (`src/auth/jwt.rs`):
+```rust
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Claims {
+    pub sub: Uuid,          // user id
+    pub role: String,       // RBAC role
+    pub token_type: TokenType, // Access | Refresh
+    pub iat: i64,
+    pub exp: i64,
+    pub jti: Uuid,          // for Redis deny-list revocation
+}
 
-**Configure** (`config/sanctum.php`):
-```php
-'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(
-    '%s%s',
-    'localhost,localhost:3000,127.0.0.1,127.0.0.1:3000,::1',
-    env('APP_URL') ? ','.parse_url(env('APP_URL'), PHP_URL_HOST) : ''
-))),
-```
-
-**API Routes** (`routes/api.php`):
-```php
-use App\Http\Controllers\Api\AuthController;
-use Illuminate\Support\Facades\Route;
-
-// Public routes
-Route::post('/auth/register', [AuthController::class, 'register']);
-Route::post('/auth/login', [AuthController::class, 'login']);
-Route::post('/auth/otp/send', [AuthController::class, 'sendOtp']);
-Route::post('/auth/otp/verify', [AuthController::class, 'verifyOtp']);
-
-// Protected routes (Sanctum middleware)
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/auth/me', [AuthController::class, 'me']);
-    Route::post('/auth/logout', [AuthController::class, 'logout']);
-    Route::patch('/auth/me', [AuthController::class, 'updateProfile']);
-
-    // Listings
-    Route::apiResource('listings', ListingController::class);
-    Route::post('/listings/{id}/views', [ListingController::class, 'incrementViews']);
-
-    // Contracts
-    Route::post('/contracts/generate', [ContractController::class, 'generate']);
-    Route::post('/contracts/{id}/sign', [ContractController::class, 'sign']);
-
-    // Payments
-    Route::post('/payments/initiate', [PaymentController::class, 'initiate']);
-    Route::post('/payments/escrow/{id}/validate', [PaymentController::class, 'validateEscrow']);
-});
-```
-
-**AuthController Example**:
-```php
-// app/Http/Controllers/Api/AuthController.php
-namespace App\Http\Controllers\Api;
-
-use App\Http\Controllers\Controller;
-use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
-
-class AuthController extends Controller
-{
-    public function register(Request $request)
-    {
-        $request->validate([
-            'telephone' => 'required|regex:/^\+224\s?6[0-9]{2}\s?[0-9]{3}\s?[0-9]{3}$/|unique:users',
-            'nom_complet' => 'required|string|min:3|max:255',
-            'email' => 'nullable|email|unique:users',
-            'mot_de_passe' => 'required|string|min:8|regex:/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/',
-            'type_compte' => 'required|in:PARTICULIER,AGENCE,DIASPORA',
-        ]);
-
-        $user = User::create([
-            'telephone' => $request->telephone,
-            'nom_complet' => $request->nom_complet,
-            'email' => $request->email,
-            'mot_de_passe_hash' => Hash::make($request->mot_de_passe),
-            'type_compte' => $request->type_compte,
-            'badge_certification' => 'BRONZE',  // FR-002
-        ]);
-
-        // Generate OTP and send SMS (via Laravel Notification)
-        $otp = rand(100000, 999999);
-        Cache::put("otp:{$user->telephone}:register", $otp, now()->addMinutes(5));
-
-        $user->notify(new OtpNotification($otp));  // Twilio SMS
-
-        return response()->json([
-            'success' => true,
-            'message' => "OTP envoyé à {$user->telephone}",
-            'data' => [
-                'user_id' => $user->id,
-                'telephone' => $user->telephone,
-                'otp_expires_at' => now()->addMinutes(5)->toIso8601String(),
-            ]
-        ]);
-    }
-
-    public function verifyOtp(Request $request)
-    {
-        $request->validate([
-            'telephone' => 'required',
-            'otp_code' => 'required|digits:6',
-        ]);
-
-        $cachedOtp = Cache::get("otp:{$request->telephone}:register");
-
-        if (!$cachedOtp || $cachedOtp !== (int)$request->otp_code) {
-            throw ValidationException::withMessages([
-                'otp_code' => ['Code OTP invalide ou expiré.'],
-            ]);
-        }
-
-        $user = User::where('telephone', $request->telephone)->firstOrFail();
-
-        // Delete OTP
-        Cache::forget("otp:{$request->telephone}:register");
-
-        // Create Sanctum token
-        $token = $user->createToken('web')->plainTextToken;
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Inscription réussie. Bienvenue sur ImmoGuinée!',
-            'data' => [
-                'user' => $user,
-                'access_token' => $token,
-            ]
-        ]);
-    }
-
-    public function login(Request $request)
-    {
-        $request->validate([
-            'telephone' => 'required',
-            'mot_de_passe' => 'required',
-        ]);
-
-        $user = User::where('telephone', $request->telephone)->first();
-
-        if (!$user || !Hash::check($request->mot_de_passe, $user->mot_de_passe_hash)) {
-            throw ValidationException::withMessages([
-                'telephone' => ['Numéro de téléphone ou mot de passe incorrect.'],
-            ]);
-        }
-
-        if ($user->statut_compte !== 'ACTIF') {
-            throw ValidationException::withMessages([
-                'telephone' => ['Compte suspendu ou banni.'],
-            ]);
-        }
-
-        $user->update(['derniere_connexion' => now()]);
-
-        $token = $user->createToken('web')->plainTextToken;
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Connexion réussie',
-            'data' => [
-                'user' => $user,
-                'access_token' => $token,
-            ]
-        ]);
-    }
-
-    public function me(Request $request)
-    {
-        return response()->json([
-            'success' => true,
-            'data' => $request->user(),
-        ]);
-    }
-
-    public function logout(Request $request)
-    {
-        $request->user()->currentAccessToken()->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Déconnexion réussie',
-        ]);
-    }
+pub fn issue_pair(secret: &[u8], user_id: Uuid, role: &str) -> AppResult<TokenPair> {
+    let access  = encode_token(secret, user_id, role, TokenType::Access,  Duration::hours(24))?;
+    let refresh = encode_token(secret, user_id, role, TokenType::Refresh, Duration::days(7))?;
+    Ok(TokenPair { access, refresh })
 }
 ```
+
+**RBAC** (`src/auth/rbac.rs`): a static table maps each `Role` (Admin, Moderateur,
+Agence, Particulier, Diaspora, Support) to its `Permission` set (ManageUsers,
+ManageListings, ViewAnalytics, ManageCertifications, …). `Role::has(perm)` is a cheap
+lookup; `AuthUser::require_permission(perm)` returns `403` otherwise.
+
+**AuthUser extractor** (`src/extractors/auth_user.rs`): implements
+`FromRequestParts` — parses `Authorization: Bearer`, verifies signature/expiry, checks
+the Redis deny-list (`revoked:{jti}`), and yields `{ id, role, jti, exp }`.
+
+**Routes** (`src/domain/auth`, mounted under `/api`):
+```rust
+Router::new()
+    .route("/auth/register",    post(register))
+    .route("/auth/login",       post(login))
+    .route("/auth/verify-otp",  post(verify_otp))
+    .route("/auth/refresh",     post(refresh))
+    .route("/auth/me",          get(me).patch(update_me)) // AuthUser
+    .route("/auth/logout",      post(logout))             // AuthUser → deny-list jti
+```
+
+**Register handler** (`src/domain/auth/handlers.rs`, sketch):
+```rust
+pub async fn register(
+    State(state): State<SharedState>,
+    ValidatedJson(req): ValidatedJson<RegisterRequest>,
+) -> AppResult<Json<Envelope<UserPublic>>> {
+    req.validate_password_strength()?;                 // FR-003
+    if user::Entity::find().filter(user::Column::Telephone.eq(&req.telephone))
+        .one(&state.db).await?.is_some() {
+        return Err(AppError::Conflict("Téléphone déjà utilisé".into()));
+    }
+    let hash = bcrypt::hash(&req.mot_de_passe, bcrypt::DEFAULT_COST)?;
+    let user = user::ActiveModel {
+        id: Set(Uuid::new_v4()),
+        telephone: Set(req.telephone.clone()),
+        nom_complet: Set(req.nom_complet),
+        mot_de_passe_hash: Set(hash),
+        type_compte: Set(req.type_compte),
+        badge_certification: Set(BadgeCertification::Bronze), // FR-002
+        ..Default::default()
+    }.insert(&state.db).await?;
+
+    // OTP with anti-fraud (FR-029): Redis TTL + per-number throttle
+    state.otp.issue(&user.telephone).await?;           // logs code in dev
+    Ok(Json(Envelope::ok(UserPublic::from(user))))
+}
+```
+
+Passwords use `bcrypt`; login verifies the hash and, on success, issues the JWT pair.
+`POST /auth/logout` adds the current `jti` to the Redis deny-list. Secrets (the JWT
+signing key) come from Vault in prod, `IMMOG_JWT_SECRET` in dev.
 
 ---
 
-## 7. Real-Time: Laravel Echo + Socket.IO
+## 7. Real-Time: Axum WebSocket (Pusher-compatible)
 
-### Decision: Laravel Echo Server (Broadcasting) + Socket.IO Client
+### Decision: Axum WS endpoint backed by Redis pub/sub — no separate Echo server
 
 **Rationale**:
-- **Laravel Native**: Laravel Broadcasting events → Echo Server → Socket.IO
-- **Redis Driver**: Use Redis for pub/sub (same Redis as cache/queue)
-- **Presence Channels**: Know who's online in a conversation
-- **Private Channels**: Secure user-specific notifications
+- **One process**: the backend serves WebSocket upgrades at `/api/ws` itself
+  (`axum` `ws` feature). No Node.js/Laravel-Echo broadcasting daemon to run or scale.
+- **Fan-out across replicas**: events are published to Redis pub/sub; every API replica
+  subscribes and pushes to its connected sockets — horizontal scaling just works.
+- **Frontend unchanged**: the existing `laravel-echo` + `pusher-js` client keeps
+  working; it simply points at the Axum WS endpoint (Pusher protocol-compatible).
+- **Private channels**: the WS upgrade is authenticated with the JWT Bearer token; the
+  server authorizes channel subscriptions (e.g. `conversation.{id}`) against membership.
 
-**Setup**:
-
-1. **Install Laravel Broadcasting**:
-```bash
-composer require pusher/pusher-php-server
+**Backend (domain events → WS)** (`domain::messaging::events`, *planned* with US6):
+```rust
+// Publish to Redis; all replicas fan out to their sockets.
+broadcast(&state, Event::NewMessage { conversation_id, message }).await?;
+broadcast(&state, Event::TypingIndicator { conversation_id, user_id }).await?;
+broadcast(&state, Event::MessageRead { message_id }).await?;
 ```
 
-2. **Configure** (`config/broadcasting.php`):
-```php
-'default' => env('BROADCAST_DRIVER', 'redis'),
-
-'connections' => [
-    'redis' => [
-        'driver' => 'redis',
-        'connection' => 'default',
-    ],
-],
-```
-
-3. **Install Laravel Echo Server** (Node.js):
-```bash
-npm install -g laravel-echo-server
-laravel-echo-server init
-```
-
-`laravel-echo-server.json`:
-```json
-{
-  "authHost": "http://localhost:8000",
-  "authEndpoint": "/broadcasting/auth",
-  "clients": [
-    {
-      "appId": "immog",
-      "key": "immog-secret-key"
-    }
-  ],
-  "database": "redis",
-  "databaseConfig": {
-    "redis": {
-      "host": "127.0.0.1",
-      "port": "6379"
-    }
-  },
-  "devMode": true,
-  "host": null,
-  "port": "6001",
-  "protocol": "http",
-  "socketio": {},
-  "secureOptions": 67108864,
-  "sslCertPath": "",
-  "sslKeyPath": "",
-  "sslCertChainPath": "",
-  "sslPassphrase": "",
-  "subscribers": {
-    "http": true,
-    "redis": true
-  },
-  "apiOriginAllow": {
-    "allowCors": true,
-    "allowOrigin": "http://localhost:3000",
-    "allowMethods": "GET, POST",
-    "allowHeaders": "Origin, Content-Type, X-Auth-Token, X-Requested-With, Accept, Authorization, X-CSRF-TOKEN, X-Socket-Id"
-  }
+**WebSocket handler** (sketch):
+```rust
+async fn ws_handler(
+    ws: WebSocketUpgrade,
+    auth: AuthUser,                     // JWT-authenticated upgrade
+    State(state): State<SharedState>,
+) -> impl IntoResponse {
+    ws.on_upgrade(move |socket| async move {
+        // subscribe to Redis channels the user may access, forward messages to `socket`
+        serve_socket(state, auth, socket).await;
+    })
 }
 ```
 
-4. **Define Event** (`app/Events/NewMessage.php`):
-```php
-namespace App\Events;
-
-use App\Models\Message;
-use Illuminate\Broadcasting\Channel;
-use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
-use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Foundation\Events\Dispatchable;
-use Illuminate\Queue\SerializesModels;
-
-class NewMessage implements ShouldBroadcast
-{
-    use Dispatchable, InteractsWithSockets, SerializesModels;
-
-    public function __construct(public Message $message) {}
-
-    public function broadcastOn(): array
-    {
-        return [
-            new PrivateChannel("conversation.{$this->message->conversation_id}"),
-        ];
-    }
-
-    public function broadcastAs(): string
-    {
-        return 'message.new';
-    }
-
-    public function broadcastWith(): array
-    {
-        return [
-            'message' => $this->message->load('expediteur:id,nom_complet,photo_profil_url'),
-        ];
-    }
-}
-```
-
-5. **Dispatch Event**:
-```php
-// app/Http/Controllers/Api/MessageController.php
-public function send(Request $request, string $conversationId)
-{
-    $message = Message::create([
-        'conversation_id' => $conversationId,
-        'expediteur_id' => $request->user()->id,
-        'type_message' => 'TEXTE',
-        'contenu_texte' => $request->contenu,
-    ]);
-
-    // Broadcast to all conversation participants
-    broadcast(new NewMessage($message))->toOthers();
-
-    return response()->json([
-        'success' => true,
-        'data' => $message,
-    ]);
-}
-```
-
-6. **Frontend Setup** (Next.js):
-```bash
-npm install laravel-echo socket.io-client
-```
-
+**Frontend client** (unchanged, targets Axum WS):
 ```typescript
-// lib/echo.ts
+// lib/socket/echo.ts
 import Echo from 'laravel-echo'
-import io from 'socket.io-client'
-
-window.io = io
+import Pusher from 'pusher-js'
+window.Pusher = Pusher
 
 export const echo = new Echo({
-  broadcaster: 'socket.io',
-  host: process.env.NEXT_PUBLIC_ECHO_SERVER_URL,  // http://localhost:6001
-  auth: {
-    headers: {
-      Authorization: `Bearer ${getAccessToken()}`,
-    },
-  },
+  broadcaster: 'pusher',
+  key: process.env.NEXT_PUBLIC_WS_APP_KEY,
+  wsHost: process.env.NEXT_PUBLIC_WS_HOST, // Axum WS (pusher-compat)
+  wsPort: Number(process.env.NEXT_PUBLIC_WS_PORT), // 8000
+  forceTLS: false,
+  auth: { headers: { Authorization: `Bearer ${getAccessToken()}` } },
 })
-```
 
-```typescript
-// components/MessageThread.tsx
-import { useEffect } from 'react'
-import { echo } from '@/lib/echo'
-
-export function MessageThread({ conversationId }: { conversationId: string }) {
-  useEffect(() => {
-    echo
-      .private(`conversation.${conversationId}`)
-      .listen('.message.new', (event: { message: Message }) => {
-        console.log('New message:', event.message)
-        // Update UI with new message
-      })
-
-    return () => {
-      echo.leave(`conversation.${conversationId}`)
-    }
-  }, [conversationId])
-
-  return <div>...</div>
-}
+echo.private(`conversation.${conversationId}`)
+    .listen('NewMessage', (e) => { /* update UI */ })
 ```
 
 ---
 
-## 8. Background Jobs: Laravel Queue (Redis Driver)
+## 8. Background Jobs: apalis (Redis backend)
 
-### Decision: Laravel Queue with Redis Driver + Horizon Dashboard
+### Decision: apalis for technical async work; n8n for business workflows
 
 **Rationale**:
-- **Async Processing**: PDF generation, email sending, image optimization (don't block HTTP response)
-- **Redis Driver**: Fast, reliable, same Redis as cache
-- **Horizon**: Beautiful dashboard for monitoring queues
-- **Retry Logic**: Auto-retry failed jobs
-- **Priority Queues**: High priority for payment confirmations, low priority for emails
+- **Async off the request path**: PDF generation, photo re-processing, email/SMS/push
+  dispatch, and scheduled sweeps (listing auto-expiry, payment release) run on **apalis**
+  workers so HTTP responses stay fast.
+- **Redis backend**: same Redis instance as cache/pub-sub; reliable, retry-able,
+  observable.
+- **Clear split** (Constitution Principle IX, v3.1.0): **apalis = technique**
+  (in-process, typed Rust jobs), **n8n = métier** (business-configurable workflows,
+  e.g. multi-channel notification fan-out, external integrations).
 
-**Setup**:
-```bash
-composer require laravel/horizon
-php artisan horizon:install
-php artisan migrate
-```
+**Job definition** (`src/jobs/generate_contract_pdf.rs`, *planned* — Contracts phase):
+```rust
+use apalis::prelude::*;
 
-**Configure** (`config/queue.php`):
-```php
-'default' => env('QUEUE_CONNECTION', 'redis'),
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GenerateContractPdf { pub contract_id: Uuid }
 
-'connections' => [
-    'redis' => [
-        'driver' => 'redis',
-        'connection' => 'default',
-        'queue' => env('REDIS_QUEUE', 'default'),
-        'retry_after' => 90,
-        'block_for' => null,
-    ],
-],
-```
+pub async fn generate_contract_pdf(
+    job: GenerateContractPdf,
+    state: Data<SharedState>,
+) -> Result<(), JobError> {
+    let contract = contract::Entity::find_by_id(job.contract_id)
+        .one(&state.db).await?.ok_or(JobError::NotFound)?;
 
-**Job Example** (`app/Jobs/GenerateContractPDF.php`):
-```php
-namespace App\Jobs;
+    // Render HTML (Askama template) → PDF via headless Chromium (see §9).
+    let pdf = state.pdf.render_bail_location(&contract).await?;
 
-use App\Models\Contract;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
-use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Facades\Storage;
+    let key = format!("contracts/{}.pdf", contract.id);
+    let url = state.storage.put(&key, &pdf, "application/pdf").await?;
+    let hash = sha256_hex(&pdf);
 
-class GenerateContractPDF implements ShouldQueue
-{
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    let mut am: contract::ActiveModel = contract.into();
+    am.fichier_pdf_url = Set(Some(url));
+    am.hash_sha256    = Set(Some(hash));
+    am.update(&state.db).await?;
 
-    public function __construct(public Contract $contract) {}
-
-    public function handle(): void
-    {
-        // Load contract data with relationships
-        $this->contract->load(['proprietaire', 'locataire', 'annonce']);
-
-        // Generate PDF from Blade template
-        $pdf = Pdf::loadView('contracts.bail-location', [
-            'contract' => $this->contract,
-            'landlord' => $this->contract->proprietaire,
-            'tenant' => $this->contract->locataire,
-            'listing' => $this->contract->annonce,
-        ]);
-
-        // Save to S3
-        $fileName = "contracts/{$this->contract->id}.pdf";
-        Storage::disk('s3')->put($fileName, $pdf->output(), 'private');
-
-        // Update contract with PDF URL and hash
-        $this->contract->update([
-            'fichier_pdf_url' => Storage::disk('s3')->url($fileName),
-            'hash_sha256' => hash('sha256', $pdf->output()),
-        ]);
-
-        // Fire event (will trigger n8n workflow for notifications)
-        event(new ContractGenerated($this->contract));
-    }
-
-    public function failed(\Throwable $exception): void
-    {
-        // Log error, notify admin
-        \Log::error("Contract PDF generation failed for {$this->contract->id}: {$exception->getMessage()}");
-    }
+    // Hand off business notifications to n8n (webhook).
+    state.n8n.trigger("contract-generated", &job.contract_id).await?;
+    Ok(())
 }
 ```
 
-**Dispatch Job**:
-```php
-// app/Http/Controllers/Api/ContractController.php
-public function generate(Request $request)
-{
-    $contract = Contract::create([
-        'type_contrat' => $request->type_contrat,
-        'annonce_id' => $request->annonce_id,
-        'proprietaire_id' => $request->proprietaire_id,
-        'locataire_acheteur_id' => $request->user()->id,
-        'donnees_personnalisees' => $request->donnees,
-        'statut' => 'BROUILLON',
-    ]);
+**Worker bootstrap**:
+```rust
+Monitor::new()
+    .register({
+        WorkerBuilder::new("pdf")
+            .data(state.clone())
+            .backend(RedisStorage::new(redis.clone()))
+            .build_fn(generate_contract_pdf)
+    })
+    .run().await?;
+```
 
-    // Dispatch job to queue (don't wait for PDF generation)
-    GenerateContractPDF::dispatch($contract);
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Contrat en cours de génération...',
-        'data' => $contract,
-    ], 201);
+**Enqueue from a handler**:
+```rust
+pub async fn generate(auth: AuthUser, State(state): State<SharedState>,
+    ValidatedJson(req): ValidatedJson<GenerateContractRequest>)
+    -> AppResult<Json<Envelope<ContractResponse>>> {
+    let contract = /* insert BROUILLON contract */;
+    state.jobs.pdf.push(GenerateContractPdf { contract_id: contract.id }).await?;
+    Ok(Json(Envelope::ok(ContractResponse::from(contract)))) // 201, PDF async
 }
 ```
 
-**Queue Priorities** (`config/horizon.php`):
-```php
-'environments' => [
-    'production' => [
-        'supervisor-1' => [
-            'connection' => 'redis',
-            'queue' => ['high', 'default', 'low'],
-            'balance' => 'auto',
-            'processes' => 10,
-            'tries' => 3,
-        ],
-    ],
-],
-```
-
-**Start Horizon**:
-```bash
-php artisan horizon
-# Dashboard: http://localhost:8000/horizon
-```
+**Scheduled jobs** (apalis cron): auto-expire `DISPONIBLE` listings past
+`date_expiration` → `EXPIRE` (FR-014); payment-release timers (FR escrow).
 
 ---
 
-## 9. PDF Generation: Laravel PDF (DomPDF / Snappy)
+## 9. PDF Generation: headless Chromium
 
-### Decision: Barryvdh/laravel-dompdf (Simple) or Snappy/wkhtmltopdf (Advanced)
+### Decision: `headless_chrome` rendering an HTML/Askama template
 
-**Option 1: DomPDF** (Simpler, Pure PHP):
-```bash
-composer require barryvdh/laravel-dompdf
-```
+**Rationale**:
+- **Fidelity**: Chromium renders the exact HTML/CSS the contract template defines
+  (page breaks, fonts, signature blocks) — far better layout control than a pure-Rust
+  PDF drawer for legal documents.
+- **Template reuse**: contracts are authored as an HTML template (**Askama**,
+  compile-checked) rendered with the contract's data, then printed to PDF.
+- **Deterministic hashing**: the generated bytes are SHA-256 hashed for integrity
+  (stored on the contract) — supports Guinea's Loi 2016/037 e-signature requirements.
 
-**Option 2: Snappy + wkhtmltopdf** (Better rendering, requires binary):
-```bash
-composer require barryvdh/laravel-snappy
-# Install wkhtmltopdf binary:
-sudo apt-get install wkhtmltopdf
-```
-
-**Recommendation**: Start with DomPDF, migrate to Snappy if needed for complex layouts.
-
-**Blade Template** (`resources/views/contracts/bail-location.blade.php`):
-```blade
+**HTML template** (`templates/contracts/bail_location.html`, Askama):
+```html
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Contrat de Location - {{ $contract->id }}</title>
-    <style>
-        @page { size: A4; margin: 2cm; }
-        body { font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.6; }
-        .header { text-align: center; margin-bottom: 2cm; }
-        .article { margin-bottom: 1.5cm; }
-        .signature-block { margin-top: 3cm; page-break-inside: avoid; }
-    </style>
+  <meta charset="UTF-8">
+  <title>Contrat de Location - {{ contract.id }}</title>
+  <style>
+    @page { size: A4; margin: 2cm; }
+    body { font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.6; }
+    .header { text-align: center; margin-bottom: 2cm; }
+    .article { margin-bottom: 1.5cm; }
+    .signature-block { margin-top: 3cm; page-break-inside: avoid; }
+  </style>
 </head>
 <body>
-    <div class="header">
-        <h1>RÉPUBLIQUE DE GUINÉE</h1>
-        <p>Loi 2016/037 sur les signatures électroniques</p>
-        <h2>CONTRAT DE LOCATION RÉSIDENTIEL</h2>
-    </div>
-
-    <div class="article">
-        <h3>Article 1 - PARTIES</h3>
-        <p><strong>Propriétaire:</strong> {{ $landlord->nom_complet }}, CNI {{ $landlord->cni ?? 'N/A' }}</p>
-        <p><strong>Locataire:</strong> {{ $tenant->nom_complet }}, CNI {{ $tenant->cni ?? 'N/A' }}</p>
-    </div>
-
-    <div class="article">
-        <h3>Article 2 - DESCRIPTION DU BIEN</h3>
-        <p>{{ $listing->type_bien }} situé à {{ $listing->adresse_complete }}</p>
-        <p>Superficie: {{ $listing->superficie_m2 }} m²</p>
-        <p>Équipements: {{ implode(', ', $listing->equipements ?? []) }}</p>
-    </div>
-
-    <div class="article">
-        <h3>Article 3 - LOYER ET CAUTION</h3>
-        <p>Loyer mensuel: {{ number_format($contract->donnees_personnalisees['montant_loyer_gnf'], 0, ',', ' ') }} GNF</p>
-        <p>Caution ({{ $contract->donnees_personnalisees['caution_mois'] }} mois): {{ number_format($contract->donnees_personnalisees['montant_caution_gnf'], 0, ',', ' ') }} GNF</p>
-    </div>
-
-    <!-- Articles 4-8... -->
-
-    <div class="signature-block">
-        <p><strong>Fait à Conakry, le {{ $contract->date_signature_complete?->format('d/m/Y') ?? '__/__/____' }}</strong></p>
-        <div style="display: flex; justify-content: space-between;">
-            <div>
-                <p>Le Propriétaire</p>
-                <p>{{ $landlord->nom_complet }}</p>
-                @if($contract->isSignedBy($landlord->id))
-                    <p>Signé le {{ $contract->getSignatureDate($landlord->id)->format('d/m/Y à H:i:s') }}</p>
-                @else
-                    <p>_______________________</p>
-                @endif
-            </div>
-            <div>
-                <p>Le Locataire</p>
-                <p>{{ $tenant->nom_complet }}</p>
-                @if($contract->isSignedBy($tenant->id))
-                    <p>Signé le {{ $contract->getSignatureDate($tenant->id)->format('d/m/Y à H:i:s') }}</p>
-                @else
-                    <p>_______________________</p>
-                @endif
-            </div>
-        </div>
-        <p style="text-align: center; margin-top: 2cm; font-size: 9pt;">
-            <em>Cachet électronique ImmoGuinée</em><br>
-            Hash SHA-256: {{ substr($contract->hash_sha256 ?? 'En cours...', 0, 16) }}...
-        </p>
-    </div>
+  <div class="header">
+    <h1>RÉPUBLIQUE DE GUINÉE</h1>
+    <p>Loi 2016/037 sur les signatures électroniques</p>
+    <h2>CONTRAT DE LOCATION RÉSIDENTIEL</h2>
+  </div>
+  <div class="article">
+    <h3>Article 1 - PARTIES</h3>
+    <p><strong>Propriétaire:</strong> {{ landlord.nom_complet }}</p>
+    <p><strong>Locataire:</strong> {{ tenant.nom_complet }}</p>
+  </div>
+  <div class="article">
+    <h3>Article 3 - LOYER ET CAUTION</h3>
+    <p>Loyer mensuel: {{ loyer_gnf }} GNF</p>
+    <p>Caution ({{ caution_mois }} mois): {{ caution_gnf }} GNF</p>
+  </div>
+  <div class="signature-block">
+    <p><em>Cachet électronique ImmoGuinée</em> — Hash SHA-256: {{ hash_prefix }}…</p>
+  </div>
 </body>
 </html>
 ```
 
-**Generate PDF**:
-```php
-use Barryvdh\DomPDF\Facade\Pdf;
+**Render to PDF** (`src/services/pdf.rs`, sketch):
+```rust
+use headless_chrome::{Browser, types::PrintToPdfOptions};
 
-$pdf = Pdf::loadView('contracts.bail-location', compact('contract', 'landlord', 'tenant', 'listing'));
-$pdfOutput = $pdf->output();  // Binary PDF data
-
-// Save to S3
-Storage::disk('s3')->put("contracts/{$contract->id}.pdf", $pdfOutput, 'private');
+pub fn render_html_to_pdf(html: &str) -> anyhow::Result<Vec<u8>> {
+    let browser = Browser::default()?;
+    let tab = browser.new_tab()?;
+    // Load the rendered HTML via a data URL, then print to PDF.
+    tab.navigate_to(&format!("data:text/html;charset=utf-8,{}", urlencoding::encode(html)))?;
+    tab.wait_until_navigated()?;
+    let pdf = tab.print_to_pdf(Some(PrintToPdfOptions {
+        print_background: Some(true),
+        prefer_css_page_size: Some(true),
+        ..Default::default()
+    }))?;
+    Ok(pdf)
+}
 ```
+
+> Chromium runs on the **apalis** worker (§8), never inline in a request. In containers,
+> the worker image bundles a headless Chromium binary.
 
 ---
 
-## 10. Notifications: Laravel Notifications (Multi-Channel)
+## 10. Notifications: native multi-channel notifier
 
-### Decision: Laravel Notifications with Custom Channels
+### Decision: a `Notifier` service dispatching over typed channels (via apalis)
 
-**Channels**:
-1. **SMS**: Twilio (via `laravel-twilio-channel`)
-2. **Email**: Laravel Mail (SMTP or Resend API)
-3. **WhatsApp**: WAHA (custom channel)
-4. **Telegram**: Telegram Bot API (custom channel)
-5. **Push**: Firebase Cloud Messaging (web push)
-6. **Database**: Store in `notifications` table for in-app
+**Rationale**:
+- **Per-user preferences** (FR-005, FR-062): each notification declares the channels it
+  supports; the notifier intersects them with the user's `preferences_notification`.
+- **Non-blocking**: notification sends are enqueued as apalis jobs.
+- **Business fan-out via n8n**: complex multi-step notification workflows (e.g. escrow
+  reminders across SMS + WhatsApp + email with retries) are configured in n8n; the Rust
+  notifier handles direct, first-party sends.
 
-**Setup**:
-```bash
-composer require laravel-notification-channels/twilio
-composer require laravel-notification-channels/telegram
-```
+**Channels**: SMS (Twilio), Email (Resend SMTP/API), **WhatsApp (Evolution API)**,
+Push (Expo/FCM), in-app (persisted in a `notifications` table).
 
-**Notification Example** (`app/Notifications/PaymentConfirmed.php`):
-```php
-namespace App\Notifications;
+**Notification trait + payload**:
+```rust
+pub trait Notification {
+    fn channels(&self, prefs: &NotificationPrefs) -> Vec<Channel>;
+    fn sms(&self) -> Option<String> { None }
+    fn email(&self) -> Option<EmailMessage> { None }
+    fn whatsapp(&self) -> Option<String> { None }
+    fn in_app(&self) -> serde_json::Value;
+}
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;
-use NotificationChannels\Twilio\TwilioSmsMessage;
-use App\Channels\WahaChannel;
-use App\Channels\TelegramChannel;
+pub struct PaymentConfirmed { pub payment: payment::Model }
 
-class PaymentConfirmed extends Notification implements ShouldQueue
-{
-    use Queueable;
-
-    public function __construct(public Payment $payment) {}
-
-    public function via(object $notifiable): array
-    {
-        $channels = ['database'];  // Always store in DB
-
-        // Check user preferences (FR-005, FR-062)
-        $prefs = $notifiable->preferences_notification;
-
-        if ($prefs['sms'] ?? true) $channels[] = 'twilio';
-        if ($prefs['email'] ?? true) $channels[] = 'mail';
-        if ($prefs['whatsapp'] ?? false) $channels[] = WahaChannel::class;
-        if ($prefs['telegram'] ?? false) $channels[] = TelegramChannel::class;
-
-        return $channels;
+impl Notification for PaymentConfirmed {
+    fn channels(&self, p: &NotificationPrefs) -> Vec<Channel> {
+        let mut c = vec![Channel::InApp];
+        if p.sms      { c.push(Channel::Sms); }
+        if p.email    { c.push(Channel::Email); }
+        if p.whatsapp { c.push(Channel::WhatsApp); }
+        c
     }
-
-    public function toMail(object $notifiable): MailMessage
-    {
-        return (new MailMessage)
-            ->subject('Paiement confirmé - ImmoGuinée')
-            ->greeting("Bonjour {$notifiable->nom_complet},")
-            ->line("Votre paiement de {$this->payment->montant_gnf} GNF a été confirmé.")
-            ->action('Voir la quittance', url("/payments/{$this->payment->id}/quittance"))
-            ->line('Merci d\'utiliser ImmoGuinée!');
+    fn sms(&self) -> Option<String> {
+        Some(format!("ImmoGuinée: Paiement confirmé ({} GNF). Quittance sur votre dashboard.",
+            self.payment.montant_gnf))
     }
-
-    public function toTwilio(object $notifiable): TwilioSmsMessage
-    {
-        return (new TwilioSmsMessage())
-            ->content("ImmoGuinée: Paiement confirmé ({$this->payment->montant_gnf} GNF). Quittance disponible sur votre dashboard.");
+    fn whatsapp(&self) -> Option<String> {
+        Some(format!("✅ Paiement confirmé: {} GNF", self.payment.montant_gnf))
     }
-
-    public function toWaha(object $notifiable): string
-    {
-        return "✅ Paiement confirmé: {$this->payment->montant_gnf} GNF\n\nVoir la quittance: " . url("/payments/{$this->payment->id}/quittance");
-    }
-
-    public function toTelegram(object $notifiable): array
-    {
-        return [
-            'text' => "✅ Paiement confirmé\n\nMontant: {$this->payment->montant_gnf} GNF\n\n[Voir la quittance](" . url("/payments/{$this->payment->id}/quittance") . ")",
-            'parse_mode' => 'Markdown',
-        ];
-    }
-
-    public function toArray(object $notifiable): array
-    {
-        return [
-            'payment_id' => $this->payment->id,
-            'montant_gnf' => $this->payment->montant_gnf,
-            'type' => 'payment_confirmed',
-        ];
+    fn in_app(&self) -> serde_json::Value {
+        serde_json::json!({ "type": "payment_confirmed",
+            "payment_id": self.payment.id, "montant_gnf": self.payment.montant_gnf })
     }
 }
 ```
 
-**Custom WAHA Channel** (`app/Channels/WahaChannel.php`):
-```php
-namespace App\Channels;
+**Evolution API (WhatsApp) client** (`src/services/whatsapp.rs`, implemented):
+```rust
+pub struct WhatsAppClient { http: reqwest::Client, base_url: String, instance: String, api_key: String }
 
-use Illuminate\Notifications\Notification;
-use Illuminate\Support\Facades\Http;
-
-class WahaChannel
-{
-    public function send($notifiable, Notification $notification)
-    {
-        $message = $notification->toWaha($notifiable);
-
-        Http::withHeaders([
-            'X-Api-Key' => config('services.waha.api_key'),
-        ])->post(config('services.waha.url') . '/api/sendText', [
-            'chatId' => $notifiable->telephone . '@c.us',  // WhatsApp format
-            'text' => $message,
-        ]);
+impl WhatsAppClient {
+    pub async fn send_text(&self, to: &str, text: &str) -> AppResult<()> {
+        if self.base_url.is_empty() { return Ok(()); } // disabled in dev
+        let number = normalize_number(to);             // +224… → digits
+        self.http
+            .post(format!("{}/message/sendText/{}", self.base_url, self.instance))
+            .header("apikey", &self.api_key)
+            .json(&serde_json::json!({ "number": number, "text": text }))
+            .send().await?.error_for_status()?;
+        Ok(())
     }
 }
 ```
 
-**Send Notification**:
-```php
-// After payment confirmation
-$user->notify(new PaymentConfirmed($payment));
-
-// Or notify multiple users
-Notification::send([$landlord, $tenant], new ContractSigned($contract));
+**Dispatch**:
+```rust
+state.notifier.send(&user, PaymentConfirmed { payment }).await?; // enqueues per channel
 ```
 
 ---
 
-## 11. Automation: n8n Workflows
+## 11. Automation: n8n Workflows (business layer)
 
-**Decision**: n8n (Self-Hosted) with Laravel Webhooks
+### Decision: n8n (self-hosted) triggered by Rust webhooks — business workflows only
+
+**Rationale** (Constitution Principle IX, v3.1.0): keep **business-configurable**
+automation (notification fan-out, external CRM/accounting sync, escrow reminders) in
+n8n so non-developers can adjust it; keep **technical** async work in apalis (§8).
 
 **Integration**:
-1. Laravel fires events (e.g., `PaymentConfirmed`)
-2. Event listener calls n8n webhook
-3. n8n workflow executes (send notifications, update external systems, etc.)
+1. The Rust API (or an apalis job) fires an event → calls an n8n webhook with a payload.
+2. The n8n workflow runs (send notifications, update external systems, etc.).
+3. n8n never writes core financial state directly; the **Rust job owns escrow release**
+   and money movement — n8n handles notifications/side-effects only (finding D1).
 
-**n8n Workflow Example** (Payment Confirmed):
+**n8n workflow example** (Payment Confirmed — notifications):
 ```json
 {
-  "name": "Payment Confirmed Workflow",
+  "name": "Payment Confirmed Notifications",
   "nodes": [
-    {
-      "name": "Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "position": [250, 300],
-      "webhookId": "payment-confirmed",
+    { "name": "Webhook", "type": "n8n-nodes-base.webhook",
+      "parameters": { "path": "payment-confirmed", "httpMethod": "POST" } },
+    { "name": "Notify Landlord (WhatsApp)", "type": "n8n-nodes-base.httpRequest",
       "parameters": {
-        "path": "payment-confirmed",
-        "httpMethod": "POST"
-      }
-    },
-    {
-      "name": "Extract Commission",
-      "type": "n8n-nodes-base.set",
-      "position": [450, 300],
-      "parameters": {
-        "values": {
-          "number": [
-            {
-              "name": "commission_gnf",
-              "value": "={{$json.payment.commission_plateforme_gnf}}"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "name": "Update ImmoG Account",
-      "type": "n8n-nodes-base.postgres",
-      "position": [650, 300],
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "UPDATE users SET balance = balance + {{$json.commission_gnf}} WHERE id = '{{$env.IMMOG_ACCOUNT_ID}}'"
-      }
-    },
-    {
-      "name": "Notify Landlord (WhatsApp)",
-      "type": "n8n-nodes-base.httpRequest",
-      "position": [650, 400],
-      "parameters": {
-        "url": "{{$env.WAHA_URL}}/api/sendText",
+        "url": "={{$env.EVOLUTION_BASE_URL}}/message/sendText/{{$env.EVOLUTION_INSTANCE}}",
         "method": "POST",
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "X-Api-Key",
-              "value": "={{$env.WAHA_API_KEY}}"
-            }
-          ]
-        },
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "chatId",
-              "value": "={{$json.landlord.telephone}}@c.us"
-            },
-            {
-              "name": "text",
-              "value": "Caution reçue: {{$json.payment.montant_gnf}} GNF. Validez la réception sur ImmoGuinée."
-            }
-          ]
-        }
-      }
-    }
+        "headerParameters": { "parameters": [ { "name": "apikey", "value": "={{$env.EVOLUTION_API_KEY}}" } ] },
+        "bodyParameters": { "parameters": [
+          { "name": "number", "value": "={{$json.landlord.telephone}}" },
+          { "name": "text", "value": "Caution reçue: {{$json.payment.montant_gnf}} GNF. Validez la réception sur ImmoGuinée." }
+        ] }
+      } }
   ]
 }
 ```
 
-**Laravel Event Listener**:
-```php
-// app/Listeners/TriggerN8nWorkflow.php
-namespace App\Listeners;
-
-use App\Events\PaymentConfirmed;
-use Illuminate\Support\Facades\Http;
-
-class TriggerN8nWorkflow
-{
-    public function handle(PaymentConfirmed $event): void
-    {
-        Http::post(config('services.n8n.webhook_url') . '/payment-confirmed', [
-            'payment' => $event->payment->load(['payeur', 'beneficiaire', 'contrat']),
-            'landlord' => $event->payment->beneficiaire,
-            'tenant' => $event->payment->payeur,
-        ]);
-    }
+**Rust webhook trigger** (`src/services/n8n.rs`, sketch):
+```rust
+pub async fn trigger(&self, workflow: &str, payload: &impl Serialize) -> AppResult<()> {
+    self.http.post(format!("{}/webhook/{}", self.base_url, workflow))
+        .json(payload).send().await?.error_for_status()?;
+    Ok(())
 }
 ```
 
@@ -1289,607 +817,260 @@ class TriggerN8nWorkflow
 
 ## 12. AI/ML Integration
 
-### Decision: Multi-Tool Approach
+### Decision: Multi-tool approach, orchestrated from Rust via HTTP
 
-**1. Ollama (Local LLM for Recommendations)**
-
-**Use Case**: Recommend properties based on user search history and preferences.
-
-**Setup**:
-```bash
-# Install Ollama
-curl -fsSL https://ollama.com/install.sh | sh
-
-# Pull model (e.g., Llama 3 8B)
-ollama pull llama3
-```
-
-**Laravel Integration**:
-```php
-// app/Services/RecommendationService.php
-namespace App\Services;
-
-use Illuminate\Support\Facades\Http;
-
-class RecommendationService
-{
-    public function recommend(User $user): array
-    {
-        $searchHistory = $user->searches()->latest()->take(10)->get();
-
-        $prompt = "Based on user search history:\n";
-        foreach ($searchHistory as $search) {
-            $prompt .= "- {$search->quartier} {$search->type_bien} around {$search->prix_gnf} GNF\n";
-        }
-        $prompt .= "\nRecommend 5 similar properties.";
-
-        $response = Http::post('http://localhost:11434/api/generate', [
-            'model' => 'llama3',
-            'prompt' => $prompt,
-            'stream' => false,
-        ]);
-
-        return json_decode($response->json()['response'], true);
-    }
+**1. Ollama (local LLM for recommendations)** — recommend properties from a user's
+search history.
+```rust
+// src/services/recommendation.rs
+pub async fn recommend(&self, user_id: Uuid) -> AppResult<Vec<Uuid>> {
+    let history = /* last 10 searches */;
+    let prompt = build_prompt(&history);
+    let resp: OllamaResponse = self.http
+        .post("http://localhost:11434/api/generate")
+        .json(&serde_json::json!({ "model": "llama3", "prompt": prompt, "stream": false }))
+        .send().await?.json().await?;
+    parse_listing_ids(&resp.response)
 }
 ```
 
-**2. TensorFlow.js (Browser-Side Fraud Detection)**
-
-**Use Case**: Detect duplicate/spam listings on the frontend before submission.
-
-**Implementation** (Next.js component):
-```typescript
-// components/ListingForm.tsx
-import * as tf from '@tensorflow/tfjs'
-import { useEffect, useState } from 'react'
-
-export function ListingForm() {
-  const [model, setModel] = useState<tf.LayersModel | null>(null)
-
-  useEffect(() => {
-    // Load pre-trained fraud detection model
-    tf.loadLayersModel('/models/fraud-detection/model.json').then(setModel)
-  }, [])
-
-  const detectFraud = async (listingData: ListingFormData) => {
-    if (!model) return { fraud: false, confidence: 0 }
-
-    // Extract features: title length, description length, price, etc.
-    const features = tf.tensor2d([[
-      listingData.titre.length,
-      listingData.description.length,
-      listingData.prix_gnf,
-      listingData.photos.length,
-    ]])
-
-    const prediction = model.predict(features) as tf.Tensor
-    const fraudProbability = await prediction.data()
-
-    return {
-      fraud: fraudProbability[0] > 0.8,
-      confidence: fraudProbability[0],
-    }
-  }
-
-  // Usage in form submit
-  const handleSubmit = async (data: ListingFormData) => {
-    const { fraud, confidence } = await detectFraud(data)
-
-    if (fraud) {
-      alert(`Cette annonce semble suspecte (confiance: ${(confidence * 100).toFixed(1)}%). Veuillez vérifier.`)
-      return
-    }
-
-    // Submit to API
-    await apiClient.post('/listings', data)
-  }
-
-  return <form onSubmit={handleSubmit}>...</form>
+**2. Content moderation (Hugging Face model behind a Python microservice)** — auto-flag
+inappropriate descriptions/messages. The Rust service calls it over HTTP; on high
+confidence it rejects with `422`.
+```rust
+// src/services/moderation.rs
+pub async fn moderate(&self, text: &str) -> AppResult<Moderation> {
+    let m: Moderation = self.http.post("http://moderation:5000/moderate")
+        .json(&serde_json::json!({ "text": text }))
+        .send().await?.json().await?;
+    Ok(m)
+}
+// in a handler:
+let m = state.moderation.moderate(&req.description).await?;
+if m.is_inappropriate && m.confidence > 0.9 {
+    return Err(AppError::Validation("Contenu inapproprié. Veuillez reformuler.".into()));
 }
 ```
 
-**3. Hugging Face Transformers (Content Moderation)**
+**3. Fraud signals** — server-side heuristics (duplicate detection, price outliers,
+velocity) computed in Rust and refined by a model service where useful. (Client-side
+TensorFlow.js hints in the form are optional UX sugar, never the security boundary — the
+authoritative check is server-side.)
 
-**Use Case**: Auto-moderate user-generated content (listings descriptions, messages) for inappropriate language.
-
-**Setup**:
-```bash
-pip install transformers torch
-```
-
-**Laravel Integration** (via Python microservice or direct PHP client):
-
-**Option A: Python Microservice**:
-```python
-# ml_services/moderation.py
-from transformers import pipeline
-from flask import Flask, request, jsonify
-
-app = Flask(__name__)
-classifier = pipeline("text-classification", model="facebook/roberta-hate-speech-dynabench-r4-target")
-
-@app.route('/moderate', methods=['POST'])
-def moderate():
-    text = request.json['text']
-    result = classifier(text)[0]
-
-    return jsonify({
-        'is_inappropriate': result['label'] == 'hate',
-        'confidence': result['score']
-    })
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
-```
-
-**Laravel Call**:
-```php
-// app/Services/ModerationService.php
-namespace App\Services;
-
-use Illuminate\Support\Facades\Http;
-
-class ModerationService
-{
-    public function moderate(string $text): array
-    {
-        $response = Http::post('http://localhost:5000/moderate', [
-            'text' => $text,
-        ]);
-
-        return $response->json();
-    }
-}
-
-// Usage in controller
-$moderation = app(ModerationService::class)->moderate($request->description);
-
-if ($moderation['is_inappropriate'] && $moderation['confidence'] > 0.9) {
-    return response()->json([
-        'success' => false,
-        'error' => [
-            'code' => 'INAPPROPRIATE_CONTENT',
-            'message' => 'Votre description contient du contenu inapproprié. Veuillez reformuler.',
-        ]
-    ], 422);
-}
-```
-
-**Option B: PHP Client** (Limited, for simple tasks):
-```bash
-composer require codewithkyrian/transformers
-```
+> All ML runs as **external services** the Rust API calls over `reqwest`; no ML runtime
+> is embedded in the API binary. Heavy/slow calls run on apalis workers, not inline.
 
 ---
 
 ## 13. Monitoring & Observability
 
-### Laravel Telescope (Development Debugging)
+### Structured logging & tracing (dev + prod)
 
-```bash
-composer require laravel/telescope --dev
-php artisan telescope:install
-php artisan migrate
+`tracing` + `tracing-subscriber` (env-filter, JSON in prod), with `tower-http`'s
+`TraceLayer` for per-request spans. Optionally exported via **OpenTelemetry** (OTLP) to
+a collector.
+```rust
+tracing_subscriber::registry()
+    .with(tracing_subscriber::EnvFilter::from_default_env())
+    .with(tracing_subscriber::fmt::layer().json())
+    .init();
 ```
 
-Dashboard: `http://localhost:8000/telescope`
+### Error tracking (production): Sentry
 
-**Features**:
-- Request/Response logging
-- Database queries with explain
-- Queue job monitoring
-- Exceptions tracking
-- Scheduled tasks
-- Cache operations
-
-### Sentry (Production Error Tracking)
-
-```bash
-composer require sentry/sentry-laravel
-php artisan sentry:publish --dsn=YOUR_DSN
+```rust
+let _guard = sentry::init((std::env::var("SENTRY_DSN").ok(), sentry::ClientOptions {
+    release: sentry::release_name!(),
+    traces_sample_rate: 0.1,
+    ..Default::default()
+}));
+// tower-http + a sentry tower layer capture request context; AppError → Internal is reported.
 ```
 
-**Automatic Error Reporting**:
-```php
-// All exceptions automatically sent to Sentry
-throw new \Exception('Something went wrong!');
+### Metrics: Prometheus + Grafana
+
+`metrics` facade + `metrics-exporter-prometheus` expose `/metrics`; a middleware records
+counters/histograms.
+```rust
+metrics::counter!("immog_listings_created_total").increment(1);
+metrics::histogram!("immog_api_response_seconds", "endpoint" => "/listings/search").record(elapsed);
+metrics::gauge!("immog_active_users").set(active as f64);
 ```
 
-### Grafana + Prometheus (Metrics)
+### Frontend session replay & HIDS
 
-**Laravel Prometheus Exporter**:
-```bash
-composer require superbalist/laravel-prometheus-exporter
-```
+- **Sentry (browser)** on the Next.js side for frontend errors; session replay via the
+  chosen tool.
+- **OSSEC (HIDS)** on the host: SSH brute-force, file integrity (`.env`, configs),
+  web-attack signatures, rootkit detection.
 
-**Expose Metrics** (`routes/web.php`):
-```php
-Route::get('/metrics', function () {
-    return app(\Prometheus\CollectorRegistry::class)->getMetricFamilySamples();
-});
-```
-
-**Custom Metrics**:
-```php
-use Prometheus\CollectorRegistry;
-
-$registry = app(CollectorRegistry::class);
-
-// Counter: Total listings created
-$counter = $registry->getOrRegisterCounter('immog', 'listings_created_total', 'Total listings created');
-$counter->inc();
-
-// Gauge: Active users
-$gauge = $registry->getOrRegisterGauge('immog', 'active_users', 'Number of active users');
-$gauge->set(User::where('statut_compte', 'ACTIF')->count());
-
-// Histogram: API response time
-$histogram = $registry->getOrRegisterHistogram('immog', 'api_response_time_seconds', 'API response time', ['endpoint']);
-$histogram->observe(0.123, ['/api/listings/search']);
-```
-
-### Logrocket (Session Replay)
-
-**Frontend Integration** (Next.js):
-```bash
-npm install logrocket
-```
-
-```typescript
-// app/layout.tsx
-import LogRocket from 'logrocket'
-
-if (process.env.NODE_ENV === 'production') {
-  LogRocket.init('your-app-id')
-}
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return <html>{children}</html>
-}
-```
-
-**Identify Users**:
-```typescript
-LogRocket.identify(user.id, {
-  name: user.nom_complet,
-  email: user.email,
-  badge: user.badge_certification,
-})
-```
-
-### OSSEC (Host-Based Intrusion Detection)
-
-**Setup** (Ubuntu server):
-```bash
-wget -q -O - https://updates.atomicorp.com/installers/atomic | sudo bash
-sudo apt-get install ossec-hids-server
-```
-
-**Monitor**:
-- SSH brute force attempts
-- File integrity (config files, .env)
-- Web server attacks (SQL injection, XSS)
-- Rootkit detection
+> Laravel Telescope has no direct equivalent (it was a framework-coupled debug UI); its
+> role is covered by `tracing` spans locally + Sentry/Prometheus in prod.
 
 ---
 
 ## 14. DevOps & Deployment
 
-### Docker Compose (Development/Staging)
+### Docker Compose (development / staging)
 
-**File: `docker-compose.yml`**:
+The Rust API and the apalis worker are built from one multi-stage image; backing
+services run as containers. (Search is Postgres — **no Meilisearch**.)
+
 ```yaml
-version: '3.9'
-
 services:
-  # Laravel Backend (PHP-FPM + Nginx)
+  # Rust API (Axum) — single static binary
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    build: { context: ./rust-backend, dockerfile: Dockerfile }
     container_name: immog-backend
-    volumes:
-      - ./backend:/var/www/html
     environment:
-      - DB_HOST=postgres
-      - REDIS_HOST=redis
-      - MEILISEARCH_HOST=http://meilisearch:7700
-    depends_on:
-      - postgres
-      - redis
-      - meilisearch
-    networks:
-      - immog-network
+      - IMMOG_DATABASE_URL=postgres://immog_user:immog@postgres:5432/immog_db
+      - IMMOG_REDIS_URL=redis://:immog_redis_secret@redis:6379
+      - IMMOG_S3_ENDPOINT=http://minio:9000
+      - IMMOG_EVOLUTION_BASE_URL=http://evolution:8080
+    depends_on: [postgres, redis, minio]
+    networks: [immog-network]
 
-  # Nginx for Laravel
-  nginx-backend:
-    image: nginx:alpine
-    container_name: immog-nginx-backend
-    ports:
-      - "8000:80"
-    volumes:
-      - ./backend:/var/www/html
-      - ./docker/nginx/backend.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - backend
-    networks:
-      - immog-network
+  # apalis worker (jobs: PDF, notifications, scheduled sweeps)
+  worker:
+    build: { context: ./rust-backend, dockerfile: Dockerfile }
+    command: ["immog-backend", "--role", "worker"]
+    depends_on: [postgres, redis]
+    networks: [immog-network]
 
   # Next.js Frontend
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: immog-frontend
-    ports:
-      - "3000:3000"
+    build: { context: ./frontend, dockerfile: Dockerfile }
+    ports: ["3000:3000"]
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000/api
-      - NEXT_PUBLIC_ECHO_SERVER_URL=http://localhost:6001
-    depends_on:
-      - backend
-    networks:
-      - immog-network
+      - NEXT_PUBLIC_WS_HOST=localhost
+      - NEXT_PUBLIC_WS_PORT=8000
+    depends_on: [backend]
+    networks: [immog-network]
 
-  # PostgreSQL 15
   postgres:
-    image: postgres:15-alpine
-    container_name: immog-postgres
+    image: postgres:16-alpine
     environment:
-      POSTGRES_DB: immoguinee
-      POSTGRES_USER: postgres
+      POSTGRES_DB: immog_db
+      POSTGRES_USER: immog_user
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    networks:
-      - immog-network
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    ports: ["5433:5432"]
+    networks: [immog-network]
 
-  # Redis 7
   redis:
     image: redis:7-alpine
-    container_name: immog-redis
-    command: redis-server --appendonly yes --maxmemory 2gb
-    volumes:
-      - redis_data:/data
-    ports:
-      - "6379:6379"
-    networks:
-      - immog-network
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes: [redis_data:/data]
+    ports: ["6379:6379"]
+    networks: [immog-network]
 
-  # Meilisearch
-  meilisearch:
-    image: getmeili/meilisearch:v1.6
-    container_name: immog-meilisearch
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
     environment:
-      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
-    volumes:
-      - meilisearch_data:/meili_data
-    ports:
-      - "7700:7700"
-    networks:
-      - immog-network
+      MINIO_ROOT_USER: ${MINIO_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
+    ports: ["9000:9000", "9001:9001"]
+    volumes: [minio_data:/data]
+    networks: [immog-network]
 
-  # Laravel Echo Server
-  echo-server:
-    image: node:20-alpine
-    container_name: immog-echo
-    working_dir: /app
-    volumes:
-      - ./backend:/app
-    command: npx laravel-echo-server start
-    ports:
-      - "6001:6001"
-    depends_on:
-      - redis
-      - backend
-    networks:
-      - immog-network
-
-  # n8n Automation
   n8n:
     image: n8nio/n8n:latest
-    container_name: immog-n8n
-    ports:
-      - "5678:5678"
+    ports: ["5678:5678"]
     environment:
       - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_BASIC_AUTH_USER=admin
       - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD}
-      - WEBHOOK_URL=https://immoguinee.com/n8n
-    volumes:
-      - n8n_data:/home/node/.n8n
-    networks:
-      - immog-network
+    volumes: [n8n_data:/home/node/.n8n]
+    networks: [immog-network]
 
-  # WAHA (WhatsApp)
-  waha:
-    image: devlikeapro/waha:latest
-    container_name: immog-waha
-    ports:
-      - "3001:3000"
+  # Evolution API (WhatsApp) — single service (no WAHA)
+  evolution:
+    image: atendai/evolution-api:latest
+    ports: ["8080:8080"]
     environment:
-      - WAHA_API_KEY=${WAHA_SECRET}
-    volumes:
-      - waha_sessions:/app/.sessions
-    networks:
-      - immog-network
+      - AUTHENTICATION_API_KEY=${EVOLUTION_API_KEY}
+    volumes: [evolution_data:/evolution/instances]
+    networks: [immog-network]
 
-  # MinIO (S3-compatible)
-  minio:
-    image: minio/minio:latest
-    container_name: immog-minio
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    environment:
-      MINIO_ROOT_USER: ${MINIO_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
-    command: server /data --console-address ":9001"
-    volumes:
-      - minio_data:/data
-    networks:
-      - immog-network
-
-  # Grafana
   grafana:
     image: grafana/grafana:latest
-    container_name: immog-grafana
-    ports:
-      - "3002:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
-    volumes:
-      - grafana_data:/var/lib/grafana
-    networks:
-      - immog-network
+    ports: ["3002:3000"]
+    environment: [GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}]
+    volumes: [grafana_data:/var/lib/grafana]
+    networks: [immog-network]
 
-  # Prometheus
   prometheus:
     image: prom/prometheus:latest
-    container_name: immog-prometheus
-    ports:
-      - "9090:9090"
+    ports: ["9090:9090"]
     volumes:
       - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
-    networks:
-      - immog-network
-
-  # Laravel Horizon (Queue Worker)
-  horizon:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: immog-horizon
-    command: php artisan horizon
-    volumes:
-      - ./backend:/var/www/html
-    depends_on:
-      - redis
-      - postgres
-    networks:
-      - immog-network
-
-  # Traefik (Reverse Proxy - Production only)
-  # traefik:
-  #   image: traefik:v2.11
-  #   command:
-  #     - "--api.insecure=true"
-  #     - "--providers.docker=true"
-  #     - "--entrypoints.web.address=:80"
-  #     - "--entrypoints.websecure.address=:443"
-  #     - "--certificatesresolvers.letsencrypt.acme.email=admin@immoguinee.com"
-  #     - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
-  #     - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
-  #   ports:
-  #     - "80:80"
-  #     - "443:443"
-  #     - "8080:8080"  # Traefik dashboard
-  #   volumes:
-  #     - "/var/run/docker.sock:/var/run/docker.sock:ro"
-  #     - traefik_letsencrypt:/letsencrypt
-  #   networks:
-  #     - immog-network
+    networks: [immog-network]
 
 volumes:
   postgres_data:
   redis_data:
-  meilisearch_data:
-  n8n_data:
-  waha_sessions:
   minio_data:
+  n8n_data:
+  evolution_data:
   grafana_data:
   prometheus_data:
-  traefik_letsencrypt:
 
 networks:
-  immog-network:
-    driver: bridge
+  immog-network: { driver: bridge }
 ```
 
-### Laravel Dockerfile
+### Rust Dockerfile (multi-stage, distroless runtime)
 
-**File: `backend/Dockerfile`**:
 ```dockerfile
-FROM php:8.2-fpm-alpine
-
-# Install dependencies
-RUN apk add --no-cache \
-    git \
-    curl \
-    libpng-dev \
-    libjpeg-turbo-dev \
-    freetype-dev \
-    zip \
-    unzip \
-    postgresql-dev \
-    redis
-
-# Install PHP extensions
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg
-RUN docker-php-ext-install pdo pdo_pgsql pgsql gd exif pcntl bcmath opcache
-
-# Install Redis extension
-RUN pecl install redis && docker-php-ext-enable redis
-
-# Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# Set working directory
-WORKDIR /var/www/html
-
-# Copy application
+# ---- builder ----
+FROM rust:1.85-slim AS builder
+WORKDIR /app
+# Cache deps
+COPY Cargo.toml Cargo.lock ./
+RUN mkdir src && echo "fn main(){}" > src/main.rs && cargo build --release || true
+# Real build
 COPY . .
+RUN cargo build --release --bin immog-backend --bin immog-migrate
 
-# Install dependencies
-RUN composer install --no-dev --optimize-autoloader
-
-# Set permissions
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-
-# Expose port 9000 for PHP-FPM
-EXPOSE 9000
-
-CMD ["php-fpm"]
+# ---- runtime ----
+# The worker variant needs Chromium for headless PDF; the API variant does not.
+FROM debian:bookworm-slim AS runtime
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates libssl3 && rm -rf /var/lib/apt/lists/*
+COPY --from=builder /app/target/release/immog-backend /usr/local/bin/immog-backend
+COPY --from=builder /app/target/release/immog-migrate /usr/local/bin/immog-migrate
+EXPOSE 8000
+ENTRYPOINT ["immog-backend"]
 ```
+
+> Secrets (DB/Redis passwords, JWT key, integration keys) are **not** baked into images
+> or env in production — they are fetched from **HashiCorp Vault** (AppRole; `secret_id`
+> from a Docker Secret) at boot, and sensitive fields are encrypted via **Vault Transit**
+> (replacing Laravel's `EncryptionService`/`APP_KEY`). See `contracts/secrets.md`.
 
 ### Next.js Dockerfile
 
-**File: `frontend/Dockerfile`**:
 ```dockerfile
 FROM node:20-alpine AS base
-
-# Dependencies
 FROM base AS deps
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 RUN npm install -g pnpm && pnpm install --frozen-lockfile
-
-# Builder
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
-
-# Runner
 FROM base AS runner
 WORKDIR /app
-ENV NODE_ENV production
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
+ENV NODE_ENV=production
 COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-USER nextjs
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 EXPOSE 3000
-ENV PORT 3000
-
 CMD ["node", "server.js"]
 ```
 
@@ -1899,89 +1080,91 @@ CMD ["node", "server.js"]
 
 | Layer | Technology | Version | License | Notes |
 |-------|-----------|---------|---------|-------|
-| **Backend Framework** | Laravel | 11 | MIT | PHP 8.2+, Eloquent ORM |
+| **Backend Framework** | Axum (on Tokio/Tower) | 0.8 | MIT | async, single binary |
+| **Language (Backend)** | Rust | edition 2024 / 1.85+ | MIT/Apache-2.0 | ownership, exhaustive enums |
 | **Frontend Framework** | Next.js | 14 | MIT | React 18, App Router |
-| **Language (Backend)** | PHP | 8.2+ | PHP License | Type hints, enums, attributes |
-| **Language (Frontend)** | TypeScript | 5+ | Apache 2.0 | Strict mode |
-| **Database** | PostgreSQL | 15+ | PostgreSQL | ACID, JSONB, full-text search |
-| **ORM** | Eloquent | Built-in | MIT | Active Record pattern |
-| **Search Engine** | Meilisearch | 1.6+ | MIT | Typo-tolerance, instant search |
-| **Cache/Queue** | Redis | 7+ | BSD-3 | In-memory data structure store |
-| **Auth** | Laravel Sanctum | Built-in | MIT | SPA + API token auth |
-| **Real-Time** | Laravel Echo + Socket.IO | Latest | MIT | WebSocket + polling fallback |
-| **Queue Dashboard** | Laravel Horizon | Latest | MIT | Redis queue monitoring |
-| **API Data Fetching** | React Query | 5+ | MIT | Server state management |
-| **UI Library** | TailwindCSS | 3+ | MIT | Utility-first CSS |
-| **Animations** | Framer Motion | 11+ | MIT | React animations |
-| **PWA** | next-pwa | 5+ | MIT | Service worker, offline |
-| **PDF Generation** | Laravel PDF (DomPDF) | Latest | LGPL | Or Snappy (wkhtmltopdf) |
-| **SMS** | Twilio | N/A | Proprietary | OTP, notifications |
-| **Email** | Resend | N/A | Proprietary | Transactional emails |
-| **WhatsApp** | WAHA | Latest | MIT | Self-hosted WhatsApp API |
-| **Telegram** | Telegram Bot API | N/A | Proprietary | Notifications |
-| **Payments (Guinea)** | Orange Money + MTN MoMo | N/A | Proprietary | Mobile Money APIs |
-| **Automation** | n8n | Latest | Fair-code | Workflow automation |
-| **AI (LLM)** | Ollama | Latest | MIT | Local LLM (Llama 3) |
-| **AI (Browser)** | TensorFlow.js | 4+ | Apache 2.0 | Client-side ML |
-| **AI (Moderation)** | Hugging Face Transformers | Latest | Apache 2.0 | Content moderation |
-| **Debug (Dev)** | Laravel Telescope | Latest | MIT | Request/query inspection |
-| **Errors (Prod)** | Sentry | N/A | Proprietary | Error tracking + performance |
-| **Session Replay** | Logrocket | N/A | Proprietary | Frontend session recording |
-| **Metrics** | Prometheus + Grafana | Latest | Apache 2.0 | Time-series metrics |
-| **HIDS** | OSSEC | Latest | GPL v3 | Intrusion detection |
-| **Reverse Proxy** | Traefik | 2.11 | MIT | Auto SSL (Let's Encrypt) |
-| **Web Server** | Nginx | 1.25+ | BSD-2 | Static files, proxying |
-| **Containerization** | Docker | 24+ | Apache 2.0 | Containers |
-| **Orchestration (Prod)** | Kubernetes | 1.28+ | Apache 2.0 | Cloud-native orchestration |
-| **Storage (S3)** | MinIO | Latest | AGPL v3 | Self-hosted S3-compatible |
-| **Testing (Backend)** | PHPUnit / Pest | Latest | BSD-3 | Laravel testing |
-| **Testing (Frontend)** | Vitest + Playwright | Latest | MIT | Unit + E2E |
-| **Load Testing** | k6 | Latest | AGPL v3 | Performance testing |
+| **Language (Frontend)** | TypeScript | 5+ | Apache 2.0 | strict mode |
+| **Database** | PostgreSQL | 16 | PostgreSQL | ACID, JSONB, tsvector |
+| **ORM** | SeaORM (on SQLx) | 1.1 | MIT/Apache-2.0 | typed entities + native enums |
+| **Search** | PostgreSQL (ILIKE + GIN) | — | PostgreSQL | Elasticsearch planned (T092) |
+| **Cache/Queue/PubSub** | Redis | 7 | BSD-3 | cache, rate-limit, WS, apalis |
+| **Auth** | `jsonwebtoken` + `bcrypt` | 9 / 0.15 | MIT/Apache-2.0 | JWT HS256, Redis deny-list |
+| **2FA** | `totp-rs` | 5 | MIT | TOTP, provisioning URI |
+| **RBAC** | native (custom table) | — | — | 6 roles / 11 permissions |
+| **Real-Time** | Axum WebSocket + Redis pub/sub | — | MIT | Pusher-compatible |
+| **Background Jobs** | apalis (Redis) | latest | MIT | technical async work |
+| **API Data Fetching** | TanStack Query | 5+ | MIT | server-state on frontend |
+| **UI Library** | TailwindCSS | 3+ | MIT | utility-first CSS |
+| **PWA** | next-pwa | 5+ | MIT | service worker, offline |
+| **PDF Generation** | `headless_chrome` (Chromium) | latest | MIT | HTML/Askama → PDF |
+| **Object Storage** | MinIO / S3 (`rust-s3`) | 0.35 | Apache-2.0 / MIT | listing photos, documents |
+| **Image Processing** | `image` crate | 0.25 | MIT | WebP ×3 renditions |
+| **HTTP Client** | `reqwest` (rustls) | 0.12 | MIT/Apache-2.0 | integrations |
+| **Config** | `figment` | 0.10 | MIT/Apache-2.0 | env + TOML layering |
+| **Secrets** | HashiCorp Vault (`vaultrs`) | latest | MPL-2.0 / Apache-2.0 | AppRole + Transit |
+| **SMS** | Twilio | — | Proprietary | OTP, notifications |
+| **Email** | Resend | — | Proprietary | transactional |
+| **WhatsApp** | Evolution API | latest | Apache-2.0 | single service (no WAHA) |
+| **Payments (Guinea)** | Orange Money + MTN MoMo | — | Proprietary | Mobile Money APIs |
+| **Automation** | n8n | latest | Fair-code | business workflows |
+| **AI (LLM)** | Ollama (Llama 3) | latest | MIT | recommendations |
+| **AI (Moderation)** | Hugging Face (microservice) | latest | Apache 2.0 | content moderation |
+| **Logging/Tracing** | `tracing` (+ OpenTelemetry) | 0.1 | MIT | structured spans |
+| **Errors (Prod)** | Sentry (`sentry` crate) | latest | MIT / Proprietary svc | error tracking |
+| **Metrics** | Prometheus + Grafana | latest | Apache 2.0 | `metrics` exporter |
+| **HIDS** | OSSEC | latest | GPL v3 | intrusion detection |
+| **Reverse Proxy** | Traefik | 2.11 | MIT | auto SSL (Let's Encrypt) |
+| **Web Server** | Nginx | 1.25+ | BSD-2 | static, proxying |
+| **Containerization** | Docker | 24+ | Apache 2.0 | multi-stage Rust build |
+| **Testing (Backend)** | `cargo test` + `axum-test` + `testcontainers` | 17 / 0.24 | MIT/Apache-2.0 | unit + integration |
+| **Testing (Frontend)** | Vitest + Playwright | latest | MIT | unit + E2E |
+| **Load Testing** | k6 | latest | AGPL v3 | performance testing |
 
-**Open Source Percentage**: ~85% (15% proprietary: Twilio, Resend, Sentry, Logrocket, Mobile Money APIs)
+**Open Source Percentage**: ~85% (proprietary: Twilio, Resend, Sentry SaaS, Mobile
+Money APIs).
 
 ---
 
-## 16. Migration Path from Old Stack
+## 16. Migration Path: Laravel → Rust
 
-**Old Stack** (Initial plan):
-- Monolith Next.js (frontend + backend API Routes)
-- Prisma ORM
-- Manual JWT auth
-- Puppeteer PDF
-- No Meilisearch
+**Previous plan** (Laravel stack, superseded):
+- Laravel 11 (PHP), Eloquent ORM, Laravel Sanctum auth.
+- Meilisearch (Scout), Laravel Echo + Socket.IO, Laravel Queue/Horizon.
+- Laravel PDF (DomPDF/Snappy), Laravel Notifications.
 
-**New Stack** (Current plan):
-- Decoupled Laravel backend + Next.js frontend
-- Eloquent ORM
-- Laravel Sanctum auth
-- Laravel PDF (DomPDF)
-- Meilisearch for advanced search
+**Current plan** (Rust stack):
+- Rust (Axum + Tokio), SeaORM, JWT + native RBAC + TOTP.
+- PostgreSQL search (Elasticsearch planned), Axum WebSocket, apalis jobs.
+- headless-chrome PDF, native multi-channel notifier + n8n for business workflows.
 
-**Why the Change?**:
-1. **Team Skills**: If team has PHP/Laravel expertise, leverage it
-2. **Ecosystem**: Laravel's mature packages (Sanctum, Horizon, Telescope, Echo, Notifications)
-3. **Scalability**: Laravel Octane for high-throughput APIs
-4. **Separation of Concerns**: Backend logic in Laravel, UI in Next.js
-5. **Future Mobile Apps**: React Native/Flutter can consume same Laravel API
+**Why the change?** The site is pre-production, so a clean full-Rust build is possible
+with no migration risk. Drivers:
+1. **Efficiency**: much lower memory/CPU per request → cheaper infra for the target market.
+2. **Correctness**: compile-time guarantees (types, ownership, exhaustive enums) remove
+   whole bug classes; typed query building removes injection footguns.
+3. **Single-artifact ops**: one static binary + a migration binary; trivial containers,
+   no interpreter/`vendor/`.
+4. **Async-first**: Tokio/Axum for high-concurrency I/O; apalis for background work.
+5. **Future mobile apps**: the stateless JWT REST/WS API serves web and mobile identically.
 
 **Trade-offs**:
-- ✅ **Pros**: Mature ecosystem, better ORM, built-in features (queue, broadcasting, PDF, notifications)
-- ❌ **Cons**: Two codebases to maintain, slightly more complex deployment, PHP vs full TypeScript
+- ✅ **Pros**: performance, safety, low footprint, single binary, strong typing end-to-end.
+- ❌ **Cons**: longer compile times, a smaller (but sufficient) hiring pool vs PHP,
+  more explicit wiring than Laravel's conventions (mitigated by the `AppState` service
+  container and `karpathy-guidelines` discipline: simplicity-first, surgical changes).
 
 ---
 
 ## 17. Development Workflow
 
-**Backend (Laravel)**:
+**Backend (Rust)** — see `quickstart.md` for the full setup:
 ```bash
-cd backend
-composer install
-cp .env.example .env
-php artisan key:generate
-php artisan migrate
-php artisan db:seed
-php artisan serve  # http://localhost:8000
+cd rust-backend
+docker compose up -d postgres redis minio evolution   # backing services
+cargo run --bin immog-migrate -- up                    # apply migrations
+cargo run --bin immog-backend                          # serve API on :8000
+# dev loop:
+cargo watch -x 'run --bin immog-backend'
 ```
 
 **Frontend (Next.js)**:
@@ -1989,28 +1172,36 @@ php artisan serve  # http://localhost:8000
 cd frontend
 pnpm install
 cp .env.example .env.local
-pnpm dev  # http://localhost:3000
+pnpm dev   # http://localhost:3000
 ```
 
-**Queue Worker**:
+**Background worker (apalis)**:
 ```bash
-php artisan horizon  # Dashboard: http://localhost:8000/horizon
+cargo run --bin immog-backend -- --role worker   # PDF, notifications, scheduled jobs
 ```
 
-**Run Tests**:
+**Run tests**:
 ```bash
-# Backend
-php artisan test
+# Backend: unit + integration (testcontainers spin up Postgres/Redis/MinIO)
+cargo test
+cargo test --lib                 # fast unit-only
+cargo test --test listings_e2e   # a specific integration suite
 
 # Frontend
 pnpm test
 ```
 
+**Quality gates**:
+```bash
+cargo fmt --all
+cargo clippy --all-targets --all-features -- -D warnings
+```
+
 ---
 
-**Research Complete**: ✅ All technology decisions resolved for Laravel + Next.js stack.
+**Research Complete**: ✅ All technology decisions resolved for the Rust (Axum) + Next.js stack.
 
 **Next Steps**:
-1. Rewrite `data-model.md` with Eloquent migrations
-2. Rewrite API contracts for Laravel routes/controllers
-3. Update `quickstart.md` with Laravel Sail setup
+1. `data-model.md` — SeaORM entities & migrations (done).
+2. API contracts — Rust/Axum routes & handlers (`contracts/`, auth + listings done).
+3. `quickstart.md` — cargo / SeaORM / testcontainers setup (done).

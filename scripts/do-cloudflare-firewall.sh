@@ -8,7 +8,12 @@
 #   - OR: DO_API_TOKEN environment variable set
 # =============================================================================
 
-set -e
+# C9 — fail-fast strict : -e (sortie sur erreur) + -o pipefail (sortie si un
+# maillon d'un pipeline échoue). Les fetchs d'IP Cloudflare (`curl … | tr … |
+# sed …`) : sans pipefail, un curl qui échoue produirait une liste vide
+# silencieusement transformée en règles. Pas de -u (vars/env optionnelles,
+# non validables à froid).
+set -e -o pipefail
 
 # Configuration
 FIREWALL_NAME="immog-cloudflare-only"

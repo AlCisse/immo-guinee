@@ -229,7 +229,7 @@ export default function ListingForm() {
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${progressPercentage}%` }}
-            className="h-full bg-gradient-to-r from-primary-500 to-orange-500 rounded-full"
+            className="h-full bg-gradient-to-r from-primary-500 to-primary-500 rounded-full"
           />
         </div>
       </div>
@@ -247,7 +247,7 @@ export default function ListingForm() {
             </div>
             <div>
               <h3 className="font-semibold text-neutral-900 dark:text-white">
-                Type d'opération <span className="text-red-500">*</span>
+                Type d'opération <span className="text-error-500">*</span>
               </h3>
               <p className="text-sm text-neutral-500">
                 Choisissez si vous souhaitez louer ou vendre
@@ -310,7 +310,7 @@ export default function ListingForm() {
           </div>
 
           {errors.operationType && (
-            <div className="mt-3 flex items-center gap-2 text-red-500 text-sm">
+            <div className="mt-3 flex items-center gap-2 text-error-500 text-sm">
               <AlertCircle className="w-4 h-4" />
               {errors.operationType}
             </div>
@@ -373,7 +373,7 @@ export default function ListingForm() {
           {/* Titre */}
           <div>
             <label htmlFor="titre" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
-              Titre de l'annonce <span className="text-red-500">*</span>
+              Titre de l'annonce <span className="text-error-500">*</span>
               <span className="ml-2 text-xs font-normal text-neutral-500">
                 ({formData.titre.length}/100)
               </span>
@@ -389,7 +389,7 @@ export default function ListingForm() {
                 w-full px-4 py-3 rounded-xl border-2 transition-colors
                 bg-white dark:bg-dark-card
                 ${errors.titre
-                  ? 'border-red-500 focus:border-red-600'
+                  ? 'border-error-500 focus:border-error-600'
                   : 'border-neutral-200 dark:border-dark-border focus:border-primary-500'
                 }
                 focus:outline-none focus:ring-2 focus:ring-primary-500/20
@@ -398,7 +398,7 @@ export default function ListingForm() {
               placeholder="Ex: Villa moderne 3 chambres avec jardin à Kipé"
             />
             {errors.titre ? (
-              <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
+              <p className="mt-1.5 text-sm text-error-500 flex items-center gap-1">
                 <AlertCircle className="w-4 h-4" />
                 {errors.titre}
               </p>
@@ -412,7 +412,7 @@ export default function ListingForm() {
           {/* Description */}
           <div>
             <label htmlFor="description" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
-              Description <span className="text-red-500">*</span>
+              Description <span className="text-error-500">*</span>
               <span className="ml-2 text-xs font-normal text-neutral-500">
                 ({formData.description.length}/2000)
               </span>
@@ -428,7 +428,7 @@ export default function ListingForm() {
                 w-full px-4 py-3 rounded-xl border-2 transition-colors resize-none
                 bg-white dark:bg-dark-card
                 ${errors.description
-                  ? 'border-red-500 focus:border-red-600'
+                  ? 'border-error-500 focus:border-error-600'
                   : 'border-neutral-200 dark:border-dark-border focus:border-primary-500'
                 }
                 focus:outline-none focus:ring-2 focus:ring-primary-500/20
@@ -437,7 +437,7 @@ export default function ListingForm() {
               placeholder="Décrivez votre bien en détail: état général, équipements, proximité des services, commodités..."
             />
             {errors.description ? (
-              <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
+              <p className="mt-1.5 text-sm text-error-500 flex items-center gap-1">
                 <AlertCircle className="w-4 h-4" />
                 {errors.description}
               </p>
@@ -457,8 +457,8 @@ export default function ListingForm() {
           className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-soft"
         >
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-500/10">
-              <DollarSign className="w-5 h-5 text-emerald-500" />
+            <div className="p-2 rounded-xl bg-accent-50 dark:bg-accent-500/10">
+              <DollarSign className="w-5 h-5 text-accent-500" />
             </div>
             <h3 className="font-semibold text-neutral-900 dark:text-white">
               Prix et caractéristiques
@@ -469,7 +469,7 @@ export default function ListingForm() {
             {/* Prix */}
             <div>
               <label htmlFor="prix" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
-                Prix <span className="text-red-500">*</span>
+                Prix <span className="text-error-500">*</span>
               </label>
               <div className="relative">
                 <input
@@ -482,7 +482,7 @@ export default function ListingForm() {
                     w-full px-4 py-3 pr-16 rounded-xl border-2 transition-colors
                     bg-white dark:bg-dark-card
                     ${errors.prix
-                      ? 'border-red-500 focus:border-red-600'
+                      ? 'border-error-500 focus:border-error-600'
                       : 'border-neutral-200 dark:border-dark-border focus:border-primary-500'
                     }
                     focus:outline-none focus:ring-2 focus:ring-primary-500/20
@@ -495,7 +495,7 @@ export default function ListingForm() {
                 </div>
               </div>
               {errors.prix ? (
-                <p className="mt-1.5 text-sm text-red-500">{errors.prix}</p>
+                <p className="mt-1.5 text-sm text-error-500">{errors.prix}</p>
               ) : (
                 <p className="mt-1.5 text-xs text-neutral-500">
                   {formData.operationType === 'LOCATION' ? 'Prix mensuel' : 'Prix de vente'}
@@ -535,7 +535,7 @@ export default function ListingForm() {
             <div>
               <label htmlFor="superficie" className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
                 <Ruler className="w-4 h-4" />
-                Superficie <span className="text-red-500">*</span>
+                Superficie <span className="text-error-500">*</span>
               </label>
               <div className="relative">
                 <input
@@ -549,7 +549,7 @@ export default function ListingForm() {
                     w-full px-4 py-3 pr-12 rounded-xl border-2 transition-colors
                     bg-white dark:bg-dark-card
                     ${errors.superficie
-                      ? 'border-red-500'
+                      ? 'border-error-500'
                       : 'border-neutral-200 dark:border-dark-border focus:border-primary-500'
                     }
                     focus:outline-none focus:ring-2 focus:ring-primary-500/20
@@ -562,7 +562,7 @@ export default function ListingForm() {
                 </div>
               </div>
               {errors.superficie && (
-                <p className="mt-1 text-xs text-red-500">{errors.superficie}</p>
+                <p className="mt-1 text-xs text-error-500">{errors.superficie}</p>
               )}
             </div>
 
@@ -570,7 +570,7 @@ export default function ListingForm() {
             <div>
               <label htmlFor="nombreChambres" className="flex items-center gap-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
                 <BedDouble className="w-4 h-4" />
-                Chambres <span className="text-red-500">*</span>
+                Chambres <span className="text-error-500">*</span>
               </label>
               <input
                 type="number"
@@ -583,7 +583,7 @@ export default function ListingForm() {
                   w-full px-4 py-3 rounded-xl border-2 transition-colors
                   bg-white dark:bg-dark-card
                   ${errors.nombreChambres
-                    ? 'border-red-500'
+                    ? 'border-error-500'
                     : 'border-neutral-200 dark:border-dark-border focus:border-primary-500'
                   }
                   focus:outline-none focus:ring-2 focus:ring-primary-500/20
@@ -592,7 +592,7 @@ export default function ListingForm() {
                 placeholder="3"
               />
               {errors.nombreChambres && (
-                <p className="mt-1 text-xs text-red-500">{errors.nombreChambres}</p>
+                <p className="mt-1 text-xs text-error-500">{errors.nombreChambres}</p>
               )}
             </div>
 
@@ -642,12 +642,12 @@ export default function ListingForm() {
           className="bg-white dark:bg-dark-card rounded-2xl p-6 shadow-soft"
         >
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-xl bg-purple-50 dark:bg-purple-500/10">
-              <Camera className="w-5 h-5 text-purple-500" />
+            <div className="p-2 rounded-xl bg-teal-50 dark:bg-teal-500/10">
+              <Camera className="w-5 h-5 text-teal-500" />
             </div>
             <div>
               <h3 className="font-semibold text-neutral-900 dark:text-white">
-                Photos du bien <span className="text-red-500">*</span>
+                Photos du bien <span className="text-error-500">*</span>
               </h3>
               <p className="text-sm text-neutral-500">
                 Ajoutez au moins 3 photos de qualité
@@ -685,7 +685,7 @@ export default function ListingForm() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full sm:w-auto px-8 py-3.5 text-white bg-gradient-to-r from-primary-500 to-orange-500 rounded-xl hover:from-primary-600 hover:to-orange-600 transition-all focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-semibold shadow-lg shadow-primary-500/25"
+            className="w-full sm:w-auto px-8 py-3.5 text-white bg-gradient-to-r from-primary-500 to-primary-500 rounded-xl hover:from-primary-600 hover:to-primary-600 transition-all focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-semibold shadow-lg shadow-primary-500/25"
           >
             {isSubmitting ? (
               <>

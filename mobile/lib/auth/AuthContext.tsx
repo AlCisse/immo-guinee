@@ -98,7 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       const data = response.data as ApiResponse;
-      const { token, user: userData, action } = data.data || {};
+      const { token, refresh_token: refreshToken, user: userData, action } = data.data || {};
 
       // Check if user needs to verify OTP
       if (data.success && action === 'verify_otp') {
@@ -111,6 +111,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (token && userData) {
         await tokenManager.setToken(token);
+        // R11 — persiste le refresh token pour le renouvellement silencieux.
+        if (refreshToken) await tokenManager.setRefreshToken(refreshToken);
         await tokenManager.setUser(userData);
         setUser(userData);
         // Register push token after successful login
@@ -168,9 +170,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = response.data as ApiResponse;
 
       if (data.success) {
-        const { token, user: userData } = data.data || {};
+        const { token, refresh_token: refreshToken, user: userData } = data.data || {};
         if (token && userData) {
           await tokenManager.setToken(token);
+          // R11 — persiste le refresh token pour le renouvellement silencieux.
+          if (refreshToken) await tokenManager.setRefreshToken(refreshToken);
           await tokenManager.setUser(userData);
           setUser(userData);
           // Register push token after OTP verification

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { motion } from 'framer-motion';
 import {
   Facebook,
@@ -23,6 +23,7 @@ import {
   useFacebookToggleAutoPublish,
   useFacebookRefreshToken,
 } from '@/lib/hooks/useFacebook';
+import { socialBrand } from '@/lib/colors';
 
 export default function FacebookSettings() {
   const { t } = useTranslations();
@@ -90,35 +91,35 @@ export default function FacebookSettings() {
     if (!status.connection.is_token_valid || daysUntilExpiry <= 0) {
       return {
         status: 'expired',
-        icon: <AlertTriangle className="w-4 h-4 text-red-500" />,
+        icon: <AlertTriangle className="w-4 h-4 text-error-500" />,
         text: t('facebook.tokenExpired'),
-        color: 'text-red-600 dark:text-red-400',
+        color: 'text-error-600 dark:text-error-400',
       };
     }
 
     if (daysUntilExpiry <= 7) {
       return {
         status: 'expiring',
-        icon: <Clock className="w-4 h-4 text-amber-500" />,
+        icon: <Clock className="w-4 h-4 text-warning-500" />,
         text: t('facebook.tokenExpiresSoon', { days: daysUntilExpiry }),
-        color: 'text-amber-600 dark:text-amber-400',
+        color: 'text-warning-600 dark:text-warning-400',
       };
     }
 
     return {
       status: 'valid',
-      icon: <CheckCircle className="w-4 h-4 text-emerald-500" />,
+      icon: <CheckCircle className="w-4 h-4 text-accent-500" />,
       text: t('facebook.tokenValid', { days: daysUntilExpiry }),
-      color: 'text-emerald-600 dark:text-emerald-400',
+      color: 'text-accent-600 dark:text-accent-400',
     };
   };
 
   if (statusLoading) {
     return (
-      <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft p-6">
+      <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft p-6" style={{ '--fb': socialBrand.facebook, '--fb-hover': socialBrand.facebookHover } as CSSProperties}>
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 bg-[#1877F2]/10 rounded-xl flex items-center justify-center">
-            <Facebook className="w-5 h-5 text-[#1877F2]" />
+          <div className="w-10 h-10 bg-[var(--fb)]/10 rounded-xl flex items-center justify-center">
+            <Facebook className="w-5 h-5 text-[var(--fb)]" />
           </div>
           <div>
             <h2 className="font-semibold text-neutral-900 dark:text-white">
@@ -137,11 +138,11 @@ export default function FacebookSettings() {
   const tokenStatus = getTokenStatus();
 
   return (
-    <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft p-6">
+    <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft p-6" style={{ '--fb': socialBrand.facebook, '--fb-hover': socialBrand.facebookHover } as CSSProperties}>
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 bg-[#1877F2]/10 rounded-xl flex items-center justify-center">
-          <Facebook className="w-5 h-5 text-[#1877F2]" />
+        <div className="w-10 h-10 bg-[var(--fb)]/10 rounded-xl flex items-center justify-center">
+          <Facebook className="w-5 h-5 text-[var(--fb)]" />
         </div>
         <div>
           <h2 className="font-semibold text-neutral-900 dark:text-white">
@@ -176,7 +177,7 @@ export default function FacebookSettings() {
             whileTap={{ scale: 0.98 }}
             onClick={handleConnect}
             disabled={connectMutation.isPending}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#1877F2] hover:bg-[#166FE5] text-white font-medium rounded-xl transition-colors disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[var(--fb)] hover:bg-[var(--fb-hover)] text-white font-medium rounded-xl transition-colors disabled:opacity-50"
           >
             {connectMutation.isPending ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -196,7 +197,7 @@ export default function FacebookSettings() {
           {/* Page Info */}
           <div className="flex items-center justify-between p-4 bg-neutral-50 dark:bg-dark-bg rounded-xl">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-[#1877F2] rounded-full flex items-center justify-center text-white font-bold">
+              <div className="w-10 h-10 bg-[var(--fb)] rounded-full flex items-center justify-center text-white font-bold">
                 {status.connection.page_name.charAt(0)}
               </div>
               <div>
@@ -221,14 +222,14 @@ export default function FacebookSettings() {
 
           {/* Token Refresh Warning */}
           {tokenStatus?.status === 'expired' && (
-            <div className="p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl">
+            <div className="p-4 bg-error-50 dark:bg-error-500/10 border border-error-200 dark:border-error-500/20 rounded-xl">
               <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5" />
+                <AlertTriangle className="w-5 h-5 text-error-500 mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-red-700 dark:text-red-400">
+                  <p className="text-sm font-medium text-error-700 dark:text-error-400">
                     {t('facebook.tokenExpiredTitle')}
                   </p>
-                  <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+                  <p className="text-sm text-error-600 dark:text-error-400 mt-1">
                     {t('facebook.tokenExpiredDescription')}
                   </p>
                   <motion.button
@@ -236,7 +237,7 @@ export default function FacebookSettings() {
                     whileTap={{ scale: 0.98 }}
                     onClick={handleRefreshToken}
                     disabled={refreshTokenMutation.isPending}
-                    className="mt-3 flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+                    className="mt-3 flex items-center gap-2 px-4 py-2 bg-error-600 hover:bg-error-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
                   >
                     {refreshTokenMutation.isPending ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -295,20 +296,20 @@ export default function FacebookSettings() {
           {!showConfirmDisconnect ? (
             <button
               onClick={() => setShowConfirmDisconnect(true)}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-neutral-200 dark:border-dark-border text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-dark-bg font-medium rounded-xl transition-colors"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-neutral-200 dark:border-dark-border text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-dark-hover font-medium rounded-xl transition-colors"
             >
               <Unlink className="w-5 h-5" />
               {t('facebook.disconnectButton')}
             </button>
           ) : (
-            <div className="p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl">
-              <p className="text-sm text-red-700 dark:text-red-400 mb-3">
+            <div className="p-4 bg-error-50 dark:bg-error-500/10 border border-error-200 dark:border-error-500/20 rounded-xl">
+              <p className="text-sm text-error-700 dark:text-error-400 mb-3">
                 {t('facebook.disconnectConfirm')}
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowConfirmDisconnect(false)}
-                  className="flex-1 px-4 py-2 border border-neutral-300 dark:border-dark-border text-neutral-700 dark:text-neutral-300 font-medium rounded-lg hover:bg-neutral-100 dark:hover:bg-dark-bg transition-colors"
+                  className="flex-1 px-4 py-2 border border-neutral-300 dark:border-dark-border text-neutral-700 dark:text-neutral-300 font-medium rounded-lg hover:bg-neutral-100 dark:hover:bg-dark-hover transition-colors"
                 >
                   {t('common.cancel')}
                 </button>
@@ -317,7 +318,7 @@ export default function FacebookSettings() {
                   whileTap={{ scale: 0.98 }}
                   onClick={handleDisconnect}
                   disabled={disconnectMutation.isPending}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-error-600 hover:bg-error-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
                 >
                   {disconnectMutation.isPending ? (
                     <Loader2 className="w-4 h-4 animate-spin" />

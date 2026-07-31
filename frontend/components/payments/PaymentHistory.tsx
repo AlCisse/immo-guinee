@@ -198,15 +198,15 @@ export default function PaymentHistory({ initialStatus }: PaymentHistoryProps) {
 
   const getStatusBadgeClass = (status: string) => {
     const classes: Record<string, string> = {
-      en_attente: 'bg-yellow-100 text-yellow-700',
-      en_cours: 'bg-blue-100 text-blue-700',
-      escrow: 'bg-purple-100 text-purple-700',
-      confirme: 'bg-green-100 text-green-700',
-      rembourse: 'bg-gray-100 text-gray-700',
-      litige: 'bg-red-100 text-red-700',
-      echoue: 'bg-red-100 text-red-700',
+      en_attente: 'bg-warning-100 text-warning-700',
+      en_cours: 'bg-secondary-100 text-secondary-700',
+      escrow: 'bg-teal-100 text-teal-700',
+      confirme: 'bg-success-100 text-success-700',
+      rembourse: 'bg-neutral-100 dark:bg-dark-hover text-neutral-700 dark:text-neutral-300',
+      litige: 'bg-error-100 text-error-700',
+      echoue: 'bg-error-100 text-error-700',
     };
-    return classes[status] || 'bg-gray-100 text-gray-700';
+    return classes[status] || 'bg-neutral-100 dark:bg-dark-hover text-neutral-700 dark:text-neutral-300';
   };
 
   const handleSort = (field: 'date' | 'amount') => {
@@ -230,13 +230,13 @@ export default function PaymentHistory({ initialStatus }: PaymentHistoryProps) {
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-xl shadow-sm p-6">
+      <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm p-6">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-          <div className="h-12 bg-gray-200 rounded"></div>
+          <div className="h-8 bg-neutral-200 dark:bg-dark-hover rounded w-1/4"></div>
+          <div className="h-12 bg-neutral-200 dark:bg-dark-hover rounded"></div>
           <div className="space-y-3">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-16 bg-gray-200 rounded"></div>
+              <div key={i} className="h-16 bg-neutral-200 dark:bg-dark-hover rounded"></div>
             ))}
           </div>
         </div>
@@ -246,13 +246,13 @@ export default function PaymentHistory({ initialStatus }: PaymentHistoryProps) {
 
   if (error) {
     return (
-      <div className="bg-white rounded-xl shadow-sm p-6">
+      <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm p-6">
         <div className="text-center py-8">
-          <svg className="mx-auto h-12 w-12 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="mx-auto h-12 w-12 text-error-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
-          <h3 className="mt-4 text-lg font-medium text-gray-900">Erreur de chargement</h3>
-          <p className="mt-2 text-sm text-gray-500">
+          <h3 className="mt-4 text-lg font-medium text-neutral-900 dark:text-white">Erreur de chargement</h3>
+          <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
             Impossible de charger l&apos;historique des paiements
           </p>
         </div>
@@ -261,11 +261,11 @@ export default function PaymentHistory({ initialStatus }: PaymentHistoryProps) {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+    <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200">
+      <div className="px-6 py-4 border-b border-neutral-200 dark:border-dark-border">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <h2 className="text-lg font-semibold text-gray-900">Historique des paiements</h2>
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">Historique des paiements</h2>
           <Button variant="outline" onClick={handleExportCSV} disabled={filteredPayments.length === 0}>
             <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -276,14 +276,14 @@ export default function PaymentHistory({ initialStatus }: PaymentHistoryProps) {
       </div>
 
       {/* Filters */}
-      <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+      <div className="px-6 py-4 bg-neutral-50 dark:bg-dark-bg border-b border-neutral-200 dark:border-dark-border">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {/* Search */}
           <div className="lg:col-span-2">
             <label htmlFor="search" className="sr-only">Rechercher</label>
             <div className="relative">
               <svg
-                className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"
+                className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -296,7 +296,7 @@ export default function PaymentHistory({ initialStatus }: PaymentHistoryProps) {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Rechercher par référence, bien, bénéficiaire..."
-                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full pl-10 pr-4 py-2 rounded-lg border border-neutral-300 dark:border-dark-border focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               />
             </div>
           </div>
@@ -311,7 +311,7 @@ export default function PaymentHistory({ initialStatus }: PaymentHistoryProps) {
                 setStatusFilter(e.target.value);
                 setPage(1);
               }}
-              className="w-full py-2 px-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full py-2 px-3 rounded-lg border border-neutral-300 dark:border-dark-border focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             >
               {STATUS_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -328,7 +328,7 @@ export default function PaymentHistory({ initialStatus }: PaymentHistoryProps) {
               id="method-filter"
               value={methodFilter}
               onChange={(e) => setMethodFilter(e.target.value)}
-              className="w-full py-2 px-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full py-2 px-3 rounded-lg border border-neutral-300 dark:border-dark-border focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             >
               {METHOD_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -345,7 +345,7 @@ export default function PaymentHistory({ initialStatus }: PaymentHistoryProps) {
               id="date-filter"
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value as DateFilter)}
-              className="w-full py-2 px-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full py-2 px-3 rounded-lg border border-neutral-300 dark:border-dark-border focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             >
               {DATE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -358,7 +358,7 @@ export default function PaymentHistory({ initialStatus }: PaymentHistoryProps) {
 
         {hasActiveFilters && (
           <div className="mt-3 flex items-center gap-2">
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-neutral-500 dark:text-neutral-400">
               {filteredPayments.length} résultat{filteredPayments.length !== 1 ? 's' : ''}
             </span>
             <button
@@ -376,20 +376,20 @@ export default function PaymentHistory({ initialStatus }: PaymentHistoryProps) {
         <div className="px-6 py-3 bg-primary-50 border-b border-primary-100">
           <div className="flex flex-wrap items-center gap-6 text-sm">
             <div>
-              <span className="text-gray-500">Total:</span>{' '}
+              <span className="text-neutral-500 dark:text-neutral-400">Total:</span>{' '}
               <span className="font-semibold text-primary-700">{formatPaymentAmount(totals.total)}</span>
             </div>
             <div>
-              <span className="text-gray-500">Loyers:</span>{' '}
-              <span className="font-medium text-gray-700">{formatPaymentAmount(totals.loyer)}</span>
+              <span className="text-neutral-500 dark:text-neutral-400">Loyers:</span>{' '}
+              <span className="font-medium text-neutral-700 dark:text-neutral-300">{formatPaymentAmount(totals.loyer)}</span>
             </div>
             <div>
-              <span className="text-gray-500">Cautions:</span>{' '}
-              <span className="font-medium text-gray-700">{formatPaymentAmount(totals.caution)}</span>
+              <span className="text-neutral-500 dark:text-neutral-400">Cautions:</span>{' '}
+              <span className="font-medium text-neutral-700 dark:text-neutral-300">{formatPaymentAmount(totals.caution)}</span>
             </div>
             <div>
-              <span className="text-gray-500">Commissions:</span>{' '}
-              <span className="font-medium text-gray-700">{formatPaymentAmount(totals.commission)}</span>
+              <span className="text-neutral-500 dark:text-neutral-400">Commissions:</span>{' '}
+              <span className="font-medium text-neutral-700 dark:text-neutral-300">{formatPaymentAmount(totals.commission)}</span>
             </div>
           </div>
         </div>
@@ -399,12 +399,12 @@ export default function PaymentHistory({ initialStatus }: PaymentHistoryProps) {
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="bg-gray-50 text-left text-sm font-medium text-gray-500">
+            <tr className="bg-neutral-50 dark:bg-dark-bg text-left text-sm font-medium text-neutral-500 dark:text-neutral-400">
               <th className="px-6 py-3">Référence</th>
               <th className="px-6 py-3">
                 <button
                   onClick={() => handleSort('date')}
-                  className="flex items-center hover:text-gray-700"
+                  className="flex items-center hover:text-neutral-700 dark:hover:text-neutral-300"
                 >
                   Date
                   {sortField === 'date' && (
@@ -418,7 +418,7 @@ export default function PaymentHistory({ initialStatus }: PaymentHistoryProps) {
               <th className="px-6 py-3">
                 <button
                   onClick={() => handleSort('amount')}
-                  className="flex items-center hover:text-gray-700"
+                  className="flex items-center hover:text-neutral-700 dark:hover:text-neutral-300"
                 >
                   Montant
                   {sortField === 'amount' && (
@@ -433,15 +433,15 @@ export default function PaymentHistory({ initialStatus }: PaymentHistoryProps) {
               <th className="px-6 py-3 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-neutral-100">
             {filteredPayments.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-6 py-12 text-center">
-                  <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="mx-auto h-12 w-12 text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
-                  <h3 className="mt-4 text-sm font-medium text-gray-900">Aucun paiement trouvé</h3>
-                  <p className="mt-1 text-sm text-gray-500">
+                  <h3 className="mt-4 text-sm font-medium text-neutral-900 dark:text-white">Aucun paiement trouvé</h3>
+                  <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
                     {hasActiveFilters
                       ? 'Essayez de modifier vos filtres'
                       : "Vous n'avez pas encore effectué de paiement"}
@@ -450,18 +450,18 @@ export default function PaymentHistory({ initialStatus }: PaymentHistoryProps) {
               </tr>
             ) : (
               filteredPayments.map((payment: Payment) => (
-                <tr key={payment.id} className="hover:bg-gray-50">
+                <tr key={payment.id} className="hover:bg-neutral-50 dark:hover:bg-dark-hover">
                   <td className="px-6 py-4">
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{payment.reference_paiement}</p>
-                      <p className="text-xs text-gray-500">{payment.contrat?.reference}</p>
+                      <p className="text-sm font-medium text-neutral-900 dark:text-white">{payment.reference_paiement}</p>
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400">{payment.contrat?.reference}</p>
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <p className="text-sm text-gray-900">
+                    <p className="text-sm text-neutral-900 dark:text-white">
                       {new Date(payment.created_at).toLocaleDateString('fr-FR')}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400">
                       {new Date(payment.created_at).toLocaleTimeString('fr-FR', {
                         hour: '2-digit',
                         minute: '2-digit',
@@ -469,25 +469,25 @@ export default function PaymentHistory({ initialStatus }: PaymentHistoryProps) {
                     </p>
                   </td>
                   <td className="px-6 py-4">
-                    <p className="text-sm text-gray-900 truncate max-w-[200px]">
+                    <p className="text-sm text-neutral-900 dark:text-white truncate max-w-[200px]">
                       {payment.contrat?.listing?.titre}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400">
                       {payment.contrat?.listing?.quartier}
                     </p>
                   </td>
                   <td className="px-6 py-4">
-                    <p className="text-sm font-semibold text-gray-900">
+                    <p className="text-sm font-semibold text-neutral-900 dark:text-white">
                       {formatPaymentAmount(payment.montant_total)}
                     </p>
                     {payment.montant_frais_service > 0 && (
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400">
                         dont {formatPaymentAmount(payment.montant_frais_service)} comm.
                       </p>
                     )}
                   </td>
                   <td className="px-6 py-4">
-                    <p className="text-sm text-gray-900">
+                    <p className="text-sm text-neutral-900 dark:text-white">
                       {getPaymentMethodLabel(payment.methode_paiement)}
                     </p>
                   </td>
@@ -517,8 +517,8 @@ export default function PaymentHistory({ initialStatus }: PaymentHistoryProps) {
 
       {/* Pagination */}
       {data?.pagination && data.pagination.total_pages > 1 && (
-        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-          <p className="text-sm text-gray-500">
+        <div className="px-6 py-4 border-t border-neutral-200 dark:border-dark-border flex items-center justify-between">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">
             Page {page} sur {data.pagination.total_pages} ({data.pagination.total} résultats)
           </p>
           <div className="flex gap-2">

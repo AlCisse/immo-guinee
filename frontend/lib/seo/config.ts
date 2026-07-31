@@ -389,8 +389,7 @@ export function generateSearchMetadata(params: {
 }, locale: 'fr' | 'en' = 'fr'): Metadata {
   const { type_transaction, type_bien, commune, quartier } = params;
 
-  let titleParts: string[] = [];
-  let descParts: string[] = [];
+  const titleParts: string[] = [];
 
   // Build title based on filters
   if (type_bien) {

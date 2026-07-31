@@ -59,7 +59,7 @@ export default function ModifierAnnoncePage() {
   const router = useRouter();
   const params = useParams();
   const queryClient = useQueryClient();
-  const listingId = params.id as string;
+  const listingId = (params?.id ?? '') as string;
 
   const [formData, setFormData] = useState({
     titre: '',
@@ -190,7 +190,7 @@ export default function ModifierAnnoncePage() {
   if (error || !listing) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-12 text-center">
-        <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-yellow-500" />
+        <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-warning-500" />
         <h2 className="text-xl font-semibold mb-2">Annonce introuvable</h2>
         <p className="text-neutral-500 mb-4">Cette annonce n'existe pas ou a ete supprimee.</p>
         <Link href="/mes-annonces" className="text-primary-500 hover:underline">
@@ -207,7 +207,7 @@ export default function ModifierAnnoncePage() {
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg">
       {/* Header */}
-      <div className="bg-gradient-to-br from-primary-500 to-orange-500 pt-6 pb-8">
+      <div className="bg-gradient-to-br from-primary-500 to-primary-500 pt-6 pb-8">
         <div className="max-w-3xl mx-auto px-4">
           <div className="flex items-center gap-4">
             <Link
@@ -345,7 +345,7 @@ export default function ModifierAnnoncePage() {
                   name="meuble"
                   checked={formData.meuble}
                   onChange={handleInputChange}
-                  className="w-5 h-5 rounded border-neutral-300 text-primary-500 focus:ring-primary-500"
+                  className="w-5 h-5 rounded border-neutral-300 dark:border-dark-border text-primary-500 focus:ring-primary-500"
                 />
                 <span className="text-neutral-700 dark:text-neutral-300">Meuble</span>
               </label>
@@ -395,7 +395,7 @@ export default function ModifierAnnoncePage() {
                         <button
                           type="button"
                           onClick={() => markPhotoForDeletion(photo.id)}
-                          className="absolute top-2 right-2 p-1.5 bg-red-500/80 hover:bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="absolute top-2 right-2 p-1.5 bg-error-500/80 hover:bg-error-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                           title="Supprimer"
                         >
                           <Trash2 className="w-4 h-4 text-white" />

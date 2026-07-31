@@ -1,27 +1,35 @@
-# Developer Quickstart Guide: ImmoGuinée Platform (Laravel 11)
+# Developer Quickstart Guide: ImmoGuinée Platform (Rust / Axum)
 
 **Feature**: ImmoGuinée - Plateforme Immobilière pour la Guinée
 **Branch**: `001-immog-platform`
 **Date**: 2025-01-28
-**Estimated Setup Time**: 40-60 minutes
+**Estimated Setup Time**: 25-40 minutes (first `cargo build` dominates)
 
 ---
 
 ## Overview
 
-This guide walks you through setting up the ImmoGuinée development environment using **Laravel 11** backend + **Next.js 14** frontend. By the end, you'll have a fully functional local instance with all services running.
+This guide walks you through setting up the ImmoGuinée development environment using a
+**Rust (Axum + Tokio, SeaORM)** backend + **Next.js 14** frontend. By the end, you'll
+have a fully functional local instance with all backing services running.
 
 **What You'll Build**:
-- Laravel 11 API backend (PHP 8.2+)
+- Rust API backend (`immog-backend`, Axum 0.8, edition 2024, Rust 1.85+)
 - Next.js 14 frontend PWA (TypeScript)
-- PostgreSQL 15 database with seeded data
-- Redis 7 cache + queue
-- Meilisearch (advanced search)
-- n8n automation workflows
-- WAHA (WhatsApp) local instance
-- MinIO (S3-compatible storage)
-- Grafana + Prometheus monitoring
-- Laravel Echo Server (WebSocket)
+- PostgreSQL 16 database (SeaORM migrations + native enums)
+- Redis 7 (cache, rate-limiting, OTP TTL, JWT deny-list, WS pub/sub)
+- MinIO (S3-compatible storage for listing photos, via `rust-s3`)
+- Evolution API (WhatsApp) local instance
+- Axum WebSocket (Pusher-compatible real-time — no separate Echo server)
+
+> **Search**: full-text search runs on **PostgreSQL** (SeaORM filters + ILIKE, GIN
+> index). Elasticsearch is a planned relevance/perf upgrade (T092) — it is **not**
+> part of the dev stack. (There is no Meilisearch.)
+
+> **Status**: **US1 (authentication + listings)** is implemented and covered by
+> integration tests. Payments, contracts, messaging, certifications and admin are
+> planned (see `contracts/`). Steps below reflect what runs today; planned services
+> are marked *(planned)*.
 
 ---
 
@@ -29,40 +37,41 @@ This guide walks you through setting up the ImmoGuinée development environment 
 
 ### Required Software
 
-1. **Docker Desktop** (for Laravel Sail)
+1. **Rust 1.85+** (edition 2024) via [rustup](https://rustup.rs)
    ```bash
-   docker --version  # Should output 24.x.x or higher
+   rustup toolchain install stable
+   rustc --version   # Should output 1.85.0 or higher
+   ```
+
+2. **Docker Desktop** (for the backing services: Postgres, Redis, MinIO, Evolution)
+   ```bash
+   docker --version  # 24.x.x or higher
+   docker compose version
    ```
    Download: https://www.docker.com/products/docker-desktop
 
-2. **Git**
+3. **Git**
    ```bash
    git --version
    ```
 
-3. **Node.js 20 LTS** (for Next.js frontend)
+4. **Node.js 20 LTS** + **pnpm 8+** (for the Next.js frontend)
    ```bash
-   node --version  # Should output v20.x.x
-   ```
-   Download: https://nodejs.org/
-
-4. **pnpm 8+** (for Next.js frontend)
-   ```bash
+   node --version    # v20.x.x
    npm install -g pnpm
-   pnpm --version  # Should output 8.x.x or 9.x.x
+   pnpm --version    # 8.x.x or 9.x.x
    ```
 
 ### Recommended Tools
 
 - **VS Code** with extensions:
-  - Laravel Extension Pack
-  - PHP Intelephense
-  - ESLint
-  - Prettier
-  - Tailwind CSS IntelliSense
-- **Postman** or **Insomnia** (API testing)
-- **TablePlus** or **DBeaver** (Database GUI)
-- **Laravel Herd** (optional, for running Laravel without Docker)
+  - **rust-analyzer** (essential)
+  - **Even Better TOML**
+  - ESLint, Prettier, Tailwind CSS IntelliSense (frontend)
+- **cargo-watch** — auto-rebuild on save: `cargo install cargo-watch`
+- **sea-orm-cli** (optional, entity generation): `cargo install sea-orm-cli`
+- **Postman** / **Insomnia** (API testing)
+- **TablePlus** / **DBeaver** (Database GUI)
 
 ---
 
@@ -76,284 +85,166 @@ git checkout 001-immog-platform
 
 ---
 
-## Step 2: Backend Setup (Laravel 11)
+## Step 2: Start Backing Services (Docker)
 
-### 2.1 Install Laravel Dependencies
-
-Navigate to backend directory:
-
-```bash
-cd backend
-```
-
-**If you have PHP 8.2+ installed locally**:
-```bash
-composer install
-```
-
-**If you don't have PHP installed** (use Laravel Sail to install dependencies):
-```bash
-docker run --rm \
-    -u "$(id -u):$(id -g)" \
-    -v "$(pwd):/var/www/html" \
-    -w /var/www/html \
-    laravelsail/php82-composer:latest \
-    composer install --ignore-platform-reqs
-```
-
-**Expected output**: ~200 Laravel packages installed (~3-5 minutes)
-
----
-
-### 2.2 Configure Environment
-
-Copy example environment file:
+The Rust app runs on the host with `cargo`; its dependencies (Postgres, Redis, MinIO,
+Evolution API) run in Docker.
 
 ```bash
-cp .env.example .env
+docker compose up -d postgres redis minio evolution
 ```
 
-Edit `.env` with your values:
+**Services Started** (default dev ports — match `Config::default()` in `src/config.rs`):
 
-```bash
-# App
-APP_NAME=ImmoGuinée
-APP_ENV=local
-APP_KEY=  # Will be generated in next step
-APP_DEBUG=true
-APP_URL=http://localhost:8000
-
-# Database (PostgreSQL via Sail)
-DB_CONNECTION=pgsql
-DB_HOST=pgsql
-DB_PORT=5432
-DB_DATABASE=immoguinee
-DB_USERNAME=sail
-DB_PASSWORD=password
-
-# Redis (via Sail)
-REDIS_HOST=redis
-REDIS_PASSWORD=null
-REDIS_PORT=6379
-
-# Meilisearch (via Sail)
-MEILISEARCH_HOST=http://meilisearch:7700
-MEILISEARCH_KEY=
-
-# Queue
-QUEUE_CONNECTION=redis
-
-# Cache
-CACHE_DRIVER=redis
-
-# Session
-SESSION_DRIVER=redis
-SESSION_LIFETIME=120
-
-# Broadcasting (Laravel Echo)
-BROADCAST_DRIVER=pusher
-PUSHER_APP_ID=immoguinee
-PUSHER_APP_KEY=immoguinee-key
-PUSHER_APP_SECRET=immoguinee-secret
-PUSHER_APP_CLUSTER=mt1
-PUSHER_SCHEME=http
-PUSHER_HOST=127.0.0.1
-PUSHER_PORT=6001
-
-# AWS S3 (use MinIO for local dev)
-FILESYSTEM_DISK=s3
-AWS_ACCESS_KEY_ID=minioadmin
-AWS_SECRET_ACCESS_KEY=minioadmin
-AWS_DEFAULT_REGION=us-east-1
-AWS_BUCKET=immoguinee-dev
-AWS_ENDPOINT=http://minio:9000
-AWS_USE_PATH_STYLE_ENDPOINT=true
-
-# Twilio SMS (for OTP)
-TWILIO_ACCOUNT_SID=your-twilio-sid
-TWILIO_AUTH_TOKEN=your-twilio-token
-TWILIO_PHONE_NUMBER=+1234567890
-
-# Resend Email
-MAIL_MAILER=resend
-RESEND_API_KEY=re_xxx
-
-# WAHA (WhatsApp)
-WAHA_URL=http://waha:3001
-WAHA_API_KEY=your-waha-secret
-
-# Orange Money (Sandbox)
-ORANGE_MONEY_API_KEY=sandbox-key
-ORANGE_MONEY_API_SECRET=sandbox-secret
-ORANGE_MONEY_MERCHANT_ID=test-merchant
-
-# MTN Mobile Money (Sandbox)
-MTN_MOMO_API_KEY=sandbox-key
-MTN_MOMO_API_SECRET=sandbox-secret
-
-# ImmoGuinée Platform Account ID
-IMMOG_PLATFORM_ACCOUNT_ID=  # Will be set after seeding
-
-# Sanctum
-SANCTUM_STATEFUL_DOMAINS=localhost,localhost:3000,127.0.0.1,127.0.0.1:3000
-```
-
-Generate application key:
-
-```bash
-./vendor/bin/sail artisan key:generate
-```
-
----
-
-### 2.3 Start Laravel Sail (Docker)
-
-Laravel Sail is a light-weight CLI for Docker. Start all services:
-
-```bash
-./vendor/bin/sail up -d
-```
-
-**Services Started**:
 | Service | Port | URL | Credentials |
 |---------|------|-----|-------------|
-| Laravel API | 8000 | http://localhost:8000 | - |
-| PostgreSQL | 5432 | localhost:5432 | sail/password |
-| Redis | 6379 | localhost:6379 | (no auth) |
-| Meilisearch | 7700 | http://localhost:7700 | (no auth) |
-| MinIO | 9000, 9001 | http://localhost:9001 | minioadmin/minioadmin |
-| Mailpit | 1025, 8025 | http://localhost:8025 | (no auth) |
+| PostgreSQL | 5433 | localhost:5433 | `immog_user` / `immog` (db `immog_db`) |
+| Redis | 6379 | localhost:6379 | password `immog_redis_secret` |
+| MinIO | 9000 / 9001 | http://localhost:9001 (console) | `minioadmin` / `minioadmin` |
+| Evolution API | 8080 | http://localhost:8080 | API key from `.env` |
 
-Verify all services are running:
+Verify all services are healthy:
 
 ```bash
-./vendor/bin/sail ps
+docker compose ps
 ```
 
-**Expected output**: All containers show `Up` status.
+**Expected**: all four containers show `running` / `healthy`.
 
-**Alias (Optional)**:
-To avoid typing `./vendor/bin/sail` every time, add this to your `.bashrc` or `.zshrc`:
+> The MinIO bucket (`immoguinee-images`) is **created automatically** by the backend at
+> boot (`S3Storage::ensure_bucket`) — no manual bucket creation needed.
+
+---
+
+## Step 3: Backend Setup (Rust / Axum)
+
+Navigate to the backend crate:
 
 ```bash
-alias sail='[ -f sail ] && sh sail || sh vendor/bin/sail'
+cd rust-backend
 ```
 
-Then you can just use:
+### 3.1 Configure Environment
+
+Configuration is layered (highest priority last): `Config::default()` →
+`config.toml` → `IMMOG_*` env vars (nested keys split on `__`). The defaults already
+point at the Docker services above, so **for a standard local run you can skip
+config.toml entirely.**
+
+To override, either create `rust-backend/config.toml`:
+
+```toml
+host = "0.0.0.0"
+port = 8000
+database_url = "postgres://immog_user:immog@localhost:5433/immog_db"
+redis_url    = "redis://:immog_redis_secret@localhost:6379"
+s3_endpoint  = "http://localhost:9000"
+s3_bucket    = "immoguinee-images"
+evolution_base_url = "http://localhost:8080"
+evolution_instance = "immoguinee"
+cors_allowed_origin = "http://localhost:3000"
+```
+
+…or export env vars (they win over the file):
+
 ```bash
-sail up -d
-sail artisan migrate
+export IMMOG_PORT=8000
+export IMMOG_DATABASE_URL="postgres://immog_user:immog@localhost:5433/immog_db"
+export IMMOG_JWT_SECRET="a-long-random-dev-secret"   # dev only; prod fetches from Vault
+```
+
+> **Secrets**: in production the JWT secret, DB/Redis passwords and all integration
+> keys are fetched from **HashiCorp Vault** at boot (`secret/immoguinee/app`). In dev,
+> `IMMOG_JWT_SECRET` provides a fallback (a dev constant is used if unset). Never commit
+> real secrets. See `contracts/secrets.md`.
+
+**Access keys for MinIO/S3** are read by `rust-s3` from the standard env vars:
+
+```bash
+export AWS_ACCESS_KEY_ID=minioadmin
+export AWS_SECRET_ACCESS_KEY=minioadmin
 ```
 
 ---
 
-### 2.4 Run Database Migrations
+### 3.2 Run Database Migrations
+
+Migrations are SeaORM code (`src/db/migration/`) — the schema source of truth. Apply
+them with the `immog-migrate` binary:
 
 ```bash
-sail artisan migrate
+cargo run --bin immog-migrate -- up
 ```
 
 This will:
-1. Create the `immoguinee` database
-2. Run all migrations from `database/migrations/`
-3. Create 11 tables (users, listings, contracts, payments, etc.)
-4. Create PostgreSQL native enums
-5. Create indexes for performance
+1. Create all PostgreSQL native enums (24 enums, e.g. `quartier`, `statut_annonce`, `statut_visite`).
+2. Create the tables (users, listings, contracts, payments, visits, …).
+3. Create indexes (incl. the GIN index used by search).
 
 **Expected output**:
 ```
-Migration table created successfully.
-Migrating: 2025_01_28_000001_create_enums
-Migrated:  2025_01_28_000001_create_enums (123.45ms)
-Migrating: 2025_01_28_000002_create_users_table
-Migrated:  2025_01_28_000002_create_users_table (234.56ms)
+Applying migration 'm20250128_000001_create_enums'
+Migration 'm20250128_000001_create_enums' has been applied
+Applying migration 'm20250128_000002_create_users'
 ...
 ```
 
----
-
-### 2.5 Seed Database
-
-Populate with test data:
-
+Other migration subcommands:
 ```bash
-sail artisan db:seed
+cargo run --bin immog-migrate -- status     # show applied / pending
+cargo run --bin immog-migrate -- down       # roll back the last migration
+cargo run --bin immog-migrate -- fresh      # DROP everything + re-apply (dev only!)
 ```
 
-This creates:
-- 1 admin user: `+224622000000` / `admin123`
-- 5 test users with various badges (Bronze, Argent, Or, Diamant)
-- 20 sample listings (Kaloum, Dixinn, Ratoma)
-- Pre-seeded enum values
-
-**Verify**:
-
-```bash
-sail artisan tinker
-```
-
-Then in Tinker:
-```php
-User::count()  // Should output 6
-Listing::count()  // Should output 20
-exit
-```
-
-Or use a database GUI:
-- **Host**: `localhost`
-- **Port**: `5432`
-- **Database**: `immoguinee`
-- **User**: `sail`
-- **Password**: `password`
+> Seeding: a `db:seed` equivalent is *(planned)*. For now, create data through the API
+> (Step 5) — register a user, then create listings.
 
 ---
 
-### 2.6 Index Data in Meilisearch
+### 3.3 Run the API Server
 
 ```bash
-sail artisan scout:import "App\Models\Listing"
-sail artisan scout:import "App\Models\User"
+cargo run --bin immog-backend
+```
+
+The first build compiles all dependencies (~several minutes); subsequent runs are fast.
+For an auto-reloading dev loop:
+
+```bash
+cargo watch -x 'run --bin immog-backend'
 ```
 
 **Expected output**:
 ```
-Imported [App\Models\Listing] models up to ID: 20
-All [App\Models\Listing] records have been imported.
+INFO immog_backend: connected to Postgres
+INFO immog_backend: connected to Redis
+INFO immog_backend: S3 bucket 'immoguinee-images' ready
+INFO immog_backend: listening on 0.0.0.0:8000
 ```
+
+All routes are mounted under `/api`.
 
 ---
 
-## Step 3: Frontend Setup (Next.js 14)
+## Step 4: Frontend Setup (Next.js 14)
 
-Open a **new terminal** and navigate to frontend:
+Open a **new terminal** and navigate to the frontend:
 
 ```bash
 cd ../frontend
 ```
 
-### 3.1 Install Dependencies
+### 4.1 Install Dependencies
 
 ```bash
 pnpm install
 ```
 
-This installs:
-- Next.js 14
-- React 18
-- TailwindCSS 3
-- React Query (TanStack Query v5)
-- Laravel Echo (for WebSocket)
-- Socket.IO Client
-- shadcn/ui components
-- ~100 total packages
+This installs Next.js 14, React 18, TailwindCSS 3, TanStack Query v5, the
+`laravel-echo` + `pusher-js` client (now pointed at the Axum WS endpoint), shadcn/ui,
+and related packages (~100 total). **Estimated time**: 2-4 minutes.
 
-**Estimated time**: 2-4 minutes
-
----
-
-### 3.2 Configure Environment
-
-Copy example environment file:
+### 4.2 Configure Environment
 
 ```bash
 cp .env.example .env.local
@@ -362,24 +253,20 @@ cp .env.example .env.local
 Edit `.env.local`:
 
 ```bash
-# API URL
+# API URL (Rust backend, routes under /api)
 NEXT_PUBLIC_API_URL=http://localhost:8000
-NEXT_PUBLIC_WS_URL=http://localhost:6001
 
-# Laravel Echo
-NEXT_PUBLIC_PUSHER_APP_KEY=immoguinee-key
-NEXT_PUBLIC_PUSHER_APP_CLUSTER=mt1
-NEXT_PUBLIC_ECHO_HOST=localhost
-NEXT_PUBLIC_ECHO_PORT=6001
+# Real-time — Axum WebSocket (Pusher-compatible), served by the backend itself
+NEXT_PUBLIC_WS_HOST=localhost
+NEXT_PUBLIC_WS_PORT=8000
+NEXT_PUBLIC_WS_APP_KEY=immoguinee-key
 
 # App
 NEXT_PUBLIC_APP_NAME=ImmoGuinée
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
----
-
-### 3.3 Start Next.js Development Server
+### 4.3 Start the Development Server
 
 ```bash
 pnpm dev
@@ -388,165 +275,48 @@ pnpm dev
 **Output**:
 ```
 ▲ Next.js 14.2.0
-- Local:        http://localhost:3000
-- Network:      http://192.168.1.x:3000
-
+- Local:   http://localhost:3000
 ✓ Ready in 2.8s
 ```
 
-**Verify**:
-1. Open http://localhost:3000
-2. You should see the ImmoGuinée homepage
-3. Latest listings should load (from seed data via API)
+Open http://localhost:3000 — the homepage should load listings from the Rust API.
 
 ---
 
-## Step 4: Additional Services Setup
+## Step 5: Additional Services
 
-### 4.1 Start n8n (Automation)
+### 5.1 Evolution API (WhatsApp)
 
-Open a **new terminal**:
+Started in Step 2. To connect a WhatsApp number:
 
-```bash
-cd docker
-docker-compose up -d n8n
-```
+1. Open the Evolution API dashboard: http://localhost:8080
+2. Create/connect the instance named `immoguinee` and scan the QR code.
+3. Ensure `IMMOG_EVOLUTION_BASE_URL` / `IMMOG_EVOLUTION_INSTANCE` match your config
+   (defaults: `http://localhost:8080` / `immoguinee`).
 
-1. Open n8n: http://localhost:5678
-2. Create account (first time only)
-3. Import workflows:
-   - Click **Import from File**
-   - Navigate to `n8n/workflows/`
-   - Import all 6 JSON files:
-     - `nouvelle-annonce-notifications.json`
-     - `nouveau-message-alerts.json`
-     - `signature-contrat-pdf.json`
-     - `paiement-quittance.json`
-     - `rappels-paiement.json`
-     - `expiration-annonces.json`
+The backend sends via `services::whatsapp::WhatsAppClient` (Evolution `sendText`). If
+`evolution_base_url` is empty, WhatsApp sending is disabled (no-op) — fine for most
+local work.
 
-4. Activate each workflow:
-   - Click workflow
-   - Toggle **Active** switch
+### 5.2 Real-Time (Axum WebSocket) — *(planned wiring)*
 
----
+Broadcasting is served by the backend itself at `/api/ws` (Pusher-compatible), backed
+by Redis pub/sub. **There is no separate Laravel Echo / Node broadcasting process to
+run.** The frontend connects with its existing `laravel-echo` + `pusher-js` client
+pointed at `NEXT_PUBLIC_WS_HOST:NEXT_PUBLIC_WS_PORT`.
 
-### 4.2 Start WAHA (WhatsApp)
+### 5.3 Background Jobs (apalis) — *(planned)*
 
-```bash
-docker-compose up -d waha
-```
-
-1. Open WAHA: http://localhost:3001
-2. Scan QR code with WhatsApp
-3. Update `.env` with your API key
+Scheduled/async work (photo optimization off-thread, listing auto-expiry, payment
+release, notifications) will run on **apalis** workers backed by Redis. Today, photo
+optimization runs inline in the upload handler. No separate worker process is required
+yet.
 
 ---
 
-### 4.3 Configure MinIO (S3 Storage)
+## Step 6: Verify Setup (Smoke Tests)
 
-1. Open MinIO Console: http://localhost:9001
-2. Login: `minioadmin` / `minioadmin`
-3. Create bucket:
-   - Click **Create Bucket**
-   - Name: `immoguinee-dev`
-   - Region: `us-east-1`
-   - Click **Create**
-
-4. Set bucket policy (public read for listing photos):
-   - Select bucket → **Manage** → **Access Policy**
-   - Add policy:
-   ```json
-   {
-     "Version": "2012-10-17",
-     "Statement": [
-       {
-         "Effect": "Allow",
-         "Principal": {"AWS": ["*"]},
-         "Action": ["s3:GetObject"],
-         "Resource": ["arn:aws:s3:::immoguinee-dev/listings/*"]
-       }
-     ]
-   }
-   ```
-
----
-
-### 4.4 Start Laravel Echo Server (WebSocket)
-
-Open a **new terminal** in `backend/`:
-
-```bash
-npm install -g laravel-echo-server
-laravel-echo-server init  # Only first time
-laravel-echo-server start
-```
-
-**Configuration** (when prompted):
-- **Port**: `6001`
-- **Protocol**: `http`
-- **Database**: `redis`
-- **Redis Host**: `127.0.0.1`
-- **Redis Port**: `6379`
-
-**Expected output**:
-```
-L A R A V E L  E C H O  S E R V E R
-
-version 1.6.3
-
-⚠ Starting server in DEV mode...
-
-✔  Running at localhost on port 6001
-✔  Channels are ready.
-✔  Listening for http events...
-✔  Listening for redis events...
-
-Server ready!
-```
-
----
-
-### 4.5 Start Queue Worker (Background Jobs)
-
-Open a **new terminal** in `backend/`:
-
-```bash
-sail artisan queue:work
-```
-
-This processes:
-- Photo optimization jobs (OptimizeListingPhotosJob)
-- Email notifications
-- PDF generation
-- Payment processing
-
-**Expected output**:
-```
-[2025-01-28 14:30:00][1] Processing: App\Jobs\OptimizeListingPhotosJob
-[2025-01-28 14:30:05][1] Processed:  App\Jobs\OptimizeListingPhotosJob
-```
-
----
-
-### 4.6 Start Grafana + Prometheus (Monitoring)
-
-```bash
-cd docker
-docker-compose up -d grafana prometheus
-```
-
-1. Open Grafana: http://localhost:3002
-2. Login: `admin` / `admin`
-3. Import dashboard:
-   - Click **Dashboards** → **Import**
-   - Upload `grafana/dashboards/immog-dashboard.json`
-
----
-
-## Step 5: Verify Setup (Smoke Tests)
-
-### Test 1: Laravel API Health Check
+### Test 1: API Health Check
 
 ```bash
 curl http://localhost:8000/api/health
@@ -554,12 +324,12 @@ curl http://localhost:8000/api/health
 
 **Expected**:
 ```json
-{"success":true,"status":"healthy","timestamp":"2025-01-28T14:30:00Z"}
+{"success":true,"status":"healthy"}
 ```
 
 ---
 
-### Test 2: User Registration (Laravel)
+### Test 2: User Registration
 
 ```bash
 curl -X POST http://localhost:8000/api/auth/register \
@@ -567,27 +337,49 @@ curl -X POST http://localhost:8000/api/auth/register \
   -d '{
     "telephone": "+224622999999",
     "nom_complet": "Test User",
-    "email": "test@example.com",
     "mot_de_passe": "Test123!",
     "type_compte": "PARTICULIER"
   }'
 ```
 
-**Expected**:
-- Response: `"success": true, "message": "OTP envoyé..."`
-- Check Mailpit: http://localhost:8025 (you should see OTP email)
+**Expected**: `{"success": true, ...}` and an OTP issued (logged by the backend in dev).
+
+Then verify the OTP and log in:
+
+```bash
+# (use the OTP printed in the backend logs)
+curl -X POST http://localhost:8000/api/auth/verify-otp \
+  -H "Content-Type: application/json" \
+  -d '{"telephone":"+224622999999","code":"123456"}'
+
+curl -X POST http://localhost:8000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"telephone":"+224622999999","mot_de_passe":"Test123!"}'
+```
+
+Login returns `access_token` (24h) + `refresh_token` (7d). Use the access token as
+`Authorization: Bearer <token>` on authenticated endpoints.
 
 ---
 
-### Test 3: Search Listings (Meilisearch)
+### Test 3: Create & Search a Listing
 
 ```bash
+TOKEN="<access_token from login>"
+
+# Create (owner)
+curl -X POST http://localhost:8000/api/listings \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"type_operation":"LOCATION","type_bien":"APPARTEMENT",
+       "titre":"Bel appartement 2 chambres vue mer",
+       "description":"Magnifique appartement situé à Kaloum, proche commodités.",
+       "prix_gnf":2500000,"quartier":"KALOUM","caution_mois":3}'
+
+# Public search (Postgres)
 curl "http://localhost:8000/api/listings/search?quartier=KALOUM&type_bien=APPARTEMENT"
 ```
 
-**Expected**:
-- Response: JSON array with listings
-- Query time: < 50ms (check logs)
+**Expected**: the created listing appears in the search results (`statut=DISPONIBLE`).
 
 ---
 
@@ -600,467 +392,231 @@ curl "http://localhost:8000/api/listings/search?quartier=KALOUM&type_bien=APPART
 
 ---
 
-### Test 5: WebSocket Connection
+## Step 7: Run Tests
 
-Open browser console on http://localhost:3000:
+### Backend Tests (cargo)
 
-```javascript
-import Echo from 'laravel-echo';
-import Pusher from 'pusher-js';
-
-window.Pusher = Pusher;
-
-const echo = new Echo({
-    broadcaster: 'pusher',
-    key: 'immoguinee-key',
-    wsHost: 'localhost',
-    wsPort: 6001,
-    forceTLS: false,
-    auth: {
-        headers: {
-            Authorization: `Bearer YOUR_TOKEN`
-        }
-    }
-});
-
-echo.private('conversation.uuid').listen('NewMessageEvent', (e) => {
-    console.log('✅ WebSocket connected:', e);
-});
-```
-
----
-
-## Step 6: Run Tests
-
-### Laravel Backend Tests (PHPUnit/Pest)
+Unit tests run without Docker; integration tests spin up **Postgres + Redis + MinIO via
+testcontainers** (Docker must be running — no manual services needed for them).
 
 ```bash
-sail artisan test
+cargo test                       # unit + integration (testcontainers)
+cargo test --lib                 # unit tests only (fast, no Docker)
+cargo test --test listings_e2e   # a specific integration suite
 ```
 
 **Expected output**:
 ```
-   PASS  Tests\Feature\Auth\RegisterTest
-  ✓ user can register with valid phone number
-  ✓ user cannot register with invalid phone
-  ✓ otp is sent after registration
+running 23 tests
+test auth::jwt::tests::issue_and_verify_roundtrip ... ok
+test auth::rbac::tests::admin_has_manage_users ... ok
+...
+test result: ok. 23 passed; 0 failed
 
-   PASS  Tests\Feature\Listing\CreateListingTest
-  ✓ authenticated user can create listing
-  ✓ listing requires minimum 3 photos
-
-  Tests:    42 passed (42 run)
-  Duration: 5.23s
+running 3 tests   (tests/listings_e2e.rs, testcontainers)
+test register_login_create_search_show_flow ... ok
+test upload_photo_stores_in_minio ... ok
+test me_and_logout_revoke_token ... ok
+test result: ok. 3 passed; 0 failed
 ```
 
----
-
-### Run Specific Test Suite
+### Frontend Tests (Vitest / Playwright)
 
 ```bash
-sail artisan test --filter=ListingTest
-sail artisan test --testsuite=Feature
+pnpm test:unit    # Vitest unit tests
+pnpm test:e2e     # Playwright E2E (US1-US4)
 ```
-
----
-
-### Frontend Tests (Vitest)
-
-In frontend terminal:
-
-```bash
-pnpm test:unit
-```
-
-**Expected**:
-```
-✓ components/ListingCard.test.tsx (5 tests)
-✓ hooks/useAuth.test.ts (8 tests)
-✓ utils/validators.test.ts (12 tests)
-
-Test Files  15 passed (15)
-Tests       85 passed (85)
-Duration    2.51s
-```
-
----
-
-### E2E Tests (Playwright)
-
-```bash
-pnpm test:e2e
-```
-
-This opens a browser and tests critical user flows (US1-US4).
 
 ---
 
 ## Development Workflow
 
-### 1. Create Feature Branch
-
+### 1. Create a Feature Branch
 ```bash
 git checkout -b feature/add-rating-system
 ```
 
----
+### 2. Make Backend Changes (Rust)
 
-### 2. Make Backend Changes (Laravel)
+Edit files under `rust-backend/src/`. Typical additions:
 
-Edit files in `backend/app/`, `backend/routes/`, etc.
-
-**Run migrations** (if you added new tables):
 ```bash
-sail artisan make:migration create_ratings_table
-sail artisan migrate
+# New table → add a migration module under src/db/migration/, register it in the Migrator
+# (optionally) regenerate an entity:
+sea-orm-cli generate entity -u "$IMMOG_DATABASE_URL" -o src/db/entities --with-serde both
+
+# Apply it
+cargo run --bin immog-migrate -- up
 ```
 
-**Create controller**:
-```bash
-sail artisan make:controller Api/RatingController
-```
-
-**Create model**:
-```bash
-sail artisan make:model Rating
-```
-
----
+A new domain lives under `src/domain/<name>/` (`dto.rs`, `handlers.rs`, `routes`),
+mounted in `src/routes/mod.rs`. Services go under `src/services/`.
 
 ### 3. Make Frontend Changes (Next.js)
-
 Edit files in `frontend/app/`, `frontend/components/`, etc.
 
----
+### 4. Lint / Format / Type-check
 
-### 4. Run Type Checking
-
-**Laravel (PHPStan)**:
+**Backend (Rust)**:
 ```bash
-sail composer phpstan
+cargo fmt --all          # format
+cargo clippy --all-targets --all-features -- -D warnings   # lint (denies warnings)
+cargo check              # fast type-check
 ```
 
-**Next.js (TypeScript)**:
+**Frontend (Next.js)**:
 ```bash
 pnpm typecheck
-```
-
----
-
-### 5. Run Linters
-
-**Laravel (PHP CS Fixer)**:
-```bash
-sail composer lint
-```
-
-**Next.js (ESLint)**:
-```bash
 pnpm lint
-```
-
----
-
-### 6. Format Code
-
-**Laravel (Pint)**:
-```bash
-sail pint
-```
-
-**Next.js (Prettier)**:
-```bash
 pnpm format
 ```
 
----
-
-### 7. Run Tests
-
+### 5. Run Tests
 ```bash
-sail artisan test
+cargo test
 pnpm test
 ```
 
----
-
-### 8. Commit Changes
-
+### 6. Commit, Push, PR
 ```bash
 git add .
 git commit -m "feat: add rating system for transactions"
-```
-
----
-
-### 9. Push & Create PR
-
-```bash
 git push origin feature/add-rating-system
 ```
-
-Then create Pull Request on GitHub.
+Then open a Pull Request on GitHub.
 
 ---
 
 ## Troubleshooting
 
-### Issue: Docker containers won't start
-
-**Solution**:
+### Docker services won't start
 ```bash
-sail down -v  # Remove volumes
-docker system prune -a  # Clean Docker
-sail up -d --force-recreate
+docker compose down          # (add -v ONLY if you intend to wipe data volumes)
+docker compose up -d --force-recreate postgres redis minio evolution
 ```
 
----
-
-### Issue: Laravel migration errors
-
-**Solution**:
+### Migration errors / dirty schema (dev)
 ```bash
-sail artisan migrate:fresh --seed  # Reset and re-seed
+cargo run --bin immog-migrate -- fresh    # DROP all + re-apply (DEV ONLY — destroys data)
 ```
 
----
-
-### Issue: Port 8000 already in use
-
-**Solution**:
+### Port 8000 already in use
 ```bash
-# Kill process on port 8000 (Windows)
-netstat -ano | findstr :8000
-taskkill /PID <PID> /F
-
-# Or change Laravel port
-APP_PORT=8001 sail up -d
+# find and stop the process, or run on another port:
+IMMOG_PORT=8001 cargo run --bin immog-backend
 ```
 
----
-
-### Issue: PostgreSQL connection refused
-
-**Solution**:
+### PostgreSQL connection refused
 ```bash
-# Check PostgreSQL is running
-sail ps | grep pgsql
-
-# View logs
-sail logs pgsql
-
-# Restart
-sail restart pgsql
+docker compose ps postgres
+docker compose logs postgres
+docker compose restart postgres
+# Confirm IMMOG_DATABASE_URL host/port match (default localhost:5433).
 ```
 
----
+### Photos not uploading to MinIO
+1. Verify MinIO is running: http://localhost:9001 (`minioadmin` / `minioadmin`).
+2. Confirm `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` are exported.
+3. The bucket `immoguinee-images` is auto-created at boot — check the backend logs for
+   `S3 bucket ... ready`; if missing, check `s3_endpoint`.
 
-### Issue: Meilisearch not indexing
+### OTP not received
+In dev the OTP is **logged by the backend** (no SMS provider needed). Check the
+`cargo run` console output for the generated code.
 
-**Solution**:
-```bash
-# Clear Meilisearch index
-sail artisan scout:flush "App\Models\Listing"
-
-# Re-import
-sail artisan scout:import "App\Models\Listing"
-
-# Check Meilisearch UI
-open http://localhost:7700
-```
-
----
-
-### Issue: Images not uploading to MinIO
-
-**Solution**:
-1. Verify MinIO is running: http://localhost:9001
-2. Check bucket exists: `immoguinee-dev`
-3. Verify `.env` has correct `AWS_S3_ENDPOINT`
-
----
-
-### Issue: OTP SMS not sending
-
-**Solution**:
-1. Check Twilio credentials in `.env`
-2. For development, check Mailpit: http://localhost:8025
-3. Use mock OTP mode:
-   ```bash
-   MOCK_OTP=true sail artisan serve
-   ```
-   (OTP will be logged to console)
-
----
-
-### Issue: Queue jobs not processing
-
-**Solution**:
-```bash
-# Check queue worker is running
-sail artisan queue:work --verbose
-
-# Clear failed jobs
-sail artisan queue:flush
-
-# Restart queue
-sail artisan queue:restart
-```
+### Slow / stuck `cargo build`
+The first build is heavy. If a build hangs on a target lock, ensure no other `cargo`
+process is running against the same target dir, then retry. `cargo build` once, then use
+`cargo watch` for the dev loop.
 
 ---
 
 ## Project Structure Reference
 
 ```
-ImmoG/
-├── backend/               # Laravel 11 API
-│   ├── app/
-│   │   ├── Http/
-│   │   │   ├── Controllers/Api/
-│   │   │   ├── Middleware/
-│   │   │   ├── Requests/
-│   │   │   └── Resources/
-│   │   ├── Models/
-│   │   ├── Jobs/
-│   │   ├── Events/
-│   │   ├── Notifications/
-│   │   └── Services/
-│   ├── database/
-│   │   ├── migrations/
-│   │   ├── seeders/
-│   │   └── factories/
-│   ├── routes/
-│   │   ├── api.php
-│   │   ├── web.php
-│   │   └── channels.php
-│   ├── tests/
-│   │   ├── Feature/
-│   │   └── Unit/
-│   ├── .env.example
-│   ├── composer.json
-│   └── artisan
-├── frontend/             # Next.js 14 PWA
-│   ├── app/
-│   │   ├── (public)/
-│   │   ├── (auth)/
-│   │   └── api/  (optional proxy)
-│   ├── components/
-│   │   ├── ui/  (shadcn)
-│   │   ├── listings/
-│   │   └── contracts/
-│   ├── hooks/
-│   ├── lib/
-│   │   ├── api.ts
-│   │   └── echo.ts
-│   ├── .env.example
-│   ├── package.json
-│   └── next.config.js
-├── docker/
-│   └── docker-compose.yml
-├── n8n/workflows/
-└── specs/
+immoguinee/
+├── rust-backend/                 # Rust API (crate: immog-backend)
+│   ├── Cargo.toml                # edition 2024, rust-version 1.85
+│   ├── config.toml               # optional local overrides (git-ignored)
+│   └── src/
+│       ├── lib.rs                # module tree shared by both bins
+│       ├── main.rs               # bin: immog-backend (API server)
+│       ├── bin/immog_migrate.rs  # bin: immog-migrate (up/down/status/fresh)
+│       ├── config.rs             # figment config (IMMOG_* env)
+│       ├── state.rs              # AppState (db, redis, storage, whatsapp, jwt)
+│       ├── error.rs              # AppError → JSON envelope
+│       ├── routes/               # router assembly (nest under /api, CORS)
+│       ├── auth/                 # jwt, rbac, totp
+│       ├── extractors/           # AuthUser, ValidatedJson
+│       ├── middleware/           # rate_limit (native Redis)
+│       ├── services/             # storage (S3), listing_photo (WebP), otp, whatsapp
+│       ├── domain/               # auth/, listings/  (dto + handlers + routes)
+│       └── db/
+│           ├── migration/        # SeaORM migrations (schema source of truth)
+│           └── entities/         # SeaORM entities + native enums
+│   └── tests/                    # integration suites (testcontainers)
+├── frontend/                     # Next.js 14 PWA
+│   ├── app/  components/  lib/ (api.ts, socket/echo.ts)
+│   └── .env.example
+├── docker-compose*.yml           # backing services (dev) + prod/swarm
+└── specs/001-immog-platform/     # spec, plan, tasks, data-model, contracts, ...
 ```
 
 ---
 
 ## Useful Commands
 
-### Laravel Backend
-
+### Backend (Rust)
 ```bash
-# Development
-sail up -d                  # Start Docker containers
-sail artisan serve          # Serve API (optional, Sail auto-serves on :8000)
-sail down                   # Stop containers
+# Run / dev loop
+cargo run --bin immog-backend           # start the API on :8000
+cargo watch -x 'run --bin immog-backend'
 
-# Database
-sail artisan migrate        # Run migrations
-sail artisan migrate:fresh --seed  # Reset & seed
-sail artisan db:seed        # Seed only
-sail artisan tinker         # Interactive shell
+# Migrations
+cargo run --bin immog-migrate -- up
+cargo run --bin immog-migrate -- status
+cargo run --bin immog-migrate -- down
+cargo run --bin immog-migrate -- fresh  # dev only
 
-# Queue
-sail artisan queue:work     # Start queue worker
-sail artisan queue:restart  # Restart queue
-sail artisan horizon        # Start Horizon (queue dashboard)
-
-# Testing
-sail artisan test           # Run all tests
-sail artisan test --filter=ListingTest  # Run specific test
-sail artisan test --coverage  # With coverage
-
-# Code Quality
-sail pint                   # Format code (Laravel Pint)
-sail composer phpstan       # Static analysis
-sail composer lint          # Run PHP CS Fixer
-
-# Scout (Meilisearch)
-sail artisan scout:import "App\Models\Listing"  # Index model
-sail artisan scout:flush "App\Models\Listing"   # Clear index
-
-# Caching
-sail artisan cache:clear
-sail artisan config:clear
-sail artisan route:clear
-sail artisan view:clear
+# Quality
+cargo fmt --all
+cargo clippy --all-targets --all-features -- -D warnings
+cargo test
+cargo test --lib
 ```
 
----
-
-### Next.js Frontend
-
+### Frontend (Next.js)
 ```bash
-# Development
-pnpm dev                   # Start dev server
-pnpm build                 # Build for production
-pnpm start                 # Start production server
-
-# Testing
-pnpm test                  # Run all tests
-pnpm test:unit             # Unit tests only
-pnpm test:e2e              # E2E tests (Playwright)
-
-# Code Quality
-pnpm lint                  # Run ESLint
-pnpm format                # Run Prettier
-pnpm typecheck             # TypeScript check
+pnpm dev            # dev server
+pnpm build          # production build
+pnpm test:unit      # Vitest
+pnpm test:e2e       # Playwright
+pnpm lint / pnpm format / pnpm typecheck
 ```
 
----
-
-### Docker
-
+### Docker (backing services)
 ```bash
-# General
-docker-compose ps          # List services
-docker-compose logs -f     # View logs
-docker-compose down -v     # Stop & remove volumes
-
-# Specific services
-docker-compose up -d n8n
-docker-compose logs n8n
-docker-compose restart redis
+docker compose up -d postgres redis minio evolution
+docker compose ps
+docker compose logs -f postgres
+docker compose down            # stop (keep volumes); add -v to wipe data
 ```
 
 ---
 
 ## Next Steps
 
-Now that your environment is set up, you can:
-
-1. **Explore the codebase**: Start with `backend/app/Http/Controllers/Api/` and `frontend/app/page.tsx`
-2. **Read API contracts**: See `specs/001-immog-platform/contracts/`
-3. **Implement a user story**: Pick from US1-US9 in spec.md
-4. **Run E2E tests**: `pnpm test:e2e` to see automated browser tests
-5. **Check monitoring**: Open Grafana at http://localhost:3002
-6. **Browse database**: Connect with TablePlus/DBeaver to `localhost:5432`
+1. **Explore the code**: start with `rust-backend/src/domain/` and `frontend/app/page.tsx`.
+2. **Read API contracts**: `specs/001-immog-platform/contracts/`.
+3. **Implement a user story**: pick from US1-US10 in `spec.md` (US1 auth+listings is done).
+4. **Run integration tests**: `cargo test --test listings_e2e` (testcontainers).
 
 ---
 
 ## Additional Resources
 
 - **Specification**: `specs/001-immog-platform/spec.md`
-- **Architecture**: `specs/001-immog-platform/research.md`
+- **Architecture / decisions**: `specs/001-immog-platform/research.md`
 - **Data Model**: `specs/001-immog-platform/data-model.md`
 - **API Contracts**: `specs/001-immog-platform/contracts/`
 - **Constitution**: `.specify/memory/constitution.md`
@@ -1070,15 +626,16 @@ Now that your environment is set up, you can:
 ## Getting Help
 
 - **GitHub Issues**: https://github.com/your-org/immoguinee/issues
-- **Team Chat**: Slack #immog-dev channel
-- **Laravel Docs**: https://laravel.com/docs/11.x
+- **Axum Docs**: https://docs.rs/axum
+- **SeaORM Docs**: https://www.sea-ql.org/SeaORM/
 - **Next.js Docs**: https://nextjs.org/docs
 
 ---
 
 **Setup Complete!** 🎉
 
-You now have a fully functional ImmoGuinée development environment with Laravel 11 backend + Next.js 14 frontend. Happy coding!
+You now have a fully functional ImmoGuinée development environment with a Rust (Axum)
+backend + Next.js 14 frontend. Happy coding!
 
-**Estimated Total Setup Time**: 40-60 minutes
-**Next**: Start implementing User Story 1 (Publish Listing in < 5 minutes)
+**Estimated Total Setup Time**: 25-40 minutes (dominated by the first `cargo build`)
+**Next**: Start with User Story 1 (Publish Listing in < 5 minutes) — already implemented.

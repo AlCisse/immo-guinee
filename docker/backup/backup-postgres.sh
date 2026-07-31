@@ -5,7 +5,12 @@
 # Rotation: 14 days retention
 # ===============================================
 
-set -e
+# C9 — fail-fast strict : -e (sortie sur erreur), -u (var non définie = erreur,
+# aucune ici car tous les secrets sont lus via `$(cat … || echo "")` puis validés
+# par -z), -o pipefail (CRITIQUE : `pg_dump | gzip` — sans pipefail, un pg_dump
+# qui échoue produit un .gz vide valide, qui serait chiffré puis uploadé sur
+# Spaces sans qu'aucun exit-code ne signale la sauvegarde corrompue).
+set -euo pipefail
 
 LOG_PREFIX="[$(date '+%Y-%m-%d %H:%M:%S')] [BACKUP]"
 DATE=$(date +%Y-%m-%d_%H-%M-%S)

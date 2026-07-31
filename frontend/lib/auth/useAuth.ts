@@ -17,7 +17,7 @@ interface RegisterData {
   telephone: string;
   mot_de_passe: string;
   nom_complet: string;
-  type_compte: 'PARTICULIER' | 'PROPRIETAIRE' | 'AGENT' | 'AGENCE';
+  type_compte: 'PARTICULIER' | 'AGENCE' | 'DIASPORA';
   email?: string;
 }
 
@@ -60,7 +60,7 @@ function getRedirectPathByRole(user: User): string {
 
   // Proprietaire/Agence goes to their dashboard
   if (roles.includes('proprietaire') || roles.includes('agence') ||
-      user.type_compte === 'PROPRIETAIRE' || user.type_compte === 'AGENCE') {
+      user.type_compte === 'AGENCE') {
     return '/dashboard';
   }
 

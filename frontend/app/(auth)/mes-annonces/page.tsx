@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useSearchParamsSafe } from '@/lib/hooks/useSearchParamsSafe';
+
+import { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api/client';
@@ -53,23 +54,23 @@ interface Annonce {
 const STATUS_CONFIG: Record<string, { icon: any; className: string }> = {
   ACTIVE: {
     icon: CheckCircle,
-    className: 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400',
+    className: 'bg-success-100 text-success-700 dark:bg-success-500/10 dark:text-success-400',
   },
   publiee: {
     icon: CheckCircle,
-    className: 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400',
+    className: 'bg-success-100 text-success-700 dark:bg-success-500/10 dark:text-success-400',
   },
   EN_ATTENTE: {
     icon: Clock,
-    className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400',
+    className: 'bg-warning-100 text-warning-700 dark:bg-warning-500/10 dark:text-warning-400',
   },
   PENDING: {
     icon: Clock,
-    className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400',
+    className: 'bg-warning-100 text-warning-700 dark:bg-warning-500/10 dark:text-warning-400',
   },
   BROUILLON: {
     icon: Clock,
-    className: 'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400',
+    className: 'bg-secondary-100 text-secondary-700 dark:bg-secondary-500/10 dark:text-secondary-400',
   },
   EXPIREE: {
     icon: AlertCircle,
@@ -77,15 +78,15 @@ const STATUS_CONFIG: Record<string, { icon: any; className: string }> = {
   },
   ARCHIVEE: {
     icon: CheckCircle,
-    className: 'bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400',
+    className: 'bg-teal-100 text-teal-700 dark:bg-teal-500/10 dark:text-teal-400',
   },
   REJETEE: {
     icon: XCircle,
-    className: 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400',
+    className: 'bg-error-100 text-error-700 dark:bg-error-500/10 dark:text-error-400',
   },
   REJECTED: {
     icon: XCircle,
-    className: 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400',
+    className: 'bg-error-100 text-error-700 dark:bg-error-500/10 dark:text-error-400',
   },
 };
 
@@ -114,8 +115,16 @@ function formatPrice(price: number | string | null | undefined, priceNotDefined:
 }
 
 export default function MesAnnoncesPage() {
+  return (
+    <Suspense fallback={null}>
+      <MesAnnoncesPageContent />
+    </Suspense>
+  );
+}
+
+function MesAnnoncesPageContent() {
   const { t } = useTranslations();
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParamsSafe();
   const successParam = searchParams.get('success');
   const showSuccess = successParam === 'true' || successParam === 'created';
   const queryClient = useQueryClient();
@@ -252,7 +261,7 @@ export default function MesAnnoncesPage() {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="text-center">
-          <p className="text-red-500 mb-4">{t('myListings.error.loading')}</p>
+          <p className="text-error-500 mb-4">{t('myListings.error.loading')}</p>
           <button
             onClick={() => queryClient.invalidateQueries({ queryKey: ['my-listings'] })}
             className="px-4 py-2 bg-primary-500 text-white rounded-lg"
@@ -267,7 +276,7 @@ export default function MesAnnoncesPage() {
   return (
     <div>
       {/* Header */}
-      <div className="bg-gradient-to-br from-primary-500 to-orange-500 pt-6 pb-8 md:pt-8 md:pb-12">
+      <div className="bg-gradient-to-br from-primary-500 to-primary-500 pt-6 pb-8 md:pt-8 md:pb-12">
         <div className="max-w-6xl mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -292,7 +301,7 @@ export default function MesAnnoncesPage() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-2 px-4 py-2.5 bg-white text-primary-600 font-semibold rounded-xl shadow-lg"
+                className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-dark-card text-primary-600 font-semibold rounded-xl shadow-soft"
               >
                 <Plus className="w-5 h-5" />
                 <span className="hidden sm:inline">{t('myListings.newListing')}</span>
@@ -332,10 +341,10 @@ export default function MesAnnoncesPage() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="mb-4 p-4 bg-green-100 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 rounded-xl flex items-center gap-3"
+              className="mb-4 p-4 bg-success-100 dark:bg-success-500/10 border border-success-200 dark:border-success-500/20 rounded-xl flex items-center gap-3"
             >
-              <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-              <p className="text-green-700 dark:text-green-400 font-medium">
+              <CheckCircle className="w-5 h-5 text-success-600 dark:text-success-400" />
+              <p className="text-success-700 dark:text-success-400 font-medium">
                 {t('myListings.publishSuccess')}
               </p>
             </motion.div>
@@ -453,7 +462,7 @@ export default function MesAnnoncesPage() {
                               <button
                                 onClick={() => handleMarkAsRented(annonce.id)}
                                 disabled={markAsRentedMutation.isPending}
-                                className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-500/10 dark:text-green-400 dark:hover:bg-green-500/20 transition-colors disabled:opacity-50"
+                                className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-success-100 text-success-700 hover:bg-success-200 dark:bg-success-500/10 dark:text-success-400 dark:hover:bg-success-500/20 transition-colors disabled:opacity-50"
                               >
                                 {markAsRentedMutation.isPending ? (
                                   <Loader2 className="w-3 h-3 animate-spin" />
@@ -469,7 +478,7 @@ export default function MesAnnoncesPage() {
                               <button
                                 onClick={() => handleReactivate(annonce.id)}
                                 disabled={reactivateMutation.isPending}
-                                className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/20 transition-colors disabled:opacity-50"
+                                className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-secondary-100 text-secondary-700 hover:bg-secondary-200 dark:bg-secondary-500/10 dark:text-secondary-400 dark:hover:bg-secondary-500/20 transition-colors disabled:opacity-50"
                               >
                                 {reactivateMutation.isPending ? (
                                   <Loader2 className="w-3 h-3 animate-spin" />
@@ -500,11 +509,11 @@ export default function MesAnnoncesPage() {
                                 <span className="text-sm font-normal text-neutral-500">{t('common.perMonth')}</span>
                               )}
                               {(annonce.type_transaction === 'LOCATION_COURTE' || annonce.type_transaction === 'location_courte') && (
-                                <span className="text-sm font-normal text-purple-500">{t('common.perDay')}</span>
+                                <span className="text-sm font-normal text-teal-500">{t('common.perDay')}</span>
                               )}
                             </span>
                             {(annonce.type_transaction === 'LOCATION_COURTE' || annonce.type_transaction === 'location_courte') && (
-                              <span className="text-xs text-purple-600 bg-purple-100 dark:bg-purple-500/10 px-2 py-0.5 rounded">
+                              <span className="text-xs text-teal-600 bg-teal-100 dark:bg-teal-500/10 px-2 py-0.5 rounded">
                                 {t('myListings.shortRental')}
                               </span>
                             )}
@@ -524,7 +533,7 @@ export default function MesAnnoncesPage() {
                         <div className="relative">
                           <button
                             onClick={() => setActiveMenu(activeMenu === annonce.id ? null : annonce.id)}
-                            className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-lg transition-colors"
+                            className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg transition-colors"
                           >
                             <MoreVertical className="w-5 h-5 text-neutral-500" />
                           </button>
@@ -535,18 +544,18 @@ export default function MesAnnoncesPage() {
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
-                                className="absolute right-0 top-10 w-44 bg-white dark:bg-dark-card rounded-xl shadow-lg border border-neutral-200 dark:border-dark-border py-2 z-10 max-h-[60vh] overflow-y-auto"
+                                className="absolute right-0 top-10 w-44 bg-white dark:bg-dark-card rounded-xl shadow-soft border border-neutral-200 dark:border-dark-border py-2 z-10 max-h-[60vh] overflow-y-auto"
                               >
                                 <Link
                                   href={`/bien/${annonce.id}`}
-                                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-50 dark:hover:bg-dark-bg text-neutral-700 dark:text-neutral-300"
+                                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-50 dark:hover:bg-dark-hover text-neutral-700 dark:text-neutral-300"
                                 >
                                   <Eye className="w-4 h-4" />
                                   {t('myListings.actions.viewListing')}
                                 </Link>
                                 <Link
                                   href={`/mes-annonces/${annonce.id}/modifier`}
-                                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-50 dark:hover:bg-dark-bg text-neutral-700 dark:text-neutral-300"
+                                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-50 dark:hover:bg-dark-hover text-neutral-700 dark:text-neutral-300"
                                 >
                                   <Edit className="w-4 h-4" />
                                   {t('myListings.actions.edit')}
@@ -556,7 +565,7 @@ export default function MesAnnoncesPage() {
                                   <button
                                     onClick={() => handleMarkAsRented(annonce.id)}
                                     disabled={markAsRentedMutation.isPending}
-                                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-green-50 dark:hover:bg-green-500/10 text-green-600 w-full disabled:opacity-50"
+                                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-success-50 dark:hover:bg-success-500/10 text-success-600 w-full disabled:opacity-50"
                                   >
                                     {markAsRentedMutation.isPending ? (
                                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -571,7 +580,7 @@ export default function MesAnnoncesPage() {
                                   <button
                                     onClick={() => handleReactivate(annonce.id)}
                                     disabled={reactivateMutation.isPending}
-                                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-blue-50 dark:hover:bg-blue-500/10 text-blue-600 w-full disabled:opacity-50"
+                                    className="flex items-center gap-3 px-4 py-2.5 hover:bg-secondary-50 dark:hover:bg-secondary-500/10 text-secondary-600 w-full disabled:opacity-50"
                                   >
                                     {reactivateMutation.isPending ? (
                                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -584,7 +593,7 @@ export default function MesAnnoncesPage() {
                                 <button
                                   onClick={() => handleDelete(annonce.id)}
                                   disabled={deleteMutation.isPending}
-                                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 dark:hover:bg-red-500/10 text-red-600 w-full disabled:opacity-50"
+                                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-error-50 dark:hover:bg-error-500/10 text-error-600 w-full disabled:opacity-50"
                                 >
                                   {deleteMutation.isPending ? (
                                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -638,7 +647,7 @@ export default function MesAnnoncesPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white dark:bg-dark-card rounded-2xl shadow-xl max-w-md w-full p-6"
+              className="bg-white dark:bg-dark-card rounded-2xl shadow-soft max-w-md w-full p-6"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
@@ -648,7 +657,7 @@ export default function MesAnnoncesPage() {
                 </h3>
                 <button
                   onClick={() => setShowRentedModal(false)}
-                  className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-lg transition-colors"
+                  className="p-2 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-lg transition-colors"
                 >
                   <X className="w-5 h-5 text-neutral-500" />
                 </button>
@@ -687,7 +696,7 @@ export default function MesAnnoncesPage() {
                 <button
                   onClick={() => confirmMarkAsRented(false)}
                   disabled={markAsRentedMutation.isPending}
-                  className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-neutral-200 dark:border-dark-border hover:border-neutral-300 dark:hover:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors disabled:opacity-50"
+                  className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-neutral-200 dark:border-dark-border hover:border-neutral-300 dark:hover:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors disabled:opacity-50"
                 >
                   <div className="p-3 bg-neutral-200 dark:bg-dark-bg rounded-xl">
                     <Users className="w-6 h-6 text-neutral-600 dark:text-neutral-400" />
@@ -709,7 +718,7 @@ export default function MesAnnoncesPage() {
               {/* Cancel button */}
               <button
                 onClick={() => setShowRentedModal(false)}
-                className="w-full mt-4 py-3 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-dark-bg rounded-xl transition-colors"
+                className="w-full mt-4 py-3 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-dark-hover rounded-xl transition-colors"
               >
                 {t('myListings.markAsRentedModal.cancel')}
               </button>

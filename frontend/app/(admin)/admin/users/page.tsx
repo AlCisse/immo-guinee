@@ -52,6 +52,7 @@ interface AdminUser {
   is_mediator: boolean;
   badge: string;
   statut_verification: string;
+  statut_compte: string;
   is_active: boolean;
   is_suspended: boolean;
   listings_count: number;
@@ -68,9 +69,9 @@ interface Role {
 }
 
 const ROLE_INFO: Record<string, { label: string; icon: React.ElementType; color: string }> = {
-  admin: { label: 'Administrateur', icon: Crown, color: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400' },
-  moderator: { label: 'Modérateur', icon: Shield, color: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400' },
-  mediator: { label: 'Médiateur', icon: Gavel, color: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400' },
+  admin: { label: 'Administrateur', icon: Crown, color: 'bg-error-100 text-error-700 dark:bg-error-500/20 dark:text-error-400' },
+  moderator: { label: 'Modérateur', icon: Shield, color: 'bg-secondary-100 text-secondary-700 dark:bg-secondary-500/20 dark:text-secondary-400' },
+  mediator: { label: 'Médiateur', icon: Gavel, color: 'bg-teal-100 text-teal-700 dark:bg-teal-500/20 dark:text-teal-400' },
 };
 
 export default function UsersPage() {
@@ -206,11 +207,11 @@ export default function UsersPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-white flex items-center gap-3">
           <Users className="w-7 h-7 text-primary-500" />
           Gestion des utilisateurs
         </h1>
-        <p className="text-gray-600 mt-1">
+        <p className="text-neutral-600 dark:text-neutral-400 mt-1">
           Gérez les comptes, badges et vérifications
         </p>
       </div>
@@ -404,12 +405,12 @@ export default function UsersPage() {
                               <span className={clsx(
                                 'inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full',
                                 user.is_suspended && !user.is_active
-                                  ? 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400'
+                                  ? 'bg-error-100 text-error-700 dark:bg-error-500/20 dark:text-error-400'
                                   : user.is_suspended
-                                  ? 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400'
+                                  ? 'bg-primary-100 text-primary-700 dark:bg-primary-500/20 dark:text-primary-400'
                                   : user.is_active
-                                  ? 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400'
-                                  : 'bg-gray-100 text-gray-700 dark:bg-gray-500/20 dark:text-gray-400'
+                                  ? 'bg-success-100 text-success-700 dark:bg-success-500/20 dark:text-success-400'
+                                  : 'bg-neutral-100 text-neutral-700 dark:bg-neutral-500/20 dark:text-neutral-400'
                               )}>
                                 {user.is_suspended && !user.is_active ? (
                                   <><Ban className="w-3.5 h-3.5" /> Banni</>
@@ -430,7 +431,7 @@ export default function UsersPage() {
                               <div className="flex items-center justify-end gap-2">
                                 <button
                                   onClick={() => openRoleModal(user)}
-                                  className="p-2 bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-500/20 transition-colors"
+                                  className="p-2 bg-teal-50 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-lg hover:bg-teal-100 dark:hover:bg-teal-500/20 transition-colors"
                                   title="Gérer les rôles"
                                 >
                                   <UserCog className="w-4 h-4" />
@@ -445,7 +446,7 @@ export default function UsersPage() {
                                 {!user.is_admin && (
                                   <button
                                     onClick={() => setUserToDelete(user)}
-                                    className="p-2 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors"
+                                    className="p-2 bg-error-50 dark:bg-error-500/10 text-error-600 dark:text-error-400 rounded-lg hover:bg-error-100 dark:hover:bg-error-500/20 transition-colors"
                                     title="Supprimer l'utilisateur"
                                   >
                                     <Trash2 className="w-4 h-4" />
@@ -505,7 +506,7 @@ export default function UsersPage() {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-white dark:bg-dark-card rounded-2xl p-6 w-full max-w-md shadow-xl"
+              className="bg-white dark:bg-dark-card rounded-2xl p-6 w-full max-w-md shadow-soft"
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-neutral-900 dark:text-white flex items-center gap-2">
@@ -540,12 +541,12 @@ export default function UsersPage() {
                   <span className={clsx(
                     'px-4 py-2 text-sm font-bold rounded-full',
                     selectedUser.is_suspended && !selectedUser.is_active
-                      ? 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400'
+                      ? 'bg-error-100 text-error-700 dark:bg-error-500/20 dark:text-error-400'
                       : selectedUser.is_suspended
-                      ? 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400'
+                      ? 'bg-primary-100 text-primary-700 dark:bg-primary-500/20 dark:text-primary-400'
                       : selectedUser.is_active
-                      ? 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400'
-                      : 'bg-gray-100 text-gray-700 dark:bg-gray-500/20 dark:text-gray-400'
+                      ? 'bg-success-100 text-success-700 dark:bg-success-500/20 dark:text-success-400'
+                      : 'bg-neutral-100 text-neutral-700 dark:bg-neutral-500/20 dark:text-neutral-400'
                   )}>
                     {selectedUser.is_suspended && !selectedUser.is_active
                       ? 'BANNI'
@@ -595,7 +596,7 @@ export default function UsersPage() {
                     <button
                       onClick={() => handleAction('activate')}
                       disabled={updateMutation.isPending}
-                      className="flex items-center justify-center gap-2 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-xl disabled:opacity-50 transition-colors text-sm font-medium"
+                      className="flex items-center justify-center gap-2 py-2.5 bg-success-500 hover:bg-success-600 text-white rounded-xl disabled:opacity-50 transition-colors text-sm font-medium"
                     >
                       {updateMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
                       Activer
@@ -607,7 +608,7 @@ export default function UsersPage() {
                     <button
                       onClick={() => handleAction('deactivate')}
                       disabled={updateMutation.isPending}
-                      className="flex items-center justify-center gap-2 py-2.5 bg-gray-500 hover:bg-gray-600 text-white rounded-xl disabled:opacity-50 transition-colors text-sm font-medium"
+                      className="flex items-center justify-center gap-2 py-2.5 bg-neutral-500 hover:bg-neutral-600 text-white rounded-xl disabled:opacity-50 transition-colors text-sm font-medium"
                     >
                       {updateMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserX className="w-4 h-4" />}
                       Désactiver
@@ -619,7 +620,7 @@ export default function UsersPage() {
                     <button
                       onClick={() => handleAction('suspend')}
                       disabled={updateMutation.isPending}
-                      className="flex items-center justify-center gap-2 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl disabled:opacity-50 transition-colors text-sm font-medium"
+                      className="flex items-center justify-center gap-2 py-2.5 bg-primary-500 hover:bg-primary-600 text-white rounded-xl disabled:opacity-50 transition-colors text-sm font-medium"
                     >
                       {updateMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Ban className="w-4 h-4" />}
                       Suspendre
@@ -631,7 +632,7 @@ export default function UsersPage() {
                     <button
                       onClick={() => handleAction('unsuspend')}
                       disabled={updateMutation.isPending}
-                      className="flex items-center justify-center gap-2 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-xl disabled:opacity-50 transition-colors text-sm font-medium"
+                      className="flex items-center justify-center gap-2 py-2.5 bg-success-500 hover:bg-success-600 text-white rounded-xl disabled:opacity-50 transition-colors text-sm font-medium"
                     >
                       {updateMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserCheck className="w-4 h-4" />}
                       Lever susp.
@@ -647,7 +648,7 @@ export default function UsersPage() {
                         }
                       }}
                       disabled={updateMutation.isPending}
-                      className="flex items-center justify-center gap-2 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl disabled:opacity-50 transition-colors text-sm font-medium"
+                      className="flex items-center justify-center gap-2 py-2.5 bg-error-500 hover:bg-error-600 text-white rounded-xl disabled:opacity-50 transition-colors text-sm font-medium"
                     >
                       {updateMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Ban className="w-4 h-4" />}
                       Bannir
@@ -674,11 +675,11 @@ export default function UsersPage() {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-white dark:bg-dark-card rounded-2xl p-6 w-full max-w-md shadow-xl"
+              className="bg-white dark:bg-dark-card rounded-2xl p-6 w-full max-w-md shadow-soft"
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-neutral-900 dark:text-white flex items-center gap-2">
-                  <UserCog className="w-5 h-5 text-purple-500" />
+                  <UserCog className="w-5 h-5 text-teal-500" />
                   Gérer les rôles
                 </h3>
                 <button
@@ -703,20 +704,20 @@ export default function UsersPage() {
                   className={clsx(
                     'w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all',
                     selectedRoles.includes('admin')
-                      ? 'border-red-500 bg-red-50 dark:bg-red-500/10'
-                      : 'border-neutral-200 dark:border-dark-border hover:border-red-300 dark:hover:border-red-500/30'
+                      ? 'border-error-500 bg-error-50 dark:bg-error-500/10'
+                      : 'border-neutral-200 dark:border-dark-border hover:border-error-300 dark:hover:border-error-500/30'
                   )}
                 >
                   <div className={clsx(
                     'p-2 rounded-lg',
                     selectedRoles.includes('admin')
-                      ? 'bg-red-100 dark:bg-red-500/20'
+                      ? 'bg-error-100 dark:bg-error-500/20'
                       : 'bg-neutral-100 dark:bg-dark-hover'
                   )}>
                     <Crown className={clsx(
                       'w-5 h-5',
                       selectedRoles.includes('admin')
-                        ? 'text-red-600 dark:text-red-400'
+                        ? 'text-error-600 dark:text-error-400'
                         : 'text-neutral-500'
                     )} />
                   </div>
@@ -724,7 +725,7 @@ export default function UsersPage() {
                     <p className={clsx(
                       'font-medium',
                       selectedRoles.includes('admin')
-                        ? 'text-red-700 dark:text-red-400'
+                        ? 'text-error-700 dark:text-error-400'
                         : 'text-neutral-700 dark:text-neutral-300'
                     )}>Administrateur</p>
                     <p className="text-xs text-neutral-500">Accès complet à toutes les fonctionnalités</p>
@@ -732,7 +733,7 @@ export default function UsersPage() {
                   <div className={clsx(
                     'w-5 h-5 rounded-full border-2 flex items-center justify-center',
                     selectedRoles.includes('admin')
-                      ? 'border-red-500 bg-red-500'
+                      ? 'border-error-500 bg-error-500'
                       : 'border-neutral-300 dark:border-neutral-600'
                   )}>
                     {selectedRoles.includes('admin') && (
@@ -747,20 +748,20 @@ export default function UsersPage() {
                   className={clsx(
                     'w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all',
                     selectedRoles.includes('moderator')
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10'
-                      : 'border-neutral-200 dark:border-dark-border hover:border-blue-300 dark:hover:border-blue-500/30'
+                      ? 'border-secondary-500 bg-secondary-50 dark:bg-secondary-500/10'
+                      : 'border-neutral-200 dark:border-dark-border hover:border-secondary-300 dark:hover:border-secondary-500/30'
                   )}
                 >
                   <div className={clsx(
                     'p-2 rounded-lg',
                     selectedRoles.includes('moderator')
-                      ? 'bg-blue-100 dark:bg-blue-500/20'
+                      ? 'bg-secondary-100 dark:bg-secondary-500/20'
                       : 'bg-neutral-100 dark:bg-dark-hover'
                   )}>
                     <Shield className={clsx(
                       'w-5 h-5',
                       selectedRoles.includes('moderator')
-                        ? 'text-blue-600 dark:text-blue-400'
+                        ? 'text-secondary-600 dark:text-secondary-400'
                         : 'text-neutral-500'
                     )} />
                   </div>
@@ -768,7 +769,7 @@ export default function UsersPage() {
                     <p className={clsx(
                       'font-medium',
                       selectedRoles.includes('moderator')
-                        ? 'text-blue-700 dark:text-blue-400'
+                        ? 'text-secondary-700 dark:text-secondary-400'
                         : 'text-neutral-700 dark:text-neutral-300'
                     )}>Modérateur</p>
                     <p className="text-xs text-neutral-500">Modération des annonces et utilisateurs</p>
@@ -776,7 +777,7 @@ export default function UsersPage() {
                   <div className={clsx(
                     'w-5 h-5 rounded-full border-2 flex items-center justify-center',
                     selectedRoles.includes('moderator')
-                      ? 'border-blue-500 bg-blue-500'
+                      ? 'border-secondary-500 bg-secondary-500'
                       : 'border-neutral-300 dark:border-neutral-600'
                   )}>
                     {selectedRoles.includes('moderator') && (
@@ -791,20 +792,20 @@ export default function UsersPage() {
                   className={clsx(
                     'w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all',
                     selectedRoles.includes('mediator')
-                      ? 'border-purple-500 bg-purple-50 dark:bg-purple-500/10'
-                      : 'border-neutral-200 dark:border-dark-border hover:border-purple-300 dark:hover:border-purple-500/30'
+                      ? 'border-teal-500 bg-teal-50 dark:bg-teal-500/10'
+                      : 'border-neutral-200 dark:border-dark-border hover:border-teal-300 dark:hover:border-teal-500/30'
                   )}
                 >
                   <div className={clsx(
                     'p-2 rounded-lg',
                     selectedRoles.includes('mediator')
-                      ? 'bg-purple-100 dark:bg-purple-500/20'
+                      ? 'bg-teal-100 dark:bg-teal-500/20'
                       : 'bg-neutral-100 dark:bg-dark-hover'
                   )}>
                     <Gavel className={clsx(
                       'w-5 h-5',
                       selectedRoles.includes('mediator')
-                        ? 'text-purple-600 dark:text-purple-400'
+                        ? 'text-teal-600 dark:text-teal-400'
                         : 'text-neutral-500'
                     )} />
                   </div>
@@ -812,7 +813,7 @@ export default function UsersPage() {
                     <p className={clsx(
                       'font-medium',
                       selectedRoles.includes('mediator')
-                        ? 'text-purple-700 dark:text-purple-400'
+                        ? 'text-teal-700 dark:text-teal-400'
                         : 'text-neutral-700 dark:text-neutral-300'
                     )}>Médiateur</p>
                     <p className="text-xs text-neutral-500">Gestion des litiges entre utilisateurs</p>
@@ -820,7 +821,7 @@ export default function UsersPage() {
                   <div className={clsx(
                     'w-5 h-5 rounded-full border-2 flex items-center justify-center',
                     selectedRoles.includes('mediator')
-                      ? 'border-purple-500 bg-purple-500'
+                      ? 'border-teal-500 bg-teal-500'
                       : 'border-neutral-300 dark:border-neutral-600'
                   )}>
                     {selectedRoles.includes('mediator') && (
@@ -862,11 +863,11 @@ export default function UsersPage() {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-white dark:bg-dark-card rounded-2xl p-6 w-full max-w-md shadow-xl"
+              className="bg-white dark:bg-dark-card rounded-2xl p-6 w-full max-w-md shadow-soft"
             >
               <div className="flex items-center justify-center mb-4">
-                <div className="p-3 bg-red-100 dark:bg-red-500/20 rounded-full">
-                  <AlertTriangle className="w-8 h-8 text-red-600 dark:text-red-400" />
+                <div className="p-3 bg-error-100 dark:bg-error-500/20 rounded-full">
+                  <AlertTriangle className="w-8 h-8 text-error-600 dark:text-error-400" />
                 </div>
               </div>
 
@@ -882,8 +883,8 @@ export default function UsersPage() {
                 ?
               </p>
 
-              <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl p-4 mb-6">
-                <p className="text-sm text-amber-800 dark:text-amber-300">
+              <div className="bg-warning-50 dark:bg-warning-500/10 border border-warning-200 dark:border-warning-500/20 rounded-xl p-4 mb-6">
+                <p className="text-sm text-warning-800 dark:text-warning-300">
                   Cette action est réversible. L&apos;utilisateur sera désactivé et pourra être restauré ultérieurement depuis la corbeille.
                 </p>
               </div>
@@ -898,7 +899,7 @@ export default function UsersPage() {
                 <button
                   onClick={handleDeleteUser}
                   disabled={deleteMutation.isPending}
-                  className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 py-2.5 bg-error-500 hover:bg-error-600 text-white rounded-xl transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {deleteMutation.isPending ? (
                     <>

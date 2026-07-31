@@ -53,8 +53,8 @@ export default function ContractTypeSelector({
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900">Type de contrat</h3>
-      <p className="text-sm text-gray-500">
+      <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">Type de contrat</h3>
+      <p className="text-sm text-neutral-500 dark:text-neutral-400">
         Sélectionnez le type de contrat adapté à votre situation
       </p>
 
@@ -74,7 +74,7 @@ export default function ContractTypeSelector({
                 'relative flex flex-col items-start rounded-xl border-2 p-4 text-left transition-all duration-200',
                 isSelected
                   ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-500/20'
-                  : 'border-gray-200 bg-white hover:border-primary-300 hover:bg-gray-50',
+                  : 'border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card hover:border-primary-300 hover:bg-neutral-50 dark:hover:bg-dark-hover',
                 isHovered && !isSelected && 'shadow-md'
               )}
               aria-pressed={isSelected}
@@ -102,7 +102,7 @@ export default function ContractTypeSelector({
               <div
                 className={cn(
                   'mb-3 rounded-lg p-2',
-                  isSelected ? 'bg-primary-100 text-primary-600' : 'bg-gray-100 text-gray-500'
+                  isSelected ? 'bg-primary-100 text-primary-600' : 'bg-neutral-100 dark:bg-dark-hover text-neutral-500 dark:text-neutral-400'
                 )}
               >
                 {option.icon}
@@ -112,20 +112,20 @@ export default function ContractTypeSelector({
               <h4
                 className={cn(
                   'font-semibold',
-                  isSelected ? 'text-primary-900' : 'text-gray-900'
+                  isSelected ? 'text-primary-900' : 'text-neutral-900 dark:text-white'
                 )}
               >
                 {option.title}
               </h4>
-              <p className="mt-1 text-sm text-gray-500">{option.description}</p>
+              <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">{option.description}</p>
             </button>
           );
         })}
       </div>
 
       {availableTypes.length === 0 && (
-        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-center">
-          <p className="text-yellow-800">
+        <div className="rounded-lg border border-warning-200 bg-warning-50 p-4 text-center">
+          <p className="text-warning-800">
             Aucun type de contrat disponible pour ce type de bien.
           </p>
         </div>

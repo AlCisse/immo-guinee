@@ -3,6 +3,7 @@ import { StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Text, View } from '@/components/Themed';
+import Colors from '@/constants/Colors';
 
 export default function NotFoundScreen() {
   const { t } = useTranslation();
@@ -38,6 +39,6 @@ const styles = StyleSheet.create({
   },
   linkText: {
     fontSize: 14,
-    color: '#2e78b7',
+    color: Colors.primary[600],
   },
 });

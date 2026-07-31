@@ -1,12 +1,15 @@
 'use client';
 
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import { useSearchParamsSafe } from '@/lib/hooks/useSearchParamsSafe';
 import { Suspense } from 'react';
 import OtpVerification from '@/components/auth/OtpVerification';
+import AuthBrandPanel from '@/components/auth/AuthBrandPanel';
+import AuthTopControls from '@/components/auth/AuthTopControls';
 import { useTranslations } from '@/lib/i18n';
 
 function VerifyOtpContent() {
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParamsSafe();
   const router = useRouter();
   const telephone = searchParams.get('telephone') || '';
 
@@ -24,18 +27,20 @@ function VerifyOtpContent() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-xl">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-green-600">ImmoGuinée</h1>
-        </div>
+    <div className="flex min-h-[100dvh] lg:min-h-screen overflow-x-hidden">
+      {/* Left brand panel (shared, matches the mockup) */}
+      <AuthBrandPanel />
 
-        <OtpVerification
-          telephone={telephone}
-          onSuccess={handleSuccess}
-          onCancel={handleCancel}
-        />
+      {/* Right: OTP form */}
+      <div className="relative flex-1 flex items-center justify-center px-4 py-6 sm:p-6 lg:p-12 w-full max-w-full overflow-x-hidden">
+        <AuthTopControls className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20" />
+        <div className="w-full max-w-md mx-auto">
+          <OtpVerification
+            telephone={telephone}
+            onSuccess={handleSuccess}
+            onCancel={handleCancel}
+          />
+        </div>
       </div>
     </div>
   );
@@ -44,10 +49,10 @@ function VerifyOtpContent() {
 function LoadingFallback() {
   const { t } = useTranslations();
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100">
+    <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-dark-bg">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-        <p className="mt-4 text-gray-600">{t('auth.otp.loading')}</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
+        <p className="mt-4 text-neutral-600 dark:text-neutral-400">{t('auth.otp.loading')}</p>
       </div>
     </div>
   );

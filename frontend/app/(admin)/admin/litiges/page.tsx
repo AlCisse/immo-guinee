@@ -180,11 +180,11 @@ export default function LitigesPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-white flex items-center gap-3">
           <Scale className="w-7 h-7 text-primary-500" />
           Gestion des litiges
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
+        <p className="text-neutral-600 dark:text-neutral-400 mt-1">
           Gérez et résolvez les litiges entre utilisateurs
         </p>
       </div>
@@ -375,7 +375,7 @@ export default function LitigesPage() {
       {/* Detail Modal */}
       {selectedDispute && !showAssignModal && !showResolveModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
             {/* Header */}
             <div className="px-6 py-4 border-b border-neutral-200 dark:border-dark-border flex items-center justify-between shrink-0">
               <div className="flex items-center gap-3">
@@ -458,25 +458,25 @@ export default function LitigesPage() {
                   {/* Parties */}
                   <div className="grid md:grid-cols-2 gap-4">
                     {/* Demandeur */}
-                    <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-4">
-                      <p className="text-xs text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-3 font-medium">Demandeur (Plaignant)</p>
+                    <div className="bg-secondary-50 dark:bg-secondary-500/10 rounded-xl p-4">
+                      <p className="text-xs text-secondary-600 dark:text-secondary-400 uppercase tracking-wider mb-3 font-medium">Demandeur (Plaignant)</p>
                       {(detail?.demandeur || selectedDispute.demandeur) ? (
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
-                            <User className="w-4 h-4 text-blue-500" />
+                            <User className="w-4 h-4 text-secondary-500" />
                             <span className="font-medium text-neutral-900 dark:text-white">
                               {detail?.demandeur?.nom_complet || selectedDispute.demandeur?.nom_complet}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Phone className="w-4 h-4 text-blue-500" />
+                            <Phone className="w-4 h-4 text-secondary-500" />
                             <span className="text-sm text-neutral-600 dark:text-neutral-400">
                               {detail?.demandeur?.telephone || selectedDispute.demandeur?.telephone}
                             </span>
                           </div>
                           {(detail?.demandeur?.email || selectedDispute.demandeur?.email) && (
                             <div className="flex items-center gap-2">
-                              <Mail className="w-4 h-4 text-blue-500" />
+                              <Mail className="w-4 h-4 text-secondary-500" />
                               <span className="text-sm text-neutral-600 dark:text-neutral-400">
                                 {detail?.demandeur?.email || selectedDispute.demandeur?.email}
                               </span>
@@ -489,25 +489,25 @@ export default function LitigesPage() {
                     </div>
 
                     {/* Défendeur */}
-                    <div className="bg-red-50 dark:bg-red-500/10 rounded-xl p-4">
-                      <p className="text-xs text-red-600 dark:text-red-400 uppercase tracking-wider mb-3 font-medium">Défendeur</p>
+                    <div className="bg-error-50 dark:bg-error-500/10 rounded-xl p-4">
+                      <p className="text-xs text-error-600 dark:text-error-400 uppercase tracking-wider mb-3 font-medium">Défendeur</p>
                       {(detail?.defendeur || selectedDispute.defendeur) ? (
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
-                            <User className="w-4 h-4 text-red-500" />
+                            <User className="w-4 h-4 text-error-500" />
                             <span className="font-medium text-neutral-900 dark:text-white">
                               {detail?.defendeur?.nom_complet || selectedDispute.defendeur?.nom_complet}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Phone className="w-4 h-4 text-red-500" />
+                            <Phone className="w-4 h-4 text-error-500" />
                             <span className="text-sm text-neutral-600 dark:text-neutral-400">
                               {detail?.defendeur?.telephone || selectedDispute.defendeur?.telephone}
                             </span>
                           </div>
                           {(detail?.defendeur?.email || selectedDispute.defendeur?.email) && (
                             <div className="flex items-center gap-2">
-                              <Mail className="w-4 h-4 text-red-500" />
+                              <Mail className="w-4 h-4 text-error-500" />
                               <span className="text-sm text-neutral-600 dark:text-neutral-400">
                                 {detail?.defendeur?.email || selectedDispute.defendeur?.email}
                               </span>
@@ -522,10 +522,10 @@ export default function LitigesPage() {
 
                   {/* Médiateur */}
                   {(detail?.mediateur || selectedDispute.mediateur) && (
-                    <div className="bg-purple-50 dark:bg-purple-500/10 rounded-xl p-4">
-                      <p className="text-xs text-purple-600 dark:text-purple-400 uppercase tracking-wider mb-3 font-medium">Médiateur assigné</p>
+                    <div className="bg-teal-50 dark:bg-teal-500/10 rounded-xl p-4">
+                      <p className="text-xs text-teal-600 dark:text-teal-400 uppercase tracking-wider mb-3 font-medium">Médiateur assigné</p>
                       <div className="flex items-center gap-2">
-                        <User className="w-4 h-4 text-purple-500" />
+                        <User className="w-4 h-4 text-teal-500" />
                         <span className="font-medium text-neutral-900 dark:text-white">
                           {detail?.mediateur?.nom_complet || selectedDispute.mediateur?.nom_complet}
                         </span>
@@ -558,11 +558,11 @@ export default function LitigesPage() {
 
                   {/* Resolution notes */}
                   {detail?.resolution_notes && (
-                    <div className="bg-green-50 dark:bg-green-500/10 rounded-xl p-4">
-                      <p className="text-xs text-green-600 dark:text-green-400 uppercase tracking-wider mb-2 font-medium">Notes de résolution</p>
+                    <div className="bg-success-50 dark:bg-success-500/10 rounded-xl p-4">
+                      <p className="text-xs text-success-600 dark:text-success-400 uppercase tracking-wider mb-2 font-medium">Notes de résolution</p>
                       <p className="text-neutral-700 dark:text-neutral-300">{detail.resolution_notes}</p>
                       {detail.montant_resolution && (
-                        <p className="mt-2 font-medium text-green-700 dark:text-green-400">
+                        <p className="mt-2 font-medium text-success-700 dark:text-success-400">
                           Montant: {detail.montant_resolution.toLocaleString()} GNF
                         </p>
                       )}
@@ -606,7 +606,7 @@ export default function LitigesPage() {
       {/* Assign Mediator Modal */}
       {showAssignModal && selectedDispute && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-2xl max-w-md w-full">
+          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft max-w-md w-full">
             <div className="px-6 py-4 border-b border-neutral-200 dark:border-dark-border flex items-center justify-between">
               <h3 className="font-semibold text-lg text-neutral-900 dark:text-white">Assigner un médiateur</h3>
               <button
@@ -669,7 +669,7 @@ export default function LitigesPage() {
       {/* Resolve Modal */}
       {showResolveModal && selectedDispute && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-2xl max-w-md w-full">
+          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-soft max-w-md w-full">
             <div className="px-6 py-4 border-b border-neutral-200 dark:border-dark-border flex items-center justify-between">
               <h3 className="font-semibold text-lg text-neutral-900 dark:text-white">Résoudre le litige</h3>
               <button

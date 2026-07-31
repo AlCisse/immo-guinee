@@ -3,11 +3,20 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { locales, defaultLocale, getLocaleFromCountry, type Locale } from './config';
 
-// Import all translation files
+// P8 — fr (locale par défaut) est importé statiquement pour un rendu synchrone
+// dès le premier paint (pas de flash / clé manquante). en (seconde locale) est
+// chargé à la demande via dynamic import : il vit dans un chunk séparé et
+// n'entre dans le bundle client que si l'utilisateur bascule en anglais.
 import fr from '../../messages/fr.json';
-import en from '../../messages/en.json';
+type Messages = typeof fr;
 
-const messages: Record<Locale, typeof fr> = { fr, en };
+let enPromise: Promise<Messages> | null = null;
+async function loadEn(): Promise<Messages> {
+  if (!enPromise) {
+    enPromise = import('../../messages/en.json').then((m) => m.default as Messages);
+  }
+  return enPromise;
+}
 
 interface LocaleContextType {
   locale: Locale;
@@ -67,6 +76,8 @@ async function detectCountry(): Promise<string | null> {
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(defaultLocale);
   const [isInitialized, setIsInitialized] = useState(false);
+  // P8 — messages EN chargés à la demande (null = non encore chargés → fallback fr).
+  const [enMessages, setEnMessages] = useState<Messages | null>(null);
 
   // Initialize locale from localStorage or detect from country
   useEffect(() => {
@@ -126,11 +137,13 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
   // Translation function
   const t = useCallback(
     (key: string, params?: Record<string, string | number>): string => {
-      const translation = getNestedValue(messages[locale] as unknown as Record<string, unknown>, key);
+      // P8 — source EN si chargée, sinon fr (fallback synchrone le temps du load).
+      const source = locale === 'en' && enMessages ? enMessages : fr;
+      const translation = getNestedValue(source as unknown as Record<string, unknown>, key);
 
       if (!translation) {
-        // Fallback to default locale
-        const fallback = getNestedValue(messages[defaultLocale] as unknown as Record<string, unknown>, key);
+        // Fallback to default locale (fr)
+        const fallback = getNestedValue(fr as unknown as Record<string, unknown>, key);
         if (fallback) {
           return replaceParams(fallback, params);
         }
@@ -140,7 +153,7 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
 
       return replaceParams(translation, params);
     },
-    [locale]
+    [locale, enMessages]
   );
 
   // Replace {param} placeholders with values
@@ -159,14 +172,23 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
     }
   }, [locale, isInitialized]);
 
+  // P8 — charge en.json (chunk séparé) à la demande dès que l'utilisateur bascule
+  // en anglais (sélection manuelle ou détection pays). La promesse est mise en
+  // cache au niveau module (enPromise) pour ne charger le chunk qu'une fois.
+  useEffect(() => {
+    if (locale === 'en' && enMessages === null) {
+      loadEn().then((m) => setEnMessages(m));
+    }
+  }, [locale, enMessages]);
+
   const contextValue = useMemo(
     () => ({
       locale,
       setLocale,
       t,
-      messages: messages[locale],
+      messages: locale === 'en' && enMessages ? enMessages : fr,
     }),
-    [locale, setLocale, t]
+    [locale, setLocale, t, enMessages]
   );
 
   return <LocaleContext.Provider value={contextValue}>{children}</LocaleContext.Provider>;

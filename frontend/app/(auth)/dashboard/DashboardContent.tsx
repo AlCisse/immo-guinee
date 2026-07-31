@@ -122,32 +122,32 @@ function StatusBadge({ status, labels }: { status: string; labels: Record<string
   const config: Record<string, { labelKey: string; className: string; icon: any }> = {
     ACTIVE: {
       labelKey: 'active',
-      className: 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400',
+      className: 'bg-success-100 text-success-700 dark:bg-success-500/10 dark:text-success-400',
       icon: CheckCircle,
     },
     EN_ATTENTE: {
       labelKey: 'pending',
-      className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400',
+      className: 'bg-warning-100 text-warning-700 dark:bg-warning-500/10 dark:text-warning-400',
       icon: Clock,
     },
     PENDING: {
       labelKey: 'pending',
-      className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400',
+      className: 'bg-warning-100 text-warning-700 dark:bg-warning-500/10 dark:text-warning-400',
       icon: Clock,
     },
     CONFIRMED: {
       labelKey: 'confirmed',
-      className: 'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400',
+      className: 'bg-secondary-100 text-secondary-700 dark:bg-secondary-500/10 dark:text-secondary-400',
       icon: CheckCircle,
     },
     COMPLETED: {
       labelKey: 'completed',
-      className: 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400',
+      className: 'bg-success-100 text-success-700 dark:bg-success-500/10 dark:text-success-400',
       icon: CheckCircle,
     },
     CANCELLED: {
       labelKey: 'cancelled',
-      className: 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400',
+      className: 'bg-error-100 text-error-700 dark:bg-error-500/10 dark:text-error-400',
       icon: XCircle,
     },
     EXPIREE: {
@@ -188,23 +188,23 @@ function StatCard({
 }) {
   const colorClasses = {
     primary: 'from-primary-400 to-primary-600',
-    success: 'from-green-400 to-green-600',
-    warning: 'from-amber-400 to-amber-600',
-    info: 'from-blue-400 to-blue-600',
+    success: 'from-success-400 to-success-600',
+    warning: 'from-warning-400 to-warning-600',
+    info: 'from-secondary-400 to-secondary-600',
   };
 
   return (
     <Link href={href}>
       <motion.div
         whileHover={{ y: -4 }}
-        className="bg-white dark:bg-dark-card rounded-2xl p-5 shadow-soft hover:shadow-lg transition-all cursor-pointer"
+        className="bg-white dark:bg-dark-card rounded-2xl p-5 shadow-soft hover:shadow-soft-lg transition-all cursor-pointer"
       >
         <div className="flex items-start justify-between mb-3">
           <div className={`p-3 rounded-xl bg-gradient-to-br ${colorClasses[color]}`}>
             <Icon className="w-5 h-5 text-white" />
           </div>
           {trend !== undefined && (
-            <span className={`text-sm font-medium ${trend >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+            <span className={`text-sm font-medium ${trend >= 0 ? 'text-success-500' : 'text-error-500'}`}>
               {trend >= 0 ? '+' : ''}{trend}%
             </span>
           )}
@@ -368,7 +368,7 @@ export default function DashboardContent() {
   return (
     <div>
       {/* Header */}
-      <div className="bg-gradient-to-br from-primary-500 to-orange-500 pt-6 pb-12 md:pt-8 md:pb-16">
+      <div className="bg-gradient-to-br from-primary-500 to-primary-500 pt-6 pb-12 md:pt-8 md:pb-16">
         <div className="max-w-7xl mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -454,7 +454,7 @@ export default function DashboardContent() {
                     <Link
                       key={listing.id}
                       href={`/bien/${listing.id}`}
-                      className="flex items-center gap-4 p-4 hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors"
+                      className="flex items-center gap-4 p-4 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors"
                     >
                       <div className="w-16 h-16 rounded-xl overflow-hidden bg-neutral-100 dark:bg-dark-bg flex-shrink-0">
                         {listing.photo_principale ? (
@@ -591,7 +591,7 @@ export default function DashboardContent() {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-primary-500 to-orange-500 text-white font-semibold rounded-xl"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-primary-500 to-primary-500 text-white font-semibold rounded-xl"
                   >
                     <Plus className="w-5 h-5" />
                     {t('dashboard.quickActions.publishListing')}

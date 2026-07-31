@@ -13,7 +13,7 @@
   }
 
   body {
-    @apply bg-white text-gray-900 dark:bg-dark-bg dark:text-neutral-100;
+    @apply bg-white text-neutral-900 dark:bg-dark-bg dark:text-neutral-100;
   }
 
   h1,
@@ -51,25 +51,25 @@
   }
 
   .btn-danger {
-    @apply btn bg-secondary-500 text-white hover:bg-secondary-600 focus:ring-secondary-500;
+    @apply btn bg-error-500 text-white hover:bg-error-600 focus:ring-error-500;
   }
 
   /* Input styles */
   .input {
-    @apply block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-dark-border dark:bg-dark-card dark:text-white dark:placeholder-neutral-400;
+    @apply block w-full rounded-lg border-neutral-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-dark-border dark:bg-dark-card dark:text-white dark:placeholder-neutral-400;
   }
 
   .input-error {
-    @apply border-secondary-500 focus:border-secondary-500 focus:ring-secondary-500;
+    @apply border-error-500 focus:border-error-500 focus:ring-error-500;
   }
 
-  /* Card styles */
+  /* Card styles — canonical « Argile de Conakry » card: rounded-2xl + shadow-soft */
   .card {
-    @apply rounded-xl border border-gray-200 bg-white shadow-card dark:border-dark-border dark:bg-dark-card;
+    @apply rounded-2xl border border-neutral-200 bg-white shadow-soft dark:border-dark-border dark:bg-dark-card;
   }
 
   .card-hover {
-    @apply card transition-shadow hover:shadow-card-hover dark:hover:bg-dark-hover;
+    @apply card transition-shadow hover:shadow-soft-lg dark:hover:bg-dark-hover;
   }
 
   /* Badge styles */
@@ -78,24 +78,24 @@
   }
 
   .badge-bronze {
-    @apply badge bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300;
+    @apply badge bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-300;
   }
 
   .badge-silver {
-    @apply badge bg-gray-100 text-gray-800 dark:bg-neutral-700 dark:text-neutral-200;
+    @apply badge bg-neutral-100 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200;
   }
 
   .badge-gold {
-    @apply badge bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300;
+    @apply badge bg-warning-100 text-warning-800 dark:bg-warning-900/30 dark:text-warning-300;
   }
 
   .badge-diamond {
-    @apply badge bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300;
+    @apply badge bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300;
   }
 
   /* Loading spinner */
   .spinner {
-    @apply h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-primary-500 dark:border-dark-border dark:border-t-primary-400;
+    @apply h-8 w-8 animate-spin rounded-full border-4 border-neutral-200 border-t-primary-500 dark:border-dark-border dark:border-t-primary-400;
   }
 
   /* Table styles for dark mode */
@@ -220,7 +220,7 @@
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-gray-100;
+  @apply bg-neutral-100;
 }
 
 .dark ::-webkit-scrollbar-track {
@@ -228,7 +228,7 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply rounded-full bg-gray-400;
+  @apply rounded-full bg-neutral-400;
 }
 
 .dark ::-webkit-scrollbar-thumb {
@@ -236,7 +236,7 @@
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-500;
+  @apply bg-neutral-500;
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {

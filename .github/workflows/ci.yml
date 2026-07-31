@@ -2,7 +2,7 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [main, develop, 'feature/**']
+    branches: [main, develop, 'feat/**', 'feature/**']
   pull_request:
     branches: [main, develop]
 
@@ -11,122 +11,70 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PHP_VERSION: '8.3'
   NODE_VERSION: '20'
 
+# C1 — moindre privilège : aucun job n'écrit dans le repo ni ne pousse d'image
+# (build-docker a push: false). On révoque donc le défaut `write-all` des tokens
+# GITHUB_TOKEN : `contents: read` suffit au checkout ; les jobs n'ont pas besoin
+# de plus. Un job qui aurait besoin d'écrire (ex. release) ré-ouverait sa propre
+# permission explicite — jamais le niveau racine.
+permissions:
+  contents: read
+
 jobs:
-  # Backend Tests
+  # Backend Tests (Rust / Axum). No external toolchain action: ubuntu-latest ships
+  # rustup + a recent stable, and the repo's Actions policy only allows actions/*,
+  # docker/* and shivammathur/setup-php@* (all SHA-pinned).
   backend-tests:
-    name: Backend Tests (Laravel)
+    name: Backend Tests (Rust)
     runs-on: ubuntu-latest
-    continue-on-error: true
-
-    services:
-      postgres:
-        image: postgis/postgis:16-3.4
-        env:
-          POSTGRES_USER: immoguinee
-          POSTGRES_PASSWORD: secret
-          POSTGRES_DB: immoguinee_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
+    # rust-backend/.cargo/config.toml sets rustc-wrapper=sccache (host-only speed-up).
+    # sccache isn't on the CI runner → disable it, like the Dockerfile does.
+    env:
+      RUSTC_WRAPPER: ''
     defaults:
       run:
-        working-directory: backend
-
+        working-directory: rust-backend
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@9e72090525849c5e82e596468b86eb55e9cc5401 # v2.32.0
-        with:
-          php-version: ${{ env.PHP_VERSION }}
-          extensions: mbstring, xml, ctype, json, pdo, pdo_pgsql, redis, gd, imagick
-          coverage: xdebug
+      - name: Ensure Rust components
+        run: |
+          rustup show active-toolchain || rustup default stable
+          rustup component add rustfmt clippy
 
-      - name: Get Composer cache directory
-        id: composer-cache
-        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-
-      - name: Cache Composer dependencies
+      - name: Cache cargo
         uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
         with:
-          path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-composer-${{ hashFiles('backend/composer.lock') }}
-          restore-keys: ${{ runner.os }}-composer-
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            rust-backend/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('rust-backend/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
 
-      - name: Create bootstrap/cache directory
-        run: mkdir -p bootstrap/cache && chmod -R 775 bootstrap/cache
+      - name: Format check
+        run: cargo fmt --all --check
+        continue-on-error: true
 
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-progress --no-interaction
+      - name: Clippy
+        run: cargo clippy --all-targets
 
-      - name: Copy environment file
-        run: cp .env.example .env
-
-      - name: Generate application key
-        run: php artisan key:generate
-
-      - name: Run database migrations
+      # Unit tests only (no DB). The e2e suite needs Postgres/Redis/MinIO via
+      # testcontainers — run locally or in a dedicated nightly job.
+      - name: Unit tests
+        run: cargo test --lib
         env:
-          DB_CONNECTION: pgsql
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_DATABASE: immoguinee_test
-          DB_USERNAME: immoguinee
-          DB_PASSWORD: secret
-          REDIS_HOST: localhost
-          REDIS_PORT: 6379
-        run: php artisan migrate --force
-        continue-on-error: true
+          SQLX_OFFLINE: 'true'
 
-      - name: Run PHPUnit tests
-        env:
-          DB_CONNECTION: pgsql
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_DATABASE: immoguinee_test
-          DB_USERNAME: immoguinee
-          DB_PASSWORD: secret
-          REDIS_HOST: localhost
-          REDIS_PORT: 6379
-        run: vendor/bin/phpunit --coverage-text
-        continue-on-error: true
-
-      - name: Run PHP CS Fixer (dry-run)
-        run: |
-          if [ -f ".php-cs-fixer.php" ]; then
-            vendor/bin/php-cs-fixer fix --dry-run --diff
-          fi
-        continue-on-error: true
-
-  # Frontend Tests
+  # Frontend Tests (Next.js)
   frontend-tests:
     name: Frontend Tests (Next.js)
     runs-on: ubuntu-latest
-    continue-on-error: true
-
     defaults:
       run:
         working-directory: frontend
-
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -139,82 +87,149 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
-        run: npm ci || npm install
+        run: npm ci
 
+      # ✅ BLOQUANT — la dette TypeScript front est résorbée (tâche #29 :
+      # `npx tsc --noEmit` passe à 0 erreur, `npm run lint` à 0 erreur ; les
+      # tests e2e Playwright sont hors-scope via un tsconfig dédié, et les
+      # wrappers orphelins sentry/logrocket supprimés). lint/type-check/build
+      # bloquent de nouveau le merge, au même titre que les GATES SÉCURITÉ
+      # (job security-audit). Ne pas réintroduire de continue-on-error ici
+      # sans une raison documentée. Note : 6 règles jsx-a11y (click-events,
+      # static-element-interactions, autofocus, img-redundant-alt,
+      # heading-has-content, media-has-caption) restent en « warn » (42
+      # occurrences pré-existantes) — leurs correctifs source sont planifiés
+      # dans le lot UI (#27/#28), pas dans le scope #29.
       - name: Run ESLint
-        run: npm run lint || true
+        run: npm run lint
 
       - name: Run TypeScript check
-        run: npm run type-check || true
+        run: npm run type-check
 
       - name: Build application
         run: npm run build
         env:
-          NEXT_PUBLIC_API_URL: http://localhost:8000/api
+          NEXT_PUBLIC_API_URL: /api
+
+  # Mobile Tests (React Native / Expo + Jest). Le mobile ne se build pas en CI
+  # (Expo build nécessite un compte EAS) — on exécute juste les tests unitaires
+  # Jest (hooks, utils) qui valident la logique hors device. C3 : couverture CI du
+  # mobile, jusqu'ici absent du pipeline.
+  mobile-tests:
+    name: Mobile Tests (Jest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Jest unit tests
+        run: npm test -- --ci --passWithNoTests
 
   # Security Audit
   security-audit:
     name: Security Audit
     runs-on: ubuntu-latest
-    continue-on-error: true
-
+    env:
+      RUSTC_WRAPPER: '' # sccache (config.toml) is host-only; not installed on CI
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@9e72090525849c5e82e596468b86eb55e9cc5401 # v2.32.0
-        with:
-          php-version: ${{ env.PHP_VERSION }}
+      - name: Audit Rust dependencies
+        working-directory: rust-backend
+        run: |
+          # C15 — cargo-audit pinné (0.22.2). Avant : `cargo install cargo-audit
+          # --locked` installait la dernière version au moment du run → la CI
+          # était reproductible uniquement à moitié (un bump cassant de
+          # cargo-audit pouvait faire rouger le job sans lien avec le code).
+          # --locked fige aussi les deps de cargo-audit via son Cargo.lock.
+          cargo install cargo-audit --version 0.22.2 --locked
+          # Audit-2026-07-29 — 8 advisories ignorées en CLI (--ignore repeatable ;
+          # cargo-audit 0.22.2 ne lit pas de fichier de config). Chacune est un
+          # risque non-applicable à ce backend (justifications ci-dessous). La
+          # modernisation de la stack rust-s3 (0.35 -> 0.37 + cmake dans le
+          # Dockerfile) est différée : 0.37 apporte aws-lc-rs (casse le build
+          # Docker actuel) et laisse 5 advisories résiduelles. Détails dans
+          # docs/audit-2026-07-29.md.
+          #
+          # rustls-webpki 0.101.7 (pull transitif de rust-s3 0.35 ; MinIO interne
+          # TLS mutuellement approuvé, CRL non activées) — la stack moderne
+          # 0.103.13 utilisée par reqwest/rustls 0.23 est saine :
+          #   RUSTSEC-2026-0104  panic parsing CRL
+          #   RUSTSEC-2026-0098  URI name constraints acceptées à tort
+          #   RUSTSEC-2026-0099  wildcard name constraints acceptées à tort
+          # tokio-tar 0.3.1 — dev-dependency (testcontainers) uniquement, pas dans
+          #   le binaire prod ; pas de fix amont :
+          #   RUSTSEC-2025-0111  PAX header smuggling
+          # idna 0.5.0 — edge case Punycode sur parsing d'URL, impact faible :
+          #   RUSTSEC-2024-0421
+          # rsa 0.9.10 — dépendance ciblée non construite dans le target prod :
+          #   RUSTSEC-2023-0071  Marvin attack
+          # quick-xml 0.32.0 — ne parse que du XML de confiance (S3/typst) :
+          #   RUSTSEC-2026-0194  start-tag duplicate attributes en O(n^2)
+          #   RUSTSEC-2026-0195  namespace-declaration allocation non bornée
+          cargo audit \
+            --ignore RUSTSEC-2026-0104 \
+            --ignore RUSTSEC-2026-0098 \
+            --ignore RUSTSEC-2026-0099 \
+            --ignore RUSTSEC-2025-0111 \
+            --ignore RUSTSEC-2024-0421 \
+            --ignore RUSTSEC-2023-0071 \
+            --ignore RUSTSEC-2026-0194 \
+            --ignore RUSTSEC-2026-0195
 
       - name: Setup Node.js
         uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Audit PHP dependencies
-        working-directory: backend
-        run: |
-          mkdir -p bootstrap/cache && chmod -R 775 bootstrap/cache
-          composer install --prefer-dist --no-progress --no-interaction
-          composer audit
-        continue-on-error: true
-
       - name: Audit NPM dependencies
         working-directory: frontend
         run: npm audit --audit-level=high
-        continue-on-error: true
 
-  # Code Quality
-  code-quality:
-    name: Code Quality
+  # C13 — Secret-scan (gitleaks). Aligne la CI sur la tolérance zéro du projet
+  # vis-à-vis des secrets committés (CLAUDE.md ⚫) : bloque tout PR contenant un
+  # secret détecté. L'outil est installé en binaire pinné via `run` (la policy
+  # d'Actions du repo n'autorise que actions/*, docker/*, shivammathur/* — pas
+  # d'action gitleaks tierce). --redact évite de ré-imprimer un secret trouvé
+  # dans les logs de CI (ne pas propager la fuite).
+  secret-scan:
+    name: Secret Scan (gitleaks)
     runs-on: ubuntu-latest
-    needs: [backend-tests, frontend-tests]
-
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          fetch-depth: 0
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@9e72090525849c5e82e596468b86eb55e9cc5401 # v2.32.0
-        with:
-          php-version: ${{ env.PHP_VERSION }}
-
-      - name: Install PHP dependencies
-        working-directory: backend
+      - name: Install gitleaks (pinned v8.30.1)
         run: |
-          mkdir -p bootstrap/cache && chmod -R 775 bootstrap/cache
-          composer install --prefer-dist --no-progress --no-interaction
+          mkdir -p "$HOME/.local/bin"
+          curl -sfL -o /tmp/gitleaks.tar.gz \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          tar xzf /tmp/gitleaks.tar.gz -C "$HOME/.local/bin" gitleaks
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          gitleaks version
 
-      - name: Run PHPStan (static analysis)
-        working-directory: backend
-        run: |
-          if [ -f "phpstan.neon" ]; then
-            vendor/bin/phpstan analyse --no-progress
-          fi
-        continue-on-error: true
+      - name: Scan for secrets
+        # --config .gitleaks.toml : allowlist chirurgical des faux positifs
+        # (chemin Vault `secret/immoguinee/app` + template
+        # `docker/.env.production.example`). useDefault=true garde toutes les
+        # règles par défaut : un vrai secret reste détecté (sanity-checké). Le
+        # repo n'est scanné qu'à HEAD (checkout shallow fetch-depth=1) — les
+        # findings historiques ne sont pas en scope CI.
+        run: gitleaks detect --source . --config .gitleaks.toml --no-banner --redact --verbose
 
   # Build Docker Images (only on main/develop)
   build-docker:
@@ -222,7 +237,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: [backend-tests, frontend-tests]
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
-
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -230,11 +244,11 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
 
-      - name: Build backend image
+      - name: Build backend image (Rust)
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
-          context: .
-          file: ./Dockerfile
+          context: ./rust-backend
+          file: ./rust-backend/Dockerfile
           push: false
           tags: immoguinee-backend:${{ github.sha }}
           cache-from: type=gha
@@ -249,4 +263,28 @@ jobs:
           tags: immoguinee-frontend:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-        if: hashFiles('frontend/Dockerfile') != ''
+
+      # C13 — Scan d'image Docker (Trivy). Ce job ne tourne que sur main/develop
+      # (gated `if` ci-dessus) : il ne bloque donc pas les PR mais surface les
+      # vulnérabilités des images après merge. --severity CRITICAL + --exit-code 1
+      # → seul un CRITICAL corrigé (--ignore-unfixed) fait rouger le job : on
+      # évite le bruit des HIGH non patchées en amont qui bloqueraient la branche.
+      # Binaire pinné v0.71.2 (on évite v0.72.0 : breaking change dockers_v2).
+      - name: Install Trivy (pinned v0.71.2)
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          curl -sfL -o /tmp/trivy.tar.gz \
+            https://github.com/aquasecurity/trivy/releases/download/v0.71.2/trivy_0.71.2_Linux-64bit.tar.gz
+          tar xzf /tmp/trivy.tar.gz -C "$HOME/.local/bin" trivy
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          trivy --version
+
+      - name: Scan backend image (CRITICAL blocks)
+        run: |
+          trivy image --exit-code 1 --severity CRITICAL --ignore-unfixed \
+            immoguinee-backend:${{ github.sha }}
+
+      - name: Scan frontend image (CRITICAL blocks)
+        run: |
+          trivy image --exit-code 1 --severity CRITICAL --ignore-unfixed \
+            immoguinee-frontend:${{ github.sha }}

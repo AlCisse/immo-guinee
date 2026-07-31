@@ -77,9 +77,9 @@ function OptionCard({
         'relative rounded-2xl border-2 p-6 cursor-pointer transition-all',
         isSelected
           ? isSejourSerein
-            ? 'border-green-500 bg-green-50 shadow-lg'
-            : 'border-amber-500 bg-amber-50 shadow-lg'
-          : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
+            ? 'border-success-500 bg-success-50 shadow-lg'
+            : 'border-warning-500 bg-warning-50 shadow-lg'
+          : 'border-neutral-200 dark:border-dark-border hover:border-neutral-300 dark:hover:border-dark-border hover:shadow-md'
       )}
     >
       {/* Selection indicator */}
@@ -87,7 +87,7 @@ function OptionCard({
         <div
           className={clsx(
             'absolute top-4 right-4 w-6 h-6 rounded-full flex items-center justify-center',
-            isSejourSerein ? 'bg-green-500' : 'bg-amber-500'
+            isSejourSerein ? 'bg-success-500' : 'bg-warning-500'
           )}
         >
           <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,47 +101,47 @@ function OptionCard({
         <div
           className={clsx(
             'inline-block px-3 py-1 rounded-full text-xs font-medium mb-2',
-            isSejourSerein ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+            isSejourSerein ? 'bg-success-100 text-success-700' : 'bg-warning-100 text-warning-700'
           )}
         >
           {option.targetUser === 'locataire' ? 'Pour locataires' : 'Pour propriétaires'}
         </div>
-        <h3 className="text-xl font-bold text-gray-900">{option.name}</h3>
-        <p className="text-sm text-gray-600 mt-1">{option.description}</p>
+        <h3 className="text-xl font-bold text-neutral-900 dark:text-white">{option.name}</h3>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">{option.description}</p>
       </div>
 
       {/* Premium */}
-      <div className="bg-white rounded-xl p-4 mb-4 border border-gray-100">
-        <div className="text-sm text-gray-500">Prime mensuelle</div>
-        <div className={clsx('text-2xl font-bold', isSejourSerein ? 'text-green-600' : 'text-amber-600')}>
+      <div className="bg-white dark:bg-dark-card rounded-xl p-4 mb-4 border border-neutral-100 dark:border-dark-border">
+        <div className="text-sm text-neutral-500 dark:text-neutral-400">Prime mensuelle</div>
+        <div className={clsx('text-2xl font-bold', isSejourSerein ? 'text-success-600' : 'text-warning-600')}>
           {formatMoney(premium)}
         </div>
-        <div className="text-xs text-gray-400">{option.primePercentage}% du loyer mensuel</div>
+        <div className="text-xs text-neutral-400">{option.primePercentage}% du loyer mensuel</div>
       </div>
 
       {/* Coverages */}
       <div className="space-y-3 mb-4">
-        <div className="text-sm font-medium text-gray-700">Garanties incluses :</div>
+        <div className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Garanties incluses :</div>
         {option.coverages.map((coverage, index) => (
           <div key={index} className="flex items-start gap-3">
-            <div className={clsx('p-2 rounded-lg', isSejourSerein ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600')}>
+            <div className={clsx('p-2 rounded-lg', isSejourSerein ? 'bg-success-100 text-success-600' : 'bg-warning-100 text-warning-600')}>
               <CoverageIcon icon={coverage.icon} />
             </div>
             <div>
-              <div className="font-medium text-gray-900 text-sm">{coverage.name}</div>
-              <div className="text-xs text-gray-500">{coverage.description}</div>
+              <div className="font-medium text-neutral-900 dark:text-white text-sm">{coverage.name}</div>
+              <div className="text-xs text-neutral-500 dark:text-neutral-400">{coverage.description}</div>
             </div>
           </div>
         ))}
       </div>
 
       {/* Benefits */}
-      <div className="border-t border-gray-100 pt-4">
+      <div className="border-t border-neutral-100 dark:border-dark-border pt-4">
         <div className="grid grid-cols-2 gap-2">
           {option.benefits.map((benefit, index) => (
-            <div key={index} className="flex items-center gap-1 text-xs text-gray-600">
+            <div key={index} className="flex items-center gap-1 text-xs text-neutral-600 dark:text-neutral-400">
               <svg
-                className={clsx('w-4 h-4', isSejourSerein ? 'text-green-500' : 'text-amber-500')}
+                className={clsx('w-4 h-4', isSejourSerein ? 'text-success-500' : 'text-warning-500')}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -175,8 +175,8 @@ export default function InsuranceOptions({
     <div className="space-y-6">
       {/* Intro */}
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Protégez-vous avec ImmoGuinée</h2>
-        <p className="text-gray-600">
+        <h2 className="text-2xl font-bold text-neutral-900 dark:text-white mb-2">Protégez-vous avec ImmoGuinée</h2>
+        <p className="text-neutral-600 dark:text-neutral-400">
           Choisissez l'assurance adaptée à votre situation pour une tranquillité d'esprit totale
         </p>
       </div>
@@ -195,14 +195,14 @@ export default function InsuranceOptions({
       </div>
 
       {/* Info Box */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mt-6">
+      <div className="bg-secondary-50 border border-secondary-200 rounded-xl p-4 mt-6">
         <div className="flex gap-3">
-          <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-secondary-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <div className="text-sm text-blue-800">
+          <div className="text-sm text-secondary-800">
             <p className="font-medium mb-1">Bon à savoir</p>
-            <ul className="list-disc list-inside space-y-1 text-blue-700">
+            <ul className="list-disc list-inside space-y-1 text-secondary-700">
               <li>Délai de carence de 30 jours après souscription</li>
               <li>Renouvellement automatique sauf résiliation</li>
               <li>Résiliation possible à tout moment avec préavis de 30 jours</li>

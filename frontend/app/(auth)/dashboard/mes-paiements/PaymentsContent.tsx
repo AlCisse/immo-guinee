@@ -61,16 +61,16 @@ async function fetchPendingInvoices() {
 // Status badge
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { label: string; className: string }> = {
-    en_attente: { label: 'En attente', className: 'bg-yellow-100 text-yellow-700' },
-    en_cours: { label: 'En cours', className: 'bg-blue-100 text-blue-700' },
-    escrow: { label: 'En escrow', className: 'bg-purple-100 text-purple-700' },
-    confirme: { label: 'Confirmé', className: 'bg-green-100 text-green-700' },
-    rembourse: { label: 'Remboursé', className: 'bg-gray-100 text-gray-600' },
-    litige: { label: 'Litige', className: 'bg-red-100 text-red-700' },
-    echoue: { label: 'Échoué', className: 'bg-red-100 text-red-700' },
+    en_attente: { label: 'En attente', className: 'bg-warning-100 text-warning-700' },
+    en_cours: { label: 'En cours', className: 'bg-secondary-100 text-secondary-700' },
+    escrow: { label: 'En escrow', className: 'bg-teal-100 text-teal-700' },
+    confirme: { label: 'Confirmé', className: 'bg-success-100 text-success-700' },
+    rembourse: { label: 'Remboursé', className: 'bg-neutral-100 dark:bg-dark-hover text-neutral-600 dark:text-neutral-400' },
+    litige: { label: 'Litige', className: 'bg-error-100 text-error-700' },
+    echoue: { label: 'Échoué', className: 'bg-error-100 text-error-700' },
   };
 
-  const { label, className } = config[status] || { label: status, className: 'bg-gray-100 text-gray-700' };
+  const { label, className } = config[status] || { label: status, className: 'bg-neutral-100 dark:bg-dark-hover text-neutral-700 dark:text-neutral-300' };
 
   return (
     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${className}`}>
@@ -85,7 +85,7 @@ function PaymentMethodIcon({ method }: { method: string }) {
     case 'orange_money':
       return (
         <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded-full bg-orange-500 flex items-center justify-center">
+          <div className="h-6 w-6 rounded-full bg-primary-500 flex items-center justify-center">
             <span className="text-white text-xs font-bold">OM</span>
           </div>
           <span>Orange Money</span>
@@ -94,7 +94,7 @@ function PaymentMethodIcon({ method }: { method: string }) {
     case 'mtn_momo':
       return (
         <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded-full bg-yellow-400 flex items-center justify-center">
+          <div className="h-6 w-6 rounded-full bg-warning-400 flex items-center justify-center">
             <span className="text-black text-xs font-bold">MTN</span>
           </div>
           <span>MTN MoMo</span>
@@ -103,7 +103,7 @@ function PaymentMethodIcon({ method }: { method: string }) {
     case 'especes':
       return (
         <div className="flex items-center gap-2">
-          <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-6 w-6 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
           <span>Espèces</span>
@@ -145,54 +145,54 @@ export default function PaymentsContent() {
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Mes paiements</h1>
-        <p className="mt-1 text-gray-600">
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">Mes paiements</h1>
+        <p className="mt-1 text-neutral-600 dark:text-neutral-400">
           Gérez vos paiements, factures et quittances
         </p>
       </div>
 
       {/* Summary cards */}
       <div className="grid gap-6 md:grid-cols-3 mb-8">
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="rounded-lg border border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Total payé</p>
-              <p className="text-2xl font-bold text-green-600">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">Total payé</p>
+              <p className="text-2xl font-bold text-success-600">
                 {totalPaid.toLocaleString('fr-GN')} GNF
               </p>
             </div>
-            <div className="rounded-full bg-green-100 p-3">
-              <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="rounded-full bg-success-100 p-3">
+              <svg className="h-6 w-6 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
           </div>
         </div>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="rounded-lg border border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">En attente</p>
-              <p className="text-2xl font-bold text-yellow-600">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">En attente</p>
+              <p className="text-2xl font-bold text-warning-600">
                 {totalPending.toLocaleString('fr-GN')} GNF
               </p>
             </div>
-            <div className="rounded-full bg-yellow-100 p-3">
-              <svg className="h-6 w-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="rounded-full bg-warning-100 p-3">
+              <svg className="h-6 w-6 text-warning-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
           </div>
         </div>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="rounded-lg border border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Transactions</p>
-              <p className="text-2xl font-bold text-gray-900">{payments.length}</p>
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">Transactions</p>
+              <p className="text-2xl font-bold text-neutral-900 dark:text-white">{payments.length}</p>
             </div>
-            <div className="rounded-full bg-blue-100 p-3">
-              <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="rounded-full bg-secondary-100 p-3">
+              <svg className="h-6 w-6 text-secondary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
@@ -206,20 +206,20 @@ export default function PaymentsContent() {
       {/* Pending invoices */}
       {pendingInvoices.length > 0 && (
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Factures en attente</h2>
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">Factures en attente</h2>
           <div className="space-y-4">
             {pendingInvoices.map((invoice) => (
               <div
                 key={invoice.contract_id}
-                className="rounded-lg border border-yellow-200 bg-yellow-50 p-4"
+                className="rounded-lg border border-warning-200 bg-warning-50 p-4"
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-gray-900">{invoice.listing_titre}</p>
-                    <p className="text-sm text-gray-500">Contrat: {invoice.contract_reference}</p>
+                    <p className="font-medium text-neutral-900 dark:text-white">{invoice.listing_titre}</p>
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400">Contrat: {invoice.contract_reference}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-bold text-yellow-700">{invoice.total_formatted}</p>
+                    <p className="text-lg font-bold text-warning-700">{invoice.total_formatted}</p>
                     <Link href={`/paiement/${invoice.contract_id}`}>
                       <Button variant="primary" size="sm">
                         Payer maintenant
@@ -241,7 +241,7 @@ export default function PaymentsContent() {
             setStatusFilter(e.target.value || undefined);
             setCurrentPage(1);
           }}
-          className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm focus:border-primary-500 focus:ring-primary-500"
+          className="rounded-lg border border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card px-4 py-2 text-sm focus:border-primary-500 focus:ring-primary-500"
           aria-label="Filtrer par statut"
         >
           <option value="">Tous les statuts</option>
@@ -286,69 +286,69 @@ export default function PaymentsContent() {
 
       {/* Payments list */}
       {!isLoading && payments.length === 0 && (
-        <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
-          <svg className="mx-auto h-16 w-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="rounded-lg border border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card p-12 text-center">
+          <svg className="mx-auto h-16 w-16 text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
-          <h3 className="mt-4 text-lg font-medium text-gray-900">Aucun paiement</h3>
-          <p className="mt-2 text-gray-500">
+          <h3 className="mt-4 text-lg font-medium text-neutral-900 dark:text-white">Aucun paiement</h3>
+          <p className="mt-2 text-neutral-500 dark:text-neutral-400">
             Vos paiements apparaîtront ici après la signature d&apos;un contrat.
           </p>
         </div>
       )}
 
       {!isLoading && payments.length > 0 && (
-        <div className="rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="rounded-lg border border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card shadow-sm overflow-hidden">
+          <table className="min-w-full divide-y divide-neutral-200">
+            <thead className="bg-neutral-50 dark:bg-dark-bg">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                   Référence
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                   Bien
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                   Montant
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                   Méthode
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                   Statut
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                   Date
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white dark:bg-dark-card divide-y divide-neutral-200">
               {payments.map((payment) => (
-                <tr key={payment.id} className="hover:bg-gray-50">
+                <tr key={payment.id} className="hover:bg-neutral-50 dark:hover:bg-dark-hover">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-medium text-neutral-900 dark:text-white">
                       {payment.reference_paiement}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{payment.contrat?.listing?.titre}</div>
-                    <div className="text-sm text-gray-500">{payment.contrat?.listing?.quartier}</div>
+                    <div className="text-sm text-neutral-900 dark:text-white">{payment.contrat?.listing?.titre}</div>
+                    <div className="text-sm text-neutral-500 dark:text-neutral-400">{payment.contrat?.listing?.quartier}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-semibold text-gray-900">
+                    <div className="text-sm font-semibold text-neutral-900 dark:text-white">
                       {payment.montant_total.toLocaleString('fr-GN')} GNF
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-500 dark:text-neutral-400">
                     <PaymentMethodIcon method={payment.methode_paiement} />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <StatusBadge status={payment.statut_paiement} />
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-500 dark:text-neutral-400">
                     {new Date(payment.created_at).toLocaleDateString('fr-FR')}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -364,7 +364,7 @@ export default function PaymentsContent() {
                           href={payment.quittance_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-green-600 hover:text-green-900"
+                          className="text-success-600 hover:text-success-900"
                         >
                           Quittance
                         </a>
@@ -378,8 +378,8 @@ export default function PaymentsContent() {
 
           {/* Pagination */}
           {pagination && pagination.last_page > 1 && (
-            <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-              <p className="text-sm text-gray-600">
+            <div className="px-6 py-4 border-t border-neutral-200 dark:border-dark-border flex items-center justify-between">
+              <p className="text-sm text-neutral-600 dark:text-neutral-400">
                 Page {pagination.current_page} sur {pagination.last_page}
               </p>
               <div className="flex gap-2">

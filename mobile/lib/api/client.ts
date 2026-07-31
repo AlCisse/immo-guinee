@@ -130,6 +130,21 @@ export const tokenManager = {
     await SecureStore.setItemAsync('access_token', token);
   },
 
+  // R11 — refresh token persisté dans SecureStore (mobile n'a pas de cookie
+  // HttpOnly). Utilisé par l'intercepteur pour renouveler silencieusement
+  // l'access token expiré.
+  async getRefreshToken(): Promise<string | null> {
+    try {
+      return await SecureStore.getItemAsync('refresh_token');
+    } catch {
+      return null;
+    }
+  },
+
+  async setRefreshToken(token: string): Promise<void> {
+    await SecureStore.setItemAsync('refresh_token', token);
+  },
+
   async removeToken(): Promise<void> {
     await SecureStore.deleteItemAsync('access_token');
   },
@@ -154,6 +169,7 @@ export const tokenManager = {
   async clear(): Promise<void> {
     await Promise.all([
       SecureStore.deleteItemAsync('access_token'),
+      SecureStore.deleteItemAsync('refresh_token'),
       SecureStore.deleteItemAsync('user'),
     ]);
   },
@@ -202,15 +218,66 @@ apiClient.interceptors.request.use(
   }
 );
 
+// R11 — refresh token silencieux. Sur un 401 (access token expiré), on échange
+// le refresh token (SecureStore) contre une nouvelle paire de tokens via
+// POST /auth/refresh (Bearer refresh), puis on rejoue la requête d'origine avec
+// le nouvel access token. L'utilisateur ne voit aucune interruption de
+// session. Si le refresh échoue (refresh token révoqué/expiré), on déconnecte.
+// On n'essaie qu'une fois (_retry) pour éviter toute boucle infinie.
+let refreshInFlight: Promise<boolean> | null = null;
+
+async function tryRefreshToken(): Promise<boolean> {
+  // Une seule tentative de refresh à la fois : les requêtes en 401 concurrentes
+  // partagent la même promesse, évitant une tempête de refresh (le backend
+  // rotationne le refresh token à chaque appel — un usage concurrent multiplie
+  // les rotations et risque de révoquer un token encore en vol).
+  if (refreshInFlight) return refreshInFlight;
+  refreshInFlight = (async () => {
+    const refreshToken = await tokenManager.getRefreshToken();
+    if (!refreshToken) return false;
+    try {
+      // Appel brut (axios global, sans les intercepteurs de apiClient) pour ne
+      // pas se ré-invoquer ni écraser l'Authorization par l'access token.
+      const response = await axios.post(`${API_URL}/auth/refresh`, undefined, {
+        headers: { Authorization: `Bearer ${refreshToken}` },
+        timeout: 10000,
+      });
+      const data = response.data?.data || response.data;
+      const newAccess = data?.access_token || data?.token;
+      const newRefresh = data?.refresh_token;
+      if (!newAccess) return false;
+      // Le refresh token est single-use (rotation server-side) : on persiste le
+      // nouveau, sinon le prochain refresh réutiliserait le token révoqué.
+      await tokenManager.setToken(newAccess);
+      if (newRefresh) await tokenManager.setRefreshToken(newRefresh);
+      return true;
+    } catch {
+      return false;
+    } finally {
+      refreshInFlight = null;
+    }
+  })();
+  return refreshInFlight;
+}
+
 // Response interceptor - Handle errors globally
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
 
-    // Handle 401 Unauthorized
+    // R11 — sur 401, tente un refresh silencieux puis rejoue la requête.
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
+      const refreshed = await tryRefreshToken();
+      if (refreshed) {
+        const token = await tokenManager.getToken();
+        if (token && originalRequest.headers) {
+          (originalRequest.headers as Record<string, string>).Authorization = `Bearer ${token}`;
+        }
+        return apiClient(originalRequest);
+      }
+      // Refresh impossible : session invalide, on purge les tokens.
       await tokenManager.clear();
     }
 

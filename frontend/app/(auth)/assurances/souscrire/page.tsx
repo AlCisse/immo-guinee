@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSearchParamsSafe } from '@/lib/hooks/useSearchParamsSafe';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
@@ -47,8 +48,16 @@ async function fetchUserContracts(): Promise<Contract[]> {
 type Step = 'select-contract' | 'select-insurance' | 'confirm' | 'success';
 
 export default function InsuranceSubscriptionPage() {
+  return (
+    <Suspense fallback={null}>
+      <InsuranceSubscriptionPageContent />
+    </Suspense>
+  );
+}
+
+function InsuranceSubscriptionPageContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParamsSafe();
   const preselectedContractId = searchParams.get('contrat');
 
   const [step, setStep] = useState<Step>('select-contract');
@@ -116,10 +125,10 @@ export default function InsuranceSubscriptionPage() {
           <div
             className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
               step === s
-                ? 'bg-blue-600 text-white'
+                ? 'bg-secondary-600 text-white'
                 : ['select-contract', 'select-insurance', 'confirm'].indexOf(step) > index
-                  ? 'bg-green-500 text-white'
-                  : 'bg-gray-200 text-gray-600'
+                  ? 'bg-success-500 text-white'
+                  : 'bg-neutral-200 dark:bg-dark-hover text-neutral-600 dark:text-neutral-400'
             }`}
           >
             {['select-contract', 'select-insurance', 'confirm'].indexOf(step) > index ? (
@@ -134,8 +143,8 @@ export default function InsuranceSubscriptionPage() {
             <div
               className={`w-16 h-1 mx-2 ${
                 ['select-contract', 'select-insurance', 'confirm'].indexOf(step) > index
-                  ? 'bg-green-500'
-                  : 'bg-gray-200'
+                  ? 'bg-success-500'
+                  : 'bg-neutral-200 dark:bg-dark-hover'
               }`}
             />
           )}
@@ -146,17 +155,17 @@ export default function InsuranceSubscriptionPage() {
 
   const renderContractSelection = () => (
     <div>
-      <h2 className="text-xl font-bold text-gray-900 mb-2">Sélectionnez un contrat</h2>
-      <p className="text-gray-600 mb-6">Choisissez le contrat de location que vous souhaitez assurer</p>
+      <h2 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">Sélectionnez un contrat</h2>
+      <p className="text-neutral-600 dark:text-neutral-400 mb-6">Choisissez le contrat de location que vous souhaitez assurer</p>
 
       {loadingContracts ? (
         <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-secondary-600" />
         </div>
       ) : activeContracts.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-xl">
+        <div className="text-center py-12 bg-neutral-50 dark:bg-dark-bg rounded-xl">
           <svg
-            className="w-12 h-12 text-gray-400 mx-auto mb-4"
+            className="w-12 h-12 text-neutral-400 mx-auto mb-4"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -168,11 +177,11 @@ export default function InsuranceSubscriptionPage() {
               d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
             />
           </svg>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun contrat actif</h3>
-          <p className="text-gray-500 mb-4">Vous devez avoir un contrat signé pour souscrire à une assurance</p>
+          <h3 className="text-lg font-medium text-neutral-900 dark:text-white mb-2">Aucun contrat actif</h3>
+          <p className="text-neutral-500 dark:text-neutral-400 mb-4">Vous devez avoir un contrat signé pour souscrire à une assurance</p>
           <Link
             href="/annonces"
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="inline-flex items-center px-4 py-2 bg-secondary-600 text-white rounded-lg hover:bg-secondary-700"
           >
             Rechercher un logement
           </Link>
@@ -183,19 +192,19 @@ export default function InsuranceSubscriptionPage() {
             <div
               key={contract.id}
               onClick={() => handleContractSelect(contract)}
-              className="p-4 border border-gray-200 rounded-xl hover:border-blue-500 hover:shadow-md cursor-pointer transition-all"
+              className="p-4 border border-neutral-200 dark:border-dark-border rounded-xl hover:border-secondary-500 hover:shadow-md cursor-pointer transition-all"
             >
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="font-medium text-gray-900">{contract.listing.titre}</h3>
-                  <p className="text-sm text-gray-500 mt-1">{contract.listing.adresse_complete}</p>
-                  <p className="text-xs text-gray-400 mt-2">Réf: {contract.reference}</p>
+                  <h3 className="font-medium text-neutral-900 dark:text-white">{contract.listing.titre}</h3>
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">{contract.listing.adresse_complete}</p>
+                  <p className="text-xs text-neutral-400 mt-2">Réf: {contract.reference}</p>
                 </div>
                 <div className="text-right">
-                  <div className="text-lg font-bold text-gray-900">
+                  <div className="text-lg font-bold text-neutral-900 dark:text-white">
                     {formatMoney(contract.donnees_personnalisees?.montant_loyer_gnf || 0)}
                   </div>
-                  <div className="text-xs text-gray-500">/mois</div>
+                  <div className="text-xs text-neutral-500 dark:text-neutral-400">/mois</div>
                 </div>
               </div>
             </div>
@@ -209,7 +218,7 @@ export default function InsuranceSubscriptionPage() {
     <div>
       <button
         onClick={() => setStep('select-contract')}
-        className="flex items-center text-sm text-gray-600 hover:text-gray-900 mb-4"
+        className="flex items-center text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white mb-4"
       >
         <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -218,10 +227,10 @@ export default function InsuranceSubscriptionPage() {
       </button>
 
       {selectedContract && (
-        <div className="bg-gray-50 rounded-xl p-4 mb-6">
-          <div className="text-sm text-gray-500">Contrat sélectionné</div>
-          <div className="font-medium text-gray-900">{selectedContract.listing.titre}</div>
-          <div className="text-sm text-gray-600">
+        <div className="bg-neutral-50 dark:bg-dark-bg rounded-xl p-4 mb-6">
+          <div className="text-sm text-neutral-500 dark:text-neutral-400">Contrat sélectionné</div>
+          <div className="font-medium text-neutral-900 dark:text-white">{selectedContract.listing.titre}</div>
+          <div className="text-sm text-neutral-600 dark:text-neutral-400">
             Loyer: {formatMoney(getMonthlyRent())}/mois
           </div>
         </div>
@@ -244,7 +253,7 @@ export default function InsuranceSubscriptionPage() {
       <div>
         <button
           onClick={() => setStep('select-insurance')}
-          className="flex items-center text-sm text-gray-600 hover:text-gray-900 mb-4"
+          className="flex items-center text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white mb-4"
         >
           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -252,35 +261,35 @@ export default function InsuranceSubscriptionPage() {
           Retour
         </button>
 
-        <h2 className="text-xl font-bold text-gray-900 mb-6">Confirmation de souscription</h2>
+        <h2 className="text-xl font-bold text-neutral-900 dark:text-white mb-6">Confirmation de souscription</h2>
 
         {/* Summary */}
-        <div className="bg-gray-50 rounded-xl p-6 mb-6">
-          <h3 className="font-medium text-gray-900 mb-4">Récapitulatif</h3>
+        <div className="bg-neutral-50 dark:bg-dark-bg rounded-xl p-6 mb-6">
+          <h3 className="font-medium text-neutral-900 dark:text-white mb-4">Récapitulatif</h3>
 
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-gray-600">Bien assuré</span>
+              <span className="text-neutral-600 dark:text-neutral-400">Bien assuré</span>
               <span className="font-medium">{selectedContract?.listing.titre}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Adresse</span>
+              <span className="text-neutral-600 dark:text-neutral-400">Adresse</span>
               <span className="font-medium text-sm">{selectedContract?.listing.adresse_complete}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Type d&apos;assurance</span>
+              <span className="text-neutral-600 dark:text-neutral-400">Type d&apos;assurance</span>
               <span className="font-medium">{option?.name}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Loyer mensuel</span>
+              <span className="text-neutral-600 dark:text-neutral-400">Loyer mensuel</span>
               <span className="font-medium">{formatMoney(getMonthlyRent())}</span>
             </div>
-            <div className="border-t border-gray-200 pt-3 mt-3">
+            <div className="border-t border-neutral-200 dark:border-dark-border pt-3 mt-3">
               <div className="flex justify-between text-lg">
-                <span className="font-medium text-gray-900">Prime mensuelle</span>
-                <span className="font-bold text-blue-600">{formatMoney(premium)}</span>
+                <span className="font-medium text-neutral-900 dark:text-white">Prime mensuelle</span>
+                <span className="font-bold text-secondary-600">{formatMoney(premium)}</span>
               </div>
-              <div className="text-sm text-gray-500 text-right">
+              <div className="text-sm text-neutral-500 dark:text-neutral-400 text-right">
                 {formatMoney(premium * 12)}/an
               </div>
             </div>
@@ -288,17 +297,17 @@ export default function InsuranceSubscriptionPage() {
         </div>
 
         {/* Coverages */}
-        <div className="bg-white border border-gray-200 rounded-xl p-6 mb-6">
-          <h3 className="font-medium text-gray-900 mb-4">Garanties incluses</h3>
+        <div className="bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-xl p-6 mb-6">
+          <h3 className="font-medium text-neutral-900 dark:text-white mb-4">Garanties incluses</h3>
           <div className="space-y-3">
             {option?.coverages.map((coverage, index) => (
               <div key={index} className="flex items-start gap-3">
-                <svg className="w-5 h-5 text-green-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-success-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 <div>
-                  <div className="font-medium text-gray-900">{coverage.name}</div>
-                  <div className="text-sm text-gray-500">{coverage.description}</div>
+                  <div className="font-medium text-neutral-900 dark:text-white">{coverage.name}</div>
+                  <div className="text-sm text-neutral-500 dark:text-neutral-400">{coverage.description}</div>
                 </div>
               </div>
             ))}
@@ -312,15 +321,15 @@ export default function InsuranceSubscriptionPage() {
               type="checkbox"
               checked={acceptedTerms}
               onChange={(e) => setAcceptedTerms(e.target.checked)}
-              className="mt-1 w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+              className="mt-1 w-4 h-4 text-secondary-600 rounded border-neutral-300 dark:border-dark-border focus:ring-secondary-500"
             />
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-neutral-600 dark:text-neutral-400">
               J&apos;ai lu et j&apos;accepte les{' '}
-              <a href="#" className="text-blue-600 hover:underline">
+              <a href="#" className="text-secondary-600 hover:underline">
                 conditions générales d&apos;assurance
               </a>{' '}
               et la{' '}
-              <a href="#" className="text-blue-600 hover:underline">
+              <a href="#" className="text-secondary-600 hover:underline">
                 politique de confidentialité
               </a>
             </span>
@@ -331,7 +340,7 @@ export default function InsuranceSubscriptionPage() {
         <button
           onClick={handleSubscribe}
           disabled={!acceptedTerms || subscribeMutation.isPending}
-          className="w-full py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+          className="w-full py-3 bg-secondary-600 text-white font-medium rounded-xl hover:bg-secondary-700 disabled:bg-neutral-300 dark:disabled:bg-dark-hover disabled:cursor-not-allowed transition-colors"
         >
           {subscribeMutation.isPending ? (
             <span className="flex items-center justify-center gap-2">
@@ -347,7 +356,7 @@ export default function InsuranceSubscriptionPage() {
         </button>
 
         {subscribeMutation.isError && (
-          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+          <div className="mt-4 p-4 bg-error-50 border border-error-200 rounded-xl text-error-700 text-sm">
             Une erreur est survenue. Veuillez réessayer.
           </div>
         )}
@@ -357,26 +366,26 @@ export default function InsuranceSubscriptionPage() {
 
   const renderSuccess = () => (
     <div className="text-center py-12">
-      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-        <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="w-16 h-16 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-6">
+        <svg className="w-8 h-8 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
         </svg>
       </div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-2">Souscription réussie!</h2>
-      <p className="text-gray-600 mb-8">
+      <h2 className="text-2xl font-bold text-neutral-900 dark:text-white mb-2">Souscription réussie!</h2>
+      <p className="text-neutral-600 dark:text-neutral-400 mb-8">
         Votre assurance {getSelectedOption()?.name} est maintenant active.<br />
         Vous recevrez votre certificat d&apos;assurance par email.
       </p>
       <div className="flex gap-4 justify-center">
         <Link
           href="/dashboard/mes-assurances"
-          className="px-6 py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700"
+          className="px-6 py-3 bg-secondary-600 text-white font-medium rounded-xl hover:bg-secondary-700"
         >
           Voir mes assurances
         </Link>
         <Link
           href="/dashboard"
-          className="px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200"
+          className="px-6 py-3 bg-neutral-100 dark:bg-dark-hover text-neutral-700 dark:text-neutral-300 font-medium rounded-xl hover:bg-neutral-200 dark:hover:bg-dark-hover"
         >
           Retour au dashboard
         </Link>
@@ -385,24 +394,24 @@ export default function InsuranceSubscriptionPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg py-8">
       <div className="max-w-2xl mx-auto px-4">
         {/* Header */}
         <div className="mb-8">
-          <Link href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1 mb-4">
+          <Link href="/dashboard" className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white flex items-center gap-1 mb-4">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             Retour au dashboard
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900">Souscrire à une assurance</h1>
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">Souscrire à une assurance</h1>
         </div>
 
         {/* Step Indicator */}
         {step !== 'success' && renderStepIndicator()}
 
         {/* Content */}
-        <div className="bg-white rounded-2xl shadow-sm p-6">
+        <div className="bg-white dark:bg-dark-card rounded-2xl shadow-sm p-6">
           {step === 'select-contract' && renderContractSelection()}
           {step === 'select-insurance' && renderInsuranceSelection()}
           {step === 'confirm' && renderConfirmation()}

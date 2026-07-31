@@ -116,11 +116,11 @@ export default function MapView({ commune, quartier }: MapViewProps) {
     <div
       ref={mapContainerRef}
       style={{ height: '100%', width: '100%', minHeight: '300px' }}
-      className="rounded-lg bg-gray-100"
+      className="rounded-lg bg-neutral-100 dark:bg-dark-hover"
     >
       {!isReady && (
         <div className="w-full h-full flex items-center justify-center">
-          <div className="text-gray-600">Chargement de la carte...</div>
+          <div className="text-neutral-600 dark:text-neutral-400">Chargement de la carte...</div>
         </div>
       )}
     </div>

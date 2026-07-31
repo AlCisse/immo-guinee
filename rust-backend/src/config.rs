@@ -1,0 +1,109 @@
+//! Application configuration (replaces Laravel config/*.php + env()).
+//!
+//! Sources, in priority order: IMMOG_* env vars -> config.toml -> defaults.
+//! Secrets (DB password, Redis password, JWT secret, Vault creds) are NOT read
+//! from here in production — they are fetched from HashiCorp Vault at boot
+//! (see state::AppState). Only non-sensitive bootstrap values live in Config.
+
+use figment::{
+    Figment,
+    providers::{Env, Format, Serialized, Toml},
+};
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(default)]
+pub struct Config {
+    pub host: String,
+    pub port: u16,
+
+    /// PostgreSQL connection string (dev: full URL with creds; prod: Vault-fetched).
+    pub database_url: String,
+
+    /// Redis connection URL (dev: with creds; prod: Vault-fetched).
+    pub redis_url: String,
+
+    /// S3-compatible endpoint used for API calls (MinIO in dev, DO Spaces in prod).
+    pub s3_endpoint: String,
+    /// Public base URL for building browser-facing object URLs. Empty = derive from
+    /// `s3_endpoint`. In dev set to `/media` (proxied to MinIO by the frontend); in
+    /// prod set to the CDN base (e.g. https://immoguinee.fra1.cdn.digitaloceanspaces.com).
+    pub s3_public_url: String,
+    /// S3 region label (MinIO ignores it; DO Spaces uses e.g. "fra1").
+    pub s3_region: String,
+    /// Bucket for listing photos and documents.
+    pub s3_bucket: String,
+
+    /// Evolution API base URL (WhatsApp). Empty disables WhatsApp sending.
+    pub evolution_base_url: String,
+    /// Evolution API instance name (the connected WhatsApp business number).
+    pub evolution_instance: String,
+    /// Shared token authenticating inbound Evolution webhooks (compared against
+    /// the `apikey` / `x-webhook-token` header). Empty accepts all (dev only).
+    pub evolution_webhook_token: String,
+
+    /// Vault address (prod). Empty in dev -> Vault client disabled.
+    pub vault_addr: String,
+
+    /// AppRole role_id (public, non-secret). secret_id comes from
+    /// /run/secrets/vault_approle_secret_id (Docker Secret bootstrap).
+    pub vault_approle_role_id: String,
+
+    /// JWT signing/verification secret path in Vault: secret/immoguinee/app -> jwt_secret.
+    pub jwt_secret_vault_path: String,
+
+    /// CORS allowed origin (frontend). Falls back to "*" only in dev.
+    pub cors_allowed_origin: String,
+
+    /// Request body size limit (bytes).
+    pub body_limit_bytes: usize,
+
+    /// Request timeout (seconds).
+    pub request_timeout_secs: u64,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            host: "0.0.0.0".into(),
+            port: 8000,
+            // No credentials in source (public repo, zero-tolerance). Real
+            // connection strings come from IMMOG_DATABASE_URL / IMMOG_REDIS_URL
+            // (docker-compose in dev, Vault/env in prod).
+            database_url: "postgres://localhost:5433/immog_db".into(),
+            redis_url: "redis://localhost:6379".into(),
+            s3_endpoint: "http://localhost:9000".into(),
+            s3_public_url: String::new(),
+            s3_region: "us-east-1".into(),
+            s3_bucket: "immoguinee-images".into(),
+            evolution_base_url: "http://localhost:8080".into(),
+            evolution_instance: "immoguinee".into(),
+            evolution_webhook_token: String::new(),
+            vault_addr: String::new(),
+            vault_approle_role_id: String::new(),
+            jwt_secret_vault_path: "secret/immoguinee/app".into(),
+            cors_allowed_origin: "*".into(),
+            body_limit_bytes: 10 * 1024 * 1024, // 10 MiB (multipart listings with photos)
+            request_timeout_secs: 60,
+        }
+    }
+}
+
+impl Config {
+    pub fn load() -> anyhow::Result<Self> {
+        let cfg: Config = Figment::new()
+            .merge(Serialized::defaults(Self::default()))
+            .merge(Toml::file("config.toml").nested())
+            .merge(Env::prefixed("IMMOG_").split("__"))
+            .extract()?;
+        Ok(cfg)
+    }
+}
+
+/// Whether the process runs in production. Drives boot-time guards (S5/S6):
+/// refuse unsafe dev defaults (CORS `*`, webhook non authentifié) when `IMMOG_APP_ENV=production`.
+pub fn is_prod() -> bool {
+    std::env::var("IMMOG_APP_ENV")
+        .map(|v| v == "production")
+        .unwrap_or(false)
+}

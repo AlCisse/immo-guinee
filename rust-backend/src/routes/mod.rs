@@ -1,0 +1,106 @@
+//! Router (replaces routes/api.php). Built per migration phase — domains are
+//! added incrementally. Phase 0 exposes only /api/health (orchestration probe).
+//!
+//! All routes are stateful on `Arc<AppState>`. Layers (cors/limit/timeout/trace/
+//! security headers) are state-agnostic and wrap the whole service.
+
+use std::sync::Arc;
+use std::time::Duration;
+
+use axum::Router;
+use axum::extract::DefaultBodyLimit;
+use axum::http::StatusCode;
+use tower_http::{
+    compression::CompressionLayer,
+    cors::{AllowOrigin, CorsLayer},
+    timeout::TimeoutLayer,
+    trace::TraceLayer,
+};
+
+use crate::config::Config;
+use crate::middleware::security_headers::security_header_layers;
+use crate::state::AppState;
+
+mod health;
+
+pub fn router(state: Arc<AppState>, cfg: &Config) -> Router {
+    // Stateful API router; domains are merged in per phase.
+    let api: Router<Arc<AppState>> = Router::new()
+        .merge(health::routes())
+        .merge(crate::domain::listings::routes()) // Phase 1 (read-only)
+        .merge(crate::domain::auth::routes())      // T078-T083 (auth)
+        .merge(crate::domain::webhooks::routes()) // W3 (evolution webhook)
+        .merge(crate::domain::visits::routes())    // US10 (visits)
+        .merge(crate::domain::favorites::routes())  // saved listings
+        .merge(crate::domain::ratings::routes())    // US7 (reviews + average)
+        .merge(crate::domain::admin::routes())      // Phase 5 (dashboard + moderation)
+        .merge(crate::domain::contracts::routes())  // US2 (contract PDF generation)
+        .merge(crate::domain::payments::routes())   // US4 (commission + escrow)
+        .merge(crate::domain::certifications::routes()); // Phase 5 (FR-054)
+    // Phase 2: .merge(crate::domain::messaging::routes())
+    // Phase 3: .merge(crate::domain::contracts::routes())
+    // Phase 4: .merge(crate::domain::payments::routes())
+
+    let cors = build_cors(cfg);
+
+    // Everything is mounted under /api (matches the spec + frontend). Then provide
+    // the state and apply state-agnostic layers. DefaultBodyLimit is the global
+    // default; specific routes (e.g. photo upload) raise it via a route layer.
+    let app = Router::new()
+        .nest("/api", api)
+        .with_state(state)
+        .layer(DefaultBodyLimit::max(cfg.body_limit_bytes))
+        .layer(TimeoutLayer::with_status_code(
+            StatusCode::REQUEST_TIMEOUT,
+            Duration::from_secs(cfg.request_timeout_secs),
+        ))
+        .layer(cors)
+        .layer(TraceLayer::new_for_http())
+        // Response compression (gzip + Brotli, negotiated via Accept-Encoding).
+        // Huge win on 2G/3G: JSON payloads shrink ~70-85% with Brotli. Skips
+        // already-compressed bodies (images) and tiny responses automatically.
+        .layer(CompressionLayer::new().gzip(true).br(true));
+
+    // Security headers last (outermost), so they apply to every response.
+    let mut app = app;
+    for layer in security_header_layers() {
+        app = app.layer(layer);
+    }
+    app
+}
+
+fn build_cors(cfg: &Config) -> CorsLayer {
+    use axum::http::HeaderName;
+    // S8 — `*` + credentials est invalide côté navigateur (les cookies HttpOnly
+    // d'auth ne seraient jamais envoyés). En dev on veut malgré tout laisser les
+    // cookies passer depuis n'importe quelle origine locale (localhost:3000,
+    // :3001…), donc on reflète l'origine de la requête (mirror_request) plutôt
+    // que d'émettre un `*` qui casse `allow_credentials`. En prod, S5 garantit
+    // au boot que cors_allowed_origin != "*", donc on tombe sur AllowOrigin::exact.
+    let origin: AllowOrigin = if cfg.cors_allowed_origin == "*" {
+        AllowOrigin::mirror_request()
+    } else {
+        AllowOrigin::exact(
+            cfg.cors_allowed_origin
+                .parse()
+                .unwrap_or_else(|_| "https://immoguinee.com".parse().expect("static origin parses")),
+        )
+    };
+    CorsLayer::new()
+        .allow_origin(origin)
+        .allow_credentials(true)
+        .allow_methods([
+            axum::http::Method::GET,
+            axum::http::Method::POST,
+            axum::http::Method::PUT,
+            axum::http::Method::PATCH,
+            axum::http::Method::DELETE,
+            axum::http::Method::OPTIONS,
+        ])
+        .allow_headers([
+            HeaderName::from_static("content-type"),
+            HeaderName::from_static("authorization"),
+            HeaderName::from_static("accept-language"),
+            HeaderName::from_static("x-requested-with"),
+        ])
+}

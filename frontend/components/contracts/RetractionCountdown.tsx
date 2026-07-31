@@ -76,11 +76,11 @@ export default function RetractionCountdown({
 
   if (expired) {
     return (
-      <div className="rounded-lg border border-green-200 bg-green-50 p-6">
+      <div className="rounded-lg border border-success-200 bg-success-50 p-6">
         <div className="flex items-start">
           <div className="flex-shrink-0">
             <svg
-              className="h-6 w-6 text-green-600"
+              className="h-6 w-6 text-success-600"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -94,10 +94,10 @@ export default function RetractionCountdown({
             </svg>
           </div>
           <div className="ml-3">
-            <h3 className="text-lg font-medium text-green-800">
+            <h3 className="text-lg font-medium text-success-800">
               Contrat actif
             </h3>
-            <p className="mt-1 text-sm text-green-700">
+            <p className="mt-1 text-sm text-success-700">
               La période de rétractation est terminée.
               Le contrat est maintenant officiellement en vigueur.
             </p>
@@ -112,22 +112,22 @@ export default function RetractionCountdown({
       <div
         className={`rounded-lg border p-6 ${
           isUrgent
-            ? 'border-red-200 bg-red-50'
-            : 'border-yellow-200 bg-yellow-50'
+            ? 'border-error-200 bg-error-50'
+            : 'border-warning-200 bg-warning-50'
         }`}
       >
         <div className="flex items-start justify-between">
           <div>
             <h3
               className={`text-lg font-medium ${
-                isUrgent ? 'text-red-800' : 'text-yellow-800'
+                isUrgent ? 'text-error-800' : 'text-warning-800'
               }`}
             >
               Période de rétractation
             </h3>
             <p
               className={`mt-1 text-sm ${
-                isUrgent ? 'text-red-700' : 'text-yellow-700'
+                isUrgent ? 'text-error-700' : 'text-warning-700'
               }`}
             >
               Vous pouvez encore annuler ce contrat sans frais
@@ -135,11 +135,11 @@ export default function RetractionCountdown({
           </div>
           <div
             className={`flex-shrink-0 rounded-full p-2 ${
-              isUrgent ? 'bg-red-100' : 'bg-yellow-100'
+              isUrgent ? 'bg-error-100' : 'bg-warning-100'
             }`}
           >
             <svg
-              className={`h-6 w-6 ${isUrgent ? 'text-red-600' : 'text-yellow-600'}`}
+              className={`h-6 w-6 ${isUrgent ? 'text-error-600' : 'text-warning-600'}`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -159,34 +159,34 @@ export default function RetractionCountdown({
           <div className="text-center">
             <div
               className={`text-3xl font-bold ${
-                isUrgent ? 'text-red-600' : 'text-yellow-600'
+                isUrgent ? 'text-error-600' : 'text-warning-600'
               }`}
             >
               {hours.toString().padStart(2, '0')}
             </div>
-            <div className="text-xs text-gray-500">heures</div>
+            <div className="text-xs text-neutral-500">heures</div>
           </div>
-          <div className="text-3xl font-bold text-gray-400">:</div>
+          <div className="text-3xl font-bold text-neutral-400">:</div>
           <div className="text-center">
             <div
               className={`text-3xl font-bold ${
-                isUrgent ? 'text-red-600' : 'text-yellow-600'
+                isUrgent ? 'text-error-600' : 'text-warning-600'
               }`}
             >
               {minutes.toString().padStart(2, '0')}
             </div>
-            <div className="text-xs text-gray-500">minutes</div>
+            <div className="text-xs text-neutral-500">minutes</div>
           </div>
-          <div className="text-3xl font-bold text-gray-400">:</div>
+          <div className="text-3xl font-bold text-neutral-400">:</div>
           <div className="text-center">
             <div
               className={`text-3xl font-bold ${
-                isUrgent ? 'text-red-600' : 'text-yellow-600'
+                isUrgent ? 'text-error-600' : 'text-warning-600'
               }`}
             >
               {seconds.toString().padStart(2, '0')}
             </div>
-            <div className="text-xs text-gray-500">secondes</div>
+            <div className="text-xs text-neutral-500">secondes</div>
           </div>
         </div>
 
@@ -194,7 +194,7 @@ export default function RetractionCountdown({
         <div className="mt-4">
           <Button
             variant="outline"
-            className="w-full border-red-300 text-red-600 hover:bg-red-50"
+            className="w-full border-error-300 text-error-600 hover:bg-error-50"
             onClick={() => setShowCancelModal(true)}
           >
             Annuler le contrat
@@ -203,9 +203,9 @@ export default function RetractionCountdown({
 
         {/* Warning */}
         {isUrgent && (
-          <div className="mt-4 flex items-center rounded-lg bg-red-100 p-3">
+          <div className="mt-4 flex items-center rounded-lg bg-error-100 p-3">
             <svg
-              className="h-5 w-5 text-red-600 flex-shrink-0"
+              className="h-5 w-5 text-error-600 flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -217,7 +217,7 @@ export default function RetractionCountdown({
                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
               />
             </svg>
-            <p className="ml-2 text-sm text-red-700">
+            <p className="ml-2 text-sm text-error-700">
               <strong>Attention:</strong> Il reste peu de temps pour exercer votre droit de rétractation.
             </p>
           </div>
@@ -231,10 +231,10 @@ export default function RetractionCountdown({
         title="Annuler le contrat"
       >
         <div className="p-4">
-          <div className="mb-4 rounded-lg bg-red-50 p-4">
+          <div className="mb-4 rounded-lg bg-error-50 p-4">
             <div className="flex items-start">
               <svg
-                className="h-6 w-6 text-red-600 flex-shrink-0"
+                className="h-6 w-6 text-error-600 flex-shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -247,10 +247,10 @@ export default function RetractionCountdown({
                 />
               </svg>
               <div className="ml-3">
-                <h4 className="text-sm font-medium text-red-800">
+                <h4 className="text-sm font-medium text-error-800">
                   Cette action est irréversible
                 </h4>
-                <p className="mt-1 text-sm text-red-700">
+                <p className="mt-1 text-sm text-error-700">
                   Une fois annulé, ce contrat sera définitivement résilié et les deux parties seront notifiées.
                 </p>
               </div>
@@ -258,14 +258,14 @@ export default function RetractionCountdown({
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Motif de l&apos;annulation <span className="text-red-500">*</span>
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+              Motif de l&apos;annulation <span className="text-error-500">*</span>
             </label>
             <textarea
               value={cancelMotif}
               onChange={(e) => setCancelMotif(e.target.value)}
               placeholder="Veuillez expliquer la raison de votre annulation..."
-              className="w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-primary-500 focus:ring-primary-500"
+              className="w-full rounded-lg border border-neutral-300 dark:border-dark-border p-3 text-sm focus:border-primary-500 focus:ring-primary-500"
               rows={4}
               required
             />
@@ -281,7 +281,7 @@ export default function RetractionCountdown({
             </Button>
             <Button
               variant="primary"
-              className="flex-1 bg-red-600 hover:bg-red-700"
+              className="flex-1 bg-error-600 hover:bg-error-700"
               disabled={!cancelMotif.trim()}
               isLoading={cancelMutation.isPending}
               onClick={() => cancelMutation.mutate()}
@@ -291,8 +291,8 @@ export default function RetractionCountdown({
           </div>
 
           {cancelMutation.isError && (
-            <div className="mt-4 rounded-lg bg-red-50 p-3">
-              <p className="text-sm text-red-600">
+            <div className="mt-4 rounded-lg bg-error-50 p-3">
+              <p className="text-sm text-error-600">
                 {cancelMutation.error?.message || 'Une erreur est survenue'}
               </p>
             </div>

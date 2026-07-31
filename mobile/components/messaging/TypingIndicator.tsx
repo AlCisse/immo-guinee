@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
+import Colors from '@/constants/Colors';
 
 interface TypingIndicatorProps {
   text?: string;
@@ -8,7 +9,7 @@ interface TypingIndicatorProps {
 
 export function TypingIndicator({
   text = 'est en train d\'écrire',
-  color = '#6B7280',
+  color = Colors.neutral[500],
 }: TypingIndicatorProps) {
   const dot1 = useRef(new Animated.Value(0)).current;
   const dot2 = useRef(new Animated.Value(0)).current;

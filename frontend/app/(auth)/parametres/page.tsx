@@ -109,7 +109,7 @@ export default function ParametresPage() {
   return (
     <div>
       {/* Header */}
-      <div className="bg-gradient-to-br from-primary-500 to-orange-500 pt-6 pb-8 md:pt-8 md:pb-12">
+      <div className="bg-gradient-to-br from-primary-500 to-primary-500 pt-6 pb-8 md:pt-8 md:pb-12">
         <div className="max-w-2xl mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -142,10 +142,10 @@ export default function ParametresPage() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="p-4 bg-green-100 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 rounded-xl flex items-center gap-3"
+            className="p-4 bg-success-100 dark:bg-success-500/10 border border-success-200 dark:border-success-500/20 rounded-xl flex items-center gap-3"
           >
-            <Check className="w-5 h-5 text-green-600 dark:text-green-400" />
-            <p className="text-green-700 dark:text-green-400 font-medium">
+            <Check className="w-5 h-5 text-success-600 dark:text-success-400" />
+            <p className="text-success-700 dark:text-success-400 font-medium">
               {t('settings.savedSuccess')}
             </p>
           </motion.div>
@@ -167,7 +167,7 @@ export default function ParametresPage() {
           <div className="divide-y divide-neutral-100 dark:divide-dark-border">
             <Link
               href="/profil"
-              className="flex items-center justify-between px-4 py-4 hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors"
+              className="flex items-center justify-between px-4 py-4 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors"
             >
               <div>
                 <p className="font-medium text-neutral-900 dark:text-white">{t('settings.account.myProfile')}</p>
@@ -178,7 +178,7 @@ export default function ParametresPage() {
 
             <button
               onClick={() => setShowPasswordForm(!showPasswordForm)}
-              className="w-full flex items-center justify-between px-4 py-4 hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors text-left"
+              className="w-full flex items-center justify-between px-4 py-4 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors text-left"
             >
               <div className="flex items-center gap-3">
                 <Lock className="w-5 h-5 text-neutral-500" />
@@ -308,7 +308,7 @@ export default function ParametresPage() {
               >
                 <motion.div
                   animate={{ x: isDarkMode ? 20 : 0 }}
-                  className="w-5 h-5 bg-white rounded-full shadow"
+                  className="w-5 h-5 bg-white dark:bg-dark-card rounded-full shadow"
                 />
               </button>
             </div>
@@ -362,7 +362,7 @@ export default function ParametresPage() {
                     >
                       <motion.div
                         animate={{ x: notifications[item.key] ? 20 : 0 }}
-                        className="w-5 h-5 bg-white rounded-full shadow"
+                        className="w-5 h-5 bg-white dark:bg-dark-card rounded-full shadow"
                       />
                     </button>
                   </div>
@@ -387,7 +387,7 @@ export default function ParametresPage() {
                     >
                       <motion.div
                         animate={{ x: notifications[item.key] ? 20 : 0 }}
-                        className="w-5 h-5 bg-white rounded-full shadow"
+                        className="w-5 h-5 bg-white dark:bg-dark-card rounded-full shadow"
                       />
                     </button>
                   </div>
@@ -414,14 +414,14 @@ export default function ParametresPage() {
           <div className="divide-y divide-neutral-100 dark:divide-dark-border">
             <Link
               href="/conditions"
-              className="flex items-center justify-between px-4 py-4 hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors"
+              className="flex items-center justify-between px-4 py-4 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors"
             >
               <span className="text-neutral-900 dark:text-white">{t('settings.privacy.terms')}</span>
               <ChevronRight className="w-5 h-5 text-neutral-400" />
             </Link>
             <Link
               href="/confidentialite"
-              className="flex items-center justify-between px-4 py-4 hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors"
+              className="flex items-center justify-between px-4 py-4 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors"
             >
               <span className="text-neutral-900 dark:text-white">{t('settings.privacy.privacyPolicy')}</span>
               <ChevronRight className="w-5 h-5 text-neutral-400" />
@@ -456,16 +456,16 @@ export default function ParametresPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="bg-white dark:bg-dark-card rounded-2xl shadow-soft overflow-hidden border border-red-200 dark:border-red-500/20"
+          className="bg-white dark:bg-dark-card rounded-2xl shadow-soft overflow-hidden border border-error-200 dark:border-error-500/20"
         >
-          <div className="px-4 py-3 border-b border-red-100 dark:border-red-500/20 bg-red-50 dark:bg-red-500/5">
-            <h2 className="font-semibold text-red-600 dark:text-red-400">{t('settings.danger.title')}</h2>
+          <div className="px-4 py-3 border-b border-error-100 dark:border-error-500/20 bg-error-50 dark:bg-error-500/5">
+            <h2 className="font-semibold text-error-600 dark:text-error-400">{t('settings.danger.title')}</h2>
           </div>
 
           <div className="divide-y divide-neutral-100 dark:divide-dark-border">
             <button
               onClick={logout}
-              className="w-full flex items-center gap-3 px-4 py-4 hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors text-left"
+              className="w-full flex items-center gap-3 px-4 py-4 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors text-left"
             >
               <LogOut className="w-5 h-5 text-neutral-500" />
               <div>
@@ -476,11 +476,11 @@ export default function ParametresPage() {
 
             <button
               onClick={() => setShowDeleteConfirm(true)}
-              className="w-full flex items-center gap-3 px-4 py-4 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors text-left"
+              className="w-full flex items-center gap-3 px-4 py-4 hover:bg-error-50 dark:hover:bg-error-500/10 transition-colors text-left"
             >
-              <Trash2 className="w-5 h-5 text-red-500" />
+              <Trash2 className="w-5 h-5 text-error-500" />
               <div>
-                <p className="font-medium text-red-600">{t('settings.danger.deleteAccount')}</p>
+                <p className="font-medium text-error-600">{t('settings.danger.deleteAccount')}</p>
                 <p className="text-sm text-neutral-500">{t('settings.danger.deleteAccountDesc')}</p>
               </div>
             </button>
@@ -510,7 +510,7 @@ export default function ParametresPage() {
                 </button>
                 <button
                   onClick={handleDeleteAccount}
-                  className="flex-1 py-2.5 bg-red-500 text-white font-medium rounded-xl hover:bg-red-600 transition-colors"
+                  className="flex-1 py-2.5 bg-error-500 text-white font-medium rounded-xl hover:bg-error-600 transition-colors"
                 >
                   {t('settings.danger.delete')}
                 </button>

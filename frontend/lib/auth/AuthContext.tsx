@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api, ApiResponse } from '../api/client';
 import toast from 'react-hot-toast';
@@ -11,7 +11,10 @@ export interface User {
   telephone: string;
   nom_complet: string;
   email?: string;
-  type_compte: 'PARTICULIER' | 'PROPRIETAIRE' | 'AGENT' | 'AGENCE';
+  // Le backend Rust expose l'URL du fichier (signée) ; absente tant que l'user
+  // n'a pas uploadé de photo. Utilisée par Navbar, profil, profil/edit.
+  photo_profil_url?: string;
+  type_compte: 'PARTICULIER' | 'AGENCE' | 'DIASPORA';
   badge: 'BRONZE' | 'ARGENT' | 'OR' | 'DIAMANT';
   statut_verification: 'NON_VERIFIE' | 'EN_ATTENTE' | 'VERIFIE' | 'REJETE';
   is_active: boolean;
@@ -63,7 +66,7 @@ interface RegisterData {
   telephone: string;
   mot_de_passe: string;
   nom_complet: string;
-  type_compte: 'PARTICULIER' | 'PROPRIETAIRE' | 'AGENT' | 'AGENCE';
+  type_compte: 'PARTICULIER' | 'AGENCE' | 'DIASPORA';
   email?: string;
 }
 
@@ -105,11 +108,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loadUser();
   }, []);
 
-  const login = async (telephone: string, mot_de_passe: string) => {
+  const login = useCallback(async (telephone: string, mot_de_passe: string) => {
     try {
       const response = await api.auth.login({ telephone, mot_de_passe });
       const data: ApiResponse<{
-        token: string;
+        token?: string;
+        // access_token : alias renvoyé par certaines formes de réponse du backend.
+        access_token?: string;
         user: User;
         redirect: RedirectData;
         action?: string;
@@ -117,8 +122,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         requires_2fa_setup?: boolean;
         setup_token?: string;
       }> = response.data;
-
-      console.log('Login response:', data);
 
       // Handle both possible response structures (token vs access_token)
       const responseData = data.data || data;
@@ -179,14 +182,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        // No 2FA required - store user data for UX (token is in httpOnly cookie)
-        // Token is NOT stored in localStorage - it's in a secure httpOnly cookie
-        localStorage.setItem('user', JSON.stringify(user));
+        // The Rust API returns only tokens on login (no user object). The access
+        // token was captured by the api client; fetch the profile via /auth/me.
+        let resolvedUser = user;
+        if (!resolvedUser) {
+          try {
+            const meResp = await api.auth.me();
+            resolvedUser = (meResp.data?.data || meResp.data) as User;
+          } catch (e) {
+            console.error('Failed to load profile after login:', e);
+          }
+        }
+
+        // Cache only the (non-sensitive) user profile for fast UX. The JWT is
+        // NOT stored here — it lives in the HttpOnly cookie (+ in-memory copy in
+        // the api client), out of reach of XSS.
+        localStorage.setItem('user', JSON.stringify(resolvedUser));
         if (redirect) {
           localStorage.setItem('redirect_data', JSON.stringify(redirect));
         }
 
-        setUser(user);
+        setUser(resolvedUser as User);
         setRedirectData(redirect || null);
 
         // Redirect to role-based dashboard
@@ -196,12 +212,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(data.message || 'Login failed');
       }
     } catch (error: any) {
-      console.error('Login error:', error);
+      // The login page (the UI boundary) logs and maps this to a user message;
+      // don't double-log here.
       throw error;
     }
-  };
+  }, [router]);
 
-  const register = async (data: RegisterData) => {
+  const register = useCallback(async (data: RegisterData) => {
     try {
       const response = await api.auth.register(data);
       const result: ApiResponse<{ action?: string; telephone?: string; user?: any }> = response.data;
@@ -230,7 +247,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(result.message || 'Registration failed');
       }
     } catch (error: any) {
-      console.error('Registration error:', error);
+      // The register page (the UI boundary) logs and maps this to a user message;
+      // don't double-log here.
 
       // Handle 409 Conflict - user already exists and is verified
       if (error.response?.status === 409) {
@@ -246,18 +264,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       throw error;
     }
-  };
+  }, [router]);
 
-  const verifyOtp = async (telephone: string, otp_code: string) => {
+  const verifyOtp = useCallback(async (telephone: string, otp_code: string) => {
     try {
       const response = await api.auth.verifyOtp({ telephone, otp_code });
       const data: ApiResponse<{
-        token: string;
+        token?: string;
+        access_token?: string;
         user: User;
         redirect: RedirectData;
       }> = response.data;
-
-      console.log('OTP verification response:', data);
 
       // Handle both possible response structures (token vs access_token)
       const responseData = data.data || data;
@@ -266,14 +283,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const redirect = responseData.redirect || (data as any).redirect;
 
       if (data.success && token) {
-        // Store user data for UX (token is in httpOnly cookie set by server)
-        // Token is NOT stored in localStorage - it's in a secure httpOnly cookie
-        localStorage.setItem('user', JSON.stringify(user));
+        // The Rust API returns only tokens (no user); fetch the freshly-verified
+        // profile via /auth/me (now has telephone_verified_at set).
+        let resolvedUser = user;
+        if (!resolvedUser) {
+          try {
+            const meResp = await api.auth.me();
+            resolvedUser = (meResp.data?.data || meResp.data) as User;
+          } catch (e) {
+            console.error('Failed to load profile after OTP verify:', e);
+          }
+        }
+
+        localStorage.setItem('user', JSON.stringify(resolvedUser));
         if (redirect) {
           localStorage.setItem('redirect_data', JSON.stringify(redirect));
         }
 
-        setUser(user);
+        setUser(resolvedUser as User);
         setRedirectData(redirect || null);
 
         // Redirect to role-based dashboard
@@ -286,9 +313,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('OTP verification error:', error);
       throw error;
     }
-  };
+  }, [router]);
 
-  const resendOtp = async (telephone: string) => {
+  const resendOtp = useCallback(async (telephone: string) => {
     try {
       const response = await api.auth.resendOtp({ telephone });
       const data: ApiResponse = response.data;
@@ -300,9 +327,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Resend OTP error:', error);
       throw error;
     }
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       // Call logout API - server will clear the httpOnly cookie
       await api.auth.logout().catch(() => {
@@ -330,21 +357,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Redirect to home
       router.push('/');
     }
-  };
+  }, [router]);
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     try {
       // Token is sent automatically via httpOnly cookie
       const response = await api.auth.me();
-      const data: ApiResponse<{ user: User; redirect: RedirectData }> = response.data;
+      const data: ApiResponse<any> = response.data;
+      // The Rust API returns the user directly in `data.data` (no nested `user`).
+      // Fall back to `data.data.user` for compatibility with the older shape.
+      const resolvedUser: User | undefined = data?.data?.user ?? data?.data;
 
-      if (data.success && data.data.user) {
-        setUser(data.data.user);
-        localStorage.setItem('user', JSON.stringify(data.data.user));
+      if (data.success && resolvedUser) {
+        setUser(resolvedUser);
+        localStorage.setItem('user', JSON.stringify(resolvedUser));
 
-        if (data.data.redirect) {
-          setRedirectData(data.data.redirect);
-          localStorage.setItem('redirect_data', JSON.stringify(data.data.redirect));
+        const redirect = data?.data?.redirect;
+        if (redirect) {
+          setRedirectData(redirect);
+          localStorage.setItem('redirect_data', JSON.stringify(redirect));
         }
       }
     } catch (error: any) {
@@ -359,40 +390,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setRedirectData(null);
     }
-  };
+  }, []);
 
   // Role checking functions
-  const hasRole = (role: string): boolean => {
+  const hasRole = useCallback((role: string): boolean => {
     return user?.roles?.includes(role) || false;
-  };
+  }, [user]);
 
-  const hasAnyRole = (roles: string[]): boolean => {
+  const hasAnyRole = useCallback((roles: string[]): boolean => {
     return roles.some(role => user?.roles?.includes(role)) || false;
-  };
+  }, [user]);
 
-  const hasPermission = (permission: string): boolean => {
+  const hasPermission = useCallback((permission: string): boolean => {
     return user?.permissions?.includes(permission) || false;
-  };
+  }, [user]);
 
-  const isAdmin = (): boolean => {
+  const isAdmin = useCallback((): boolean => {
     return hasRole('admin');
-  };
+  }, [hasRole]);
 
-  const isMediator = (): boolean => {
+  const isMediator = useCallback((): boolean => {
     return hasRole('mediator');
-  };
+  }, [hasRole]);
 
   // Phone verification functions
-  const hasVerifiedPhone = (): boolean => {
+  const hasVerifiedPhone = useCallback((): boolean => {
     return !!user?.telephone_verified_at;
-  };
+  }, [user]);
 
   /**
    * Check if phone is verified, if not redirect to verify page with OTP
    * @param action - Optional action description to show in toast
    * @returns true if verified, false if redirecting to verify
    */
-  const requirePhoneVerification = (action?: string): boolean => {
+  const requirePhoneVerification = useCallback((action?: string): boolean => {
     if (!user) {
       // Not logged in, redirect to login
       router.push('/auth/login');
@@ -421,9 +452,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Redirect to verify page
     router.push(`/auth/verify-otp?telephone=${encodeURIComponent(user.telephone)}`);
     return false;
-  };
+  }, [user, hasVerifiedPhone, resendOtp, router]);
 
-  const value: AuthContextType = {
+  // P7 — Mémoïser le value du contexte. Sans cela, l'objet `value` était recréé à
+  // chaque rendu du provider → tous les consommateurs (useAuth) re-rendaient même
+  // quand seul isLoading changeait. Avec useCallback sur les fonctions + useMemo
+  // ici, l'identité de `value` n'est stable que sur ses véritables dépendances.
+  const value: AuthContextType = useMemo(() => ({
     user,
     isLoading,
     isAuthenticated: !!user,
@@ -441,7 +476,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isMediator,
     hasVerifiedPhone,
     requirePhoneVerification,
-  };
+  }), [user, isLoading, redirectData, login, register, verifyOtp, resendOtp, logout, refreshUser, hasRole, hasAnyRole, hasPermission, isAdmin, isMediator, hasVerifiedPhone, requirePhoneVerification]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -1,5 +1,3 @@
-'use client';
-
 import { clsx } from 'clsx';
 import BadgeDisplay from './BadgeDisplay';
 
@@ -78,13 +76,13 @@ export default function ProgressTracker({
         <BadgeDisplay badge={currentBadge} size="md" showLabel />
         <div className="flex-1 mx-6">
           <div className="relative">
-            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div className="h-2 bg-neutral-200 dark:bg-dark-hover rounded-full overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-primary-500 to-primary-600 transition-all duration-500"
                 style={{ width: `${Math.min(progress, 100)}%` }}
               />
             </div>
-            <span className="absolute -top-6 right-0 text-sm font-medium text-gray-700">
+            <span className="absolute -top-6 right-0 text-sm font-medium text-neutral-700 dark:text-neutral-300">
               {progress}%
             </span>
           </div>
@@ -94,7 +92,7 @@ export default function ProgressTracker({
 
       {/* Requirements list */}
       <div className="space-y-4">
-        <h3 className="font-medium text-gray-900">Exigences pour le niveau suivant</h3>
+        <h3 className="font-medium text-neutral-900 dark:text-white">Exigences pour le niveau suivant</h3>
 
         {/* Met requirements */}
         {requirementsMet.map((req) => {
@@ -102,14 +100,14 @@ export default function ProgressTracker({
           return (
             <div
               key={req}
-              className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 p-3"
+              className="flex items-center gap-3 rounded-lg border border-success-200 bg-success-50 p-3"
             >
-              <div className="flex-shrink-0 text-green-600">{info.icon}</div>
+              <div className="flex-shrink-0 text-success-600">{info.icon}</div>
               <div className="flex-1">
-                <p className="font-medium text-green-800">{info.label}</p>
-                <p className="text-sm text-green-600">Exigence remplie</p>
+                <p className="font-medium text-success-800">{info.label}</p>
+                <p className="text-sm text-success-600">Exigence remplie</p>
               </div>
-              <svg className="h-6 w-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="h-6 w-6 text-success-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
             </div>
@@ -131,20 +129,20 @@ export default function ProgressTracker({
           return (
             <div
               key={req.type}
-              className="rounded-lg border border-gray-200 bg-white p-4"
+              className="rounded-lg border border-neutral-200 dark:border-dark-border bg-white dark:bg-dark-card p-4"
             >
               <div className="flex items-center gap-3 mb-3">
-                <div className="flex-shrink-0 text-gray-400">{info.icon}</div>
+                <div className="flex-shrink-0 text-neutral-400">{info.icon}</div>
                 <div className="flex-1">
-                  <p className="font-medium text-gray-900">{info.label}</p>
-                  <p className="text-sm text-gray-500">
+                  <p className="font-medium text-neutral-900 dark:text-white">{info.label}</p>
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
                     Actuel: <span className="font-medium">{currentFormatted}</span> / Requis:{' '}
                     <span className="font-medium">{requiredFormatted}</span>
                   </p>
                 </div>
               </div>
               {typeof req.current === 'number' && typeof req.required === 'number' && (
-                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-2 bg-neutral-100 dark:bg-dark-hover rounded-full overflow-hidden">
                   <div
                     className="h-full bg-primary-500 transition-all duration-300"
                     style={{ width: `${reqProgress}%` }}
@@ -157,9 +155,9 @@ export default function ProgressTracker({
       </div>
 
       {/* Tips */}
-      <div className="rounded-lg bg-blue-50 p-4">
-        <h4 className="font-medium text-blue-800 mb-2">Conseils pour progresser</h4>
-        <ul className="space-y-1 text-sm text-blue-700">
+      <div className="rounded-lg bg-secondary-50 p-4">
+        <h4 className="font-medium text-secondary-800 mb-2">Conseils pour progresser</h4>
+        <ul className="space-y-1 text-sm text-secondary-700">
           {requirementsMissing.some(r => r.type === 'transactions') && (
             <li className="flex items-start gap-2">
               <span className="mt-1">•</span>

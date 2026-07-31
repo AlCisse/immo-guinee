@@ -2,7 +2,7 @@
 
 **Version**: 1.0.0 | **Date**: 2026-01-05 | **Status**: Draft
 **Base URL**: `https://api.immoguinee.com/api`
-**Authentication**: Bearer Token (Laravel Passport OAuth2)
+**Authentication**: Bearer Token (JWT — `AuthUser` extractor)
 
 ---
 
@@ -514,7 +514,7 @@ POST /facebook/data-deletion
 
 ## Internal Webhooks (Backend → n8n)
 
-Ces webhooks sont déclenchés automatiquement par le backend Laravel vers n8n.
+Ces webhooks sont déclenchés automatiquement par le backend Rust vers n8n.
 
 ### Webhook: Listing Approved
 
@@ -711,8 +711,7 @@ interface FacebookPost {
 
 ### Token Storage
 
-- Tous les `page_access_token` sont chiffrés avec AES-256-GCM
-- La clé de chiffrement est stockée dans Docker Secrets
+- Tous les `page_access_token` sont chiffrés via **Vault Transit** (AES-256, la clé ne quitte jamais Vault)
 - Les tokens ne sont JAMAIS:
   - Retournés dans les réponses API
   - Loggés dans les fichiers de log

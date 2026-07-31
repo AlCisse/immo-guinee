@@ -46,10 +46,10 @@ const categoryColors = {
 // Tutorial step icons
 const tutorialIcons = [Home, DollarSign, MapPin, Camera];
 const tutorialColors = [
-  'from-primary-500 to-orange-500',
-  'from-blue-500 to-cyan-500',
-  'from-emerald-500 to-teal-500',
-  'from-purple-500 to-pink-500',
+  'from-primary-500 to-primary-500',
+  'from-secondary-500 to-teal-500',
+  'from-accent-500 to-teal-500',
+  'from-teal-500 to-accent-500',
 ];
 
 // Tutorial step content component
@@ -123,22 +123,22 @@ function TutorialStepContent({ stepNum, t }: { stepNum: number; t: (key: string)
               if (tip.includes('tips.')) return null; // Key doesn't exist
               return (
                 <li key={i} className="flex items-start gap-2 text-sm">
-                  <Lightbulb className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                  <Lightbulb className="w-4 h-4 text-warning-500 mt-0.5 flex-shrink-0" />
                   <span className="text-neutral-700 dark:text-neutral-300">{tip}</span>
                 </li>
               );
             })}
           </ul>
           {sectionKey === 'listingTitle' && (
-            <div className="mt-3 p-3 bg-red-50 dark:bg-red-500/10 rounded-lg">
-              <p className="text-sm font-medium text-red-700 dark:text-red-400 mb-2 flex items-center gap-2">
+            <div className="mt-3 p-3 bg-error-50 dark:bg-error-500/10 rounded-lg">
+              <p className="text-sm font-medium text-error-700 dark:text-error-400 mb-2 flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4" />
                 {t('help.tutorial.avoid')}
               </p>
               <ul className="space-y-1">
                 {[0, 1].map((i) => (
-                  <li key={i} className="text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
-                    <span className="w-1 h-1 bg-red-500 rounded-full" />
+                  <li key={i} className="text-sm text-error-600 dark:text-error-400 flex items-center gap-2">
+                    <span className="w-1 h-1 bg-error-500 rounded-full" />
                     {t(`help.tutorial.steps.2.sections.listingTitle.avoid.${i}`)}
                   </li>
                 ))}
@@ -160,7 +160,7 @@ function TutorialStepContent({ stepNum, t }: { stepNum: number; t: (key: string)
         <ul className="space-y-2">
           {[0, 1, 2].map((i) => (
             <li key={i} className="flex items-start gap-2 text-sm">
-              <Lightbulb className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+              <Lightbulb className="w-4 h-4 text-warning-500 mt-0.5 flex-shrink-0" />
               <span className="text-neutral-700 dark:text-neutral-300">
                 {t(`help.tutorial.steps.3.sections.location.tips.${i}`)}
               </span>
@@ -206,7 +206,7 @@ function TutorialStepContent({ stepNum, t }: { stepNum: number; t: (key: string)
         <ul className="space-y-2">
           {[0, 1, 2].map((i) => (
             <li key={i} className="flex items-start gap-2 text-sm">
-              <Lightbulb className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+              <Lightbulb className="w-4 h-4 text-warning-500 mt-0.5 flex-shrink-0" />
               <span className="text-neutral-700 dark:text-neutral-300">
                 {t(`help.tutorial.steps.4.sections.requirements.tips.${i}`)}
               </span>
@@ -222,7 +222,7 @@ function TutorialStepContent({ stepNum, t }: { stepNum: number; t: (key: string)
         <ul className="space-y-2">
           {[0, 1, 2, 3].map((i) => (
             <li key={i} className="flex items-start gap-2 text-sm">
-              <Lightbulb className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+              <Lightbulb className="w-4 h-4 text-warning-500 mt-0.5 flex-shrink-0" />
               <span className="text-neutral-700 dark:text-neutral-300">
                 {t(`help.tutorial.steps.4.sections.tips.tips.${i}`)}
               </span>
@@ -315,7 +315,7 @@ export default function AidePage() {
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-dark-bg">
       {/* Header */}
-      <div className="bg-gradient-to-br from-primary-500 to-orange-500 pt-6 pb-16">
+      <div className="bg-gradient-to-br from-primary-500 to-primary-500 pt-6 pb-16">
         <div className="max-w-4xl mx-auto px-4">
           <div className="flex items-center gap-4 mb-8">
             <Link
@@ -359,7 +359,7 @@ export default function AidePage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t('help.searchPlaceholder')}
-                className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-white dark:bg-dark-card text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/50 shadow-lg"
+                className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-white dark:bg-dark-card text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-white/50 shadow-soft"
               />
             </div>
           </motion.div>
@@ -379,9 +379,9 @@ export default function AidePage() {
             const isActive = activeCategory === category.id;
             const colorClasses = {
               primary: 'bg-primary-50 dark:bg-primary-500/10 text-primary-500',
-              blue: 'bg-blue-50 dark:bg-blue-500/10 text-blue-500',
-              emerald: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500',
-              purple: 'bg-purple-50 dark:bg-purple-500/10 text-purple-500',
+              blue: 'bg-secondary-50 dark:bg-secondary-500/10 text-secondary-500',
+              emerald: 'bg-accent-50 dark:bg-accent-500/10 text-accent-500',
+              purple: 'bg-teal-50 dark:bg-teal-500/10 text-teal-500',
             };
 
             return (
@@ -419,7 +419,7 @@ export default function AidePage() {
         >
           <button
             onClick={() => setShowTutorial(!showTutorial)}
-            className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl p-6 text-left hover:from-emerald-600 hover:to-teal-600 transition-all shadow-lg"
+            className="w-full bg-gradient-to-r from-accent-500 to-teal-500 rounded-2xl p-6 text-left hover:from-accent-600 hover:to-teal-600 transition-all shadow-lg"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -467,7 +467,7 @@ export default function AidePage() {
                             ${isActive
                               ? `bg-gradient-to-br ${step.color} shadow-lg`
                               : isPast
-                                ? 'bg-emerald-500'
+                                ? 'bg-accent-500'
                                 : 'bg-neutral-200 dark:bg-dark-border'
                             }
                           `}>
@@ -481,7 +481,7 @@ export default function AidePage() {
                             {t('help.tutorial.step')} {step.step}
                           </span>
                           {index < tutorialSteps.length - 1 && (
-                            <div className={`hidden md:block absolute h-0.5 w-full max-w-[60px] top-6 left-1/2 ml-6 ${isPast ? 'bg-emerald-500' : 'bg-neutral-200 dark:bg-dark-border'}`} />
+                            <div className={`hidden md:block absolute h-0.5 w-full max-w-[60px] top-6 left-1/2 ml-6 ${isPast ? 'bg-accent-500' : 'bg-neutral-200 dark:bg-dark-border'}`} />
                           )}
                         </button>
                       );
@@ -524,14 +524,14 @@ export default function AidePage() {
                           {activeStep < 4 ? (
                             <button
                               onClick={() => setActiveStep(Math.min(4, activeStep + 1))}
-                              className="px-6 py-2.5 bg-gradient-to-r from-primary-500 to-orange-500 text-white font-medium rounded-xl hover:from-primary-600 hover:to-orange-600 transition-all"
+                              className="px-6 py-2.5 bg-gradient-to-r from-primary-500 to-primary-500 text-white font-medium rounded-xl hover:from-primary-600 hover:to-primary-600 transition-all"
                             >
                               {t('help.tutorial.next')} →
                             </button>
                           ) : (
                             <Link
                               href="/publier"
-                              className="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-medium rounded-xl hover:from-emerald-600 hover:to-teal-600 transition-all flex items-center gap-2"
+                              className="px-6 py-2.5 bg-gradient-to-r from-accent-500 to-teal-500 text-white font-medium rounded-xl hover:from-accent-600 hover:to-teal-600 transition-all flex items-center gap-2"
                             >
                               <CheckCircle className="w-5 h-5" />
                               {t('help.tutorial.createListing')}
@@ -573,7 +573,7 @@ export default function AidePage() {
                       <div key={i} className="border-b border-neutral-100 dark:border-dark-border last:border-0">
                         <button
                           onClick={() => setOpenQuestion(isOpen ? null : questionId)}
-                          className="w-full px-6 py-4 text-left flex items-center justify-between gap-4 hover:bg-neutral-50 dark:hover:bg-dark-bg transition-colors"
+                          className="w-full px-6 py-4 text-left flex items-center justify-between gap-4 hover:bg-neutral-50 dark:hover:bg-dark-hover transition-colors"
                         >
                           <span className="font-medium text-neutral-900 dark:text-white">
                             {faq.q}
@@ -615,7 +615,7 @@ export default function AidePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-gradient-to-br from-primary-500 to-orange-500 rounded-2xl p-6 md:p-8 text-center mb-12"
+          className="bg-gradient-to-br from-primary-500 to-primary-500 rounded-2xl p-6 md:p-8 text-center mb-12"
         >
           <h2 className="text-xl font-bold text-white mb-2">
             {t('help.cta.title')}
@@ -626,7 +626,7 @@ export default function AidePage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/contact"
-              className="w-full sm:w-auto px-6 py-3 bg-white text-primary-600 font-semibold rounded-xl hover:bg-neutral-100 transition-colors flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-6 py-3 bg-white dark:bg-dark-card text-primary-600 font-semibold rounded-xl hover:bg-neutral-100 transition-colors flex items-center justify-center gap-2"
             >
               <MessageSquare className="w-5 h-5" />
               {t('help.cta.contactUs')}

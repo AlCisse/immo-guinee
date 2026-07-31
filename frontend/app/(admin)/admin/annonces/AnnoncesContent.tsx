@@ -65,7 +65,7 @@ const STATUS_ACTIONS = [
     label: 'Approuver',
     description: 'Rendre visible au public',
     icon: CheckCircle,
-    color: 'bg-green-500 hover:bg-green-600',
+    color: 'bg-success-500 hover:bg-success-600',
     targetStatus: 'ACTIVE'
   },
   {
@@ -73,7 +73,7 @@ const STATUS_ACTIONS = [
     label: 'Suspendre',
     description: 'Masquer temporairement',
     icon: Clock,
-    color: 'bg-orange-500 hover:bg-orange-600',
+    color: 'bg-primary-500 hover:bg-primary-600',
     targetStatus: 'SUSPENDU'
   },
   {
@@ -81,7 +81,7 @@ const STATUS_ACTIONS = [
     label: 'Supprimer',
     description: 'Supprimer définitivement',
     icon: Ban,
-    color: 'bg-red-500 hover:bg-red-600',
+    color: 'bg-error-500 hover:bg-error-600',
     targetStatus: null
   },
 ];
@@ -206,11 +206,11 @@ export default function AnnoncesContent() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-white flex items-center gap-3">
           <Building2 className="w-7 h-7 text-primary-500" />
           Gestion des annonces
         </h1>
-        <p className="text-gray-600 mt-1">
+        <p className="text-neutral-600 dark:text-neutral-400 mt-1">
           Gérez toutes les annonces de la plateforme
         </p>
       </div>
@@ -475,11 +475,11 @@ export default function AnnoncesContent() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-dark-card rounded-2xl shadow-xl w-full max-w-sm overflow-hidden"
+              className="bg-white dark:bg-dark-card rounded-2xl shadow-soft w-full max-w-sm overflow-hidden"
             >
               <div className="p-6 text-center">
-                <div className="w-14 h-14 bg-red-100 dark:bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <AlertTriangle className="w-7 h-7 text-red-500" />
+                <div className="w-14 h-14 bg-error-100 dark:bg-error-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <AlertTriangle className="w-7 h-7 text-error-500" />
                 </div>
                 <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-2">
                   Supprimer l'annonce ?
@@ -501,7 +501,7 @@ export default function AnnoncesContent() {
                 <button
                   onClick={confirmDelete}
                   disabled={deleteMutation.isPending}
-                  className="flex-1 px-4 py-3 text-sm font-medium text-white bg-red-500 hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-3 text-sm font-medium text-white bg-error-500 hover:bg-error-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {deleteMutation.isPending ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -531,7 +531,7 @@ export default function AnnoncesContent() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-dark-card rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
+              className="bg-white dark:bg-dark-card rounded-2xl shadow-soft w-full max-w-md overflow-hidden"
             >
               {/* Modal Header */}
               <div className="flex items-center justify-between p-4 border-b border-neutral-100 dark:border-dark-border">
