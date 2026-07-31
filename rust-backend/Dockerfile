@@ -46,7 +46,10 @@ RUN find src -type f -exec touch {} + && cargo build --release --bin immog-backe
 FROM debian:bookworm-slim AS runtime
 # ca-certificates for TLS; fonts-dejavu-core provides the font the Typst PDF
 # renderer loads at runtime (contract generation, US2).
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates fonts-dejavu-core \
+# C16 — curl pour le HEALTHCHECK conteneur (sinon debian-slim n'a ni curl ni
+# wget). Léger surcoût (~4 Mo) justifié : Docker/le swarm peuvent désormais
+# détecter un backend planté et le redémarrer automatiquement.
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /app/target/release/immog-backend  /usr/local/bin/immog-backend
 COPY --from=builder /app/target/release/immog-migrate  /usr/local/bin/immog-migrate
@@ -60,4 +63,11 @@ RUN groupadd --system --gid 10001 immog \
     && chmod 0755 /usr/local/bin/immog-backend /usr/local/bin/immog-migrate
 USER immog:immog
 EXPOSE 8000
+# C16 — healthcheck conteneur. /api/health/live = liveness bon marché (process
+# vivant, sans dépendre de DB/Redis) : un échec => Docker/swarm redémarre le
+# backend. On évite /api/health (readiness DB+Redis) : un DB down ne se répare
+# pas en redémarrant le backend, et ferait churner le conteneur. start-period
+# laisse le temps au binaire de démarrer avant la 1re sonde.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+    CMD curl -fsS http://127.0.0.1:8000/api/health/live || exit 1
 ENTRYPOINT ["immog-backend"]

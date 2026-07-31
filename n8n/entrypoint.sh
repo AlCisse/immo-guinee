@@ -2,6 +2,11 @@
 # n8n entrypoint - Load secrets as environment variables
 # Secrets are read from /run/secrets/ and exported for use with $env() in workflows
 
+# C9 — fail-fast strict (POSIX sh : pas de pipefail). -u sûr : load_secret() est
+# toujours appelée avec ses 2 args positionnels, et chaque secret n'est lu qu'à
+# l'intérieur du garde `if [ -f "$secret_file" ]`.
+set -eu
+
 # Function to read secret and export as env var
 load_secret() {
     secret_name=$1

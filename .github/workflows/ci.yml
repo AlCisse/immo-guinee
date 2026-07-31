@@ -151,7 +151,12 @@ jobs:
       - name: Audit Rust dependencies
         working-directory: rust-backend
         run: |
-          cargo install cargo-audit --locked
+          # C15 — cargo-audit pinné (0.22.2). Avant : `cargo install cargo-audit
+          # --locked` installait la dernière version au moment du run → la CI
+          # était reproductible uniquement à moitié (un bump cassant de
+          # cargo-audit pouvait faire rouger le job sans lien avec le code).
+          # --locked fige aussi les deps de cargo-audit via son Cargo.lock.
+          cargo install cargo-audit --version 0.22.2 --locked
           cargo audit
 
       - name: Setup Node.js
@@ -162,6 +167,31 @@ jobs:
       - name: Audit NPM dependencies
         working-directory: frontend
         run: npm audit --audit-level=high
+
+  # C13 — Secret-scan (gitleaks). Aligne la CI sur la tolérance zéro du projet
+  # vis-à-vis des secrets committés (CLAUDE.md ⚫) : bloque tout PR contenant un
+  # secret détecté. L'outil est installé en binaire pinné via `run` (la policy
+  # d'Actions du repo n'autorise que actions/*, docker/*, shivammathur/* — pas
+  # d'action gitleaks tierce). --redact évite de ré-imprimer un secret trouvé
+  # dans les logs de CI (ne pas propager la fuite).
+  secret-scan:
+    name: Secret Scan (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Install gitleaks (pinned v8.30.1)
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          curl -sfL -o /tmp/gitleaks.tar.gz \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          tar xzf /tmp/gitleaks.tar.gz -C "$HOME/.local/bin" gitleaks
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          gitleaks version
+
+      - name: Scan for secrets
+        run: gitleaks detect --source . --no-banner --redact --verbose
 
   # Build Docker Images (only on main/develop)
   build-docker:
@@ -195,3 +225,28 @@ jobs:
           tags: immoguinee-frontend:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # C13 — Scan d'image Docker (Trivy). Ce job ne tourne que sur main/develop
+      # (gated `if` ci-dessus) : il ne bloque donc pas les PR mais surface les
+      # vulnérabilités des images après merge. --severity CRITICAL + --exit-code 1
+      # → seul un CRITICAL corrigé (--ignore-unfixed) fait rouger le job : on
+      # évite le bruit des HIGH non patchées en amont qui bloqueraient la branche.
+      # Binaire pinné v0.71.2 (on évite v0.72.0 : breaking change dockers_v2).
+      - name: Install Trivy (pinned v0.71.2)
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          curl -sfL -o /tmp/trivy.tar.gz \
+            https://github.com/aquasecurity/trivy/releases/download/v0.71.2/trivy_0.71.2_Linux-64bit.tar.gz
+          tar xzf /tmp/trivy.tar.gz -C "$HOME/.local/bin" trivy
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          trivy --version
+
+      - name: Scan backend image (CRITICAL blocks)
+        run: |
+          trivy image --exit-code 1 --severity CRITICAL --ignore-unfixed \
+            immoguinee-backend:${{ github.sha }}
+
+      - name: Scan frontend image (CRITICAL blocks)
+        run: |
+          trivy image --exit-code 1 --severity CRITICAL --ignore-unfixed \
+            immoguinee-frontend:${{ github.sha }}

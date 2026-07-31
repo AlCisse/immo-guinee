@@ -1,6 +1,8 @@
 #!/bin/sh
 # MinIO entrypoint - Load credentials from Docker secrets
-set -e
+# C9 — fail-fast strict (POSIX sh : pas de pipefail). -u sûr : les vars issus de
+# `$(cat …)` ne sont référencés qu'à l'intérieur de leur garde `if [ -f … ]`.
+set -eu
 
 echo "[minio-entrypoint] Loading secrets..."
 

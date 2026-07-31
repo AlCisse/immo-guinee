@@ -32,7 +32,35 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let n = std::env::args().nth(2).and_then(|s| s.parse().ok()).unwrap_or(1);
             Migrator::down(&db, Some(n)).await?;
         }
-        "fresh" => Migrator::fresh(&db).await?,
+        "fresh" => {
+            // C11 — `fresh` droppe TOUTES les tables puis ré-applique les
+            // migrations : catastrophique en production. Double garde :
+            //   1. refus absolu si IMMOG_APP_ENV=production (même avec le flag) ;
+            //   2. exige un opt-in explicite IMMOG_ALLOW_DESTRUCTIVE_FRESH=1
+            //      ailleurs, pour qu'un `fresh` accidentel (ex. APP_ENV oublié
+            //      sur un poste dev qui pointe vers une base shared) ne wipe pas
+            //      la base. Pour initialiser une base, utiliser `immog-migrate up`.
+            let app_env = std::env::var("IMMOG_APP_ENV").unwrap_or_default();
+            if app_env == "production" {
+                return Err(
+                    "`immog-migrate fresh` refusé : IMMOG_APP_ENV=production. \
+                     Cette commande droppe toutes les tables. Utilisez `immog-migrate up`."
+                        .into(),
+                );
+            }
+            if std::env::var("IMMOG_ALLOW_DESTRUCTIVE_FRESH")
+                .ok()
+                .as_deref()
+                != Some("1")
+            {
+                return Err(
+                    "`immog-migrate fresh` est destructif (drop toutes les tables). \
+                     Définir IMMOG_ALLOW_DESTRUCTIVE_FRESH=1 pour confirmer (jamais en prod)."
+                        .into(),
+                );
+            }
+            Migrator::fresh(&db).await?;
+        }
         other => {
             eprintln!("immog-migrate: unknown subcommand `{other}` (up | status | down [n] | fresh)");
             std::process::exit(2);

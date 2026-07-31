@@ -6,6 +6,7 @@
 //! `annonce_id` is nullable, and NULLs are distinct in a unique index, so contracts
 //! with no listing are unaffected.
 
+use sea_orm::TransactionTrait;
 use sea_orm_migration::prelude::*;
 
 #[derive(DeriveMigrationName)]
@@ -22,11 +23,25 @@ const DOWN: &str = "DROP INDEX IF EXISTS uq_contracts_annonce_active;";
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.get_connection().execute_unprepared(UP).await?;
+        // C12 — wrapper dans une transaction : si le CREATE UNIQUE INDEX échoue
+        // (ex. doublons pré-existants dans contracts), la migration est roulée
+        // back et n'est pas marquée appliquée à moitié. Postgres supporte le DDL
+        // transactionnel, donc l'index est créé ou annulé atomiquement.
+        let txn = manager.get_connection().begin().await?;
+        if let Err(e) = txn.execute_unprepared(UP).await {
+            let _ = txn.rollback().await;
+            return Err(e);
+        }
+        txn.commit().await?;
         Ok(())
     }
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager.get_connection().execute_unprepared(DOWN).await?;
+        let txn = manager.get_connection().begin().await?;
+        if let Err(e) = txn.execute_unprepared(DOWN).await {
+            let _ = txn.rollback().await;
+            return Err(e);
+        }
+        txn.commit().await?;
         Ok(())
     }
 }

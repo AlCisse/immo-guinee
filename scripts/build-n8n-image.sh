@@ -2,7 +2,9 @@
 # Build custom n8n image with SSH client
 # This image is required for Execute Command nodes to SSH to the host
 
-set -e
+# C9 — fail-fast strict : -e (sortie sur erreur), -u (var non définie = erreur),
+# -o pipefail (sortie si un maillon d'un pipeline échoue).
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"

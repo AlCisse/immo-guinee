@@ -1,6 +1,10 @@
 #!/bin/sh
 # Read password from secret file and substitute in datasource config
 # Using db_backup_password (read-only user) for security
+# C9 — fail-fast strict (POSIX sh : pas de pipefail). -u sûr : DB_PASSWORD n'est
+# référencé qu'à l'intérieur du garde `if [ -f … ]` ; $f est la variable de boucle.
+set -eu
+
 if [ -f /run/secrets/db_backup_password ]; then
     DB_PASSWORD=$(cat /run/secrets/db_backup_password)
 
