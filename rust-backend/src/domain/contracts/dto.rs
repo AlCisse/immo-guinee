@@ -5,8 +5,33 @@
 use serde::Deserialize;
 use serde_json::{Value, json};
 use uuid::Uuid;
+use validator::ValidationError;
 
 use crate::db::entities::{contract, listing, user};
+
+/// Nombre max de clauses spéciales et longueur max par clause (S12). Sans
+/// limite, un payload avec des milliers de clauses (ou des clauses très longues)
+/// fait DoS sur le rendu PDF Typst (US2) — génération CPU-bound, potentiellement
+/// des secondes par contrat.
+const MAX_CLAUSES: usize = 50;
+const MAX_CLAUSE_LEN: usize = 500;
+
+fn validate_clauses(clauses: &Vec<String>) -> Result<(), ValidationError> {
+    if clauses.len() > MAX_CLAUSES {
+        let mut err = ValidationError::new("len");
+        err.message = Some(format!("trop de clauses (max {MAX_CLAUSES})").into());
+        return Err(err);
+    }
+    for c in clauses {
+        if c.chars().count() > MAX_CLAUSE_LEN {
+            let mut err = ValidationError::new("len");
+            err.message =
+                Some(format!("clause trop longue (max {MAX_CLAUSE_LEN} caractères)").into());
+            return Err(err);
+        }
+    }
+    Ok(())
+}
 
 /// `POST /contracts` payload (frontend `GenerateContractData`). `type_contrat` is
 /// the simplified `location` / `vente`; it maps to the DB `TypeContrat` enum.
@@ -23,6 +48,7 @@ pub struct GenerateContractRequest {
     pub montant_loyer: Option<i64>,
     pub montant_caution: Option<i64>,
     pub prix_vente: Option<i64>,
+    #[validate(custom(function = "validate_clauses"))]
     pub clauses_speciales: Option<Vec<String>>,
 }
 

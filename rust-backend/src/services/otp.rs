@@ -36,6 +36,23 @@ fn generate_code() -> String {
     format!("{n:06}")
 }
 
+/// Comparaison en temps constant (S10). Une comparaison `==` court-circuite au
+/// premier octet différent : le temps de réponse divulgue alors combien de
+/// caractères du code soumis sont corrects (oracle de timing). On accumule les
+/// différences d'octets sans sortie anticipée. La longueur (fixe, 6 chiffres)
+/// est comparée une fois pour toutes ; le parcours du contenu est constant.
+fn ct_eq(a: &str, b: &str) -> bool {
+    let (a, b) = (a.as_bytes(), b.as_bytes());
+    if a.len() != b.len() {
+        return false;
+    }
+    let mut diff: u8 = 0;
+    for (x, y) in a.iter().zip(b.iter()) {
+        diff |= x ^ y;
+    }
+    diff == 0
+}
+
 /// Generate a new OTP for `phone`, store it (5 min TTL) and reset the attempt
 /// counter. Returns the code for the caller to deliver by SMS.
 /// Rejects with `429` if a code was requested less than 60 s ago.
@@ -76,7 +93,8 @@ pub async fn verify(redis: &ConnectionManager, phone: &str, code: &str) -> AppRe
     }
 
     let stored: Option<String> = conn.get(code_key(phone)).await?;
-    if stored.as_deref() == Some(code) {
+    // S10 — comparaison en temps constant : évite l'oracle de timing sur le code.
+    if stored.as_deref().is_some_and(|s| ct_eq(s, code)) {
         let _: () = conn.del(code_key(phone)).await?;
         let _: () = conn.del(attempts_key(phone)).await?;
         return Ok(());

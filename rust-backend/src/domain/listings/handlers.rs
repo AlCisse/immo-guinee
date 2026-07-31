@@ -5,8 +5,8 @@
 
 use std::sync::Arc;
 
-use axum::body::Body;
-use axum::extract::{DefaultBodyLimit, Multipart, Path, Query, State};
+use axum::body::{Body, Bytes};
+use axum::extract::{DefaultBodyLimit, Multipart, Path, Query, State, multipart::Field};
 use axum::http::{HeaderMap, HeaderName, HeaderValue, StatusCode};
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
@@ -263,6 +263,33 @@ async fn create(
     Ok(Json(Envelope { success: true, data: ListingResponse::from(model) }))
 }
 
+/// Taille max par fichier photo (S11). Sans limite, un upload massif est lu
+/// entièrement en mémoire puis passé au resize Lanczos3 (CPU-bound) — DoS
+/// mémoire/CPU. 10 Mio couvre largement une photo de téléphone avant resize.
+const MAX_PHOTO_BYTES: usize = 10 * 1024 * 1024;
+
+/// Lit un champ multipart en bornant la taille (S11). `field.bytes()` lirait le
+/// fichier entier quelle que soit sa taille ; on streame par chunks et on
+/// rejette dès que la limite est dépassée, avant le resize coûteux et avant de
+/// tout charger en mémoire.
+async fn read_field_capped(field: &mut Field<'_>, max_bytes: usize) -> AppResult<Bytes> {
+    let mut buf = Vec::new();
+    while let Some(chunk) = field
+        .chunk()
+        .await
+        .map_err(|e| AppError::Validation(format!("lecture du fichier: {e}")))?
+    {
+        if buf.len().saturating_add(chunk.len()) > max_bytes {
+            return Err(AppError::Validation(format!(
+                "fichier trop volumineux (max {} Mio)",
+                max_bytes / (1024 * 1024)
+            )));
+        }
+        buf.extend_from_slice(&chunk);
+    }
+    Ok(buf.into())
+}
+
 /// `POST /api/listings/{id}/photos` — upload photos (owner only, max 10). Each
 /// file is optimized to 3 WebP renditions and pushed to `listings.photos`.
 ///
@@ -305,7 +332,7 @@ async fn upload_photos_locked(
 
     let mut photos: Vec<serde_json::Value> = listing.photos.as_array().cloned().unwrap_or_default();
 
-    while let Some(field) = multipart
+    while let Some(mut field) = multipart
         .next_field()
         .await
         .map_err(|e| AppError::Validation(format!("upload invalide: {e}")))?
@@ -313,10 +340,10 @@ async fn upload_photos_locked(
         if photos.len() >= 10 {
             return Err(AppError::Validation("Maximum 10 photos par annonce".into()));
         }
-        let bytes = field
-            .bytes()
-            .await
-            .map_err(|e| AppError::Validation(format!("lecture du fichier: {e}")))?;
+        // S11 — borne la taille du fichier AVANT le resize (Lanczos3, CPU-bound)
+        // et avant de tout charger en mémoire : un upload massif ne peut plus
+        // faire DoS mémoire/CPU.
+        let bytes = read_field_capped(&mut field, MAX_PHOTO_BYTES).await?;
 
         // Lanczos3 resize is CPU-bound (up to seconds on a large photo) — run it
         // on a blocking thread so concurrent uploads/requests cannot stall the

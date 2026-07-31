@@ -12,6 +12,13 @@ use crate::error::{AppError, AppResult};
 pub const ACCESS_TTL_SECS: u64 = 24 * 3600;
 pub const REFRESH_TTL_SECS: u64 = 7 * 24 * 3600;
 
+/// JWT issuer & audience — bound to this service (S9). `verify` requires and
+/// checks them, so a token minted for another service — even signed with the
+/// same HS256 secret — can't be replayed against this API (anti confusion de
+/// destinataire).
+pub const JWT_ISSUER: &str = "immoguinee";
+pub const JWT_AUDIENCE: &str = "immoguinee-api";
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum TokenType {
@@ -28,6 +35,13 @@ pub struct Claims {
     pub token_type: TokenType,
     pub iat: u64,
     pub exp: u64,
+    /// Not-before (S9) : le token n'est pas valide avant cette date. Posé à
+    /// `iat` à l'émission, vérifié (`validate_nbf`) à la vérification.
+    pub nbf: u64,
+    /// Émetteur (S9) — vérifié contre `JWT_ISSUER`.
+    pub iss: String,
+    /// Audience (S9) — vérifiée contre `JWT_AUDIENCE`.
+    pub aud: String,
     /// Token id — enables per-token revocation (Redis deny-list) later.
     pub jti: Uuid,
 }
@@ -54,6 +68,9 @@ fn issue(secret: &[u8], user_id: Uuid, role: &str, token_type: TokenType) -> App
         token_type,
         iat: now,
         exp: now + ttl,
+        nbf: now,
+        iss: JWT_ISSUER.to_owned(),
+        aud: JWT_AUDIENCE.to_owned(),
         jti: Uuid::new_v4(),
     };
     encode(&Header::new(Algorithm::HS256), &claims, &EncodingKey::from_secret(secret))
@@ -75,6 +92,15 @@ pub fn issue_pair(secret: &[u8], user_id: Uuid, role: &str) -> AppResult<TokenPa
 pub fn verify(secret: &[u8], token: &str, expected: TokenType) -> AppResult<Claims> {
     let mut validation = Validation::new(Algorithm::HS256);
     validation.validate_exp = true;
+    // S9 — anti confusion de destinataire : exige et vérifie `iss`/`aud`, et
+    // valide `nbf`. `validate_aud`/`validate_iss` ne s'appliquent que si le claim
+    // est présent dans le token ; on les rend donc obligatoires via
+    // `required_spec_claims`, sinon un token sans `aud` (ex. minté pour un autre
+    // service avec le même secret) passerait silencieusement.
+    validation.validate_nbf = true;
+    validation.set_audience(&[JWT_AUDIENCE]);
+    validation.set_issuer(&[JWT_ISSUER]);
+    validation.set_required_spec_claims(&["exp", "nbf", "aud", "iss"]);
     let data = decode::<Claims>(token, &DecodingKey::from_secret(secret), &validation)
         .map_err(|_| AppError::Unauthorized)?;
     if data.claims.token_type != expected {
